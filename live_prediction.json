@@ -1,0 +1,21 @@
+{
+  "over": 6,
+  "batsman": "R Parag",
+  "bowler": "H Patel",
+  "score_before_over": 34,
+  "wickets_down": 0,
+  "prediction": {
+    "expected_runs": 7.1,
+    "expected_range": "5-10",
+    "wicket_probability": 47.4,
+    "commentary_lines": [
+      "Wicket probability this over is elevated at 47%."
+    ],
+    "data_confidence": {
+      "limited_data": false,
+      "batsman_overs_in_history": 715,
+      "bowler_overs_in_history": 1084,
+      "note": null
+    }
+  }
+}
