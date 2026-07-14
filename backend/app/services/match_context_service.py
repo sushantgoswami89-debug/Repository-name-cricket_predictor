@@ -11,6 +11,7 @@ from typing import Any
 
 from app.models.match_context import MatchContext
 from app.models.pitch_context import PitchContext
+from app.models.toss_context import TossContext
 from app.models.weather_context import WeatherContext
 from app.services.venue_service import VenueService
 from app.utils.normalizer import Normalizer
@@ -54,6 +55,11 @@ class MatchContextService:
 
         pitch = PitchContext()
 
+        toss = TossContext(
+            winner=match_data.get("toss_winner"),
+            decision=match_data.get("toss_decision"),
+        )
+
         context = MatchContext(
             match_id=match_data.get("match_id"),
             team1=Normalizer.normalize_team(match_data.get("team1", "")),
@@ -62,8 +68,7 @@ class MatchContextService:
             city=match_data.get("city", ""),
             country=match_data.get("country", ""),
             format=Normalizer.normalize_format(match_data.get("format", "")),
-            toss_winner=match_data.get("toss_winner"),
-            toss_decision=match_data.get("toss_decision"),
+            toss=toss,
             batting_first=match_data.get("batting_first"),
             bowling_first=match_data.get("bowling_first"),
             date=match_data.get("date"),
