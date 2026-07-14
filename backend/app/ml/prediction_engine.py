@@ -6,7 +6,7 @@ Runs the CricketBaba ML models and returns a PredictionResult.
 
 from __future__ import annotations
 
-from typing import Any
+import time
 
 import pandas as pd
 
@@ -34,31 +34,49 @@ class PredictionEngine:
         Predict runs and wicket probability.
         """
 
+        start = time.perf_counter()
+
         features = self._builder.build(context)
 
-        feature_order = self._repository.feature_columns
+        feature_order = self._repository.get_feature_columns()
 
-        missing = [f for f in feature_order if f not in features]
+        missing = [name for name in feature_order if name not in features]
 
         if missing:
             raise ValueError(f"Missing model features: {missing}")
 
-        ordered = {k: features[k] for k in feature_order}
+        ordered = {name: features[name] for name in feature_order}
 
         df = pd.DataFrame([ordered])
 
-        runs = float(self._repository.runs_model.predict(df)[0])
+        # Ensure categorical columns have categorical dtype
+        for column in self._repository.get_categorical_columns():
+            if column in df.columns:
+                df[column] = df[column].astype("category")
 
-        wicket_probability = float(
-            self._repository.wicket_model.predict_proba(df)[0][1]
-        )
+        runs_model = self._repository.get_runs_model()
+        wicket_model = self._repository.get_wicket_model()
+
+        predicted_runs = float(runs_model.predict(df)[0])
+
+        wicket_probability = float(wicket_model.predict_proba(df)[0][1])
+
+        latency_ms = (time.perf_counter() - start) * 1000
 
         confidence = 0.90
 
+        analysis: list[str] = [
+            f"Prediction completed in {latency_ms:.2f} ms",
+        ]
+
         result = PredictionResult(
-            predicted_runs=runs,
+            predicted_runs=predicted_runs,
             wicket_probability=wicket_probability,
             confidence=confidence,
+            analysis=analysis,
+            metadata={
+                "latency_ms": f"{latency_ms:.2f}",
+            },
         )
 
         result.validate()
