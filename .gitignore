@@ -28,3 +28,6 @@ htmlcov/
 
 # OS files
 Thumbs.db
+.telegram.json
+.cricketdata.json
+data/live/
