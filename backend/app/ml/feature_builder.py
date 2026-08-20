@@ -4,11 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.ml.historical_feature_store import HistoricalFeatureStore
 from app.models.match_context import MatchContext
 
 
 class FeatureBuilder:
     """Builds model features from MatchContext."""
+
+    def __init__(self, history_store: HistoricalFeatureStore | None = None) -> None:
+        self._history_store = history_store or HistoricalFeatureStore()
 
     @staticmethod
     def _value(obj: object, name: str, default: Any = 0) -> Any:
@@ -27,6 +31,15 @@ class FeatureBuilder:
                 phase = "middle"
             else:
                 phase = "death"
+
+        historical = self._history_store.lookup(
+            batsman=live.striker,
+            bowler=live.bowler,
+            venue=context.venue,
+            phase=phase,
+            exclude_match_key=context.metadata.get("exclude_match_key"),
+        )
+
         return {
             "over": live.over,
             "score_before_over": live.score_before_over,
@@ -45,22 +58,22 @@ class FeatureBuilder:
             "recent_boundary_rate": live.recent_boundary_rate,
             "recent_wicket_rate": live.recent_wicket_rate,
             "balls_faced_before_over": live.balls_faced_before_over,
-            "venue_avg_score": self._value(context, "venue_avg_score"),
-            "bat_career_overs_faced": self._value(context, "bat_career_overs_faced"),
-            "bat_hist_avg_runs_per_over": self._value(context, "bat_hist_avg_runs_per_over"),
-            "bat_hist_wicket_rate": self._value(context, "bat_hist_wicket_rate"),
-            "bowl_career_overs_bowled": self._value(context, "bowl_career_overs_bowled"),
-            "bowl_hist_avg_runs_conceded": self._value(context, "bowl_hist_avg_runs_conceded"),
-            "bowl_hist_wicket_rate": self._value(context, "bowl_hist_wicket_rate"),
-            "h2h_overs": self._value(context, "h2h_overs"),
-            "h2h_avg_runs": self._value(context, "h2h_avg_runs"),
-            "bat_vs_bowltype_avg_runs": self._value(context, "bat_vs_bowltype_avg_runs"),
-            "bat_vs_bowltype_wicket_rate": self._value(context, "bat_vs_bowltype_wicket_rate"),
-            "bowl_phase_avg_runs": self._value(context, "bowl_phase_avg_runs"),
+            "venue_avg_score": historical["venue_avg_score"],
+            "bat_career_overs_faced": historical["bat_career_overs_faced"],
+            "bat_hist_avg_runs_per_over": historical["bat_hist_avg_runs_per_over"],
+            "bat_hist_wicket_rate": historical["bat_hist_wicket_rate"],
+            "bowl_career_overs_bowled": historical["bowl_career_overs_bowled"],
+            "bowl_hist_avg_runs_conceded": historical["bowl_hist_avg_runs_conceded"],
+            "bowl_hist_wicket_rate": historical["bowl_hist_wicket_rate"],
+            "h2h_overs": historical["h2h_overs"],
+            "h2h_avg_runs": historical["h2h_avg_runs"],
+            "bat_vs_bowltype_avg_runs": historical["bat_vs_bowltype_avg_runs"],
+            "bat_vs_bowltype_wicket_rate": historical["bat_vs_bowltype_wicket_rate"],
+            "bowl_phase_avg_runs": historical["bowl_phase_avg_runs"],
             "phase": phase,
-            "batsman_style": self._value(context, "batsman_style", ""),
-            "batsman_class": self._value(context, "batsman_class", ""),
-            "bowler_type": self._value(context, "bowler_type", ""),
-            "bowler_quality": self._value(context, "bowler_quality", ""),
-            "pitch_type": self._value(context, "pitch_type", ""),
+            "batsman_style": historical["batsman_style"],
+            "batsman_class": historical["batsman_class"],
+            "bowler_type": historical["bowler_type"],
+            "bowler_quality": historical["bowler_quality"],
+            "pitch_type": historical["pitch_type"],
         }
