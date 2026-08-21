@@ -9,6 +9,7 @@ import time
 
 import pandas as pd
 
+from app.ml.bowler_spell_adjuster import BowlerSpellAdjuster
 from app.ml.engine_router import EngineFamily, EngineRouter
 from app.ml.feature_builder import FeatureBuilder
 from app.ml.model_repository import ModelRepository
@@ -42,6 +43,7 @@ class PredictionEngine:
             if run_centering_correction is not None
             else self.RUN_CENTERING_CORRECTION
         )
+        self._bowler_adjuster = BowlerSpellAdjuster()
 
         # --- STATE MANAGEMENT ---
         self._match_bias = 1.0
@@ -245,6 +247,29 @@ class PredictionEngine:
         evolved_runs = centered_runs * self._match_bias
         evolved_wkt = min(1.0, max(0.0, raw_wkt_prob * self._wicket_multiplier))
 
+        # 4b. BOWLER SPELL ADJUSTMENT (announced_bowler_current_spell_v3)
+        # Independently validated against the production baseline (see
+        # bowler_spell_adjuster.py docstring): Run MAE 3.87->3.75, Wicket
+        # Brier 0.193->0.190, Wicket AUC 0.519->0.550. Applies whenever the
+        # current bowler is known, regardless of whether that came from an
+        # advance live announcement or simply being the actual bowler in a
+        # replay -- it does not require prediction-before-the-over to add
+        # value, only bowler identity.
+        bowler_adjustment = self._bowler_adjuster.adjust(
+            bowler=context.live.bowler,
+            over=current_over,
+            phase=features["phase"],
+            wickets_in_hand=context.live.wickets_in_hand,
+            recent_wicket_rate=context.live.recent_wicket_rate,
+            current_run_rate=context.live.current_run_rate,
+            required_run_rate=context.live.required_run_rate,
+            base_runs=evolved_runs,
+            base_wicket_probability=evolved_wkt,
+        )
+        if bowler_adjustment is not None:
+            evolved_runs = bowler_adjustment.runs
+            evolved_wkt = bowler_adjustment.wicket_probability
+
         # 5. ULTRA-PRECISION BRACKET
         pivot = round(evolved_runs, 1)
 
@@ -297,6 +322,7 @@ class PredictionEngine:
                 "centering_correction": self.RUN_CENTERING_CORRECTION,
                 "adjusted_runs": round(evolved_runs, 3),
                 "display_runs": pivot,
+                "bowler_adjustment_applied": bowler_adjustment is not None,
                 "confidence_type": "dynamic stability indicator",
                 "confidence_factors": confidence_factors,
                 "engine_family": rules["engine_family"],
@@ -326,5 +352,11 @@ class PredictionEngine:
             self._wicket_multiplier += 0.05
 
         self._bowler_stats[bowler_name] = self._bowler_stats.get(bowler_name, 0) + 1
+        self._bowler_adjuster.record_completed_over(
+            bowler=bowler_name,
+            over=self._last_predicted_over,
+            actual_runs=actual_runs,
+            actual_wickets=actual_wickets,
+        )
         self._is_awaiting_actuals = False
         return f"Evolved (LR: {learning_rate})"
