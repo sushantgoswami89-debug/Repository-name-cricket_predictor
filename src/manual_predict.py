@@ -6,10 +6,13 @@ a prediction with commentary insights - fully offline, using your trained models
 Run:
     python3 src/manual_predict.py
 """
+
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from predict import NextOverPredictor
+
 
 def ask(prompt, cast=str, default=None):
     suffix = f" [{default}]" if default is not None else ""
@@ -21,6 +24,7 @@ def ask(prompt, cast=str, default=None):
     except ValueError:
         print("Invalid input, try again.")
         return ask(prompt, cast, default)
+
 
 def main():
     print("=" * 50)
@@ -36,8 +40,11 @@ def main():
         score_before = ask("Team score before this over", int, 0)
         wkts_down = ask("Wickets down before this over", int, 0)
         balls_faced = ask("Balls faced so far by this batsman in this innings", int, 0)
-        pitch_type = ask("Pitch type (batting_paradise / balanced / slow_turner / seaming_track)",
-                          str, "balanced")
+        pitch_type = ask(
+            "Pitch type (batting_paradise / balanced / slow_turner / seaming_track)",
+            str,
+            "balanced",
+        )
 
         try:
             result = predictor.predict(
@@ -51,13 +58,17 @@ def main():
             )
         except Exception as e:
             print(f"\nSomething went wrong: {e}")
-            print("Double-check the names match exactly how they appear in your training data.")
+            print(
+                "Double-check the names match exactly how they appear in your training data."
+            )
             continue
 
         print("\n" + "-" * 50)
         print(f"PREDICTION: {batsman} facing {bowler}, over {over_num}")
         print("-" * 50)
-        print(f"Expected runs this over: {result['expected_runs']} (range {result['expected_range']})")
+        print(
+            f"Expected runs this over: {result['expected_runs']} (range {result['expected_range']})"
+        )
         print(f"Wicket probability: {result['wicket_probability']}%")
 
         conf = result["data_confidence"]
@@ -74,6 +85,7 @@ def main():
             break
 
     print("\nDone.")
+
 
 if __name__ == "__main__":
     main()

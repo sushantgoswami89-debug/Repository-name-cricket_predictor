@@ -1,0 +1,82 @@
+{
+  "candidate_version": "ipl_v10_shock_probability_gate",
+  "production_models_changed": false,
+  "training_rows_through_2024": 42210,
+  "holdout_rows_2025_plus": 5580,
+  "shock_diagnostics": {
+    "2025": {
+      "rows": 2777,
+      "boundary": {
+        "log_loss": 1.047156013130815,
+        "prior_log_loss": 1.118364506186768,
+        "accuracy": 0.45012603528988115
+      },
+      "six": {
+        "brier": 0.22498009693045307,
+        "prior_brier": 0.24587120798822742,
+        "auc": 0.6103175428241827
+      },
+      "wicket": {
+        "brier": 0.19389419726532295,
+        "prior_brier": 0.2002852991348472,
+        "auc": 0.6010460757749237
+      },
+      "extras": {
+        "brier": 0.08000471050273114,
+        "prior_brier": 0.0811343085312446,
+        "auc": 0.6198548590997104
+      }
+    },
+    "2026": {
+      "rows": 2803,
+      "boundary": {
+        "log_loss": 1.0463684408305431,
+        "prior_log_loss": 1.124686555397914,
+        "accuracy": 0.4388155547627542
+      },
+      "six": {
+        "brier": 0.23001491609958627,
+        "prior_brier": 0.25350725288945053,
+        "auc": 0.6061606169521527
+      },
+      "wicket": {
+        "brier": 0.19482329430321915,
+        "prior_brier": 0.20090956343392738,
+        "auc": 0.5999477166432183
+      },
+      "extras": {
+        "brier": 0.08146700564573037,
+        "prior_brier": 0.08073994352192966,
+        "auc": 0.5628298402878606
+      }
+    }
+  },
+  "base_retrained": {
+    "hit_rate": 0.24946236559139784,
+    "mean_band_probability": 0.3096887626613621,
+    "phase": {
+      "powerplay": 0.24045584045584045,
+      "middle": 0.261425251742835,
+      "death": 0.23732904263877716
+    }
+  },
+  "shock_augmented": {
+    "hit_rate": 0.2435483870967742,
+    "mean_band_probability": 0.30867092307622357,
+    "phase": {
+      "powerplay": 0.2319088319088319,
+      "middle": 0.2621998450813323,
+      "death": 0.22123893805309736
+    }
+  },
+  "improvement_percentage_points": -0.5913978494623634,
+  "base_prediction_ms": 3.1348323600347308,
+  "shock_augmented_prediction_ms": 2.927556390010674,
+  "promotion_gates": {
+    "shock_probabilities_improve_range": false,
+    "range_accuracy_at_least_32_38pct": false,
+    "all_shock_heads_beat_prior_on_2026": false,
+    "latency_below_50ms": true
+  },
+  "integration_recommended": false
+}

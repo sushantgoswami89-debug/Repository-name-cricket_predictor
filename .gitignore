@@ -28,3 +28,32 @@ htmlcov/
 
 # OS files
 Thumbs.db
+.telegram.json
+.cricketdata.json
+data/live/
+live_prediction.state.json
+
+# Ad hoc live-test/monitor runtime output -- regenerate by re-running the
+# tool, not durable source.
+backend/live_test_output.json
+backend/live_test_output.state.json
+backend/live_test_stdout.log
+backend/monitor_stdout.log
+backend/announced_bowler_monitor.log
+backend/match_pitch_holdout_result.csv
+backend/match_pitch_replay_progress.log
+
+# Large regeneratable data/model caches -- not durable source, just cache.
+# data/raw/: re-downloadable from cricsheet.org (see src/parse_cricsheet.py)
+# models/candidates/*.pkl|*.cbm|*.csv: regenerate via the matching
+#   backend/train_*.py / backend/build_*.py script for that candidate
+# data/candidates/**/*.csv, data/reports/**/*.csv: regenerate via the
+#   matching backend/build_*.py / backend/*_replay*.py script
+# The small *.json validation/report files ARE committed -- they're the
+# actual evidence, not the bulky intermediate artifacts.
+data/raw/
+models/candidates/**/*.pkl
+models/candidates/**/*.cbm
+models/candidates/**/*.csv
+data/candidates/**/*.csv
+data/reports/**/*.csv

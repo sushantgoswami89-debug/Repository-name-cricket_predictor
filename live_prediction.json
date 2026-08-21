@@ -1,21 +1,53 @@
 {
-  "over": 6,
-  "batsman": "R Parag",
-  "bowler": "H Patel",
-  "score_before_over": 34,
-  "wickets_down": 0,
+  "candidate_version": "v3_verified_live",
+  "match_id": "zmin07262026270413",
+  "innings": 2,
+  "over": 16,
+  "verified_through": "15.6",
+  "score_before_over": 122,
+  "wickets_before_over": 4,
+  "new_deliveries_verified": 1,
   "prediction": {
-    "expected_runs": 7.1,
-    "expected_range": "5-10",
-    "wicket_probability": 47.4,
-    "commentary_lines": [
-      "Wicket probability this over is elevated at 47%."
+    "expected_runs": 10.4,
+    "expected_range": "9-12",
+    "wicket_probability": 0.345,
+    "confidence": 0.81,
+    "confidence_percent": 81,
+    "confidence_level": "HIGH",
+    "confidence_meter": "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591",
+    "analysis": [
+      "Phase: Death Overs (Extreme Momentum).",
+      "Match Bias: 1.06x | Risk: 0.75x."
     ],
-    "data_confidence": {
-      "limited_data": false,
-      "batsman_overs_in_history": 715,
-      "bowler_overs_in_history": 1084,
-      "note": null
+    "metadata": {
+      "match_bias": "1.06",
+      "momentum_blend": "Active",
+      "confidence_type": "dynamic stability indicator",
+      "confidence_factors": {
+        "method": "dynamic_match_stability_v1",
+        "phase": "death",
+        "maturity_bonus": 0.1,
+        "phase_penalty": 0.09,
+        "rhythm_disagreement": 0.443,
+        "rhythm_penalty": 0.008,
+        "wicket_penalty": 0.0,
+        "range_penalty": 0.02,
+        "adaptation_penalty": 0.012
+      },
+      "engine_family": "t20"
     }
+  },
+  "previous_over_evaluation": {
+    "predicted_runs": 8.5,
+    "actual_runs": 15,
+    "absolute_run_error": 6.5,
+    "expected_range": "7-9",
+    "range_covered": false,
+    "wicket_probability": 0.328,
+    "actual_wicket": false,
+    "wicket_brier_score": 0.1076,
+    "stars": 1,
+    "rating": "POOR",
+    "star_meter": "\u2605\u2606\u2606\u2606\u2606"
   }
 }

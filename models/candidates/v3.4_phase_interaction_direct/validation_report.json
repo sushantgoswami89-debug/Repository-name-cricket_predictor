@@ -1,0 +1,34 @@
+{
+  "candidate_version": "v3.4_phase_interaction_direct",
+  "scope": "male_only_ipl_and_t20i",
+  "split": {
+    "train_rows": 111601,
+    "calibration_rows": 24726,
+    "holdout_rows": 36408,
+    "holdout_matches": 1011
+  },
+  "phase_temperatures": {
+    "powerplay": 1.0,
+    "middle": 1.0,
+    "death": 1.0
+  },
+  "direct_phase_interactions": true,
+  "interaction_features": [
+    "phase_x_wickets",
+    "phase_x_required_rate",
+    "phase_x_recent_scoring",
+    "phase_x_boundary_rate",
+    "phase_x_dot_rate"
+  ],
+  "calibration": {
+    "raw_nll": 2.7946429663804873,
+    "phase_scaled_nll": 2.7946429663804873,
+    "hit_rate": 0.29373938364474644
+  },
+  "holdout": {
+    "old_hit_rate": 0.31376664261821996,
+    "new_hit_rate": 0.28032300593276205,
+    "relative_improvement": -0.10658761048143328
+  },
+  "decision": "REJECT"
+}

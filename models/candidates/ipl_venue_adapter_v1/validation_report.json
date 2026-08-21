@@ -1,0 +1,101 @@
+{
+  "candidate_version": "ipl_venue_adapter_v1",
+  "production_models_changed": false,
+  "features": [
+    "over",
+    "score_before_over",
+    "wkts_down_before_over",
+    "phase",
+    "wickets_in_hand",
+    "legal_balls_bowled",
+    "balls_remaining",
+    "current_run_rate",
+    "is_chase",
+    "runs_required",
+    "required_run_rate",
+    "recent_legal_balls",
+    "recent_runs_per_ball",
+    "recent_dot_rate",
+    "recent_single_rate",
+    "recent_boundary_rate",
+    "recent_wicket_rate",
+    "venue_par_score",
+    "venue_prior_innings",
+    "venue_scoring_regime",
+    "venue_par_source",
+    "batting_team_venue_context",
+    "phase_venue_regime",
+    "momentum_score",
+    "current_pair_strike_rate",
+    "opening_batters_prior_average",
+    "opening_batters_prior_dismissals"
+  ],
+  "candidate": {
+    "runs_mae": 3.893075851448594,
+    "runs_bias": -0.10333552177598912,
+    "three_run_range_coverage": 0.3219153515064562,
+    "average_range_width": 3.0
+  },
+  "shared_t20": {
+    "runs_mae": 3.972114251179382,
+    "runs_bias": -1.630891241518742,
+    "three_run_range_coverage": 0.3366212338593974,
+    "average_range_width": 3.0
+  },
+  "by_regime": {
+    "high": {
+      "rows": 660,
+      "candidate": {
+        "runs_mae": 3.9977202769735287,
+        "runs_bias": -0.23515092369739662,
+        "three_run_range_coverage": 0.29848484848484846,
+        "average_range_width": 3.0
+      },
+      "shared_t20": {
+        "runs_mae": 4.138973119645264,
+        "runs_bias": -1.728249590889979,
+        "three_run_range_coverage": 0.30303030303030304,
+        "average_range_width": 3.0
+      }
+    },
+    "medium": {
+      "rows": 4916,
+      "candidate": {
+        "runs_mae": 3.879026762586418,
+        "runs_bias": -0.08563858010224441,
+        "three_run_range_coverage": 0.3250610252237592,
+        "average_range_width": 3.0
+      },
+      "shared_t20": {
+        "runs_mae": 3.9497125316538564,
+        "runs_bias": -1.6178203483972982,
+        "three_run_range_coverage": 0.34113100081366965,
+        "average_range_width": 3.0
+      }
+    }
+  },
+  "corrections": {
+    "death|medium": 0.921253867477131,
+    "middle|medium": 0.9540324662720143,
+    "powerplay|medium": 1.670315962982473,
+    "death": 0.9057180828331599,
+    "middle": 0.9221208478787702,
+    "powerplay": 1.66728418774831
+  },
+  "range_offsets": {
+    "death": -1,
+    "middle": -2,
+    "powerplay": -3,
+    "death|medium": -1,
+    "middle|medium": -2,
+    "powerplay|medium": -3
+  },
+  "promotion_gates": {
+    "mae_improves": true,
+    "range_coverage_improves": false,
+    "range_not_widened": true,
+    "regime_non_regression_within_2pct": true,
+    "absolute_bias_below_one": true
+  },
+  "integration_recommended": false
+}

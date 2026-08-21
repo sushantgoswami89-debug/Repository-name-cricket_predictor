@@ -1,0 +1,10 @@
+{
+  "certified": true,
+  "checks": {
+    "unresolved_roles": 0,
+    "bowlers_in_batting_profiles": 0,
+    "non_bowlers_in_exclusion_file": 0,
+    "duplicate_player_ids": 0,
+    "missing_batting_positions": 0
+  }
+}

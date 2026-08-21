@@ -1,0 +1,27 @@
+{
+  "winner": "unrestricted",
+  "reason": "No ranked scope passed both improvement gates; retained safer benchmark.",
+  "eligible_ranked_candidates": [],
+  "comparison": {
+    "unrestricted": {
+      "rows": 246846,
+      "holdout_rows": 60988,
+      "runs_mae": 3.225507446795019,
+      "wicket_brier": 0.20415507142024866
+    },
+    "ranked_top10": {
+      "rows": 56955,
+      "holdout_rows": 7248,
+      "runs_mae": 3.5579329337471295,
+      "wicket_brier": 0.2071893158432966
+    },
+    "ranked_top12": {
+      "rows": 66492,
+      "holdout_rows": 9143,
+      "runs_mae": 3.50302370609376,
+      "wicket_brier": 0.2048629731503447
+    }
+  },
+  "locked_release": "/Users/susha/Downloads/cricket_predictor/models/locked/cricketbaba_candidate_v3",
+  "production_models_changed": false
+}

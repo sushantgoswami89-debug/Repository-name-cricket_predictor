@@ -1,0 +1,1186 @@
+{
+  "analysis_version": "historical_ipl_debut_states_v1",
+  "identity_safe": true,
+  "future_information_used": false,
+  "cohort_definition": "non-bowler striker with fewer than 120 prior IPL balls",
+  "cohort_rows": 8317,
+  "players": 640,
+  "seasons": [
+    2008,
+    2009,
+    2010,
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "support_policy": {
+    "minimum_rows": 100,
+    "minimum_rows_per_comparable_year": 20,
+    "minimum_comparable_years": 3,
+    "direction_agreement": 0.75
+  },
+  "survival_transition": {
+    "entry": {
+      "rows": 5551,
+      "mean_runs": 7.81408755179247,
+      "wicket_rate": 0.3248063411997838,
+      "boundary_pressure_rate": 0.14044016093196418
+    },
+    "survived_12_plus": {
+      "rows": 2766,
+      "mean_runs": 8.608098336948663,
+      "wicket_rate": 0.3275488069414317,
+      "boundary_pressure_rate": 0.1763677994697517
+    },
+    "runs_delta": 0.7940107851561926,
+    "wicket_delta": 0.0027424657416478815,
+    "comparable_years": 19,
+    "years_runs_and_wickets_both_higher": 8,
+    "yearly": {
+      "2008": {
+        "entry_rows": 934,
+        "survived_rows": 629,
+        "runs_delta": 1.0913894118327923,
+        "wicket_delta": 0.0017940853058626138
+      },
+      "2009": {
+        "entry_rows": 437,
+        "survived_rows": 264,
+        "runs_delta": 0.57757783787532,
+        "wicket_delta": 0.04950246168781641
+      },
+      "2010": {
+        "entry_rows": 371,
+        "survived_rows": 204,
+        "runs_delta": 0.7572670577665024,
+        "wicket_delta": -0.024430526927752216
+      },
+      "2011": {
+        "entry_rows": 335,
+        "survived_rows": 137,
+        "runs_delta": 1.0000871554635573,
+        "wicket_delta": 0.033947053055888465
+      },
+      "2012": {
+        "entry_rows": 317,
+        "survived_rows": 110,
+        "runs_delta": 0.28568970461714915,
+        "wicket_delta": -0.03197591052480642
+      },
+      "2013": {
+        "entry_rows": 317,
+        "survived_rows": 167,
+        "runs_delta": 0.6339371729726668,
+        "wicket_delta": 0.012278282551616004
+      },
+      "2014": {
+        "entry_rows": 215,
+        "survived_rows": 100,
+        "runs_delta": 1.3788372093023256,
+        "wicket_delta": 0.0869767441860465
+      },
+      "2015": {
+        "entry_rows": 135,
+        "survived_rows": 43,
+        "runs_delta": 0.8823428079242035,
+        "wicket_delta": -0.13367786391042202
+      },
+      "2016": {
+        "entry_rows": 183,
+        "survived_rows": 87,
+        "runs_delta": 0.49218013943847794,
+        "wicket_delta": -0.006595063124175626
+      },
+      "2017": {
+        "entry_rows": 204,
+        "survived_rows": 102,
+        "runs_delta": 0.7549019607843137,
+        "wicket_delta": -0.053921568627450955
+      },
+      "2018": {
+        "entry_rows": 196,
+        "survived_rows": 89,
+        "runs_delta": 1.6565008025682184,
+        "wicket_delta": -0.06598257280440267
+      },
+      "2019": {
+        "entry_rows": 170,
+        "survived_rows": 68,
+        "runs_delta": -0.0823529411764703,
+        "wicket_delta": 0.044117647058823484
+      },
+      "2020": {
+        "entry_rows": 230,
+        "survived_rows": 89,
+        "runs_delta": 0.49257449926722074,
+        "wicket_delta": 0.007376648754274517
+      },
+      "2021": {
+        "entry_rows": 193,
+        "survived_rows": 89,
+        "runs_delta": -0.0004075216859753539,
+        "wicket_delta": 0.12644815741980553
+      },
+      "2022": {
+        "entry_rows": 306,
+        "survived_rows": 150,
+        "runs_delta": 0.30967320261438047,
+        "wicket_delta": 0.08535947712418301
+      },
+      "2023": {
+        "entry_rows": 297,
+        "survived_rows": 160,
+        "runs_delta": 1.3605008417508433,
+        "wicket_delta": -0.0626683501683502
+      },
+      "2024": {
+        "entry_rows": 233,
+        "survived_rows": 109,
+        "runs_delta": 1.7586329093987487,
+        "wicket_delta": 0.05988896326337756
+      },
+      "2025": {
+        "entry_rows": 220,
+        "survived_rows": 72,
+        "runs_delta": 0.5954545454545457,
+        "wicket_delta": -0.06287878787878787
+      },
+      "2026": {
+        "entry_rows": 258,
+        "survived_rows": 97,
+        "runs_delta": 0.7404299528490377,
+        "wicket_delta": -0.02669224007032689
+      }
+    },
+    "supported_high_variance": false
+  },
+  "states": [
+    {
+      "ball_bucket": "0_5",
+      "pressure_trigger": "high_required_rate",
+      "phase": "death",
+      "rows": 23,
+      "mean_runs": 8.347826086956522,
+      "wicket_rate": 0.34782608695652173,
+      "boundary_pressure_rate": 0.14492753623188404,
+      "neutral_rows": 35,
+      "runs_delta_vs_neutral": -2.2236024844720497,
+      "wicket_delta_vs_neutral": -0.13788819875776398,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "0_5",
+      "pressure_trigger": "high_required_rate",
+      "phase": "middle",
+      "rows": 11,
+      "mean_runs": 5.7272727272727275,
+      "wicket_rate": 0.45454545454545453,
+      "boundary_pressure_rate": 0.1439393939393939,
+      "neutral_rows": 56,
+      "runs_delta_vs_neutral": -2.37987012987013,
+      "wicket_delta_vs_neutral": 0.15097402597402598,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "0_5",
+      "pressure_trigger": "high_required_rate",
+      "phase": "powerplay",
+      "rows": 222,
+      "mean_runs": 6.427927927927928,
+      "wicket_rate": 0.24774774774774774,
+      "boundary_pressure_rate": 0.012387387387387384,
+      "neutral_rows": 497,
+      "runs_delta_vs_neutral": -0.5942048688527564,
+      "wicket_delta_vs_neutral": -0.0037613065782079735,
+      "comparable_years": 3,
+      "positive_wicket_delta_years": 2,
+      "yearly": {
+        "2008": {
+          "rows": 44,
+          "runs_delta_vs_neutral": -1.0615891741845935,
+          "wicket_delta_vs_neutral": -0.10825815405968076
+        },
+        "2009": {
+          "rows": 32,
+          "runs_delta_vs_neutral": -0.34375,
+          "wicket_delta_vs_neutral": 0.041666666666666685
+        },
+        "2011": {
+          "rows": 20,
+          "runs_delta_vs_neutral": 0.6500000000000004,
+          "wicket_delta_vs_neutral": 0.05000000000000002
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "0_5",
+      "pressure_trigger": "neutral",
+      "phase": "death",
+      "rows": 35,
+      "mean_runs": 10.571428571428571,
+      "wicket_rate": 0.4857142857142857,
+      "boundary_pressure_rate": 0.2595238095238095,
+      "neutral_rows": 35,
+      "runs_delta_vs_neutral": 0.0,
+      "wicket_delta_vs_neutral": 0.0,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "0_5",
+      "pressure_trigger": "neutral",
+      "phase": "middle",
+      "rows": 56,
+      "mean_runs": 8.107142857142858,
+      "wicket_rate": 0.30357142857142855,
+      "boundary_pressure_rate": 0.14732142857142855,
+      "neutral_rows": 56,
+      "runs_delta_vs_neutral": 0.0,
+      "wicket_delta_vs_neutral": 0.0,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "0_5",
+      "pressure_trigger": "neutral",
+      "phase": "powerplay",
+      "rows": 497,
+      "mean_runs": 7.022132796780684,
+      "wicket_rate": 0.2515090543259557,
+      "boundary_pressure_rate": 0.11435278336686786,
+      "neutral_rows": 497,
+      "runs_delta_vs_neutral": 0.0,
+      "wicket_delta_vs_neutral": 0.0,
+      "comparable_years": 10,
+      "positive_wicket_delta_years": 0,
+      "yearly": {
+        "2008": {
+          "rows": 131,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2009": {
+          "rows": 48,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2011": {
+          "rows": 40,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2012": {
+          "rows": 22,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2013": {
+          "rows": 23,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2014": {
+          "rows": 21,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2018": {
+          "rows": 21,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2023": {
+          "rows": 30,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2025": {
+          "rows": 25,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2026": {
+          "rows": 22,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "0_5",
+      "pressure_trigger": "recent_wicket",
+      "phase": "death",
+      "rows": 1406,
+      "mean_runs": 8.396159317211948,
+      "wicket_rate": 0.44523470839260315,
+      "boundary_pressure_rate": 0.1519084874348032,
+      "neutral_rows": 35,
+      "runs_delta_vs_neutral": -2.175269254216623,
+      "wicket_delta_vs_neutral": -0.04047957732168256,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "0_5",
+      "pressure_trigger": "recent_wicket",
+      "phase": "middle",
+      "rows": 866,
+      "mean_runs": 6.894919168591224,
+      "wicket_rate": 0.25519630484988454,
+      "boundary_pressure_rate": 0.1160508083140877,
+      "neutral_rows": 56,
+      "runs_delta_vs_neutral": -1.2122236885516333,
+      "wicket_delta_vs_neutral": -0.04837512372154401,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "0_5",
+      "pressure_trigger": "recent_wicket",
+      "phase": "powerplay",
+      "rows": 425,
+      "mean_runs": 7.463529411764706,
+      "wicket_rate": 0.21176470588235294,
+      "boundary_pressure_rate": 0.15725490196078426,
+      "neutral_rows": 497,
+      "runs_delta_vs_neutral": 0.44139661498402205,
+      "wicket_delta_vs_neutral": -0.03974434844360278,
+      "comparable_years": 4,
+      "positive_wicket_delta_years": 2,
+      "yearly": {
+        "2008": {
+          "rows": 97,
+          "runs_delta_vs_neutral": 0.3650743684583304,
+          "wicket_delta_vs_neutral": -0.08389076886755331
+        },
+        "2009": {
+          "rows": 57,
+          "runs_delta_vs_neutral": 0.9594298245614032,
+          "wicket_delta_vs_neutral": -0.09539473684210525
+        },
+        "2014": {
+          "rows": 20,
+          "runs_delta_vs_neutral": 2.6142857142857148,
+          "wicket_delta_vs_neutral": 0.05714285714285716
+        },
+        "2023": {
+          "rows": 29,
+          "runs_delta_vs_neutral": 1.251724137931034,
+          "wicket_delta_vs_neutral": 0.041379310344827586
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "0_5",
+      "pressure_trigger": "three_wickets_or_less",
+      "phase": "death",
+      "rows": 6,
+      "mean_runs": 6.5,
+      "wicket_rate": 0.6666666666666666,
+      "boundary_pressure_rate": 0.16666666666666663,
+      "neutral_rows": 35,
+      "runs_delta_vs_neutral": -4.071428571428571,
+      "wicket_delta_vs_neutral": 0.18095238095238092,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "0_5",
+      "pressure_trigger": "three_wickets_or_less",
+      "phase": "middle",
+      "rows": 1,
+      "mean_runs": 4.0,
+      "wicket_rate": 0.0,
+      "boundary_pressure_rate": 0.0833333333333333,
+      "neutral_rows": 56,
+      "runs_delta_vs_neutral": -4.107142857142858,
+      "wicket_delta_vs_neutral": -0.30357142857142855,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "12_23",
+      "pressure_trigger": "high_required_rate",
+      "phase": "death",
+      "rows": 89,
+      "mean_runs": 9.898876404494382,
+      "wicket_rate": 0.5168539325842697,
+      "boundary_pressure_rate": 0.18632958801498123,
+      "neutral_rows": 205,
+      "runs_delta_vs_neutral": -0.24746505892025183,
+      "wicket_delta_vs_neutral": 0.08758563990134288,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "12_23",
+      "pressure_trigger": "high_required_rate",
+      "phase": "middle",
+      "rows": 124,
+      "mean_runs": 8.080645161290322,
+      "wicket_rate": 0.3467741935483871,
+      "boundary_pressure_rate": 0.13709677419354832,
+      "neutral_rows": 654,
+      "runs_delta_vs_neutral": 0.16933017658084193,
+      "wicket_delta_vs_neutral": 0.06848673177468684,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "12_23",
+      "pressure_trigger": "high_required_rate",
+      "phase": "powerplay",
+      "rows": 17,
+      "mean_runs": 11.470588235294118,
+      "wicket_rate": 0.23529411764705882,
+      "boundary_pressure_rate": 0.18627450980392157,
+      "neutral_rows": 197,
+      "runs_delta_vs_neutral": 2.6736339205733053,
+      "wicket_delta_vs_neutral": -0.06927441027172293,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "12_23",
+      "pressure_trigger": "neutral",
+      "phase": "death",
+      "rows": 205,
+      "mean_runs": 10.146341463414634,
+      "wicket_rate": 0.4292682926829268,
+      "boundary_pressure_rate": 0.20528455284552843,
+      "neutral_rows": 205,
+      "runs_delta_vs_neutral": 0.0,
+      "wicket_delta_vs_neutral": 0.0,
+      "comparable_years": 2,
+      "positive_wicket_delta_years": 0,
+      "yearly": {
+        "2008": {
+          "rows": 28,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2010": {
+          "rows": 21,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "12_23",
+      "pressure_trigger": "neutral",
+      "phase": "middle",
+      "rows": 654,
+      "mean_runs": 7.91131498470948,
+      "wicket_rate": 0.2782874617737003,
+      "boundary_pressure_rate": 0.17533129459734964,
+      "neutral_rows": 654,
+      "runs_delta_vs_neutral": 0.0,
+      "wicket_delta_vs_neutral": 0.0,
+      "comparable_years": 14,
+      "positive_wicket_delta_years": 0,
+      "yearly": {
+        "2008": {
+          "rows": 173,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2009": {
+          "rows": 55,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2010": {
+          "rows": 48,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2011": {
+          "rows": 26,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2012": {
+          "rows": 23,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2013": {
+          "rows": 39,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2014": {
+          "rows": 23,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2017": {
+          "rows": 22,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2019": {
+          "rows": 23,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2021": {
+          "rows": 22,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2022": {
+          "rows": 47,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2023": {
+          "rows": 27,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2024": {
+          "rows": 33,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2026": {
+          "rows": 26,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "12_23",
+      "pressure_trigger": "neutral",
+      "phase": "powerplay",
+      "rows": 197,
+      "mean_runs": 8.796954314720812,
+      "wicket_rate": 0.30456852791878175,
+      "boundary_pressure_rate": 0.2432318104906937,
+      "neutral_rows": 197,
+      "runs_delta_vs_neutral": 0.0,
+      "wicket_delta_vs_neutral": 0.0,
+      "comparable_years": 2,
+      "positive_wicket_delta_years": 0,
+      "yearly": {
+        "2008": {
+          "rows": 44,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2009": {
+          "rows": 23,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "12_23",
+      "pressure_trigger": "recent_wicket",
+      "phase": "death",
+      "rows": 179,
+      "mean_runs": 8.787709497206704,
+      "wicket_rate": 0.4134078212290503,
+      "boundary_pressure_rate": 0.15735567970204842,
+      "neutral_rows": 205,
+      "runs_delta_vs_neutral": -1.3586319662079305,
+      "wicket_delta_vs_neutral": -0.015860471453876535,
+      "comparable_years": 1,
+      "positive_wicket_delta_years": 0,
+      "yearly": {
+        "2008": {
+          "rows": 33,
+          "runs_delta_vs_neutral": -0.4426406926406923,
+          "wicket_delta_vs_neutral": -0.25216450216450215
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "12_23",
+      "pressure_trigger": "recent_wicket",
+      "phase": "middle",
+      "rows": 284,
+      "mean_runs": 7.327464788732394,
+      "wicket_rate": 0.2323943661971831,
+      "boundary_pressure_rate": 0.12617370892018778,
+      "neutral_rows": 654,
+      "runs_delta_vs_neutral": -0.5838501959770861,
+      "wicket_delta_vs_neutral": -0.04589309557651719,
+      "comparable_years": 3,
+      "positive_wicket_delta_years": 1,
+      "yearly": {
+        "2008": {
+          "rows": 65,
+          "runs_delta_vs_neutral": 0.21574032903512652,
+          "wicket_delta_vs_neutral": -0.16016007114273012
+        },
+        "2009": {
+          "rows": 34,
+          "runs_delta_vs_neutral": -0.04812834224598994,
+          "wicket_delta_vs_neutral": -0.09197860962566845
+        },
+        "2010": {
+          "rows": 26,
+          "runs_delta_vs_neutral": -1.1217948717948714,
+          "wicket_delta_vs_neutral": 0.15865384615384615
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "12_23",
+      "pressure_trigger": "recent_wicket",
+      "phase": "powerplay",
+      "rows": 60,
+      "mean_runs": 8.516666666666667,
+      "wicket_rate": 0.26666666666666666,
+      "boundary_pressure_rate": 0.19444444444444445,
+      "neutral_rows": 197,
+      "runs_delta_vs_neutral": -0.28028764805414497,
+      "wicket_delta_vs_neutral": -0.03790186125211509,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "12_23",
+      "pressure_trigger": "three_wickets_or_less",
+      "phase": "death",
+      "rows": 21,
+      "mean_runs": 8.571428571428571,
+      "wicket_rate": 0.6666666666666666,
+      "boundary_pressure_rate": 0.16666666666666666,
+      "neutral_rows": 205,
+      "runs_delta_vs_neutral": -1.574912891986063,
+      "wicket_delta_vs_neutral": 0.2373983739837398,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "12_23",
+      "pressure_trigger": "three_wickets_or_less",
+      "phase": "middle",
+      "rows": 1,
+      "mean_runs": 4.0,
+      "wicket_rate": 1.0,
+      "boundary_pressure_rate": 0.0,
+      "neutral_rows": 654,
+      "runs_delta_vs_neutral": -3.91131498470948,
+      "wicket_delta_vs_neutral": 0.7217125382262997,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "24_plus",
+      "pressure_trigger": "high_required_rate",
+      "phase": "death",
+      "rows": 40,
+      "mean_runs": 8.9,
+      "wicket_rate": 0.55,
+      "boundary_pressure_rate": 0.16249999999999995,
+      "neutral_rows": 177,
+      "runs_delta_vs_neutral": -0.7666666666666657,
+      "wicket_delta_vs_neutral": 0.19406779661016954,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "24_plus",
+      "pressure_trigger": "high_required_rate",
+      "phase": "middle",
+      "rows": 56,
+      "mean_runs": 9.196428571428571,
+      "wicket_rate": 0.375,
+      "boundary_pressure_rate": 0.14136904761904762,
+      "neutral_rows": 406,
+      "runs_delta_vs_neutral": 0.38608374384236477,
+      "wicket_delta_vs_neutral": 0.07204433497536944,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "24_plus",
+      "pressure_trigger": "neutral",
+      "phase": "death",
+      "rows": 177,
+      "mean_runs": 9.666666666666666,
+      "wicket_rate": 0.3559322033898305,
+      "boundary_pressure_rate": 0.23587570621468923,
+      "neutral_rows": 177,
+      "runs_delta_vs_neutral": 0.0,
+      "wicket_delta_vs_neutral": 0.0,
+      "comparable_years": 3,
+      "positive_wicket_delta_years": 0,
+      "yearly": {
+        "2008": {
+          "rows": 40,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2009": {
+          "rows": 20,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2010": {
+          "rows": 21,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "24_plus",
+      "pressure_trigger": "neutral",
+      "phase": "middle",
+      "rows": 406,
+      "mean_runs": 8.810344827586206,
+      "wicket_rate": 0.30295566502463056,
+      "boundary_pressure_rate": 0.18288177339901474,
+      "neutral_rows": 406,
+      "runs_delta_vs_neutral": 0.0,
+      "wicket_delta_vs_neutral": 0.0,
+      "comparable_years": 5,
+      "positive_wicket_delta_years": 0,
+      "yearly": {
+        "2008": {
+          "rows": 114,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2009": {
+          "rows": 43,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2010": {
+          "rows": 21,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2014": {
+          "rows": 21,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2023": {
+          "rows": 26,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "24_plus",
+      "pressure_trigger": "recent_wicket",
+      "phase": "death",
+      "rows": 118,
+      "mean_runs": 9.889830508474576,
+      "wicket_rate": 0.3644067796610169,
+      "boundary_pressure_rate": 0.16737288135593215,
+      "neutral_rows": 177,
+      "runs_delta_vs_neutral": 0.22316384180791005,
+      "wicket_delta_vs_neutral": 0.008474576271186418,
+      "comparable_years": 1,
+      "positive_wicket_delta_years": 1,
+      "yearly": {
+        "2008": {
+          "rows": 31,
+          "runs_delta_vs_neutral": 1.9322580645161302,
+          "wicket_delta_vs_neutral": 0.012096774193548376
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "24_plus",
+      "pressure_trigger": "recent_wicket",
+      "phase": "middle",
+      "rows": 132,
+      "mean_runs": 7.757575757575758,
+      "wicket_rate": 0.26515151515151514,
+      "boundary_pressure_rate": 0.12247474747474746,
+      "neutral_rows": 406,
+      "runs_delta_vs_neutral": -1.0527690700104486,
+      "wicket_delta_vs_neutral": -0.03780414987311542,
+      "comparable_years": 1,
+      "positive_wicket_delta_years": 0,
+      "yearly": {
+        "2008": {
+          "rows": 32,
+          "runs_delta_vs_neutral": -0.1085526315789469,
+          "wicket_delta_vs_neutral": -0.02192982456140352
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "24_plus",
+      "pressure_trigger": "three_wickets_or_less",
+      "phase": "death",
+      "rows": 6,
+      "mean_runs": 7.666666666666667,
+      "wicket_rate": 0.8333333333333334,
+      "boundary_pressure_rate": 0.15277777777777773,
+      "neutral_rows": 177,
+      "runs_delta_vs_neutral": -1.9999999999999991,
+      "wicket_delta_vs_neutral": 0.47740112994350287,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "6_11",
+      "pressure_trigger": "high_required_rate",
+      "phase": "death",
+      "rows": 93,
+      "mean_runs": 8.946236559139784,
+      "wicket_rate": 0.4946236559139785,
+      "boundary_pressure_rate": 0.1836917562724014,
+      "neutral_rows": 211,
+      "runs_delta_vs_neutral": -0.3428629669265675,
+      "wicket_delta_vs_neutral": 0.08230138103246193,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "6_11",
+      "pressure_trigger": "high_required_rate",
+      "phase": "middle",
+      "rows": 97,
+      "mean_runs": 8.371134020618557,
+      "wicket_rate": 0.25773195876288657,
+      "boundary_pressure_rate": 0.13144329896907211,
+      "neutral_rows": 361,
+      "runs_delta_vs_neutral": 0.6426021646628781,
+      "wicket_delta_vs_neutral": 0.008424479538509833,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "6_11",
+      "pressure_trigger": "high_required_rate",
+      "phase": "powerplay",
+      "rows": 51,
+      "mean_runs": 9.0,
+      "wicket_rate": 0.23529411764705882,
+      "boundary_pressure_rate": 0.11601307189542481,
+      "neutral_rows": 362,
+      "runs_delta_vs_neutral": 0.7071823204419889,
+      "wicket_delta_vs_neutral": -0.016087097822554464,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "6_11",
+      "pressure_trigger": "neutral",
+      "phase": "death",
+      "rows": 211,
+      "mean_runs": 9.289099526066352,
+      "wicket_rate": 0.41232227488151657,
+      "boundary_pressure_rate": 0.1875987361769352,
+      "neutral_rows": 211,
+      "runs_delta_vs_neutral": 0.0,
+      "wicket_delta_vs_neutral": 0.0,
+      "comparable_years": 2,
+      "positive_wicket_delta_years": 0,
+      "yearly": {
+        "2008": {
+          "rows": 31,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2010": {
+          "rows": 21,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "6_11",
+      "pressure_trigger": "neutral",
+      "phase": "middle",
+      "rows": 361,
+      "mean_runs": 7.728531855955679,
+      "wicket_rate": 0.24930747922437674,
+      "boundary_pressure_rate": 0.1537396121883656,
+      "neutral_rows": 361,
+      "runs_delta_vs_neutral": 0.0,
+      "wicket_delta_vs_neutral": 0.0,
+      "comparable_years": 8,
+      "positive_wicket_delta_years": 0,
+      "yearly": {
+        "2008": {
+          "rows": 72,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2009": {
+          "rows": 24,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2010": {
+          "rows": 29,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2012": {
+          "rows": 23,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2013": {
+          "rows": 25,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2016": {
+          "rows": 21,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2022": {
+          "rows": 31,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2024": {
+          "rows": 21,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "6_11",
+      "pressure_trigger": "neutral",
+      "phase": "powerplay",
+      "rows": 362,
+      "mean_runs": 8.292817679558011,
+      "wicket_rate": 0.2513812154696133,
+      "boundary_pressure_rate": 0.22283609576427255,
+      "neutral_rows": 362,
+      "runs_delta_vs_neutral": 0.0,
+      "wicket_delta_vs_neutral": 0.0,
+      "comparable_years": 6,
+      "positive_wicket_delta_years": 0,
+      "yearly": {
+        "2008": {
+          "rows": 74,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2009": {
+          "rows": 40,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2010": {
+          "rows": 21,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2011": {
+          "rows": 23,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2012": {
+          "rows": 22,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        },
+        "2025": {
+          "rows": 23,
+          "runs_delta_vs_neutral": 0.0,
+          "wicket_delta_vs_neutral": 0.0
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "6_11",
+      "pressure_trigger": "recent_wicket",
+      "phase": "death",
+      "rows": 313,
+      "mean_runs": 8.54632587859425,
+      "wicket_rate": 0.46325878594249204,
+      "boundary_pressure_rate": 0.1288604898828541,
+      "neutral_rows": 211,
+      "runs_delta_vs_neutral": -0.7427736474721023,
+      "wicket_delta_vs_neutral": 0.050936511060975465,
+      "comparable_years": 2,
+      "positive_wicket_delta_years": 1,
+      "yearly": {
+        "2008": {
+          "rows": 30,
+          "runs_delta_vs_neutral": -1.0462365591397855,
+          "wicket_delta_vs_neutral": -0.25161290322580643
+        },
+        "2010": {
+          "rows": 20,
+          "runs_delta_vs_neutral": -2.4595238095238106,
+          "wicket_delta_vs_neutral": 0.21666666666666673
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "6_11",
+      "pressure_trigger": "recent_wicket",
+      "phase": "middle",
+      "rows": 289,
+      "mean_runs": 7.062283737024221,
+      "wicket_rate": 0.23875432525951557,
+      "boundary_pressure_rate": 0.09371395617070356,
+      "neutral_rows": 361,
+      "runs_delta_vs_neutral": -0.666248118931458,
+      "wicket_delta_vs_neutral": -0.010553153964861173,
+      "comparable_years": 2,
+      "positive_wicket_delta_years": 1,
+      "yearly": {
+        "2008": {
+          "rows": 54,
+          "runs_delta_vs_neutral": -0.40740740740740833,
+          "wicket_delta_vs_neutral": -0.023148148148148168
+        },
+        "2022": {
+          "rows": 21,
+          "runs_delta_vs_neutral": -2.998463901689707,
+          "wicket_delta_vs_neutral": 0.17204301075268816
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "6_11",
+      "pressure_trigger": "recent_wicket",
+      "phase": "powerplay",
+      "rows": 186,
+      "mean_runs": 7.951612903225806,
+      "wicket_rate": 0.26881720430107525,
+      "boundary_pressure_rate": 0.17069892473118273,
+      "neutral_rows": 362,
+      "runs_delta_vs_neutral": -0.34120477633220503,
+      "wicket_delta_vs_neutral": 0.017435988831461968,
+      "comparable_years": 2,
+      "positive_wicket_delta_years": 1,
+      "yearly": {
+        "2008": {
+          "rows": 47,
+          "runs_delta_vs_neutral": 1.074755606670501,
+          "wicket_delta_vs_neutral": -0.049741230592294405
+        },
+        "2009": {
+          "rows": 23,
+          "runs_delta_vs_neutral": -0.21413043478260807,
+          "wicket_delta_vs_neutral": 0.10434782608695653
+        }
+      },
+      "supported": false
+    },
+    {
+      "ball_bucket": "6_11",
+      "pressure_trigger": "three_wickets_or_less",
+      "phase": "death",
+      "rows": 36,
+      "mean_runs": 8.666666666666666,
+      "wicket_rate": 0.5,
+      "boundary_pressure_rate": 0.13425925925925922,
+      "neutral_rows": 211,
+      "runs_delta_vs_neutral": -0.6224328593996855,
+      "wicket_delta_vs_neutral": 0.08767772511848343,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    },
+    {
+      "ball_bucket": "6_11",
+      "pressure_trigger": "three_wickets_or_less",
+      "phase": "middle",
+      "rows": 4,
+      "mean_runs": 6.75,
+      "wicket_rate": 0.5,
+      "boundary_pressure_rate": 0.06249999999999997,
+      "neutral_rows": 361,
+      "runs_delta_vs_neutral": -0.978531855955679,
+      "wicket_delta_vs_neutral": 0.25069252077562326,
+      "comparable_years": 0,
+      "positive_wicket_delta_years": 0,
+      "yearly": {},
+      "supported": false
+    }
+  ],
+  "authorized_states": []
+}

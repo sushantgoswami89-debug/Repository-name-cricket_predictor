@@ -1,0 +1,1589 @@
+{
+  "candidate_version": "announced_bowler_current_spell_v3",
+  "candidate_only": true,
+  "production_changed": false,
+  "offline_development_source": "Cricsheet first-delivery bowler",
+  "live_source_pending": "TOI when an actual match starts",
+  "identity_used_as_model_feature": false,
+  "chronology": {
+    "training": "through 2023",
+    "calibration": "first half 2024",
+    "blend_selection": "second half 2024",
+    "holdout": [
+      2025,
+      2026
+    ]
+  },
+  "bounds": {
+    "maximum_run_delta": 1.5,
+    "maximum_wicket_logit_delta": 0.45
+  },
+  "selected_run_alpha": 1.0,
+  "selected_wicket_alpha": 0.65,
+  "safety_run_alphas": {
+    "powerplay": 1.0,
+    "middle": 1.0,
+    "death": 1.0
+  },
+  "safety_wicket_alphas": {
+    "powerplay": 0.0,
+    "middle": 0.65,
+    "death": 0.65
+  },
+  "phase_smooth_run_alphas": {
+    "powerplay": 1.0,
+    "middle": 1.0,
+    "death": 1.0
+  },
+  "phase_smooth_wicket_alphas": {
+    "powerplay": 0.25,
+    "middle": 1.0,
+    "death": 1.0
+  },
+  "stage_metrics": {
+    "situation_baseline": {
+      "rows": 5576,
+      "run_mae": 3.9141363064303545,
+      "run_bias": -1.3687841150451059,
+      "fixed_width_3_run_coverage": 0.3253228120516499,
+      "wicket_brier": 0.1957651262868316,
+      "wicket_roc_auc": 0.5945436310729114,
+      "wicket_pr_auc": 0.3730329437816842,
+      "alert_count": 1126,
+      "alert_volume": 0.20193687230989957,
+      "precision_at_existing_alert_volume": 0.40408525754884544,
+      "recall_at_existing_alert_volume": 0.29411764705882354,
+      "wicket_calibration": [
+        {
+          "band": "(-0.001, 0.15]",
+          "rows": 46,
+          "mean_probability": 0.1351468035494602,
+          "event_rate": 0.13043478260869565
+        },
+        {
+          "band": "(0.15, 0.25]",
+          "rows": 1016,
+          "mean_probability": 0.2258331649829964,
+          "event_rate": 0.21850393700787402
+        },
+        {
+          "band": "(0.25, 0.35]",
+          "rows": 3459,
+          "mean_probability": 0.29337903641903224,
+          "event_rate": 0.25701069673315985
+        },
+        {
+          "band": "(0.35, 0.45]",
+          "rows": 890,
+          "mean_probability": 0.38715144515332484,
+          "event_rate": 0.37865168539325844
+        },
+        {
+          "band": "(0.45, 0.6]",
+          "rows": 163,
+          "mean_probability": 0.4833875705724242,
+          "event_rate": 0.5644171779141104
+        },
+        {
+          "band": "(0.6, 1.0]",
+          "rows": 2,
+          "mean_probability": 0.6059476136544503,
+          "event_rate": 0.5
+        }
+      ]
+    },
+    "stage_1_oof_global": {
+      "rows": 5576,
+      "run_mae": 3.8366249362975036,
+      "run_bias": -0.9438807447998245,
+      "fixed_width_3_run_coverage": 0.33106169296987087,
+      "wicket_brier": 0.19423167022822765,
+      "wicket_roc_auc": 0.6022524480323088,
+      "wicket_pr_auc": 0.38026246302707256,
+      "alert_count": 1126,
+      "alert_volume": 0.20193687230989957,
+      "precision_at_existing_alert_volume": 0.4191829484902309,
+      "recall_at_existing_alert_volume": 0.30510665804783454,
+      "wicket_calibration": [
+        {
+          "band": "(-0.001, 0.15]",
+          "rows": 3,
+          "mean_probability": 0.14749212812003845,
+          "event_rate": 0.0
+        },
+        {
+          "band": "(0.15, 0.25]",
+          "rows": 1844,
+          "mean_probability": 0.2251062020551265,
+          "event_rate": 0.20824295010845986
+        },
+        {
+          "band": "(0.25, 0.35]",
+          "rows": 2813,
+          "mean_probability": 0.290840323007176,
+          "event_rate": 0.2737291148240313
+        },
+        {
+          "band": "(0.35, 0.45]",
+          "rows": 700,
+          "mean_probability": 0.3886731120701785,
+          "event_rate": 0.39285714285714285
+        },
+        {
+          "band": "(0.45, 0.6]",
+          "rows": 212,
+          "mean_probability": 0.4985745440999748,
+          "event_rate": 0.5471698113207547
+        },
+        {
+          "band": "(0.6, 1.0]",
+          "rows": 4,
+          "mean_probability": 0.6055663593979892,
+          "event_rate": 0.5
+        }
+      ]
+    },
+    "stage_2_safety_routing": {
+      "rows": 5576,
+      "run_mae": 3.8366249362975036,
+      "run_bias": -0.9438807447998245,
+      "fixed_width_3_run_coverage": 0.33106169296987087,
+      "wicket_brier": 0.19460037604147873,
+      "wicket_roc_auc": 0.6012355798611329,
+      "wicket_pr_auc": 0.37877357744771323,
+      "alert_count": 1126,
+      "alert_volume": 0.20193687230989957,
+      "precision_at_existing_alert_volume": 0.40852575488454707,
+      "recall_at_existing_alert_volume": 0.297349709114415,
+      "wicket_calibration": [
+        {
+          "band": "(-0.001, 0.15]",
+          "rows": 28,
+          "mean_probability": 0.13426633295519633,
+          "event_rate": 0.10714285714285714
+        },
+        {
+          "band": "(0.15, 0.25]",
+          "rows": 1459,
+          "mean_probability": 0.22678777257728205,
+          "event_rate": 0.20562028786840303
+        },
+        {
+          "band": "(0.25, 0.35]",
+          "rows": 3147,
+          "mean_probability": 0.292385419515383,
+          "event_rate": 0.26914521766761995
+        },
+        {
+          "band": "(0.35, 0.45]",
+          "rows": 726,
+          "mean_probability": 0.3877452939713499,
+          "event_rate": 0.384297520661157
+        },
+        {
+          "band": "(0.45, 0.6]",
+          "rows": 212,
+          "mean_probability": 0.4985745440999748,
+          "event_rate": 0.5471698113207547
+        },
+        {
+          "band": "(0.6, 1.0]",
+          "rows": 4,
+          "mean_probability": 0.6055663593979892,
+          "event_rate": 0.5
+        }
+      ]
+    },
+    "stage_3_phase_smooth": {
+      "rows": 5576,
+      "run_mae": 3.879483186525955,
+      "run_bias": -1.2296859107109313,
+      "fixed_width_3_run_coverage": 0.33106169296987087,
+      "wicket_brier": 0.19497637001060764,
+      "wicket_roc_auc": 0.5992008808793006,
+      "wicket_pr_auc": 0.3765290925709805,
+      "alert_count": 1126,
+      "alert_volume": 0.20193687230989957,
+      "precision_at_existing_alert_volume": 0.4058614564831261,
+      "recall_at_existing_alert_volume": 0.2954104718810601,
+      "wicket_calibration": [
+        {
+          "band": "(-0.001, 0.15]",
+          "rows": 21,
+          "mean_probability": 0.13439397117852042,
+          "event_rate": 0.047619047619047616
+        },
+        {
+          "band": "(0.15, 0.25]",
+          "rows": 1252,
+          "mean_probability": 0.2285551712373955,
+          "event_rate": 0.21166134185303515
+        },
+        {
+          "band": "(0.25, 0.35]",
+          "rows": 3341,
+          "mean_probability": 0.2919717116683661,
+          "event_rate": 0.2630948817719246
+        },
+        {
+          "band": "(0.35, 0.45]",
+          "rows": 760,
+          "mean_probability": 0.38743911096912165,
+          "event_rate": 0.38421052631578945
+        },
+        {
+          "band": "(0.45, 0.6]",
+          "rows": 199,
+          "mean_probability": 0.4936178375769257,
+          "event_rate": 0.5477386934673367
+        },
+        {
+          "band": "(0.6, 1.0]",
+          "rows": 3,
+          "mean_probability": 0.6181543758216167,
+          "event_rate": 0.3333333333333333
+        }
+      ]
+    }
+  },
+  "selected_stage": "stage_1_oof_global",
+  "stage_decisions": {
+    "stage_1_oof_global": "accept",
+    "stage_2_safety_routing": "reject_worse_than_stage_1",
+    "stage_3_phase_smooth": "reject_worse_than_stage_1"
+  },
+  "run_alpha_trials": [
+    {
+      "alpha": 0.0,
+      "score": 3.9623149772628916
+    },
+    {
+      "alpha": 0.05,
+      "score": 3.9571016569292765
+    },
+    {
+      "alpha": 0.1,
+      "score": 3.952052192886665
+    },
+    {
+      "alpha": 0.15000000000000002,
+      "score": 3.947180405462625
+    },
+    {
+      "alpha": 0.2,
+      "score": 3.942443198345305
+    },
+    {
+      "alpha": 0.25,
+      "score": 3.9378424880292155
+    },
+    {
+      "alpha": 0.30000000000000004,
+      "score": 3.933262680815177
+    },
+    {
+      "alpha": 0.35000000000000003,
+      "score": 3.928718551989235
+    },
+    {
+      "alpha": 0.4,
+      "score": 3.9242656015423862
+    },
+    {
+      "alpha": 0.45,
+      "score": 3.9199668992522403
+    },
+    {
+      "alpha": 0.5,
+      "score": 3.915747556866609
+    },
+    {
+      "alpha": 0.55,
+      "score": 3.911815007593411
+    },
+    {
+      "alpha": 0.6000000000000001,
+      "score": 3.9081415939934967
+    },
+    {
+      "alpha": 0.65,
+      "score": 3.9047096524618667
+    },
+    {
+      "alpha": 0.7000000000000001,
+      "score": 3.9016301122788977
+    },
+    {
+      "alpha": 0.75,
+      "score": 3.898729750352259
+    },
+    {
+      "alpha": 0.8,
+      "score": 3.8960530020667554
+    },
+    {
+      "alpha": 0.8500000000000001,
+      "score": 3.893673402168189
+    },
+    {
+      "alpha": 0.9,
+      "score": 3.8917768867670115
+    },
+    {
+      "alpha": 0.9500000000000001,
+      "score": 3.8901430294587214
+    },
+    {
+      "alpha": 1.0,
+      "score": 3.8886022388824086
+    }
+  ],
+  "wicket_alpha_trials": [
+    {
+      "alpha": 0.0,
+      "score": 0.20211987889249658
+    },
+    {
+      "alpha": 0.05,
+      "score": 0.20198829678985614
+    },
+    {
+      "alpha": 0.1,
+      "score": 0.20186762529698138
+    },
+    {
+      "alpha": 0.15000000000000002,
+      "score": 0.20175785022422688
+    },
+    {
+      "alpha": 0.2,
+      "score": 0.20165895753021176
+    },
+    {
+      "alpha": 0.25,
+      "score": 0.20157093340041451
+    },
+    {
+      "alpha": 0.30000000000000004,
+      "score": 0.2014937643190543
+    },
+    {
+      "alpha": 0.35000000000000003,
+      "score": 0.20142743713400074
+    },
+    {
+      "alpha": 0.4,
+      "score": 0.20137193911448104
+    },
+    {
+      "alpha": 0.45,
+      "score": 0.2013272580013744
+    },
+    {
+      "alpha": 0.5,
+      "score": 0.20129338204991093
+    },
+    {
+      "alpha": 0.55,
+      "score": 0.20127030006461455
+    },
+    {
+      "alpha": 0.6000000000000001,
+      "score": 0.2012580014263575
+    },
+    {
+      "alpha": 0.65,
+      "score": 0.20125647611141845
+    },
+    {
+      "alpha": 0.7000000000000001,
+      "score": 0.20126571470246352
+    },
+    {
+      "alpha": 0.75,
+      "score": 0.20128570839139498
+    },
+    {
+      "alpha": 0.8,
+      "score": 0.20131644897404175
+    },
+    {
+      "alpha": 0.8500000000000001,
+      "score": 0.20135792883668827
+    },
+    {
+      "alpha": 0.9,
+      "score": 0.20141014093447085
+    },
+    {
+      "alpha": 0.9500000000000001,
+      "score": 0.2014730787616924
+    },
+    {
+      "alpha": 1.0,
+      "score": 0.20154673631413678
+    }
+  ],
+  "segments": {
+    "overall": {
+      "baseline": {
+        "rows": 5576,
+        "run_mae": 3.9141363064303545,
+        "run_bias": -1.3687841150451059,
+        "fixed_width_3_run_coverage": 0.3253228120516499,
+        "wicket_brier": 0.1957651262868316,
+        "wicket_roc_auc": 0.5945436310729114,
+        "wicket_pr_auc": 0.3730329437816842,
+        "alert_count": 1126,
+        "alert_volume": 0.20193687230989957,
+        "precision_at_existing_alert_volume": 0.40408525754884544,
+        "recall_at_existing_alert_volume": 0.29411764705882354,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 46,
+            "mean_probability": 0.1351468035494602,
+            "event_rate": 0.13043478260869565
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 1016,
+            "mean_probability": 0.2258331649829964,
+            "event_rate": 0.21850393700787402
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 3459,
+            "mean_probability": 0.29337903641903224,
+            "event_rate": 0.25701069673315985
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 890,
+            "mean_probability": 0.38715144515332484,
+            "event_rate": 0.37865168539325844
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 163,
+            "mean_probability": 0.4833875705724242,
+            "event_rate": 0.5644171779141104
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 2,
+            "mean_probability": 0.6059476136544503,
+            "event_rate": 0.5
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 5576,
+        "run_mae": 3.8366249362975036,
+        "run_bias": -0.9438807447998245,
+        "fixed_width_3_run_coverage": 0.33106169296987087,
+        "wicket_brier": 0.19423167022822765,
+        "wicket_roc_auc": 0.6022524480323088,
+        "wicket_pr_auc": 0.38026246302707256,
+        "alert_count": 1126,
+        "alert_volume": 0.20193687230989957,
+        "precision_at_existing_alert_volume": 0.4191829484902309,
+        "recall_at_existing_alert_volume": 0.30510665804783454,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 3,
+            "mean_probability": 0.14749212812003845,
+            "event_rate": 0.0
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 1844,
+            "mean_probability": 0.2251062020551265,
+            "event_rate": 0.20824295010845986
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 2813,
+            "mean_probability": 0.290840323007176,
+            "event_rate": 0.2737291148240313
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 700,
+            "mean_probability": 0.3886731120701785,
+            "event_rate": 0.39285714285714285
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 212,
+            "mean_probability": 0.4985745440999748,
+            "event_rate": 0.5471698113207547
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 4,
+            "mean_probability": 0.6055663593979892,
+            "event_rate": 0.5
+          }
+        ]
+      }
+    },
+    "period_2025": {
+      "baseline": {
+        "rows": 2775,
+        "run_mae": 3.858857860863287,
+        "run_bias": -1.2589715673724453,
+        "fixed_width_3_run_coverage": 0.3300900900900901,
+        "wicket_brier": 0.19505898690508097,
+        "wicket_roc_auc": 0.5950481907075237,
+        "wicket_pr_auc": 0.3771654577160879,
+        "alert_count": 560,
+        "alert_volume": 0.2018018018018018,
+        "precision_at_existing_alert_volume": 0.40714285714285714,
+        "recall_at_existing_alert_volume": 0.296875,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 25,
+            "mean_probability": 0.135175439036302,
+            "event_rate": 0.08
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 558,
+            "mean_probability": 0.2234743112191379,
+            "event_rate": 0.22759856630824374
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1687,
+            "mean_probability": 0.29277543484075347,
+            "event_rate": 0.25251926496739774
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 429,
+            "mean_probability": 0.38671422953392914,
+            "event_rate": 0.3916083916083916
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 76,
+            "mean_probability": 0.4832721819328304,
+            "event_rate": 0.5921052631578947
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 2775,
+        "run_mae": 3.781576958738651,
+        "run_bias": -0.8576434534499143,
+        "fixed_width_3_run_coverage": 0.33765765765765765,
+        "wicket_brier": 0.1935007138029231,
+        "wicket_roc_auc": 0.6040836239827272,
+        "wicket_pr_auc": 0.3870154820783917,
+        "alert_count": 560,
+        "alert_volume": 0.2018018018018018,
+        "precision_at_existing_alert_volume": 0.4232142857142857,
+        "recall_at_existing_alert_volume": 0.30859375,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 1,
+            "mean_probability": 0.14362666115251255,
+            "event_rate": 0.0
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 991,
+            "mean_probability": 0.2251849537061183,
+            "event_rate": 0.2119071644803229
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1346,
+            "mean_probability": 0.2897008773338092,
+            "event_rate": 0.26968796433878156
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 338,
+            "mean_probability": 0.38834115148068793,
+            "event_rate": 0.41420118343195267
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 99,
+            "mean_probability": 0.4987705230658543,
+            "event_rate": 0.5555555555555556
+          }
+        ]
+      }
+    },
+    "period_2026": {
+      "baseline": {
+        "rows": 2801,
+        "run_mae": 3.968901635401656,
+        "run_bias": -1.477577338819341,
+        "fixed_width_3_run_coverage": 0.320599785790789,
+        "wicket_brier": 0.19646471100099006,
+        "wicket_roc_auc": 0.5938108280036416,
+        "wicket_pr_auc": 0.37119732915593706,
+        "alert_count": 566,
+        "alert_volume": 0.20207068903962871,
+        "precision_at_existing_alert_volume": 0.39399293286219084,
+        "recall_at_existing_alert_volume": 0.2862644415917843,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 21,
+            "mean_probability": 0.13511271368417238,
+            "event_rate": 0.19047619047619047
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 458,
+            "mean_probability": 0.22870705231974978,
+            "event_rate": 0.2074235807860262
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1772,
+            "mean_probability": 0.2939536841969986,
+            "event_rate": 0.2612866817155756
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 461,
+            "mean_probability": 0.3875583117492484,
+            "event_rate": 0.3665943600867679
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 87,
+            "mean_probability": 0.48348836984379356,
+            "event_rate": 0.5402298850574713
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 2,
+            "mean_probability": 0.6059476136544503,
+            "event_rate": 0.5
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 2801,
+        "run_mae": 3.891161936556631,
+        "run_bias": -1.0293175471903997,
+        "fixed_width_3_run_coverage": 0.32452695465905035,
+        "wicket_brier": 0.19495584162423624,
+        "wicket_roc_auc": 0.6007816457986539,
+        "wicket_pr_auc": 0.3773363158926857,
+        "alert_count": 566,
+        "alert_volume": 0.20207068903962871,
+        "precision_at_existing_alert_volume": 0.3957597173144876,
+        "recall_at_existing_alert_volume": 0.28754813863928114,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 2,
+            "mean_probability": 0.1494248616038014,
+            "event_rate": 0.0
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 853,
+            "mean_probability": 0.22501470980878077,
+            "event_rate": 0.20398593200468934
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1467,
+            "mean_probability": 0.2918857857722419,
+            "event_rate": 0.2774369461486026
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 362,
+            "mean_probability": 0.38898306422279666,
+            "event_rate": 0.3729281767955801
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 113,
+            "mean_probability": 0.49840284571393867,
+            "event_rate": 0.5398230088495575
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 4,
+            "mean_probability": 0.6055663593979892,
+            "event_rate": 0.5
+          }
+        ]
+      }
+    },
+    "announced_offline_proxy": {
+      "baseline": {
+        "rows": 5576,
+        "run_mae": 3.9141363064303545,
+        "run_bias": -1.3687841150451059,
+        "fixed_width_3_run_coverage": 0.3253228120516499,
+        "wicket_brier": 0.1957651262868316,
+        "wicket_roc_auc": 0.5945436310729114,
+        "wicket_pr_auc": 0.3730329437816842,
+        "alert_count": 1126,
+        "alert_volume": 0.20193687230989957,
+        "precision_at_existing_alert_volume": 0.40408525754884544,
+        "recall_at_existing_alert_volume": 0.29411764705882354,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 46,
+            "mean_probability": 0.1351468035494602,
+            "event_rate": 0.13043478260869565
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 1016,
+            "mean_probability": 0.2258331649829964,
+            "event_rate": 0.21850393700787402
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 3459,
+            "mean_probability": 0.29337903641903224,
+            "event_rate": 0.25701069673315985
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 890,
+            "mean_probability": 0.38715144515332484,
+            "event_rate": 0.37865168539325844
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 163,
+            "mean_probability": 0.4833875705724242,
+            "event_rate": 0.5644171779141104
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 2,
+            "mean_probability": 0.6059476136544503,
+            "event_rate": 0.5
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 5576,
+        "run_mae": 3.8366249362975036,
+        "run_bias": -0.9438807447998245,
+        "fixed_width_3_run_coverage": 0.33106169296987087,
+        "wicket_brier": 0.19423167022822765,
+        "wicket_roc_auc": 0.6022524480323088,
+        "wicket_pr_auc": 0.38026246302707256,
+        "alert_count": 1126,
+        "alert_volume": 0.20193687230989957,
+        "precision_at_existing_alert_volume": 0.4191829484902309,
+        "recall_at_existing_alert_volume": 0.30510665804783454,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 3,
+            "mean_probability": 0.14749212812003845,
+            "event_rate": 0.0
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 1844,
+            "mean_probability": 0.2251062020551265,
+            "event_rate": 0.20824295010845986
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 2813,
+            "mean_probability": 0.290840323007176,
+            "event_rate": 0.2737291148240313
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 700,
+            "mean_probability": 0.3886731120701785,
+            "event_rate": 0.39285714285714285
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 212,
+            "mean_probability": 0.4985745440999748,
+            "event_rate": 0.5471698113207547
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 4,
+            "mean_probability": 0.6055663593979892,
+            "event_rate": 0.5
+          }
+        ]
+      }
+    },
+    "unannounced_live_fallback": {
+      "rows": 0,
+      "policy": "situation prediction retained when live bowler is unannounced"
+    },
+    "new_spells": {
+      "baseline": {
+        "rows": 3825,
+        "run_mae": 3.834815255659268,
+        "run_bias": -1.307763409449831,
+        "fixed_width_3_run_coverage": 0.3351633986928105,
+        "wicket_brier": 0.1938012395378756,
+        "wicket_roc_auc": 0.6062671112827622,
+        "wicket_pr_auc": 0.38161936010746117,
+        "alert_count": 772,
+        "alert_volume": 0.20183006535947712,
+        "precision_at_existing_alert_volume": 0.40803108808290156,
+        "recall_at_existing_alert_volume": 0.29971455756422455,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 30,
+            "mean_probability": 0.1330940210168615,
+            "event_rate": 0.1
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 679,
+            "mean_probability": 0.22646314717880361,
+            "event_rate": 0.21354933726067746
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 2313,
+            "mean_probability": 0.29418906501108955,
+            "event_rate": 0.2490272373540856
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 684,
+            "mean_probability": 0.38787232652474507,
+            "event_rate": 0.38011695906432746
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 117,
+            "mean_probability": 0.48423102977700544,
+            "event_rate": 0.5641025641025641
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 2,
+            "mean_probability": 0.6059476136544503,
+            "event_rate": 0.5
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 3825,
+        "run_mae": 3.765129583690951,
+        "run_bias": -0.9044332535503584,
+        "fixed_width_3_run_coverage": 0.3403921568627451,
+        "wicket_brier": 0.19202350779971633,
+        "wicket_roc_auc": 0.615770540227764,
+        "wicket_pr_auc": 0.38672356542466985,
+        "alert_count": 772,
+        "alert_volume": 0.20183006535947712,
+        "precision_at_existing_alert_volume": 0.4183937823834197,
+        "recall_at_existing_alert_volume": 0.3073263558515699,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 3,
+            "mean_probability": 0.14749212812003845,
+            "event_rate": 0.0
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 1338,
+            "mean_probability": 0.2233336471711031,
+            "event_rate": 0.19431988041853512
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1791,
+            "mean_probability": 0.29297985140015786,
+            "event_rate": 0.27749860413176997
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 539,
+            "mean_probability": 0.3892750486274624,
+            "event_rate": 0.3877551020408163
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 150,
+            "mean_probability": 0.5004628375979734,
+            "event_rate": 0.5533333333333333
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 4,
+            "mean_probability": 0.6055663593979892,
+            "event_rate": 0.5
+          }
+        ]
+      }
+    },
+    "returning_spells": {
+      "baseline": {
+        "rows": 1751,
+        "run_mae": 4.087410446464283,
+        "run_bias": -1.5020817728988614,
+        "fixed_width_3_run_coverage": 0.3038263849229012,
+        "wicket_brier": 0.2000551701559102,
+        "wicket_roc_auc": 0.5716167587713661,
+        "wicket_pr_auc": 0.3570913034569414,
+        "alert_count": 354,
+        "alert_volume": 0.202170188463735,
+        "precision_at_existing_alert_volume": 0.3728813559322034,
+        "recall_at_existing_alert_volume": 0.2661290322580645,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 16,
+            "mean_probability": 0.13899577079808279,
+            "event_rate": 0.1875
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 337,
+            "mean_probability": 0.2245638536745303,
+            "event_rate": 0.228486646884273
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1146,
+            "mean_probability": 0.2917441357790423,
+            "event_rate": 0.2731239092495637
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 206,
+            "mean_probability": 0.38475783904627914,
+            "event_rate": 0.3737864077669903
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 46,
+            "mean_probability": 0.48124225042164187,
+            "event_rate": 0.5652173913043478
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 1751,
+        "run_mae": 3.9928041046127887,
+        "run_bias": -1.0300524489855518,
+        "fixed_width_3_run_coverage": 0.3106796116504854,
+        "wicket_brier": 0.199055326018665,
+        "wicket_roc_auc": 0.5709789872766997,
+        "wicket_pr_auc": 0.36900422201996474,
+        "alert_count": 354,
+        "alert_volume": 0.202170188463735,
+        "precision_at_existing_alert_volume": 0.3870056497175141,
+        "recall_at_existing_alert_volume": 0.2762096774193548,
+        "wicket_calibration": [
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 506,
+            "mean_probability": 0.22979331358639776,
+            "event_rate": 0.2450592885375494
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1022,
+            "mean_probability": 0.28709091463943576,
+            "event_rate": 0.2671232876712329
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 161,
+            "mean_probability": 0.38665793316101044,
+            "event_rate": 0.40993788819875776
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 62,
+            "mean_probability": 0.49400609208868773,
+            "event_rate": 0.532258064516129
+          }
+        ]
+      }
+    },
+    "established_partnerships": {
+      "baseline": {
+        "rows": 2648,
+        "run_mae": 3.9196972323438293,
+        "run_bias": -1.1329690874851375,
+        "fixed_width_3_run_coverage": 0.32326283987915405,
+        "wicket_brier": 0.20341133113053594,
+        "wicket_roc_auc": 0.5985287975601576,
+        "wicket_pr_auc": 0.38632009204659934,
+        "alert_count": 535,
+        "alert_volume": 0.2020392749244713,
+        "precision_at_existing_alert_volume": 0.4205607476635514,
+        "recall_at_existing_alert_volume": 0.2880921895006402,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 3,
+            "mean_probability": 0.14060558468406822,
+            "event_rate": 0.0
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 194,
+            "mean_probability": 0.21884938872131296,
+            "event_rate": 0.20618556701030927
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1724,
+            "mean_probability": 0.3010666587552495,
+            "event_rate": 0.2627610208816705
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 626,
+            "mean_probability": 0.38645636924985627,
+            "event_rate": 0.3753993610223642
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 99,
+            "mean_probability": 0.48819015163596363,
+            "event_rate": 0.5252525252525253
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 2,
+            "mean_probability": 0.6059476136544503,
+            "event_rate": 0.5
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 2648,
+        "run_mae": 3.87503361198102,
+        "run_bias": -0.8227502948126879,
+        "fixed_width_3_run_coverage": 0.3300604229607251,
+        "wicket_brier": 0.20134439824395248,
+        "wicket_roc_auc": 0.6101196946493688,
+        "wicket_pr_auc": 0.39636649596331575,
+        "alert_count": 535,
+        "alert_volume": 0.2020392749244713,
+        "precision_at_existing_alert_volume": 0.4205607476635514,
+        "recall_at_existing_alert_volume": 0.2880921895006402,
+        "wicket_calibration": [
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 503,
+            "mean_probability": 0.22985654443229955,
+            "event_rate": 0.17693836978131214
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1538,
+            "mean_probability": 0.29616956983774473,
+            "event_rate": 0.28218465539661897
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 478,
+            "mean_probability": 0.38813421495472616,
+            "event_rate": 0.39330543933054396
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 126,
+            "mean_probability": 0.5024735985887941,
+            "event_rate": 0.5476190476190477
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 3,
+            "mean_probability": 0.6071222919615261,
+            "event_rate": 0.3333333333333333
+          }
+        ]
+      }
+    },
+    "powerplay": {
+      "baseline": {
+        "rows": 1751,
+        "run_mae": 4.179425407055241,
+        "run_bias": -2.00936809997412,
+        "fixed_width_3_run_coverage": 0.30611079383209594,
+        "wicket_brier": 0.18198099503835108,
+        "wicket_roc_auc": 0.5178340698596076,
+        "wicket_pr_auc": 0.24334549736462,
+        "alert_count": 354,
+        "alert_volume": 0.202170188463735,
+        "precision_at_existing_alert_volume": 0.2570621468926554,
+        "recall_at_existing_alert_volume": 0.22033898305084745,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 28,
+            "mean_probability": 0.13426633295519633,
+            "event_rate": 0.10714285714285714
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 518,
+            "mean_probability": 0.22739771909833298,
+            "event_rate": 0.23938223938223938
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1172,
+            "mean_probability": 0.28645604434684013,
+            "event_rate": 0.23890784982935154
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 33,
+            "mean_probability": 0.3643554252543569,
+            "event_rate": 0.18181818181818182
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 1751,
+        "run_mae": 4.033121390462821,
+        "run_bias": -1.3508178921286387,
+        "fixed_width_3_run_coverage": 0.31810394060536834,
+        "wicket_brier": 0.18080686390489134,
+        "wicket_roc_auc": 0.5180295117210827,
+        "wicket_pr_auc": 0.24608485370419708,
+        "alert_count": 354,
+        "alert_volume": 0.202170188463735,
+        "precision_at_existing_alert_volume": 0.2542372881355932,
+        "recall_at_existing_alert_volume": 0.2179176755447942,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 3,
+            "mean_probability": 0.14749212812003845,
+            "event_rate": 0.0
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 903,
+            "mean_probability": 0.22370375957069233,
+            "event_rate": 0.23034330011074197
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 838,
+            "mean_probability": 0.27890620212264006,
+            "event_rate": 0.24224343675417662
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 7,
+            "mean_probability": 0.3702605799026775,
+            "event_rate": 0.2857142857142857
+          }
+        ]
+      }
+    },
+    "middle": {
+      "baseline": {
+        "rows": 2582,
+        "run_mae": 3.6721639018317065,
+        "run_bias": -1.2153101880264217,
+        "fixed_width_3_run_coverage": 0.35127807900852054,
+        "wicket_brier": 0.18726867775443673,
+        "wicket_roc_auc": 0.5697540439439784,
+        "wicket_pr_auc": 0.30868454852744287,
+        "alert_count": 521,
+        "alert_volume": 0.20178156467854377,
+        "precision_at_existing_alert_volume": 0.32245681381957775,
+        "recall_at_existing_alert_volume": 0.25925925925925924,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 17,
+            "mean_probability": 0.1357692976707973,
+            "event_rate": 0.17647058823529413
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 462,
+            "mean_probability": 0.22483688823207024,
+            "event_rate": 0.18614718614718614
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1897,
+            "mean_probability": 0.292681828666794,
+            "event_rate": 0.25724828676858197
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 206,
+            "mean_probability": 0.3693545362541815,
+            "event_rate": 0.3446601941747573
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 2582,
+        "run_mae": 3.6110599052437244,
+        "run_bias": -0.9632583717851976,
+        "fixed_width_3_run_coverage": 0.35824941905499613,
+        "wicket_brier": 0.18536029985181066,
+        "wicket_roc_auc": 0.5825585366476439,
+        "wicket_pr_auc": 0.31745543468302423,
+        "alert_count": 521,
+        "alert_volume": 0.20178156467854377,
+        "precision_at_existing_alert_volume": 0.3416506717850288,
+        "recall_at_existing_alert_volume": 0.27469135802469136,
+        "wicket_calibration": [
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 920,
+            "mean_probability": 0.22626008977957962,
+            "event_rate": 0.18478260869565216
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 1515,
+            "mean_probability": 0.2895087618137595,
+            "event_rate": 0.27524752475247527
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 147,
+            "mean_probability": 0.37316095383527326,
+            "event_rate": 0.41496598639455784
+          }
+        ]
+      }
+    },
+    "death": {
+      "baseline": {
+        "rows": 1243,
+        "run_mae": 4.043059503115418,
+        "run_bias": -0.7852017513697557,
+        "fixed_width_3_run_coverage": 0.29847144006436044,
+        "wicket_brier": 0.23283177465910262,
+        "wicket_roc_auc": 0.593435208289164,
+        "wicket_pr_auc": 0.4783025319985245,
+        "alert_count": 251,
+        "alert_volume": 0.20193081255028159,
+        "precision_at_existing_alert_volume": 0.545816733067729,
+        "recall_at_existing_alert_volume": 0.28189300411522633,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 1,
+            "mean_probability": 0.14921758012611885,
+            "event_rate": 0.0
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 36,
+            "mean_probability": 0.21610652129365024,
+            "event_rate": 0.3333333333333333
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 390,
+            "mean_probability": 0.3175748051744298,
+            "event_rate": 0.31025641025641026
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 651,
+            "mean_probability": 0.3939385909135238,
+            "event_rate": 0.39938556067588327
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 163,
+            "mean_probability": 0.4833875705724242,
+            "event_rate": 0.5644171779141104
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 2,
+            "mean_probability": 0.6059476136544503,
+            "event_rate": 0.5
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 1243,
+        "run_mae": 4.028373624099104,
+        "run_bias": -0.33038116487304514,
+        "fixed_width_3_run_coverage": 0.2928399034593725,
+        "wicket_brier": 0.23157094149457563,
+        "wicket_roc_auc": 0.592290881810917,
+        "wicket_pr_auc": 0.48656157909742054,
+        "alert_count": 251,
+        "alert_volume": 0.20193081255028159,
+        "precision_at_existing_alert_volume": 0.5418326693227091,
+        "recall_at_existing_alert_volume": 0.27983539094650206,
+        "wicket_calibration": [
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 21,
+            "mean_probability": 0.2348599571478467,
+            "event_rate": 0.2857142857142857
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 460,
+            "mean_probability": 0.3169666458534087,
+            "event_rate": 0.32608695652173914
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 546,
+            "mean_probability": 0.39308552046890305,
+            "event_rate": 0.3882783882783883
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 212,
+            "mean_probability": 0.4985745440999748,
+            "event_rate": 0.5471698113207547
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 4,
+            "mean_probability": 0.6055663593979892,
+            "event_rate": 0.5
+          }
+        ]
+      }
+    },
+    "supported_bowler_histories": {
+      "baseline": {
+        "rows": 3974,
+        "run_mae": 3.848650992790169,
+        "run_bias": -1.2448948957768449,
+        "fixed_width_3_run_coverage": 0.3236034222445898,
+        "wicket_brier": 0.19328886684020774,
+        "wicket_roc_auc": 0.5822261840167429,
+        "wicket_pr_auc": 0.343317377119139,
+        "alert_count": 802,
+        "alert_volume": 0.20181177654755914,
+        "precision_at_existing_alert_volume": 0.37032418952618457,
+        "recall_at_existing_alert_volume": 0.2791353383458647,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 33,
+            "mean_probability": 0.13416713646391767,
+            "event_rate": 0.12121212121212122
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 776,
+            "mean_probability": 0.22545349037928078,
+            "event_rate": 0.2190721649484536
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 2477,
+            "mean_probability": 0.2928948978374264,
+            "event_rate": 0.25191764230924507
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 582,
+            "mean_probability": 0.3879135758076579,
+            "event_rate": 0.36769759450171824
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 105,
+            "mean_probability": 0.4845123412938193,
+            "event_rate": 0.49523809523809526
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 1,
+            "mean_probability": 0.6096392439609635,
+            "event_rate": 0.0
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 3974,
+        "run_mae": 3.7738029737551098,
+        "run_bias": -0.9161132493833238,
+        "fixed_width_3_run_coverage": 0.3331655762455964,
+        "wicket_brier": 0.19194734245384248,
+        "wicket_roc_auc": 0.5882925742190528,
+        "wicket_pr_auc": 0.34849859921452103,
+        "alert_count": 802,
+        "alert_volume": 0.20181177654755914,
+        "precision_at_existing_alert_volume": 0.39276807980049877,
+        "recall_at_existing_alert_volume": 0.29605263157894735,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 3,
+            "mean_probability": 0.14749212812003845,
+            "event_rate": 0.0
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 1376,
+            "mean_probability": 0.225130110979519,
+            "event_rate": 0.2063953488372093
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 2004,
+            "mean_probability": 0.2894177896651701,
+            "event_rate": 0.26746506986027946
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 464,
+            "mean_probability": 0.3880995862411375,
+            "event_rate": 0.3922413793103448
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 125,
+            "mean_probability": 0.4995942948952084,
+            "event_rate": 0.496
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 2,
+            "mean_probability": 0.6064268423516543,
+            "event_rate": 0.0
+          }
+        ]
+      }
+    },
+    "unsupported_bowler_histories": {
+      "baseline": {
+        "rows": 1602,
+        "run_mae": 4.07658239657149,
+        "run_bias": -1.6761098062885946,
+        "fixed_width_3_run_coverage": 0.3295880149812734,
+        "wicket_brier": 0.20190785727365004,
+        "wicket_roc_auc": 0.6200874412787223,
+        "wicket_pr_auc": 0.4449520856104692,
+        "alert_count": 324,
+        "alert_volume": 0.20224719101123595,
+        "precision_at_existing_alert_volume": 0.4537037037037037,
+        "recall_at_existing_alert_volume": 0.30434782608695654,
+        "wicket_calibration": [
+          {
+            "band": "(-0.001, 0.15]",
+            "rows": 13,
+            "mean_probability": 0.13763365076660664,
+            "event_rate": 0.15384615384615385
+          },
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 240,
+            "mean_probability": 0.22706077953501025,
+            "event_rate": 0.21666666666666667
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 982,
+            "mean_probability": 0.2946002291549158,
+            "event_rate": 0.269857433808554
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 308,
+            "mean_probability": 0.3857113151506567,
+            "event_rate": 0.39935064935064934
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 58,
+            "mean_probability": 0.4813513477147264,
+            "event_rate": 0.6896551724137931
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 1,
+            "mean_probability": 0.6022559833479371,
+            "event_rate": 1.0
+          }
+        ]
+      },
+      "candidate": {
+        "rows": 1602,
+        "run_mae": 3.992464186699174,
+        "run_bias": -1.0127621597718435,
+        "fixed_width_3_run_coverage": 0.3258426966292135,
+        "wicket_brier": 0.19989828606805707,
+        "wicket_roc_auc": 0.6302210824882466,
+        "wicket_pr_auc": 0.45237376993253026,
+        "alert_count": 324,
+        "alert_volume": 0.20224719101123595,
+        "precision_at_existing_alert_volume": 0.4567901234567901,
+        "recall_at_existing_alert_volume": 0.3064182194616977,
+        "wicket_calibration": [
+          {
+            "band": "(0.15, 0.25]",
+            "rows": 468,
+            "mean_probability": 0.22503590573041668,
+            "event_rate": 0.21367521367521367
+          },
+          {
+            "band": "(0.25, 0.35]",
+            "rows": 809,
+            "mean_probability": 0.2943641262425033,
+            "event_rate": 0.2892459826946848
+          },
+          {
+            "band": "(0.35, 0.45]",
+            "rows": 236,
+            "mean_probability": 0.3898007221747336,
+            "event_rate": 0.3940677966101695
+          },
+          {
+            "band": "(0.45, 0.6]",
+            "rows": 87,
+            "mean_probability": 0.4971093849114206,
+            "event_rate": 0.6206896551724138
+          },
+          {
+            "band": "(0.6, 1.0]",
+            "rows": 2,
+            "mean_probability": 0.604705876444324,
+            "event_rate": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "promotion_gates": {
+    "overall_wicket_brier_improves": true,
+    "2025_wicket_brier_improves": true,
+    "2026_wicket_brier_improves": true,
+    "precision_improves_same_alert_volume": true,
+    "run_mae_non_regression": true,
+    "fixed_width_3_coverage_non_regression": true,
+    "live_availability_validated": false
+  },
+  "decision": "research_pass_await_live_availability"
+}

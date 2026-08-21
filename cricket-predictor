@@ -1,0 +1,12 @@
+#!/bin/zsh
+set -e
+
+PROJECT_DIR="/Users/susha/Downloads/cricket_predictor"
+
+if [[ "$1 $2 $3" == "match is live" ]]; then
+  shift 3
+  exec "$PROJECT_DIR/.venv/bin/python" "$PROJECT_DIR/backend/run_toi_auto.py" "$@"
+fi
+
+echo "Use: cricket-predictor match is live"
+exit 2

@@ -1,0 +1,9 @@
+{
+  "rows": 47756,
+  "duplicate_keys": 0,
+  "chronological_history": true,
+  "historical_updates_after_match": true,
+  "offline_first_delivery_bowler": true,
+  "live_availability_verified": false,
+  "candidate_only": true
+}

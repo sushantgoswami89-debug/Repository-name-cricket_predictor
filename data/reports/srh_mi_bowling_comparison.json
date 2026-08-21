@@ -1,0 +1,357 @@
+{
+  "scope": "Wicket outcomes only; SRH and MI bowling; all IPL history",
+  "overall": [
+    {
+      "bowling_team": "Mumbai Indians",
+      "overs": 5652,
+      "wicket_overs": 1561,
+      "wickets": 1780,
+      "wicket_over_rate": 0.2761854210898797
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "overs": 4084,
+      "wicket_overs": 1102,
+      "wickets": 1256,
+      "wicket_over_rate": 0.26983349657198824
+    }
+  ],
+  "by_bowling_order": [
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_first",
+      "overs": 2784,
+      "wicket_overs": 749,
+      "wickets": 862,
+      "wicket_over_rate": 0.26903735632183906
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_second",
+      "overs": 2868,
+      "wicket_overs": 812,
+      "wickets": 918,
+      "wicket_over_rate": 0.28312412831241285
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_first",
+      "overs": 1977,
+      "wicket_overs": 540,
+      "wickets": 619,
+      "wicket_over_rate": 0.2731411229135053
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_second",
+      "overs": 2107,
+      "wicket_overs": 562,
+      "wickets": 637,
+      "wicket_over_rate": 0.26672994779307074
+    }
+  ],
+  "by_phase": [
+    {
+      "bowling_team": "Mumbai Indians",
+      "phase": "death",
+      "overs": 1291,
+      "wicket_overs": 519,
+      "wickets": 649,
+      "wicket_over_rate": 0.40201394268009294
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "phase": "middle",
+      "overs": 2610,
+      "wicket_overs": 633,
+      "wickets": 689,
+      "wicket_over_rate": 0.2425287356321839
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "phase": "powerplay",
+      "overs": 1751,
+      "wicket_overs": 409,
+      "wickets": 442,
+      "wicket_over_rate": 0.23358081096516276
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "phase": "death",
+      "overs": 946,
+      "wicket_overs": 376,
+      "wickets": 467,
+      "wicket_over_rate": 0.3974630021141649
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "phase": "middle",
+      "overs": 1868,
+      "wicket_overs": 458,
+      "wickets": 498,
+      "wicket_over_rate": 0.24518201284796573
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "phase": "powerplay",
+      "overs": 1270,
+      "wicket_overs": 268,
+      "wickets": 291,
+      "wicket_over_rate": 0.2110236220472441
+    }
+  ],
+  "by_order_and_phase": [
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_first",
+      "phase": "death",
+      "overs": 673,
+      "wicket_overs": 275,
+      "wickets": 348,
+      "wicket_over_rate": 0.4086181277860327
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_first",
+      "phase": "middle",
+      "overs": 1265,
+      "wicket_overs": 284,
+      "wickets": 309,
+      "wicket_over_rate": 0.22450592885375495
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_first",
+      "phase": "powerplay",
+      "overs": 846,
+      "wicket_overs": 190,
+      "wickets": 205,
+      "wicket_over_rate": 0.22458628841607564
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_second",
+      "phase": "death",
+      "overs": 618,
+      "wicket_overs": 244,
+      "wickets": 301,
+      "wicket_over_rate": 0.3948220064724919
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_second",
+      "phase": "middle",
+      "overs": 1345,
+      "wicket_overs": 349,
+      "wickets": 380,
+      "wicket_over_rate": 0.2594795539033457
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_second",
+      "phase": "powerplay",
+      "overs": 905,
+      "wicket_overs": 219,
+      "wickets": 237,
+      "wicket_over_rate": 0.2419889502762431
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_first",
+      "phase": "death",
+      "overs": 492,
+      "wicket_overs": 210,
+      "wickets": 262,
+      "wicket_over_rate": 0.4268292682926829
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_first",
+      "phase": "middle",
+      "overs": 891,
+      "wicket_overs": 205,
+      "wickets": 222,
+      "wicket_over_rate": 0.23007856341189675
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_first",
+      "phase": "powerplay",
+      "overs": 594,
+      "wicket_overs": 125,
+      "wickets": 135,
+      "wicket_over_rate": 0.21043771043771045
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_second",
+      "phase": "death",
+      "overs": 454,
+      "wicket_overs": 166,
+      "wickets": 205,
+      "wicket_over_rate": 0.3656387665198238
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_second",
+      "phase": "middle",
+      "overs": 977,
+      "wicket_overs": 253,
+      "wickets": 276,
+      "wicket_over_rate": 0.25895598771750256
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_second",
+      "phase": "powerplay",
+      "overs": 676,
+      "wicket_overs": 143,
+      "wickets": 156,
+      "wicket_over_rate": 0.21153846153846154
+    }
+  ],
+  "by_home_away": [
+    {
+      "bowling_team": "Mumbai Indians",
+      "home_away": "away",
+      "overs": 3568,
+      "wicket_overs": 972,
+      "wickets": 1102,
+      "wicket_over_rate": 0.27242152466367714
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "home_away": "home",
+      "overs": 2084,
+      "wicket_overs": 589,
+      "wickets": 678,
+      "wicket_over_rate": 0.2826295585412668
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "home_away": "away",
+      "overs": 2729,
+      "wicket_overs": 725,
+      "wickets": 832,
+      "wicket_over_rate": 0.26566507878343715
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "home_away": "home",
+      "overs": 1355,
+      "wicket_overs": 377,
+      "wickets": 424,
+      "wicket_over_rate": 0.2782287822878229
+    }
+  ],
+  "head_to_head": [
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_first",
+      "phase": "death",
+      "overs": 64,
+      "wicket_overs": 28,
+      "wickets": 34,
+      "wicket_over_rate": 0.4375
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_first",
+      "phase": "middle",
+      "overs": 117,
+      "wicket_overs": 24,
+      "wickets": 25,
+      "wicket_over_rate": 0.20512820512820512
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_first",
+      "phase": "powerplay",
+      "overs": 78,
+      "wicket_overs": 17,
+      "wickets": 18,
+      "wicket_over_rate": 0.21794871794871795
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_second",
+      "phase": "death",
+      "overs": 55,
+      "wicket_overs": 22,
+      "wickets": 32,
+      "wicket_over_rate": 0.4
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_second",
+      "phase": "middle",
+      "overs": 117,
+      "wicket_overs": 34,
+      "wickets": 36,
+      "wicket_over_rate": 0.2905982905982906
+    },
+    {
+      "bowling_team": "Mumbai Indians",
+      "bowling_order": "bowling_second",
+      "phase": "powerplay",
+      "overs": 79,
+      "wicket_overs": 14,
+      "wickets": 15,
+      "wicket_over_rate": 0.17721518987341772
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_first",
+      "phase": "death",
+      "overs": 65,
+      "wicket_overs": 26,
+      "wickets": 30,
+      "wicket_over_rate": 0.4
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_first",
+      "phase": "middle",
+      "overs": 117,
+      "wicket_overs": 29,
+      "wickets": 33,
+      "wicket_over_rate": 0.24786324786324787
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_first",
+      "phase": "powerplay",
+      "overs": 78,
+      "wicket_overs": 17,
+      "wickets": 19,
+      "wicket_over_rate": 0.21794871794871795
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_second",
+      "phase": "death",
+      "overs": 45,
+      "wicket_overs": 16,
+      "wickets": 19,
+      "wicket_over_rate": 0.35555555555555557
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_second",
+      "phase": "middle",
+      "overs": 116,
+      "wicket_overs": 23,
+      "wickets": 24,
+      "wicket_over_rate": 0.19827586206896552
+    },
+    {
+      "bowling_team": "Sunrisers Hyderabad",
+      "bowling_order": "bowling_second",
+      "phase": "powerplay",
+      "overs": 79,
+      "wicket_overs": 22,
+      "wickets": 23,
+      "wicket_over_rate": 0.27848101265822783
+    }
+  ]
+}

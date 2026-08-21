@@ -1,0 +1,11 @@
+{
+  "diagnostic": "future_event_oracle_for_architecture_testing_only",
+  "warning": "Oracle inputs are target-period facts and must never be used live.",
+  "training_rows_through_2024": 42210,
+  "holdout_rows_2025_plus": 5580,
+  "state_only_hit_rate": 0.2503584229390681,
+  "oracle_boundary_count_and_wicket_hit_rate": 0.5568100358422939,
+  "oracle_fours_sixes_wickets_hit_rate": 0.6659498207885305,
+  "oracle_fours_sixes_wickets_extras_hit_rate": 0.7093189964157706,
+  "conclusion": "The range architecture can exceed 60% when shock-event composition is known. The live bottleneck is forecasting boundaries, wickets, and extras before the over."
+}

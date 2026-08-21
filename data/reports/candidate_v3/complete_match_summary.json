@@ -1,0 +1,19 @@
+{
+  "candidate_version": "v3_phase_impact_time_split",
+  "scope": "all_complete_unseen_matches_2025_plus",
+  "matches_tested": 1704,
+  "innings_tested": 3405,
+  "overs_predicted": 60988,
+  "sequence_failures": 0,
+  "runs_mae": 3.225507446795019,
+  "wicket_brier": 0.20415507142024866,
+  "match_runs_mae_p95": 4.741812526166136,
+  "match_wicket_brier_p95": 0.2647245665220651,
+  "failures": [],
+  "gates": {
+    "at_least_100_complete_matches": true,
+    "zero_sequence_failures": true,
+    "all_predictions_finite": true,
+    "probabilities_bounded": true
+  }
+}

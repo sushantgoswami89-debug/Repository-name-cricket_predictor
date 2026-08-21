@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "player_id": "name:sediqullah-atal",
+      "player_name": "Sediqullah Atal",
+      "role": "TOP_ORDER_BATTER",
+      "usual_position": "OPENER",
+      "batting_average": null,
+      "strike_rate": null,
+      "experience": ["Afghanistan T20I", "49 T20 matches before IPL signing"],
+      "source_url": "https://www.iplt20.com/news/4201/delhi-capitals-name-sediqullah-atal-as-a-replacement-for-harry-brook",
+      "source_title": "Delhi Capitals name Sediqullah Atal as a replacement for Harry Brook",
+      "source_published": "2025-05-07",
+      "verified_at": "2026-07-29",
+      "notes": "Official IPL source verifies batter role and 1,507 T20 runs in 49 matches. Numeric average and strike rate remain null because the source does not publish them."
+    },
+    {
+      "player_id": "name:matthew-breetzke",
+      "player_name": "Matthew Breetzke",
+      "role": "WICKETKEEPER_BATTER",
+      "usual_position": "TOP_OR_MIDDLE_ORDER",
+      "batting_average": null,
+      "strike_rate": 132.87,
+      "experience": ["South Africa", "140+ T20 matches", "3,500+ T20 runs"],
+      "source_url": "https://www.iplt20.com/players/matthew-breetzke/22375",
+      "source_title": "Matthew Breetzke IPL profile",
+      "source_published": "2026-04-01",
+      "verified_at": "2026-07-29",
+      "notes": "Official IPL profile verifies wicketkeeper-batter, top/middle-order usage, T20 volume and strike rate. Publication date is conservatively set after the 2026 season began, so it cannot enter historical 2025 or early-2026 replay features."
+    },
+    {
+      "player_id": "name:kusal-mendis",
+      "player_name": "Kusal Mendis",
+      "role": "WICKETKEEPER_BATTER",
+      "usual_position": "TOP_ORDER",
+      "batting_average": null,
+      "strike_rate": null,
+      "experience": ["Sri Lanka Test/ODI/T20I", "55 T20I caps listed pre-IPL"],
+      "source_url": "https://documents.iplt20.com/bcci/documents/1702300206581_IPL%202024%20Auction%20List-%2011.12.23.pdf",
+      "source_title": "IPL 2024 Auction List",
+      "source_published": "2023-12-11",
+      "verified_at": "2026-07-29",
+      "notes": "Official auction list verifies wicketkeeper role and international experience. Unsupported averages and strike rates remain null."
+    }
+  ]
+}

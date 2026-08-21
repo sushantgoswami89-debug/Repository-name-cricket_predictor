@@ -1,0 +1,15 @@
+{
+  "neighbors": 384,
+  "same_phase_required": true,
+  "same_chase_status_required": true,
+  "reference_for_calibration": "through_2023",
+  "reference_for_holdout": "through_2024",
+  "analogue_quantiles": [
+    0.05,
+    0.95
+  ],
+  "selected_run_maximum_weight": 0.0,
+  "selected_wicket_maximum_weight": 0.0,
+  "selected_interval_padding": 0.25,
+  "confidence_target": "absolute run error at most four"
+}

@@ -24,6 +24,15 @@ def test_prediction_result() -> None:
     assert result.predicted_runs == 184.5
     assert result.wicket_probability == 0.27
     assert result.confidence == 0.91
+    assert result.confidence_percent == 91
+    assert result.confidence_level == "HIGH"
+    assert result.confidence_meter == "█████████░"
+
+    output = result.to_dict()
+    assert output["expected_range"] == ""
+    assert output["confidence_percent"] == 91
+    assert output["confidence_level"] == "HIGH"
+    assert output["confidence_meter"] == "█████████░"
 
     assert result.analysis == ["Balanced pitch"]
 
@@ -52,3 +61,12 @@ def test_prediction_result_invalid_confidence() -> None:
             wicket_probability=0.3,
             confidence=2.0,
         ).validate()
+
+
+@pytest.mark.parametrize(
+    ("confidence", "level"),
+    [(0.24, "LOW"), (0.25, "MEDIUM"), (0.34, "MEDIUM"), (0.35, "HIGH")],
+)
+def test_confidence_level_boundaries(confidence: float, level: str) -> None:
+    result = PredictionResult(7.0, 0.2, confidence, expected_range="3-12")
+    assert result.confidence_level == level

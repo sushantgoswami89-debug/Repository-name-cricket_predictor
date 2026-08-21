@@ -1,0 +1,15 @@
+{
+  "candidate": "cricketbaba_v3.1_historical_analogue",
+  "status": "ready_for_live_shadow",
+  "created_at": "2026-07-22",
+  "production_promoted": false,
+  "base_model": "models/locked/cricketbaba_candidate_v3",
+  "base_locked_manifest_sha256": "437c446fedbf100536d139413ad4102527dfffaa169957e433951e73b560b300",
+  "all_offline_gates_passed": true,
+  "artifacts": {
+    "historical_analogue_engine.pkl": "f5d45b3420c0623c230f1cdac340807c7f6a236168f6757cd65bebaa259bb14b",
+    "confidence_calibrator.pkl": "3adf3142cef9b2a2c4b476ee1cee04c0899675fec7209805aefc73ee247ae98a",
+    "analogue_config.json": "a71e45103048880a3130d66b8dbdfa760c90280bfc453c53f4122ef066f26b98",
+    "validation_report.json": "152730425b5f33f6c1fe455383f7cf294371fb55a4683e7ac155251d1ed77a5e"
+  }
+}

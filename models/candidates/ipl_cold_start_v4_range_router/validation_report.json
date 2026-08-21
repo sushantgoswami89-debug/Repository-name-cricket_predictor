@@ -1,0 +1,5318 @@
+{
+  "candidate_version": "ipl_cold_start_v4_range_router",
+  "candidate_only": true,
+  "production_changed": false,
+  "leakage_safe": true,
+  "rows": {
+    "training": 39442,
+    "calibration": 2738,
+    "holdout": 5576
+  },
+  "baseline_corrected_canonical": {
+    "rows": 5576,
+    "mae": 3.8519079824311135,
+    "bias": -0.06118345967534474,
+    "fixed_three_run_coverage": 0.3244261119081779,
+    "wicket_brier": 0.21787437404522514
+  },
+  "enhanced_cold_start": {
+    "rows": 5576,
+    "mae": 3.854915187767457,
+    "bias": -0.05524638009394937,
+    "fixed_three_run_coverage": 0.32119799139167865,
+    "wicket_brier": 0.21930013533567677
+  },
+  "gated_candidate": {
+    "rows": 5576,
+    "mae": 3.8511049905905548,
+    "bias": -0.08388790730805637,
+    "fixed_three_run_coverage": 0.32568149210903874,
+    "wicket_brier": 0.21787437404522514,
+    "routing": "calibration-selected blend only for TEMP players with <120 prior IPL balls",
+    "enhanced_weight": 0.0,
+    "calibrated_point_offset": -0.6,
+    "cold_range_phase_shifts": {
+      "death": -1,
+      "middle": 1,
+      "powerplay": -2
+    }
+  },
+  "calibration_only_route_selection": {
+    "alpha": 0.0,
+    "point_offset": -0.6,
+    "calibration_rows": 100,
+    "baseline": {
+      "rows": 100,
+      "mae": 4.223395110481084,
+      "bias": -0.20165986116432827,
+      "fixed_three_run_coverage": 0.32,
+      "wicket_brier": 0.20657069306299713
+    },
+    "selected": {
+      "alpha": 0.0,
+      "point_offset": -0.6,
+      "rows": 100,
+      "mae": 4.1750471632672905,
+      "bias": -0.8016598611643281,
+      "fixed_three_run_coverage": 0.34,
+      "wicket_brier": 0.20657069306299713
+    },
+    "grid": [
+      {
+        "alpha": 0.0,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.1750471632672905,
+        "bias": -0.8016598611643281,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.176522286118655,
+        "bias": -0.7516598611643286,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.179522286118655,
+        "bias": -0.7016598611643283,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.1825222861186555,
+        "bias": -0.6516598611643282,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.185522286118656,
+        "bias": -0.6016598611643289,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.188522286118655,
+        "bias": -0.551659861164328,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.191880348186615,
+        "bias": -0.5016598611643288,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.1964386917288925,
+        "bias": -0.4516598611643282,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.201438691728892,
+        "bias": -0.40165986116432806,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.206438691728892,
+        "bias": -0.35165986116432874,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.211438691728892,
+        "bias": -0.301659861164328,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.2173951104810845,
+        "bias": -0.2516598611643288,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.223395110481084,
+        "bias": -0.20165986116432827,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.229395110481085,
+        "bias": -0.15165986116432809,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.235395110481084,
+        "bias": -0.1016598611643287,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.241410388743719,
+        "bias": -0.05165986116432803,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.248878201324675,
+        "bias": -0.0016598611643288664,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.256878201324675,
+        "bias": 0.04834013883567167,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.26570119574643,
+        "bias": 0.098340138835672,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.27470119574643,
+        "bias": 0.14834013883567126,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.283701195746429,
+        "bias": 0.19834013883567198,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.292701195746428,
+        "bias": 0.24834013883567108,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.301701195746429,
+        "bias": 0.2983401388356716,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.31070119574643,
+        "bias": 0.3483401388356721,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.0,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.31970119574643,
+        "bias": 0.39834013883567126,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20657069306299713
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.176297753878726,
+        "bias": -0.8005092774985262,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.177455680410569,
+        "bias": -0.7505092774985266,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.18044298010973,
+        "bias": -0.7005092774985264,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.183442980109729,
+        "bias": -0.6505092774985262,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.18644298010973,
+        "bias": -0.600509277498527,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.189442980109729,
+        "bias": -0.5505092774985263,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.192728287806701,
+        "bias": -0.5005092774985269,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.197728287806702,
+        "bias": -0.45050927749852643,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.202728287806702,
+        "bias": -0.40050927749852616,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.207728287806702,
+        "bias": -0.3505092774985269,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.2127282878067005,
+        "bias": -0.30050927749852624,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.21854821136479,
+        "bias": -0.25050927749852714,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.22454821136479,
+        "bias": -0.2005092774985264,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.23054821136479,
+        "bias": -0.15050927749852613,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.2365482113647905,
+        "bias": -0.10050927749852683,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.242548211364789,
+        "bias": -0.05050927749852626,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.2501237885268885,
+        "bias": -0.0005092774985270232,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.258123788526889,
+        "bias": 0.04949072250147353,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.26696443645831,
+        "bias": 0.09949072250147392,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.275964436458312,
+        "bias": 0.1494907225014731,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.28496443645831,
+        "bias": 0.1994907225014738,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.293964436458309,
+        "bias": 0.24949072250147297,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.302964436458311,
+        "bias": 0.29949072250147346,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.31196443645831,
+        "bias": 0.34949072250147395,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.05,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.320964436458312,
+        "bias": 0.3994907225014732,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20670242902789684
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.1775483444901615,
+        "bias": -0.799358693832724,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.178548344490162,
+        "bias": -0.7493586938327249,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.181363674100804,
+        "bias": -0.6993586938327244,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.184363674100803,
+        "bias": -0.649358693832724,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.187363674100803,
+        "bias": -0.599358693832725,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.190363674100803,
+        "bias": -0.5493586938327241,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.1941680529827785,
+        "bias": -0.4993586938327249,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.19901788388451,
+        "bias": -0.4493586938327245,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.204017883884509,
+        "bias": -0.3993586938327241,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.209017883884509,
+        "bias": -0.34935869383272494,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.214017883884511,
+        "bias": -0.29935869383272407,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.219701312248494,
+        "bias": -0.24935869383272494,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.2257013122484945,
+        "bias": -0.19935869383272442,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.231701312248494,
+        "bias": -0.14935869383272407,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.237701312248493,
+        "bias": -0.09935869383272472,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.243701312248495,
+        "bias": -0.04935869383272422,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.251369375729103,
+        "bias": 0.0006413061672750508,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.259369375729104,
+        "bias": 0.0506413061672756,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.2682276771701915,
+        "bias": 0.100641306167276,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.277227677170191,
+        "bias": 0.15064130616727522,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.286227677170191,
+        "bias": 0.20064130616727577,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.295227677170192,
+        "bias": 0.250641306167275,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.304227677170192,
+        "bias": 0.3006413061672754,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.313227677170191,
+        "bias": 0.35064130616727596,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.1,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.322227677170191,
+        "bias": 0.4006413061672752,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2068381152049454
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.1787989351015975,
+        "bias": -0.7982081101669223,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.179798935101597,
+        "bias": -0.7482081101669229,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.182284368091878,
+        "bias": -0.6982081101669226,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.185284368091878,
+        "bias": -0.6482081101669221,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.188284368091876,
+        "bias": -0.598208110166923,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.191711764643702,
+        "bias": -0.5482081101669224,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.1957117646437005,
+        "bias": -0.498208110166923,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.200307479962318,
+        "bias": -0.44820811016692264,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.205307479962318,
+        "bias": -0.39820811016692226,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.210307479962318,
+        "bias": -0.34820811016692305,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.215307479962319,
+        "bias": -0.2982081101669223,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.220854413132199,
+        "bias": -0.24820811016692304,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.226854413132201,
+        "bias": -0.1982081101669226,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.2328544131322,
+        "bias": -0.14820811016692217,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.2388544131321995,
+        "bias": -0.098208110166923,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.244948002377466,
+        "bias": -0.04820811016692245,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.252614962931317,
+        "bias": 0.001791889833076894,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.260614962931318,
+        "bias": 0.0517918898330773,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.269490917882073,
+        "bias": 0.1017918898330779,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.278490917882072,
+        "bias": 0.1517918898330771,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.287490917882073,
+        "bias": 0.20179188983307758,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.296490917882071,
+        "bias": 0.2517918898330769,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.305490917882073,
+        "bias": 0.3017918898330773,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.314490917882074,
+        "bias": 0.3517918898330779,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.15000000000000002,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.32349222763656,
+        "bias": 0.4017918898330771,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20697775159414275
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.1800495257130335,
+        "bias": -0.7970575265011206,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.181049525713033,
+        "bias": -0.7470575265011213,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.183205062082951,
+        "bias": -0.6970575265011206,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.186205062082951,
+        "bias": -0.6470575265011204,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.189255476304624,
+        "bias": -0.597057526501121,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.193255476304624,
+        "bias": -0.5470575265011204,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.1972554763046235,
+        "bias": -0.49705752650112117,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.2015970760401276,
+        "bias": -0.4470575265011208,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.206597076040127,
+        "bias": -0.3970575265011203,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.2115970760401265,
+        "bias": -0.34705752650112115,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.216597076040128,
+        "bias": -0.2970575265011204,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.222007514015905,
+        "bias": -0.24705752650112128,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.228007514015905,
+        "bias": -0.1970575265011208,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.234007514015904,
+        "bias": -0.14705752650112028,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.240007514015904,
+        "bias": -0.09705752650112111,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.2463096954826085,
+        "bias": -0.04705752650112047,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.253860550133532,
+        "bias": 0.002942473498878737,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.261860550133533,
+        "bias": 0.052942473498879254,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.270754158593954,
+        "bias": 0.10294247349887974,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.279754158593954,
+        "bias": 0.15294247349887896,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.288754158593953,
+        "bias": 0.20294247349887953,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.297754158593953,
+        "bias": 0.2529424734988787,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.306754158593954,
+        "bias": 0.3029424734988792,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.315754158593954,
+        "bias": 0.3529424734988798,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.2,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.3249215634449,
+        "bias": 0.40294247349887896,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2071213381954889
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.1813001163244685,
+        "bias": -0.7959069428353185,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.182300116324469,
+        "bias": -0.745906942835319,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.184225213659655,
+        "bias": -0.6959069428353188,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.187125756074025,
+        "bias": -0.6459069428353185,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.190799187965547,
+        "bias": -0.5959069428353191,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.194799187965547,
+        "bias": -0.5459069428353185,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.198799187965547,
+        "bias": -0.49590694283531916,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.202886672117936,
+        "bias": -0.4459069428353189,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.207886672117935,
+        "bias": -0.39590694283531846,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.212886672117936,
+        "bias": -0.3459069428353191,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.217886672117936,
+        "bias": -0.29590694283531843,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.22316061489961,
+        "bias": -0.2459069428353193,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.22916061489961,
+        "bias": -0.19590694283531881,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.235160614899609,
+        "bias": -0.14590694283531833,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.24116061489961,
+        "bias": -0.09590694283531914,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.247671388587751,
+        "bias": -0.04590694283531855,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.255106137335747,
+        "bias": 0.004093057164680686,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.263106137335747,
+        "bias": 0.0540930571646812,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.272017399305835,
+        "bias": 0.10409305716468169,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.281017399305835,
+        "bias": 0.1540930571646809,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.290017399305835,
+        "bias": 0.20409305716468143,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.299017399305836,
+        "bias": 0.25409305716468067,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.308017399305836,
+        "bias": 0.3040930571646811,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.3170173993058345,
+        "bias": 0.35409305716468176,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.25,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.3263508992532405,
+        "bias": 0.404093057164681,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.2072688750089839
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.182550706935904,
+        "bias": -0.7947563591695166,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.183550706935904,
+        "bias": -0.7447563591695174,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.1854602536800956,
+        "bias": -0.6947563591695167,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.188342899626469,
+        "bias": -0.6447563591695166,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.19234289962647,
+        "bias": -0.5947563591695172,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.19634289962647,
+        "bias": -0.5447563591695166,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.20034289962647,
+        "bias": -0.4947563591695174,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.204342899626469,
+        "bias": -0.4447563591695169,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.209176268195744,
+        "bias": -0.3947563591695166,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.214176268195745,
+        "bias": -0.34475635916951725,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.219176268195745,
+        "bias": -0.2947563591695166,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.224313715783315,
+        "bias": -0.24475635916951755,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.230313715783314,
+        "bias": -0.19475635916951692,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.236313715783314,
+        "bias": -0.14475635916951654,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.242313715783315,
+        "bias": -0.09475635916951716,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.249033081692893,
+        "bias": -0.04475635916951674,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.256351724537961,
+        "bias": 0.005243640830482494,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.264351724537961,
+        "bias": 0.05524364083048305,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.273280640017716,
+        "bias": 0.10524364083048349,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.282280640017716,
+        "bias": 0.15524364083048284,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.291280640017716,
+        "bias": 0.20524364083048327,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.300280640017716,
+        "bias": 0.2552436408304826,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.3092806400177155,
+        "bias": 0.305243640830483,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.318280640017716,
+        "bias": 0.35524364083048354,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.30000000000000004,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.3277802350615815,
+        "bias": 0.4052436408304829,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20742036203462771
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.183801297547339,
+        "bias": -0.7936057755037145,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.184801297547339,
+        "bias": -0.7436057755037153,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.186695293700538,
+        "bias": -0.693605775503715,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.189886611287393,
+        "bias": -0.6436057755037145,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.193886611287392,
+        "bias": -0.5936057755037152,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.197886611287392,
+        "bias": -0.5436057755037146,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.201886611287392,
+        "bias": -0.49360577550371537,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.205886611287392,
+        "bias": -0.4436057755037149,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.210465864273553,
+        "bias": -0.3936057755037145,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.215465864273554,
+        "bias": -0.3436057755037152,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.220465864273553,
+        "bias": -0.29360577550371475,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.22546681666702,
+        "bias": -0.24360577550371545,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.2314668166670195,
+        "bias": -0.19360577550371494,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.23746681666702,
+        "bias": -0.14360577550371445,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.24346681666702,
+        "bias": -0.09360577550371524,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.250394774798035,
+        "bias": -0.04360577550371476,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.2575973117401755,
+        "bias": 0.0063942244962846215,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.2655973117401755,
+        "bias": 0.0563942244962851,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.274543880729597,
+        "bias": 0.1063942244962856,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.283543880729597,
+        "bias": 0.1563942244962848,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.292543880729597,
+        "bias": 0.20639422449628525,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.301543880729597,
+        "bias": 0.25639422449628463,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.310543880729597,
+        "bias": 0.30639422449628506,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.319543880729598,
+        "bias": 0.35639422449628555,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.35000000000000003,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.3292095708699225,
+        "bias": 0.4063942244962847,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20757579927242045
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.1850518881587755,
+        "bias": -0.7924551918379126,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.186051888158775,
+        "bias": -0.7424551918379136,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.188472818622047,
+        "bias": -0.6924551918379132,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.191472818622047,
+        "bias": -0.6424551918379129,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.195430322948314,
+        "bias": -0.5924551918379134,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.199430322948316,
+        "bias": -0.5424551918379127,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.203430322948314,
+        "bias": -0.4924551918379134,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.207430322948315,
+        "bias": -0.44245519183791304,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.211755460351362,
+        "bias": -0.3924551918379127,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.2167554603513615,
+        "bias": -0.34245519183791345,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.221755460351362,
+        "bias": -0.2924551918379127,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.226755460351361,
+        "bias": -0.24245519183791361,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.232619917550725,
+        "bias": -0.1924551918379131,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.238619917550724,
+        "bias": -0.14245519183791264,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.244756467903177,
+        "bias": -0.09245519183791352,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.251756467903178,
+        "bias": -0.042455191837912826,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.258842898942389,
+        "bias": 0.007544808162086429,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.266842898942389,
+        "bias": 0.05754480816208691,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.275807121441479,
+        "bias": 0.10754480816208742,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.284807121441478,
+        "bias": 0.15754480816208655,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.293807121441479,
+        "bias": 0.20754480816208712,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.302807121441478,
+        "bias": 0.25754480816208636,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.311807121441478,
+        "bias": 0.30754480816208685,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.3208071214414785,
+        "bias": 0.3575448081620874,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.4,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.330638906678264,
+        "bias": 0.4075448081620865,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.2077351867223618
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.1863024787702106,
+        "bias": -0.7913046081721106,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.1874679813411255,
+        "bias": -0.7413046081721113,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.190330876312338,
+        "bias": -0.6913046081721111,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.193330876312337,
+        "bias": -0.6413046081721105,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.196974034609238,
+        "bias": -0.5913046081721113,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.200974034609239,
+        "bias": -0.5413046081721106,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.204974034609237,
+        "bias": -0.4913046081721115,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.208974034609238,
+        "bias": -0.4413046081721111,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.21304505642917,
+        "bias": -0.39130460817211066,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.218045056429171,
+        "bias": -0.3413046081721113,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.223045056429171,
+        "bias": -0.29130460817211057,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.22804505642917,
+        "bias": -0.24130460817211158,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.23377301843443,
+        "bias": -0.1913046081721111,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.2397730184344296,
+        "bias": -0.1413046081721106,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.246118161008319,
+        "bias": -0.09130460817211133,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.253118161008319,
+        "bias": -0.04130460817211086,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.260118161008318,
+        "bias": 0.00869539182788836,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.268088486144604,
+        "bias": 0.05869539182788893,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.27707036215336,
+        "bias": 0.10869539182788948,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.286070362153359,
+        "bias": 0.15869539182788872,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.29507036215336,
+        "bias": 0.20869539182788924,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.304070362153359,
+        "bias": 0.25869539182788837,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.3130703621533595,
+        "bias": 0.30869539182788874,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.32207036215336,
+        "bias": 0.3586953918278894,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.45,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.332068242486604,
+        "bias": 0.4086953918278887,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20789852438445228
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.187553069381645,
+        "bias": -0.7901540245063088,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.18934158962241,
+        "bias": -0.7401540245063097,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.192188934002628,
+        "bias": -0.6901540245063091,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.195188934002628,
+        "bias": -0.6401540245063092,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.19851774627016,
+        "bias": -0.5901540245063096,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.20251774627016,
+        "bias": -0.5401540245063088,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.20651774627016,
+        "bias": -0.49015402450630974,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.21051774627016,
+        "bias": -0.4401540245063093,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.21451774627016,
+        "bias": -0.3901540245063088,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.219334652506979,
+        "bias": -0.3401540245063097,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.224334652506979,
+        "bias": -0.2901540245063089,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.229334652506979,
+        "bias": -0.24015402450630982,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.234926119318135,
+        "bias": -0.19015402450630942,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.240926119318135,
+        "bias": -0.14015402450630884,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.247479854113461,
+        "bias": -0.09015402450630969,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.254479854113461,
+        "bias": -0.04015402450630903,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.26147985411346,
+        "bias": 0.009845975493690063,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.269334073346818,
+        "bias": 0.059845975493690556,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.278333602865242,
+        "bias": 0.10984597549369121,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.287333602865241,
+        "bias": 0.15984597549369034,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.296333602865239,
+        "bias": 0.20984597549369105,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.3053336028652405,
+        "bias": 0.25984597549369015,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.31433360286524,
+        "bias": 0.30984597549369053,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.323497578294946,
+        "bias": 0.3598459754936913,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.5,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.333497578294946,
+        "bias": 0.40984597549369034,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20806581225869134
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.189215197903694,
+        "bias": -0.7890034408405069,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.191215197903695,
+        "bias": -0.7390034408405076,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.194046991692918,
+        "bias": -0.6890034408405075,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.197046991692918,
+        "bias": -0.6390034408405072,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.200061457931084,
+        "bias": -0.5890034408405078,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.204061457931083,
+        "bias": -0.5390034408405069,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.208061457931083,
+        "bias": -0.48900344084050756,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.212061457931083,
+        "bias": -0.43900344084050746,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.216061457931083,
+        "bias": -0.38900344084050686,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.220624248584789,
+        "bias": -0.3390034408405078,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.225624248584788,
+        "bias": -0.2890034408405071,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.230624248584788,
+        "bias": -0.23900344084050784,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.23607922020184,
+        "bias": -0.18900344084050735,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.242079220201839,
+        "bias": -0.13900344084050706,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.248841547218604,
+        "bias": -0.0890034408405076,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.255841547218603,
+        "bias": -0.039003440840507136,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.262841547218603,
+        "bias": 0.010996559159492048,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.270596843577122,
+        "bias": 0.06099655915949276,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.279596843577122,
+        "bias": 0.1109965591594931,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.288596843577122,
+        "bias": 0.16099655915949235,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.2975968435771215,
+        "bias": 0.21099655915949284,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.306596843577122,
+        "bias": 0.26099655915949205,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.315596843577122,
+        "bias": 0.31099655915949254,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.324926914103286,
+        "bias": 0.36099655915949314,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.55,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.334926914103287,
+        "bias": 0.4109965591594924,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20823705034507925
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.191088806184978,
+        "bias": -0.787852857174705,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.193088806184978,
+        "bias": -0.7378528571747057,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.195905049383209,
+        "bias": -0.687852857174705,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.198905049383209,
+        "bias": -0.637852857174705,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.2019050493832095,
+        "bias": -0.5878528571747057,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.205605169592006,
+        "bias": -0.537852857174705,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.209605169592005,
+        "bias": -0.4878528571747057,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.213605169592006,
+        "bias": -0.43785285717470523,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.217605169592005,
+        "bias": -0.38785285717470486,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.2219138446625974,
+        "bias": -0.3378528571747058,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.2269138446625965,
+        "bias": -0.287852857174705,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.231913844662596,
+        "bias": -0.23785285717470572,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.2372323210855445,
+        "bias": -0.18785285717470523,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.243232321085545,
+        "bias": -0.13785285717470477,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.250203240323746,
+        "bias": -0.08785285717470577,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.257203240323745,
+        "bias": -0.03785285717470513,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.264203240323745,
+        "bias": 0.012147142825294175,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.2718600842890035,
+        "bias": 0.06214714282529469,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.280860084289004,
+        "bias": 0.11214714282529523,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.2898600842890025,
+        "bias": 0.16214714282529438,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.298860084289003,
+        "bias": 0.21214714282529482,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.307860084289003,
+        "bias": 0.26214714282529417,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.3168600842890035,
+        "bias": 0.3121471428252947,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.326356249911627,
+        "bias": 0.36214714282529514,
+        "fixed_three_run_coverage": 0.26,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.6000000000000001,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.336356249911627,
+        "bias": 0.41214714282529435,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.2084122386436161
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.192962414466263,
+        "bias": -0.7867022735089031,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.1949624144662625,
+        "bias": -0.7367022735089036,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.1977631070735,
+        "bias": -0.6867022735089036,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.2007631070735,
+        "bias": -0.6367022735089031,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.2037631070735,
+        "bias": -0.5867022735089039,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.207148881252928,
+        "bias": -0.5367022735089032,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.211148881252928,
+        "bias": -0.48670227350890377,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.2151488812529285,
+        "bias": -0.43670227350890345,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.219148881252929,
+        "bias": -0.38670227350890307,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.223203440740405,
+        "bias": -0.3367022735089038,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.228203440740405,
+        "bias": -0.28670227350890315,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.233203440740405,
+        "bias": -0.23670227350890385,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.23838542196925,
+        "bias": -0.18670227350890348,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.2445649334288875,
+        "bias": -0.13670227350890302,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.251564933428888,
+        "bias": -0.08670227350890385,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.258564933428887,
+        "bias": -0.03670227350890323,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.265564933428887,
+        "bias": 0.013297726491096088,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.273123325000885,
+        "bias": 0.06329772649109656,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.282123325000885,
+        "bias": 0.11329772649109707,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.291123325000884,
+        "bias": 0.16329772649109628,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.300123325000884,
+        "bias": 0.21329772649109685,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.309123325000884,
+        "bias": 0.263297726491096,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.318123325000885,
+        "bias": 0.3132977264910966,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.327785585719969,
+        "bias": 0.36329772649109704,
+        "fixed_three_run_coverage": 0.26,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.65,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.337785585719967,
+        "bias": 0.41329772649109636,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.20859137715430173
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.194836022747547,
+        "bias": -0.7855516898431012,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.196836022747546,
+        "bias": -0.7355516898431016,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.19962116476379,
+        "bias": -0.6855516898431013,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.202621164763791,
+        "bias": -0.6355516898431013,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.205621164763791,
+        "bias": -0.5855516898431019,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.2086925929138514,
+        "bias": -0.5355516898431011,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.212692592913851,
+        "bias": -0.48555168984310176,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.2166925929138515,
+        "bias": -0.43555168984310144,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.220692592913851,
+        "bias": -0.385551689843101,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.2246925929138515,
+        "bias": -0.3355516898431017,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.229493036818214,
+        "bias": -0.2855516898431011,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.234493036818214,
+        "bias": -0.23555168984310185,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.239538522852954,
+        "bias": -0.18555168984310158,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.245926626534029,
+        "bias": -0.13555168984310095,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.25292662653403,
+        "bias": -0.08555168984310191,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.25992662653403,
+        "bias": -0.03555168984310123,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.26692662653403,
+        "bias": 0.014448310156897968,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.274386565712765,
+        "bias": 0.06444831015689859,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.283386565712766,
+        "bias": 0.11444831015689905,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.292386565712765,
+        "bias": 0.1644483101568983,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.3013865657127655,
+        "bias": 0.21444831015689877,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.310386565712765,
+        "bias": 0.264448310156898,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.319386565712765,
+        "bias": 0.31444831015689845,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.329214921528308,
+        "bias": 0.36444831015689916,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.7000000000000001,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.339214921528308,
+        "bias": 0.41444831015689815,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.20877446587713613
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.196709631028832,
+        "bias": -0.7844011061772992,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.198709631028831,
+        "bias": -0.7344011061773,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.201479222454081,
+        "bias": -0.6844011061772997,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.204479222454082,
+        "bias": -0.6344011061772994,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.207479222454081,
+        "bias": -0.5844011061773,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.210479222454082,
+        "bias": -0.534401106177299,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.214236304574774,
+        "bias": -0.4844011061773,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.218236304574774,
+        "bias": -0.43440110617729955,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.222236304574775,
+        "bias": -0.3844011061772993,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.226236304574774,
+        "bias": -0.33440110617730007,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.230782632896023,
+        "bias": -0.284401106177299,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.235782632896022,
+        "bias": -0.23440110617730003,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.240782632896023,
+        "bias": -0.18440110617729957,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.247288319639172,
+        "bias": -0.13440110617729925,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.254288319639172,
+        "bias": -0.08440110617730001,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.261288319639172,
+        "bias": -0.034401106177299426,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.268288319639171,
+        "bias": 0.015598893822699758,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.2756498064246475,
+        "bias": 0.06559889382270041,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.284649806424646,
+        "bias": 0.11559889382270087,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.293649806424646,
+        "bias": 0.16559889382270002,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.302649806424648,
+        "bias": 0.21559889382270064,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.311649806424646,
+        "bias": 0.2655988938226999,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.3206498064246475,
+        "bias": 0.31559889382270034,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.330644257336649,
+        "bias": 0.365598893822701,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.75,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.340644257336649,
+        "bias": 0.4155988938227001,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.20896150481211948
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.198583239310116,
+        "bias": -0.7832505225114972,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.200583239310115,
+        "bias": -0.7332505225114981,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.203337280144372,
+        "bias": -0.6832505225114974,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.206337280144372,
+        "bias": -0.6332505225114975,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.209337280144371,
+        "bias": -0.5832505225114981,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.2123372801443715,
+        "bias": -0.5332505225114972,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.215780016235697,
+        "bias": -0.4832505225114981,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.219780016235697,
+        "bias": -0.4332505225114977,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.223780016235697,
+        "bias": -0.38325052251149727,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.227780016235696,
+        "bias": -0.333250522511498,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.2320722289738315,
+        "bias": -0.2832505225114972,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.2370722289738305,
+        "bias": -0.23325052251149814,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.242072228973831,
+        "bias": -0.18325052251149765,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.2486500127443145,
+        "bias": -0.13325052251149722,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.255650012744313,
+        "bias": -0.08325052251149798,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.262650012744314,
+        "bias": -0.03325052251149728,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.269650012744313,
+        "bias": 0.01674947748850178,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.276913047136529,
+        "bias": 0.06674947748850232,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.285913047136528,
+        "bias": 0.11674947748850287,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.294913047136527,
+        "bias": 0.166749477488502,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.303913047136527,
+        "bias": 0.21674947748850254,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.312913047136528,
+        "bias": 0.26674947748850186,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.322073593144991,
+        "bias": 0.3167494774885023,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.33207359314499,
+        "bias": 0.36674947748850295,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.342073593144989,
+        "bias": 0.416749477488502,
+        "fixed_three_run_coverage": 0.27,
+        "wicket_brier": 0.2091524939592516
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.2004568475914,
+        "bias": -0.7820999388456953,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.2024568475913995,
+        "bias": -0.732099938845696,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.205195337834661,
+        "bias": -0.6820999388456958,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.208195337834663,
+        "bias": -0.6320999388456954,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.2111953378346625,
+        "bias": -0.5820999388456961,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.2141953378346635,
+        "bias": -0.5320999388456954,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.21732372789662,
+        "bias": -0.48209993884569613,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.2213237278966185,
+        "bias": -0.4320999388456957,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.22532372789662,
+        "bias": -0.38209993884569526,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.229323727896619,
+        "bias": -0.3320999388456961,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.233361825051641,
+        "bias": -0.28209993884569534,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.238361825051641,
+        "bias": -0.23209993884569613,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.243375705397025,
+        "bias": -0.18209993884569575,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.250011705849457,
+        "bias": -0.1320999388456952,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.257011705849456,
+        "bias": -0.08209993884569608,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.264011705849457,
+        "bias": -0.03209993884569545,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.271011705849457,
+        "bias": 0.017900061154303745,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.278176287848408,
+        "bias": 0.06790006115430422,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.287176287848409,
+        "bias": 0.11790006115430474,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.296176287848408,
+        "bias": 0.16790006115430406,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.3051762878484094,
+        "bias": 0.21790006115430444,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.31417628784841,
+        "bias": 0.26790006115430365,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.323502928953331,
+        "bias": 0.31790006115430414,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.333502928953331,
+        "bias": 0.36790006115430474,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.8500000000000001,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.34350292895333,
+        "bias": 0.417900061154304,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20934743331853248
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.202330455872684,
+        "bias": -0.7809493551798936,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.204330455872684,
+        "bias": -0.7309493551798941,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.2070533955249525,
+        "bias": -0.6809493551798941,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.210053395524953,
+        "bias": -0.6309493551798938,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.213053395524953,
+        "bias": -0.5809493551798943,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.216053395524954,
+        "bias": -0.5309493551798936,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.219053395524953,
+        "bias": -0.4809493551798943,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.222867439557541,
+        "bias": -0.4309493551798939,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.226867439557543,
+        "bias": -0.3809493551798935,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.230867439557542,
+        "bias": -0.33094935517989427,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.234867439557544,
+        "bias": -0.2809493551798936,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.239651421129449,
+        "bias": -0.2309493551798944,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.244873893696272,
+        "bias": -0.18094935517989386,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.251373398954599,
+        "bias": -0.13094935517989342,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.258373398954598,
+        "bias": -0.08094935517989432,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.2653733989545985,
+        "bias": -0.030949355179893646,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.272373398954598,
+        "bias": 0.019050644820105624,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.279514156550355,
+        "bias": 0.06905064482010599,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.28843952856029,
+        "bias": 0.11905064482010655,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.29743952856029,
+        "bias": 0.16905064482010565,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.306439528560291,
+        "bias": 0.21905064482010633,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.31543952856029,
+        "bias": 0.2690506448201056,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.324932264761672,
+        "bias": 0.31905064482010603,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.3349322647616715,
+        "bias": 0.3690506448201065,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.344932264761671,
+        "bias": 0.41905064482010573,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20954632288996222
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.204204064153967,
+        "bias": -0.7797987715140916,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.206204064153967,
+        "bias": -0.7297987715140921,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.208911453215244,
+        "bias": -0.6797987715140921,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.211911453215244,
+        "bias": -0.6297987715140917,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.214911453215243,
+        "bias": -0.5797987715140921,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.217911453215244,
+        "bias": -0.5297987715140916,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.220911453215243,
+        "bias": -0.4797987715140923,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.224411151218464,
+        "bias": -0.4297987715140919,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.228411151218465,
+        "bias": -0.3797987715140914,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.232411151218464,
+        "bias": -0.32979877151409226,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.236411151218465,
+        "bias": -0.2797987715140915,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.240941017207257,
+        "bias": -0.22979877151409236,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.246372081995518,
+        "bias": -0.1797987715140919,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.252735092059741,
+        "bias": -0.1297987715140914,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.259735092059739,
+        "bias": -0.07979877151409225,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.26673509205974,
+        "bias": -0.029798771514091715,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.27373509205974,
+        "bias": 0.020201228485907555,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.280893503165164,
+        "bias": 0.07020122848590805,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.2897027692721705,
+        "bias": 0.1202012284859086,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.298702769272171,
+        "bias": 0.17020122848590774,
+        "fixed_three_run_coverage": 0.28,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.307702769272171,
+        "bias": 0.2202012284859083,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.316702769272171,
+        "bias": 0.2702012284859075,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.326361600570013,
+        "bias": 0.32020122848590815,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.3363616005700125,
+        "bias": 0.3702012284859086,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 0.9500000000000001,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.346361600570011,
+        "bias": 0.42020122848590774,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20974916267354082
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.6,
+        "rows": 100,
+        "mae": 4.206077672435253,
+        "bias": -0.7786481878482897,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.5499999999999999,
+        "rows": 100,
+        "mae": 4.208077672435252,
+        "bias": -0.7286481878482904,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.5,
+        "rows": 100,
+        "mae": 4.210769510905533,
+        "bias": -0.6786481878482898,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.44999999999999996,
+        "rows": 100,
+        "mae": 4.213769510905535,
+        "bias": -0.6286481878482896,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.4,
+        "rows": 100,
+        "mae": 4.216769510905534,
+        "bias": -0.5786481878482904,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.35,
+        "rows": 100,
+        "mae": 4.219769510905534,
+        "bias": -0.5286481878482897,
+        "fixed_three_run_coverage": 0.36,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.3,
+        "rows": 100,
+        "mae": 4.222769510905533,
+        "bias": -0.4786481878482904,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.25,
+        "rows": 100,
+        "mae": 4.225954862879387,
+        "bias": -0.42864818784829006,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.2,
+        "rows": 100,
+        "mae": 4.229954862879388,
+        "bias": -0.37864818784828963,
+        "fixed_three_run_coverage": 0.34,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.15000000000000002,
+        "rows": 100,
+        "mae": 4.233954862879387,
+        "bias": -0.3286481878482905,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.10000000000000003,
+        "rows": 100,
+        "mae": 4.237954862879388,
+        "bias": -0.2786481878482897,
+        "fixed_three_run_coverage": 0.32,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": -0.050000000000000044,
+        "rows": 100,
+        "mae": 4.2422306132850665,
+        "bias": -0.22864818784829055,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.0,
+        "rows": 100,
+        "mae": 4.247870270294763,
+        "bias": -0.17864818784828998,
+        "fixed_three_run_coverage": 0.33,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.04999999999999993,
+        "rows": 100,
+        "mae": 4.254096785164883,
+        "bias": -0.12864818784828963,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.09999999999999998,
+        "rows": 100,
+        "mae": 4.2610967851648835,
+        "bias": -0.07864818784829032,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.1499999999999999,
+        "rows": 100,
+        "mae": 4.268096785164882,
+        "bias": -0.028648187848289836,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.19999999999999996,
+        "rows": 100,
+        "mae": 4.275096785164882,
+        "bias": 0.021351812151709365,
+        "fixed_three_run_coverage": 0.31,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.25,
+        "rows": 100,
+        "mae": 4.2822728497799725,
+        "bias": 0.07135181215170994,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.29999999999999993,
+        "rows": 100,
+        "mae": 4.290966009984053,
+        "bias": 0.12135181215171052,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.35,
+        "rows": 100,
+        "mae": 4.299966009984052,
+        "bias": 0.17135181215170966,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.3999999999999999,
+        "rows": 100,
+        "mae": 4.3089660099840525,
+        "bias": 0.2213518121517102,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.44999999999999984,
+        "rows": 100,
+        "mae": 4.317966009984052,
+        "bias": 0.27135181215170934,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.4999999999999999,
+        "rows": 100,
+        "mae": 4.327790936378353,
+        "bias": 0.32135181215170994,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.5499999999999999,
+        "rows": 100,
+        "mae": 4.337790936378354,
+        "bias": 0.3713518121517106,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.20995595266926823
+      },
+      {
+        "alpha": 1.0,
+        "point_offset": 0.6,
+        "rows": 100,
+        "mae": 4.347790936378353,
+        "bias": 0.4213518121517096,
+        "fixed_three_run_coverage": 0.29,
+        "wicket_brier": 0.20995595266926823
+      }
+    ]
+  },
+  "overall_changes": {
+    "mae": -0.0008029918405587644,
+    "bias": -0.02270444763271163,
+    "fixed_three_run_coverage": 0.0012553802008608561,
+    "wicket_brier": 0.0
+  },
+  "cold_start_only": {
+    "definition": "TEMP and fewer than 120 prior IPL balls",
+    "baseline": {
+      "rows": 211,
+      "mae": 3.864129159301569,
+      "bias": -0.21163778242170805,
+      "fixed_three_run_coverage": 0.33175355450236965,
+      "wicket_brier": 0.2230556380146399
+    },
+    "enhanced": {
+      "rows": 211,
+      "mae": 3.8664895674242197,
+      "bias": -0.23105400009806842,
+      "fixed_three_run_coverage": 0.3175355450236967,
+      "wicket_brier": 0.2263617646601242
+    },
+    "gated_candidate": {
+      "rows": 211,
+      "mae": 3.8429088630790296,
+      "bias": -0.8116377824217076,
+      "fixed_three_run_coverage": 0.36492890995260663,
+      "wicket_brier": 0.2230556380146399
+    }
+  },
+  "bowler_safeguard": {
+    "baseline": {
+      "rows": 5,
+      "mae": 5.117908644762449,
+      "bias": 2.260750874185635,
+      "fixed_three_run_coverage": 0.2,
+      "wicket_brier": 0.25719211578451223
+    },
+    "enhanced": {
+      "rows": 5,
+      "mae": 5.098624890735485,
+      "bias": 2.221689162805843,
+      "fixed_three_run_coverage": 0.2,
+      "wicket_brier": 0.26536121434224585
+    }
+  },
+  "features_added": [
+    "cold_start_role",
+    "cold_start_status",
+    "cold_start_aggressiveness",
+    "cold_start_prior_seasons",
+    "cold_start_consecutive_xi",
+    "cold_start_important_prior",
+    "cold_start_is_bowler",
+    "current_batting_position"
+  ],
+  "supported_segments": {
+    "powerplay": {
+      "baseline": {
+        "rows": 1751,
+        "mae": 3.991147661494163,
+        "bias": -0.31793549989624653,
+        "fixed_three_run_coverage": 0.3129640205596802,
+        "wicket_brier": 0.20620817490239154
+      },
+      "candidate": {
+        "rows": 1751,
+        "mae": 3.9903053591984854,
+        "bias": -0.34260711611554984,
+        "fixed_three_run_coverage": 0.31467732724157627,
+        "wicket_brier": 0.20620817490239154
+      }
+    },
+    "new_batter_under_24_prior_balls": {
+      "baseline": {
+        "rows": 223,
+        "mae": 3.8854350222991805,
+        "bias": 0.1482953587639842,
+        "fixed_three_run_coverage": 0.30493273542600896,
+        "wicket_brier": 0.2273164048801499
+      },
+      "candidate": {
+        "rows": 223,
+        "mae": 3.8621676917476413,
+        "bias": -0.2633638340611277,
+        "fixed_three_run_coverage": 0.31390134529147984,
+        "wicket_brier": 0.2273164048801499
+      }
+    },
+    "wicket_pressure_prior_over": {
+      "baseline": {
+        "rows": 2354,
+        "mae": 3.8036112519306338,
+        "bias": -0.013610057671298428,
+        "fixed_three_run_coverage": 0.3241291418861512,
+        "wicket_brier": 0.2095132396905056
+      },
+      "candidate": {
+        "rows": 2354,
+        "mae": 3.800447278511791,
+        "bias": -0.03858881722949722,
+        "fixed_three_run_coverage": 0.3262531860662702,
+        "wicket_brier": 0.2095132396905056
+      }
+    },
+    "low_history_venue": {
+      "baseline": {
+        "rows": 427,
+        "mae": 3.4428611143084846,
+        "bias": 0.009906783795952858,
+        "fixed_three_run_coverage": 0.3559718969555035,
+        "wicket_brier": 0.22488254278163824
+      },
+      "candidate": {
+        "rows": 427,
+        "mae": 3.4323862493090256,
+        "bias": -0.021006565150182947,
+        "fixed_three_run_coverage": 0.3559718969555035,
+        "wicket_brier": 0.22488254278163824
+      }
+    }
+  },
+  "temporal_holdout": {
+    "2025": {
+      "baseline": {
+        "rows": 2775,
+        "mae": 3.8143042241167477,
+        "bias": 0.047279016473878895,
+        "fixed_three_run_coverage": 0.3326126126126126,
+        "wicket_brier": 0.21633708724307021
+      },
+      "candidate": {
+        "rows": 2775,
+        "mae": 3.816256063447346,
+        "bias": 0.02630604350090592,
+        "fixed_three_run_coverage": 0.3347747747747748,
+        "wicket_brier": 0.21633708724307021
+      }
+    },
+    "2026": {
+      "baseline": {
+        "rows": 2801,
+        "mae": 3.889162687651522,
+        "bias": -0.16863914382889547,
+        "fixed_three_run_coverage": 0.3163156015708675,
+        "wicket_brier": 0.2193973911376849
+      },
+      "candidate": {
+        "rows": 2801,
+        "mae": 3.885630436082309,
+        "bias": -0.19305899388244777,
+        "fixed_three_run_coverage": 0.3166726169225277,
+        "wicket_brier": 0.2193973911376849
+      }
+    }
+  },
+  "leakage_safe_live_parity_replays": [
+    {
+      "source_file": "1529298.json",
+      "match_date": "2026-05-11",
+      "baseline": {
+        "rows": 39,
+        "mae": 4.2218237902915705,
+        "bias": -0.977445608539282,
+        "fixed_three_run_coverage": 0.28205128205128205,
+        "wicket_brier": 0.22877216388611196
+      },
+      "candidate": {
+        "rows": 39,
+        "mae": 4.267977636445416,
+        "bias": -1.0235994546931282,
+        "fixed_three_run_coverage": 0.28205128205128205,
+        "wicket_brier": 0.22877216388611196
+      }
+    },
+    {
+      "source_file": "1529299.json",
+      "match_date": "2026-05-12",
+      "baseline": {
+        "rows": 35,
+        "mae": 3.7668474741377573,
+        "bias": 1.6853418631538144,
+        "fixed_three_run_coverage": 0.22857142857142856,
+        "wicket_brier": 0.2358793126399615
+      },
+      "candidate": {
+        "rows": 35,
+        "mae": 3.7325617598520435,
+        "bias": 1.6167704345823861,
+        "fixed_three_run_coverage": 0.22857142857142856,
+        "wicket_brier": 0.2358793126399615
+      }
+    },
+    {
+      "source_file": "1529300.json",
+      "match_date": "2026-05-13",
+      "baseline": {
+        "rows": 40,
+        "mae": 2.7224467638956718,
+        "bias": -0.13309533164741544,
+        "fixed_three_run_coverage": 0.375,
+        "wicket_brier": 0.20197229783785137
+      },
+      "candidate": {
+        "rows": 40,
+        "mae": 2.7224467638956718,
+        "bias": -0.13309533164741544,
+        "fixed_three_run_coverage": 0.375,
+        "wicket_brier": 0.20197229783785137
+      }
+    },
+    {
+      "source_file": "1529301.json",
+      "match_date": "2026-05-14",
+      "baseline": {
+        "rows": 40,
+        "mae": 3.635915618681755,
+        "bias": -0.2627536311298964,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2398610083152554
+      },
+      "candidate": {
+        "rows": 40,
+        "mae": 3.635915618681755,
+        "bias": -0.2627536311298964,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.2398610083152554
+      }
+    },
+    {
+      "source_file": "1529302.json",
+      "match_date": "2026-05-15",
+      "baseline": {
+        "rows": 37,
+        "mae": 4.709764325279858,
+        "bias": -1.0365077406808794,
+        "fixed_three_run_coverage": 0.2972972972972973,
+        "wicket_brier": 0.21049065910168985
+      },
+      "candidate": {
+        "rows": 37,
+        "mae": 4.74219675771229,
+        "bias": -1.068940173113312,
+        "fixed_three_run_coverage": 0.2972972972972973,
+        "wicket_brier": 0.21049065910168985
+      }
+    },
+    {
+      "source_file": "1529303.json",
+      "match_date": "2026-05-16",
+      "baseline": {
+        "rows": 40,
+        "mae": 4.627268145703766,
+        "bias": -0.3269975714314716,
+        "fixed_three_run_coverage": 0.275,
+        "wicket_brier": 0.2378725647522919
+      },
+      "candidate": {
+        "rows": 40,
+        "mae": 4.597268145703767,
+        "bias": -0.3569975714314716,
+        "fixed_three_run_coverage": 0.275,
+        "wicket_brier": 0.2378725647522919
+      }
+    },
+    {
+      "source_file": "1529304.json",
+      "match_date": "2026-05-17",
+      "baseline": {
+        "rows": 40,
+        "mae": 3.2350763657391894,
+        "bias": -0.2741904183577547,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.21996310462147414
+      },
+      "candidate": {
+        "rows": 40,
+        "mae": 3.2350763657391894,
+        "bias": -0.2741904183577547,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.21996310462147414
+      }
+    },
+    {
+      "source_file": "1529305.json",
+      "match_date": "2026-05-17",
+      "baseline": {
+        "rows": 40,
+        "mae": 3.689644423568075,
+        "bias": 0.5705755449327888,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.22683056626161333
+      },
+      "candidate": {
+        "rows": 40,
+        "mae": 3.689644423568075,
+        "bias": 0.5705755449327888,
+        "fixed_three_run_coverage": 0.35,
+        "wicket_brier": 0.22683056626161333
+      }
+    },
+    {
+      "source_file": "1529306.json",
+      "match_date": "2026-05-18",
+      "baseline": {
+        "rows": 39,
+        "mae": 3.6143431158098744,
+        "bias": 0.44650360542690254,
+        "fixed_three_run_coverage": 0.2564102564102564,
+        "wicket_brier": 0.20782833234693088
+      },
+      "candidate": {
+        "rows": 39,
+        "mae": 3.5989585004252582,
+        "bias": 0.43111899004228715,
+        "fixed_three_run_coverage": 0.28205128205128205,
+        "wicket_brier": 0.20782833234693088
+      }
+    },
+    {
+      "source_file": "1529307.json",
+      "match_date": "2026-05-19",
+      "baseline": {
+        "rows": 40,
+        "mae": 4.263995492164746,
+        "bias": -0.7688119994164243,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.22599365546948597
+      },
+      "candidate": {
+        "rows": 40,
+        "mae": 4.249451847030644,
+        "bias": -0.7838119994164243,
+        "fixed_three_run_coverage": 0.3,
+        "wicket_brier": 0.22599365546948597
+      }
+    },
+    {
+      "source_file": "1529308.json",
+      "match_date": "2026-05-20",
+      "baseline": {
+        "rows": 39,
+        "mae": 3.413396267164161,
+        "bias": 1.1479997369356625,
+        "fixed_three_run_coverage": 0.3333333333333333,
+        "wicket_brier": 0.21586166963143372
+      },
+      "candidate": {
+        "rows": 39,
+        "mae": 3.3855186850609207,
+        "bias": 1.1172305061664316,
+        "fixed_three_run_coverage": 0.3333333333333333,
+        "wicket_brier": 0.21586166963143372
+      }
+    },
+    {
+      "source_file": "1529309.json",
+      "match_date": "2026-05-21",
+      "baseline": {
+        "rows": 34,
+        "mae": 4.155475897236734,
+        "bias": -0.780952056745137,
+        "fixed_three_run_coverage": 0.2647058823529412,
+        "wicket_brier": 0.18440781524683922
+      },
+      "candidate": {
+        "rows": 34,
+        "mae": 4.155475897236734,
+        "bias": -0.780952056745137,
+        "fixed_three_run_coverage": 0.2647058823529412,
+        "wicket_brier": 0.18440781524683922
+      }
+    },
+    {
+      "source_file": "1529310.json",
+      "match_date": "2026-05-22",
+      "baseline": {
+        "rows": 40,
+        "mae": 4.115044301538124,
+        "bias": -0.47828003448139356,
+        "fixed_three_run_coverage": 0.225,
+        "wicket_brier": 0.2323692264964147
+      },
+      "candidate": {
+        "rows": 40,
+        "mae": 4.115044301538124,
+        "bias": -0.47828003448139356,
+        "fixed_three_run_coverage": 0.225,
+        "wicket_brier": 0.2323692264964147
+      }
+    },
+    {
+      "source_file": "1529311.json",
+      "match_date": "2026-05-23",
+      "baseline": {
+        "rows": 38,
+        "mae": 4.158944404122574,
+        "bias": -1.0192676941754923,
+        "fixed_three_run_coverage": 0.21052631578947367,
+        "wicket_brier": 0.21160240688506682
+      },
+      "candidate": {
+        "rows": 38,
+        "mae": 4.158944404122574,
+        "bias": -1.0192676941754923,
+        "fixed_three_run_coverage": 0.21052631578947367,
+        "wicket_brier": 0.21160240688506682
+      }
+    },
+    {
+      "source_file": "1529312.json",
+      "match_date": "2026-05-24",
+      "baseline": {
+        "rows": 40,
+        "mae": 3.8398537024052524,
+        "bias": 0.7620359900021431,
+        "fixed_three_run_coverage": 0.325,
+        "wicket_brier": 0.22941024079412858
+      },
+      "candidate": {
+        "rows": 40,
+        "mae": 3.8398537024052524,
+        "bias": 0.7620359900021431,
+        "fixed_three_run_coverage": 0.325,
+        "wicket_brier": 0.22941024079412858
+      }
+    },
+    {
+      "source_file": "1529313.json",
+      "match_date": "2026-05-24",
+      "baseline": {
+        "rows": 39,
+        "mae": 3.8815273418368745,
+        "bias": 0.8124103087161819,
+        "fixed_three_run_coverage": 0.2564102564102564,
+        "wicket_brier": 0.1989296684489554
+      },
+      "candidate": {
+        "rows": 39,
+        "mae": 3.89691195722149,
+        "bias": 0.7662564625623356,
+        "fixed_three_run_coverage": 0.2564102564102564,
+        "wicket_brier": 0.1989296684489554
+      }
+    },
+    {
+      "source_file": "1535462.json",
+      "match_date": "2026-05-26",
+      "baseline": {
+        "rows": 40,
+        "mae": 4.699454868720586,
+        "bias": -0.9527797501350237,
+        "fixed_three_run_coverage": 0.1,
+        "wicket_brier": 0.2365415237159199
+      },
+      "candidate": {
+        "rows": 40,
+        "mae": 4.699454868720586,
+        "bias": -0.9527797501350237,
+        "fixed_three_run_coverage": 0.1,
+        "wicket_brier": 0.2365415237159199
+      }
+    },
+    {
+      "source_file": "1535463.json",
+      "match_date": "2026-05-27",
+      "baseline": {
+        "rows": 40,
+        "mae": 5.23424581475928,
+        "bias": -1.7073704562753167,
+        "fixed_three_run_coverage": 0.125,
+        "wicket_brier": 0.2297250485051085
+      },
+      "candidate": {
+        "rows": 40,
+        "mae": 5.23424581475928,
+        "bias": -1.7073704562753167,
+        "fixed_three_run_coverage": 0.125,
+        "wicket_brier": 0.2297250485051085
+      }
+    },
+    {
+      "source_file": "1535464.json",
+      "match_date": "2026-05-29",
+      "baseline": {
+        "rows": 39,
+        "mae": 4.276496114972108,
+        "bias": -1.567391879817529,
+        "fixed_three_run_coverage": 0.3076923076923077,
+        "wicket_brier": 0.20277320330466786
+      },
+      "candidate": {
+        "rows": 39,
+        "mae": 4.276496114972108,
+        "bias": -1.567391879817529,
+        "fixed_three_run_coverage": 0.3076923076923077,
+        "wicket_brier": 0.20277320330466786
+      }
+    },
+    {
+      "source_file": "1535465.json",
+      "match_date": "2026-05-31",
+      "baseline": {
+        "rows": 38,
+        "mae": 3.569754063565142,
+        "bias": 0.7180603588675667,
+        "fixed_three_run_coverage": 0.2894736842105263,
+        "wicket_brier": 0.20424871151379498
+      },
+      "candidate": {
+        "rows": 38,
+        "mae": 3.569754063565142,
+        "bias": 0.7180603588675667,
+        "fixed_three_run_coverage": 0.2894736842105263,
+        "wicket_brier": 0.20424871151379498
+      }
+    }
+  ],
+  "promotion_gates": {
+    "overall_mae_improves": true,
+    "overall_coverage_not_lower": true,
+    "cold_start_mae_improves": true,
+    "cold_start_coverage_not_lower": true,
+    "wicket_brier_not_worse": true,
+    "2025_mae_improves": false,
+    "2025_coverage_not_lower": true,
+    "2026_mae_improves": true,
+    "2026_coverage_not_lower": true
+  },
+  "decision": "reject_keep_research"
+}

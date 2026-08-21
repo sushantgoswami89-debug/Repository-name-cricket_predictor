@@ -1,0 +1,247 @@
+{
+  "candidate_version": "ipl_wicket_v7_context",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "leakage_safe": true,
+  "selection_split": {
+    "training_through": 2023,
+    "platt_fit": "first chronological half of 2024",
+    "candidate_and_threshold_selection": "second chronological half of 2024",
+    "locked_holdout": [
+      2025,
+      2026
+    ]
+  },
+  "candidate_selection": {
+    "baseline_depth7": {
+      "rows": 1369,
+      "event_rate": 0.2914536157779401,
+      "brier": 0.20288608166838992,
+      "roc_auc": 0.5732527194274345,
+      "pr_auc": 0.3788639997673757,
+      "log_loss": 0.5957522337617721
+    },
+    "context_depth4": {
+      "rows": 1369,
+      "event_rate": 0.2914536157779401,
+      "brier": 0.20211987889249658,
+      "roc_auc": 0.5768209182750691,
+      "pr_auc": 0.3851729240263652,
+      "log_loss": 0.5937978922325637
+    },
+    "context_depth5": {
+      "rows": 1369,
+      "event_rate": 0.2914536157779401,
+      "brier": 0.20253911413300474,
+      "roc_auc": 0.5745032684804795,
+      "pr_auc": 0.3792701695392018,
+      "log_loss": 0.5946542260463928
+    },
+    "context_depth6": {
+      "rows": 1369,
+      "event_rate": 0.2914536157779401,
+      "brier": 0.20214096196510334,
+      "roc_auc": 0.5781283104668888,
+      "pr_auc": 0.38716738222296115,
+      "log_loss": 0.5940094770531732
+    }
+  },
+  "selected_model": "context_depth4",
+  "baseline": {
+    "rows": 5576,
+    "event_rate": 0.2774390243902439,
+    "brier": 0.196404399213621,
+    "roc_auc": 0.5875022441532888,
+    "pr_auc": 0.369399332648116,
+    "log_loss": 0.5810593145666612
+  },
+  "candidate": {
+    "rows": 5576,
+    "event_rate": 0.2774390243902439,
+    "brier": 0.19597093997184564,
+    "roc_auc": 0.5945436310729114,
+    "pr_auc": 0.3730329437816842,
+    "log_loss": 0.5801107988763123
+  },
+  "threshold_selected_pre_holdout": {
+    "threshold": 0.345,
+    "precision": 0.4280155642023346,
+    "recall": 0.2756892230576441,
+    "accuracy": 0.6815193571950329,
+    "alert_rate": 0.1877282688093499
+  },
+  "holdout_alert_metrics": {
+    "threshold": 0.345,
+    "precision": 0.40408525754884544,
+    "recall": 0.29411764705882354,
+    "accuracy": 0.6838235294117647,
+    "alert_rate": 0.20193687230989957
+  },
+  "temporal_holdout": {
+    "2025": {
+      "baseline": {
+        "rows": 2775,
+        "event_rate": 0.27675675675675676,
+        "brier": 0.1959219381564507,
+        "roc_auc": 0.5898242868709517,
+        "pr_auc": 0.3725163956820805,
+        "log_loss": 0.5799417259241169
+      },
+      "candidate": {
+        "rows": 2775,
+        "event_rate": 0.27675675675675676,
+        "brier": 0.19528033643151266,
+        "roc_auc": 0.5950481907075237,
+        "pr_auc": 0.3771654577160879,
+        "log_loss": 0.5784445752318214
+      }
+    },
+    "2026": {
+      "baseline": {
+        "rows": 2801,
+        "event_rate": 0.27811495894323457,
+        "brier": 0.19688238187468754,
+        "roc_auc": 0.5855531388360893,
+        "pr_auc": 0.3680882853869646,
+        "log_loss": 0.5821665293053478
+      },
+      "candidate": {
+        "rows": 2801,
+        "event_rate": 0.27811495894323457,
+        "brier": 0.19665513305446755,
+        "roc_auc": 0.5938108280036416,
+        "pr_auc": 0.37119732915593706,
+        "log_loss": 0.5817615559678734
+      }
+    }
+  },
+  "baseline_segments": {
+    "powerplay": {
+      "rows": 1751,
+      "event_rate": 0.23586521987435752,
+      "brier": 0.1824676538040758,
+      "roc_auc": 0.50595373818753,
+      "pr_auc": 0.23737681530273264,
+      "log_loss": 0.5515738512423701
+    },
+    "middle": {
+      "rows": 2582,
+      "event_rate": 0.2509682416731216,
+      "brier": 0.18757334646243926,
+      "roc_auc": 0.5635612560164439,
+      "pr_auc": 0.30245229242574534,
+      "log_loss": 0.5622545096044306
+    },
+    "death": {
+      "rows": 1243,
+      "event_rate": 0.3909895414320193,
+      "brier": 0.23438108418197565,
+      "roc_auc": 0.5983685872868318,
+      "pr_auc": 0.47935933399737785,
+      "log_loss": 0.6616571043440655
+    },
+    "new_batter_0_5": {
+      "rows": 1860,
+      "event_rate": 0.26021505376344084,
+      "brier": 0.1882926846718069,
+      "roc_auc": 0.5816190779358063,
+      "pr_auc": 0.35714433359014075,
+      "log_loss": 0.5630549213324687
+    },
+    "recent_wicket": {
+      "rows": 2354,
+      "event_rate": 0.27994902293967716,
+      "brier": 0.19639457789385503,
+      "roc_auc": 0.592283830421529,
+      "pr_auc": 0.3824164525604698,
+      "log_loss": 0.5809320249706789
+    },
+    "high_chase_pressure": {
+      "rows": 892,
+      "event_rate": 0.31053811659192826,
+      "brier": 0.20699282007418152,
+      "roc_auc": 0.6108538052889554,
+      "pr_auc": 0.43657953065404315,
+      "log_loss": 0.6032629156816662
+    },
+    "three_wickets_or_less": {
+      "rows": 249,
+      "event_rate": 0.4899598393574297,
+      "brier": 0.25916663232715625,
+      "roc_auc": 0.6590293016651606,
+      "pr_auc": 0.6443478050524576,
+      "log_loss": 0.713302945443568
+    }
+  },
+  "candidate_segments": {
+    "powerplay": {
+      "rows": 1751,
+      "event_rate": 0.23586521987435752,
+      "brier": 0.1821215188457841,
+      "roc_auc": 0.5178340698596076,
+      "pr_auc": 0.24334549736462,
+      "log_loss": 0.5507033942745931
+    },
+    "middle": {
+      "rows": 2582,
+      "event_rate": 0.2509682416731216,
+      "brier": 0.18750266929584558,
+      "roc_auc": 0.5697540439439784,
+      "pr_auc": 0.30868454852744287,
+      "log_loss": 0.5621743875359682
+    },
+    "death": {
+      "rows": 1243,
+      "event_rate": 0.3909895414320193,
+      "brier": 0.23307102949490754,
+      "roc_auc": 0.593435208289164,
+      "pr_auc": 0.4783025319985245,
+      "log_loss": 0.6587947727607686
+    },
+    "new_batter_0_5": {
+      "rows": 1860,
+      "event_rate": 0.26021505376344084,
+      "brier": 0.18796732387854753,
+      "roc_auc": 0.5878925019219681,
+      "pr_auc": 0.3603552896845936,
+      "log_loss": 0.5624235395716413
+    },
+    "recent_wicket": {
+      "rows": 2354,
+      "event_rate": 0.27994902293967716,
+      "brier": 0.19565539121031775,
+      "roc_auc": 0.5993518381744039,
+      "pr_auc": 0.38622992038848164,
+      "log_loss": 0.5793592319102296
+    },
+    "high_chase_pressure": {
+      "rows": 892,
+      "event_rate": 0.31053811659192826,
+      "brier": 0.20540601942092995,
+      "roc_auc": 0.6203574887734437,
+      "pr_auc": 0.44419630969401247,
+      "log_loss": 0.5997341813400954
+    },
+    "three_wickets_or_less": {
+      "rows": 249,
+      "event_rate": 0.4899598393574297,
+      "brier": 0.25248506111415364,
+      "roc_auc": 0.6517361559313282,
+      "pr_auc": 0.6305175926331172,
+      "log_loss": 0.6989306112178835
+    }
+  },
+  "promotion_gates": {
+    "brier_improves": true,
+    "roc_auc_improves": true,
+    "pr_auc_improves": true,
+    "holdout_precision_at_least_42pct": false,
+    "holdout_recall_above_current_27_86pct": true,
+    "2025_brier_improves": true,
+    "2025_roc_auc_not_lower": true,
+    "2026_brier_improves": true,
+    "2026_roc_auc_not_lower": true
+  },
+  "decision": "reject_keep_research"
+}

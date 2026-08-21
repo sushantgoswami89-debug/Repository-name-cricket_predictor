@@ -1,0 +1,62 @@
+{
+  "baseline_file": "/Users/susha/Downloads/cricket_predictor/data/reports/verified_baseline_predictions.csv",
+  "baseline_frozen": true,
+  "overall": {
+    "rows": 246846,
+    "mean_predicted_runs": 4.6431,
+    "mean_actual_runs": 7.1639,
+    "runs_bias": -2.5208,
+    "runs_mae": 3.7902,
+    "runs_rmse": 5.1427,
+    "mean_wicket_probability": 0.5176,
+    "actual_wicket_rate": 0.2948,
+    "wicket_brier": 0.2564,
+    "wicket_accuracy": 0.575
+  },
+  "date_split": {
+    "calibration_years": "2005-2024",
+    "unseen_holdout_years": "2025-2026",
+    "calibration_rows": 185858,
+    "holdout_rows": 60988
+  },
+  "wicket_expected_calibration_error": 0.222758,
+  "best_wicket_candidate": {
+    "candidate": "isotonic",
+    "holdout_rows": 60988,
+    "brier_score": 0.207745,
+    "log_loss": 0.605521,
+    "mean_probability": 0.292143,
+    "actual_wicket_rate": 0.302978
+  },
+  "runs_linear_calibration": {
+    "intercept": 3.705293,
+    "coefficient": 0.747428,
+    "raw_holdout_mae": 3.847597,
+    "calibrated_holdout_mae": 3.633934,
+    "raw_holdout_rmse": 5.235162,
+    "calibrated_holdout_rmse": 4.605124
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "change": "Correct systematic runs underprediction",
+      "evidence": "Mean prediction 4.6431 versus actual 7.1639; bias -2.5208."
+    },
+    {
+      "priority": 2,
+      "change": "Validate isotonic wicket calibration",
+      "evidence": "Unseen-match Brier score 0.2077; uncalibrated 0.2568."
+    },
+    {
+      "priority": 3,
+      "change": "Retrain with time-aware validation and phase interactions",
+      "evidence": "Segment tables show material variation by phase and era."
+    },
+    {
+      "priority": 4,
+      "change": "Improve low-coverage player fallbacks",
+      "evidence": "Player coverage report isolates rare-player performance."
+    }
+  ],
+  "model_replaced": false
+}

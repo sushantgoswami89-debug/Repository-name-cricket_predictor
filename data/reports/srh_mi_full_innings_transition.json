@@ -1,0 +1,113 @@
+{
+  "scope": "SRH vs MI and MI vs SRH, overs 1-20",
+  "support_pool": "All SRH and MI batting innings, 2019-2024",
+  "holdout": "Exact head-to-head matches, 2025+",
+  "rows": {
+    "support_train": 3470,
+    "exact_head_to_head_all": 1010,
+    "exact_holdout": 114,
+    "exact_holdout_matches": 3
+  },
+  "metrics": {
+    "context_baseline": {
+      "runs_mae": 4.722113220206444,
+      "runs_bias": -0.6187405338160062,
+      "wicket_brier": 0.18608121129612273,
+      "wicket_auc": 0.548172757475083
+    },
+    "dynamic_transition": {
+      "runs_mae": 4.6591823325763295,
+      "runs_bias": -0.9746746757038773,
+      "wicket_brier": 0.1830937721236684,
+      "wicket_auc": 0.5658222591362126
+    },
+    "dynamic_with_matchup": {
+      "runs_mae": 4.742945327141511,
+      "runs_bias": -0.8402207842836347,
+      "wicket_brier": 0.20014368184418468,
+      "wicket_auc": 0.5112126245847176
+    },
+    "dynamic_with_strike_bowler": {
+      "runs_mae": 4.72205880683021,
+      "runs_bias": -0.7870113323399116,
+      "wicket_brier": 0.19269190924911186,
+      "wicket_auc": 0.5556478405315615
+    }
+  },
+  "phase_metrics": {
+    "powerplay": {
+      "rows": {
+        "train": 1081,
+        "holdout": 36
+      },
+      "dynamic": {
+        "runs_mae": 4.770710172211634,
+        "runs_bias": -0.9637940393033949,
+        "wicket_brier": 0.15407637477693473,
+        "wicket_auc": 0.3888888888888889
+      },
+      "strike_bowler": {
+        "runs_mae": 4.5409123809306955,
+        "runs_bias": -1.0374808031917273,
+        "wicket_brier": 0.18441775279996092,
+        "wicket_auc": 0.25555555555555554
+      },
+      "strike_vs_dynamic": {
+        "runs_mae_improvement": 0.04816846611631558,
+        "wicket_brier_improvement": -0.19692427256906297,
+        "wicket_auc_change": -0.13333333333333336
+      }
+    },
+    "middle": {
+      "rows": {
+        "train": 1591,
+        "holdout": 54
+      },
+      "dynamic": {
+        "runs_mae": 4.6866581548356985,
+        "runs_bias": -0.7208649409985989,
+        "wicket_brier": 0.2005042721566325,
+        "wicket_auc": 0.4678571428571429
+      },
+      "strike_bowler": {
+        "runs_mae": 4.474499287805271,
+        "runs_bias": -0.7178595245445898,
+        "wicket_brier": 0.20035264663384583,
+        "wicket_auc": 0.5660714285714286
+      },
+      "strike_vs_dynamic": {
+        "runs_mae_improvement": 0.045268688268104595,
+        "wicket_brier_improvement": 0.0007562209081919954,
+        "wicket_auc_change": 0.09821428571428564
+      }
+    },
+    "death": {
+      "rows": {
+        "train": 798,
+        "holdout": 24
+      },
+      "dynamic": {
+        "runs_mae": 4.851218282725582,
+        "runs_bias": -0.7321128188321516,
+        "wicket_brier": 0.22979479866351263,
+        "wicket_auc": 0.5546875
+      },
+      "strike_bowler": {
+        "runs_mae": 5.287141212675896,
+        "runs_bias": -0.5545405654335043,
+        "wicket_brier": 0.2280002008701714,
+        "wicket_auc": 0.546875
+      },
+      "strike_vs_dynamic": {
+        "runs_mae_improvement": -0.08985844473388595,
+        "wicket_brier_improvement": 0.007809566638490611,
+        "wicket_auc_change": -0.0078125
+      }
+    }
+  },
+  "strike_vs_context": {
+    "runs_mae_improvement": 1.1523098599434145e-05,
+    "wicket_brier_improvement": -0.0355258755408095,
+    "wicket_auc_change": 0.007475083056478482
+  }
+}

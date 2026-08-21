@@ -1,0 +1,2783 @@
+{
+  "analysis_version": "venue_bowling_phase_interactions_v1",
+  "oracle_bowler_type": true,
+  "promotion_eligible": false,
+  "venues": [
+    "chennai_chepauk",
+    "bengaluru_chinnaswamy"
+  ],
+  "support_policy": {
+    "minimum_total_overs": 100,
+    "minimum_overs_each_type": 30,
+    "minimum_comparable_years": 3,
+    "minimum_year_overs_each_type": 10,
+    "direction_agreement": 0.75
+  },
+  "classified_over_coverage": 0.9945680289705121,
+  "comparisons": [
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "phase",
+      "value": "death",
+      "spin": {
+        "overs": 169,
+        "bowler_wickets": 65,
+        "wickets_per_over": 0.38461538461538464,
+        "balls_per_wicket": 14.96923076923077,
+        "runs_per_over": 9.692307692307692,
+        "dot_rate": 0.28879753340184994,
+        "boundary_ball_rate": 0.20760534429599178
+      },
+      "pace": {
+        "overs": 699,
+        "bowler_wickets": 318,
+        "wickets_per_over": 0.45493562231759654,
+        "balls_per_wicket": 12.830188679245284,
+        "runs_per_over": 10.799713876967095,
+        "dot_rate": 0.283578431372549,
+        "boundary_ball_rate": 0.24803921568627452
+      },
+      "spin_minus_pace_wickets_per_over": -0.07032023770221191,
+      "comparable_years": 11,
+      "spin_higher_years": 4,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 12,
+          "pace_overs": 44,
+          "spin_minus_pace_wickets_per_over": -0.015151515151515138
+        },
+        "2010": {
+          "spin_overs": 13,
+          "pace_overs": 49,
+          "spin_minus_pace_wickets_per_over": 0.09419152276295134
+        },
+        "2011": {
+          "spin_overs": 10,
+          "pace_overs": 32,
+          "spin_minus_pace_wickets_per_over": -0.3
+        },
+        "2012": {
+          "spin_overs": 18,
+          "pace_overs": 61,
+          "spin_minus_pace_wickets_per_over": 0.10018214936247721
+        },
+        "2014": {
+          "spin_overs": 14,
+          "pace_overs": 43,
+          "spin_minus_pace_wickets_per_over": -0.08637873754152825
+        },
+        "2016": {
+          "spin_overs": 15,
+          "pace_overs": 62,
+          "spin_minus_pace_wickets_per_over": -0.16881720430107527
+        },
+        "2017": {
+          "spin_overs": 10,
+          "pace_overs": 48,
+          "spin_minus_pace_wickets_per_over": 0.054166666666666585
+        },
+        "2018": {
+          "spin_overs": 10,
+          "pace_overs": 58,
+          "spin_minus_pace_wickets_per_over": -0.16206896551724137
+        },
+        "2019": {
+          "spin_overs": 16,
+          "pace_overs": 43,
+          "spin_minus_pace_wickets_per_over": -0.08139534883720934
+        },
+        "2023": {
+          "spin_overs": 10,
+          "pace_overs": 57,
+          "spin_minus_pace_wickets_per_over": 0.06140350877192985
+        },
+        "2025": {
+          "spin_overs": 11,
+          "pace_overs": 25,
+          "spin_minus_pace_wickets_per_over": -0.37818181818181823
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "phase",
+      "value": "middle",
+      "spin": {
+        "overs": 902,
+        "bowler_wickets": 226,
+        "wickets_per_over": 0.25055432372505543,
+        "balls_per_wicket": 23.924778761061948,
+        "runs_per_over": 8.274944567627495,
+        "dot_rate": 0.3057148141298317,
+        "boundary_ball_rate": 0.15073053449232476
+      },
+      "pace": {
+        "overs": 879,
+        "bowler_wickets": 204,
+        "wickets_per_over": 0.23208191126279865,
+        "balls_per_wicket": 25.75,
+        "runs_per_over": 8.680318543799773,
+        "dot_rate": 0.3150580620597754,
+        "boundary_ball_rate": 0.17780316009899105
+      },
+      "spin_minus_pace_wickets_per_over": 0.018472412462256782,
+      "comparable_years": 15,
+      "spin_higher_years": 8,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 32,
+          "pace_overs": 94,
+          "spin_minus_pace_wickets_per_over": -0.07845744680851063
+        },
+        "2010": {
+          "spin_overs": 52,
+          "pace_overs": 70,
+          "spin_minus_pace_wickets_per_over": 0.0692307692307692
+        },
+        "2011": {
+          "spin_overs": 53,
+          "pace_overs": 50,
+          "spin_minus_pace_wickets_per_over": 0.10641509433962265
+        },
+        "2012": {
+          "spin_overs": 71,
+          "pace_overs": 73,
+          "spin_minus_pace_wickets_per_over": -0.08971638047462857
+        },
+        "2013": {
+          "spin_overs": 47,
+          "pace_overs": 83,
+          "spin_minus_pace_wickets_per_over": -0.11330428095360165
+        },
+        "2014": {
+          "spin_overs": 76,
+          "pace_overs": 32,
+          "spin_minus_pace_wickets_per_over": 0.12006578947368424
+        },
+        "2015": {
+          "spin_overs": 41,
+          "pace_overs": 56,
+          "spin_minus_pace_wickets_per_over": 0.013501742160278773
+        },
+        "2016": {
+          "spin_overs": 81,
+          "pace_overs": 80,
+          "spin_minus_pace_wickets_per_over": -0.0027777777777777957
+        },
+        "2017": {
+          "spin_overs": 83,
+          "pace_overs": 51,
+          "spin_minus_pace_wickets_per_over": 0.14434207417906925
+        },
+        "2018": {
+          "spin_overs": 71,
+          "pace_overs": 55,
+          "spin_minus_pace_wickets_per_over": 0.1503201024327785
+        },
+        "2019": {
+          "spin_overs": 67,
+          "pace_overs": 41,
+          "spin_minus_pace_wickets_per_over": 0.1860211139424827
+        },
+        "2023": {
+          "spin_overs": 71,
+          "pace_overs": 55,
+          "spin_minus_pace_wickets_per_over": 0.0030729833546734864
+        },
+        "2024": {
+          "spin_overs": 60,
+          "pace_overs": 65,
+          "spin_minus_pace_wickets_per_over": -0.08974358974358976
+        },
+        "2025": {
+          "spin_overs": 50,
+          "pace_overs": 37,
+          "spin_minus_pace_wickets_per_over": -0.030270270270270294
+        },
+        "2026": {
+          "spin_overs": 47,
+          "pace_overs": 37,
+          "spin_minus_pace_wickets_per_over": -0.06900517538815415
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "phase",
+      "value": "powerplay",
+      "spin": {
+        "overs": 203,
+        "bowler_wickets": 51,
+        "wickets_per_over": 0.2512315270935961,
+        "balls_per_wicket": 23.725490196078432,
+        "runs_per_over": 7.87192118226601,
+        "dot_rate": 0.43388429752066116,
+        "boundary_ball_rate": 0.1925619834710744
+      },
+      "pace": {
+        "overs": 1029,
+        "bowler_wickets": 246,
+        "wickets_per_over": 0.239067055393586,
+        "balls_per_wicket": 25.077235772357724,
+        "runs_per_over": 8.062196307094267,
+        "dot_rate": 0.4681471875506565,
+        "boundary_ball_rate": 0.20213973091262766
+      },
+      "spin_minus_pace_wickets_per_over": 0.012164471700010088,
+      "comparable_years": 9,
+      "spin_higher_years": 4,
+      "supported": false,
+      "yearly": {
+        "2011": {
+          "spin_overs": 11,
+          "pace_overs": 61,
+          "spin_minus_pace_wickets_per_over": 0.10134128166915052
+        },
+        "2012": {
+          "spin_overs": 13,
+          "pace_overs": 83,
+          "spin_minus_pace_wickets_per_over": -0.11584800741427248
+        },
+        "2014": {
+          "spin_overs": 12,
+          "pace_overs": 60,
+          "spin_minus_pace_wickets_per_over": -0.016666666666666663
+        },
+        "2016": {
+          "spin_overs": 21,
+          "pace_overs": 87,
+          "spin_minus_pace_wickets_per_over": 0.11494252873563215
+        },
+        "2017": {
+          "spin_overs": 26,
+          "pace_overs": 70,
+          "spin_minus_pace_wickets_per_over": 0.017582417582417575
+        },
+        "2018": {
+          "spin_overs": 34,
+          "pace_overs": 50,
+          "spin_minus_pace_wickets_per_over": -0.004705882352941171
+        },
+        "2019": {
+          "spin_overs": 15,
+          "pace_overs": 66,
+          "spin_minus_pace_wickets_per_over": 0.06060606060606061
+        },
+        "2023": {
+          "spin_overs": 17,
+          "pace_overs": 67,
+          "spin_minus_pace_wickets_per_over": -0.07726075504828797
+        },
+        "2024": {
+          "spin_overs": 22,
+          "pace_overs": 62,
+          "spin_minus_pace_wickets_per_over": -0.043988269794721396
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "phase",
+      "value": "death",
+      "spin": {
+        "overs": 213,
+        "bowler_wickets": 81,
+        "wickets_per_over": 0.38028169014084506,
+        "balls_per_wicket": 15.432098765432098,
+        "runs_per_over": 8.530516431924882,
+        "dot_rate": 0.3248,
+        "boundary_ball_rate": 0.1528
+      },
+      "pace": {
+        "overs": 689,
+        "bowler_wickets": 317,
+        "wickets_per_over": 0.46008708272859217,
+        "balls_per_wicket": 12.772870662460567,
+        "runs_per_over": 9.566037735849056,
+        "dot_rate": 0.29093603358854037,
+        "boundary_ball_rate": 0.19189923437885897
+      },
+      "spin_minus_pace_wickets_per_over": -0.0798053925877471,
+      "comparable_years": 10,
+      "spin_higher_years": 1,
+      "supported": true,
+      "yearly": {
+        "2008": {
+          "spin_overs": 10,
+          "pace_overs": 54,
+          "spin_minus_pace_wickets_per_over": -0.1074074074074074
+        },
+        "2010": {
+          "spin_overs": 26,
+          "pace_overs": 37,
+          "spin_minus_pace_wickets_per_over": -0.05925155925155928
+        },
+        "2011": {
+          "spin_overs": 29,
+          "pace_overs": 60,
+          "spin_minus_pace_wickets_per_over": -0.0017241379310344862
+        },
+        "2012": {
+          "spin_overs": 26,
+          "pace_overs": 64,
+          "spin_minus_pace_wickets_per_over": -0.10817307692307693
+        },
+        "2015": {
+          "spin_overs": 13,
+          "pace_overs": 57,
+          "spin_minus_pace_wickets_per_over": -0.20107962213225372
+        },
+        "2019": {
+          "spin_overs": 19,
+          "pace_overs": 49,
+          "spin_minus_pace_wickets_per_over": -0.06337271750805584
+        },
+        "2021": {
+          "spin_overs": 24,
+          "pace_overs": 73,
+          "spin_minus_pace_wickets_per_over": -0.0884703196347032
+        },
+        "2023": {
+          "spin_overs": 22,
+          "pace_overs": 61,
+          "spin_minus_pace_wickets_per_over": -0.33010432190760053
+        },
+        "2024": {
+          "spin_overs": 10,
+          "pace_overs": 67,
+          "spin_minus_pace_wickets_per_over": -0.05820895522388059
+        },
+        "2025": {
+          "spin_overs": 16,
+          "pace_overs": 36,
+          "spin_minus_pace_wickets_per_over": 0.09027777777777779
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "phase",
+      "value": "middle",
+      "spin": {
+        "overs": 1078,
+        "bowler_wickets": 268,
+        "wickets_per_over": 0.24860853432282004,
+        "balls_per_wicket": 24.09328358208955,
+        "runs_per_over": 7.091836734693878,
+        "dot_rate": 0.331733002942543,
+        "boundary_ball_rate": 0.10701564193898096
+      },
+      "pace": {
+        "overs": 659,
+        "bowler_wickets": 156,
+        "wickets_per_over": 0.23672230652503792,
+        "balls_per_wicket": 25.346153846153847,
+        "runs_per_over": 8.007587253414265,
+        "dot_rate": 0.3052604957005564,
+        "boundary_ball_rate": 0.13935255437531613
+      },
+      "spin_minus_pace_wickets_per_over": 0.011886227797782117,
+      "comparable_years": 12,
+      "spin_higher_years": 6,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 52,
+          "pace_overs": 74,
+          "spin_minus_pace_wickets_per_over": -0.02598752598752596
+        },
+        "2010": {
+          "spin_overs": 77,
+          "pace_overs": 48,
+          "spin_minus_pace_wickets_per_over": 0.05925324675324675
+        },
+        "2011": {
+          "spin_overs": 117,
+          "pace_overs": 45,
+          "spin_minus_pace_wickets_per_over": -0.06153846153846154
+        },
+        "2012": {
+          "spin_overs": 103,
+          "pace_overs": 77,
+          "spin_minus_pace_wickets_per_over": -0.0006304375236414195
+        },
+        "2013": {
+          "spin_overs": 73,
+          "pace_overs": 71,
+          "spin_minus_pace_wickets_per_over": 0.06309087401119043
+        },
+        "2015": {
+          "spin_overs": 77,
+          "pace_overs": 49,
+          "spin_minus_pace_wickets_per_over": 0.06307977736549164
+        },
+        "2019": {
+          "spin_overs": 104,
+          "pace_overs": 40,
+          "spin_minus_pace_wickets_per_over": 0.22307692307692306
+        },
+        "2021": {
+          "spin_overs": 119,
+          "pace_overs": 61,
+          "spin_minus_pace_wickets_per_over": -0.018597602975616495
+        },
+        "2023": {
+          "spin_overs": 119,
+          "pace_overs": 43,
+          "spin_minus_pace_wickets_per_over": -0.023060386945475908
+        },
+        "2024": {
+          "spin_overs": 89,
+          "pace_overs": 69,
+          "spin_minus_pace_wickets_per_over": -0.13759973945611464
+        },
+        "2025": {
+          "spin_overs": 72,
+          "pace_overs": 27,
+          "spin_minus_pace_wickets_per_over": 0.03240740740740744
+        },
+        "2026": {
+          "spin_overs": 65,
+          "pace_overs": 48,
+          "spin_minus_pace_wickets_per_over": 0.01698717948717951
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "phase",
+      "value": "powerplay",
+      "spin": {
+        "overs": 283,
+        "bowler_wickets": 63,
+        "wickets_per_over": 0.2226148409893993,
+        "balls_per_wicket": 26.952380952380953,
+        "runs_per_over": 7.6431095406360425,
+        "dot_rate": 0.450530035335689,
+        "boundary_ball_rate": 0.17667844522968199
+      },
+      "pace": {
+        "overs": 887,
+        "bowler_wickets": 191,
+        "wickets_per_over": 0.2153325817361894,
+        "balls_per_wicket": 27.86387434554974,
+        "runs_per_over": 8.268320180383315,
+        "dot_rate": 0.4545283727921834,
+        "boundary_ball_rate": 0.2080045095828636
+      },
+      "spin_minus_pace_wickets_per_over": 0.007282259253209883,
+      "comparable_years": 11,
+      "spin_higher_years": 5,
+      "supported": false,
+      "yearly": {
+        "2010": {
+          "spin_overs": 25,
+          "pace_overs": 59,
+          "spin_minus_pace_wickets_per_over": 0.11661016949152542
+        },
+        "2011": {
+          "spin_overs": 42,
+          "pace_overs": 66,
+          "spin_minus_pace_wickets_per_over": 0.047619047619047616
+        },
+        "2012": {
+          "spin_overs": 35,
+          "pace_overs": 85,
+          "spin_minus_pace_wickets_per_over": -0.119327731092437
+        },
+        "2013": {
+          "spin_overs": 15,
+          "pace_overs": 81,
+          "spin_minus_pace_wickets_per_over": -0.15555555555555556
+        },
+        "2015": {
+          "spin_overs": 12,
+          "pace_overs": 72,
+          "spin_minus_pace_wickets_per_over": 0.0
+        },
+        "2019": {
+          "spin_overs": 40,
+          "pace_overs": 56,
+          "spin_minus_pace_wickets_per_over": 0.15000000000000002
+        },
+        "2021": {
+          "spin_overs": 43,
+          "pace_overs": 77,
+          "spin_minus_pace_wickets_per_over": 0.08215040773180307
+        },
+        "2023": {
+          "spin_overs": 25,
+          "pace_overs": 83,
+          "spin_minus_pace_wickets_per_over": -0.004819277108433717
+        },
+        "2024": {
+          "spin_overs": 13,
+          "pace_overs": 95,
+          "spin_minus_pace_wickets_per_over": -0.10931174089068824
+        },
+        "2025": {
+          "spin_overs": 13,
+          "pace_overs": 58,
+          "spin_minus_pace_wickets_per_over": 0.057029177718832924
+        },
+        "2026": {
+          "spin_overs": 11,
+          "pace_overs": 68,
+          "spin_minus_pace_wickets_per_over": -0.053475935828877
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "innings",
+      "value": "chase",
+      "spin": {
+        "overs": 606,
+        "bowler_wickets": 172,
+        "wickets_per_over": 0.2838283828382838,
+        "balls_per_wicket": 20.83139534883721,
+        "runs_per_over": 8.227722772277227,
+        "dot_rate": 0.32291375941948086,
+        "boundary_ball_rate": 0.16327100195367011
+      },
+      "pace": {
+        "overs": 1256,
+        "bowler_wickets": 358,
+        "wickets_per_over": 0.28503184713375795,
+        "balls_per_wicket": 20.701117318435752,
+        "runs_per_over": 8.85748407643312,
+        "dot_rate": 0.3666171906625287,
+        "boundary_ball_rate": 0.20199703143975173
+      },
+      "spin_minus_pace_wickets_per_over": -0.0012034642954741326,
+      "comparable_years": 15,
+      "spin_higher_years": 8,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 24,
+          "pace_overs": 104,
+          "spin_minus_pace_wickets_per_over": -0.1826923076923077
+        },
+        "2010": {
+          "spin_overs": 30,
+          "pace_overs": 98,
+          "spin_minus_pace_wickets_per_over": 0.05238095238095239
+        },
+        "2011": {
+          "spin_overs": 38,
+          "pace_overs": 66,
+          "spin_minus_pace_wickets_per_over": 0.03987240829346092
+        },
+        "2012": {
+          "spin_overs": 52,
+          "pace_overs": 107,
+          "spin_minus_pace_wickets_per_over": -0.0007189072609632974
+        },
+        "2013": {
+          "spin_overs": 34,
+          "pace_overs": 107,
+          "spin_minus_pace_wickets_per_over": -0.05579989004947772
+        },
+        "2014": {
+          "spin_overs": 53,
+          "pace_overs": 64,
+          "spin_minus_pace_wickets_per_over": 0.13974056603773582
+        },
+        "2015": {
+          "spin_overs": 21,
+          "pace_overs": 63,
+          "spin_minus_pace_wickets_per_over": 0.12698412698412698
+        },
+        "2016": {
+          "spin_overs": 54,
+          "pace_overs": 117,
+          "spin_minus_pace_wickets_per_over": 0.11396011396011396
+        },
+        "2017": {
+          "spin_overs": 59,
+          "pace_overs": 70,
+          "spin_minus_pace_wickets_per_over": 0.07820823244552061
+        },
+        "2018": {
+          "spin_overs": 55,
+          "pace_overs": 83,
+          "spin_minus_pace_wickets_per_over": 0.11018619934282584
+        },
+        "2019": {
+          "spin_overs": 46,
+          "pace_overs": 77,
+          "spin_minus_pace_wickets_per_over": -0.10728402032749859
+        },
+        "2023": {
+          "spin_overs": 45,
+          "pace_overs": 92,
+          "spin_minus_pace_wickets_per_over": -0.1695652173913043
+        },
+        "2024": {
+          "spin_overs": 40,
+          "pace_overs": 91,
+          "spin_minus_pace_wickets_per_over": -0.11263736263736263
+        },
+        "2025": {
+          "spin_overs": 30,
+          "pace_overs": 59,
+          "spin_minus_pace_wickets_per_over": -0.20564971751412428
+        },
+        "2026": {
+          "spin_overs": 25,
+          "pace_overs": 58,
+          "spin_minus_pace_wickets_per_over": 0.0096551724137931
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "innings",
+      "value": "first_innings",
+      "spin": {
+        "overs": 668,
+        "bowler_wickets": 170,
+        "wickets_per_over": 0.25449101796407186,
+        "balls_per_wicket": 23.570588235294117,
+        "runs_per_over": 8.553892215568862,
+        "dot_rate": 0.3249313701023209,
+        "boundary_ball_rate": 0.16595957075118542
+      },
+      "pace": {
+        "overs": 1351,
+        "bowler_wickets": 410,
+        "wickets_per_over": 0.30347890451517395,
+        "balls_per_wicket": 19.734146341463415,
+        "runs_per_over": 9.141376757957069,
+        "dot_rate": 0.3686812507724632,
+        "boundary_ball_rate": 0.2096156222963787
+      },
+      "spin_minus_pace_wickets_per_over": -0.04898788655110209,
+      "comparable_years": 15,
+      "spin_higher_years": 5,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 22,
+          "pace_overs": 116,
+          "spin_minus_pace_wickets_per_over": 0.08777429467084641
+        },
+        "2010": {
+          "spin_overs": 38,
+          "pace_overs": 102,
+          "spin_minus_pace_wickets_per_over": 0.09029927760577913
+        },
+        "2011": {
+          "spin_overs": 36,
+          "pace_overs": 77,
+          "spin_minus_pace_wickets_per_over": -0.07467532467532467
+        },
+        "2012": {
+          "spin_overs": 50,
+          "pace_overs": 110,
+          "spin_minus_pace_wickets_per_over": -0.06545454545454546
+        },
+        "2013": {
+          "spin_overs": 30,
+          "pace_overs": 118,
+          "spin_minus_pace_wickets_per_over": -0.19717514124293786
+        },
+        "2014": {
+          "spin_overs": 49,
+          "pace_overs": 71,
+          "spin_minus_pace_wickets_per_over": -0.1402701925840759
+        },
+        "2015": {
+          "spin_overs": 38,
+          "pace_overs": 92,
+          "spin_minus_pace_wickets_per_over": 0.03318077803203662
+        },
+        "2016": {
+          "spin_overs": 63,
+          "pace_overs": 112,
+          "spin_minus_pace_wickets_per_over": -0.1607142857142857
+        },
+        "2017": {
+          "spin_overs": 60,
+          "pace_overs": 99,
+          "spin_minus_pace_wickets_per_over": -0.1106060606060606
+        },
+        "2018": {
+          "spin_overs": 60,
+          "pace_overs": 80,
+          "spin_minus_pace_wickets_per_over": -0.07500000000000001
+        },
+        "2019": {
+          "spin_overs": 52,
+          "pace_overs": 73,
+          "spin_minus_pace_wickets_per_over": 0.12170706006322446
+        },
+        "2023": {
+          "spin_overs": 53,
+          "pace_overs": 87,
+          "spin_minus_pace_wickets_per_over": 0.06050748210800258
+        },
+        "2024": {
+          "spin_overs": 46,
+          "pace_overs": 94,
+          "spin_minus_pace_wickets_per_over": -0.14523589269195192
+        },
+        "2025": {
+          "spin_overs": 39,
+          "pace_overs": 55,
+          "spin_minus_pace_wickets_per_over": -0.05594405594405594
+        },
+        "2026": {
+          "spin_overs": 32,
+          "pace_overs": 65,
+          "spin_minus_pace_wickets_per_over": -0.10384615384615387
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "innings",
+      "value": "chase",
+      "spin": {
+        "overs": 792,
+        "bowler_wickets": 212,
+        "wickets_per_over": 0.2676767676767677,
+        "balls_per_wicket": 22.2311320754717,
+        "runs_per_over": 7.123737373737374,
+        "dot_rate": 0.35879482283046893,
+        "boundary_ball_rate": 0.1158497772119669
+      },
+      "pace": {
+        "overs": 1072,
+        "bowler_wickets": 320,
+        "wickets_per_over": 0.29850746268656714,
+        "balls_per_wicket": 19.88125,
+        "runs_per_over": 8.471082089552239,
+        "dot_rate": 0.3630933668657655,
+        "boundary_ball_rate": 0.17950330084878968
+      },
+      "spin_minus_pace_wickets_per_over": -0.030830695009799458,
+      "comparable_years": 12,
+      "spin_higher_years": 2,
+      "supported": true,
+      "yearly": {
+        "2008": {
+          "spin_overs": 34,
+          "pace_overs": 100,
+          "spin_minus_pace_wickets_per_over": 0.01470588235294118
+        },
+        "2010": {
+          "spin_overs": 64,
+          "pace_overs": 68,
+          "spin_minus_pace_wickets_per_over": -0.01286764705882354
+        },
+        "2011": {
+          "spin_overs": 104,
+          "pace_overs": 75,
+          "spin_minus_pace_wickets_per_over": -0.07743589743589746
+        },
+        "2012": {
+          "spin_overs": 78,
+          "pace_overs": 112,
+          "spin_minus_pace_wickets_per_over": -0.019230769230769218
+        },
+        "2013": {
+          "spin_overs": 44,
+          "pace_overs": 116,
+          "spin_minus_pace_wickets_per_over": 0.00783699059561127
+        },
+        "2015": {
+          "spin_overs": 49,
+          "pace_overs": 91,
+          "spin_minus_pace_wickets_per_over": -0.08948194662480374
+        },
+        "2019": {
+          "spin_overs": 80,
+          "pace_overs": 70,
+          "spin_minus_pace_wickets_per_over": 0.0
+        },
+        "2021": {
+          "spin_overs": 96,
+          "pace_overs": 101,
+          "spin_minus_pace_wickets_per_over": -0.047029702970297016
+        },
+        "2023": {
+          "spin_overs": 83,
+          "pace_overs": 90,
+          "spin_minus_pace_wickets_per_over": -0.022891566265060226
+        },
+        "2024": {
+          "spin_overs": 51,
+          "pace_overs": 113,
+          "spin_minus_pace_wickets_per_over": -0.056741280583029685
+        },
+        "2025": {
+          "spin_overs": 50,
+          "pace_overs": 55,
+          "spin_minus_pace_wickets_per_over": -0.050909090909090904
+        },
+        "2026": {
+          "spin_overs": 48,
+          "pace_overs": 72,
+          "spin_minus_pace_wickets_per_over": -0.02777777777777779
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "innings",
+      "value": "first_innings",
+      "spin": {
+        "overs": 782,
+        "bowler_wickets": 200,
+        "wickets_per_over": 0.2557544757033248,
+        "balls_per_wicket": 23.46,
+        "runs_per_over": 7.650895140664962,
+        "dot_rate": 0.345694799658994,
+        "boundary_ball_rate": 0.13554987212276215
+      },
+      "pace": {
+        "overs": 1163,
+        "bowler_wickets": 344,
+        "wickets_per_over": 0.29578675838349094,
+        "balls_per_wicket": 20.24127906976744,
+        "runs_per_over": 8.70249355116079,
+        "dot_rate": 0.358178945856671,
+        "boundary_ball_rate": 0.18569582076691082
+      },
+      "spin_minus_pace_wickets_per_over": -0.04003228268016612,
+      "comparable_years": 12,
+      "spin_higher_years": 3,
+      "supported": true,
+      "yearly": {
+        "2008": {
+          "spin_overs": 31,
+          "pace_overs": 109,
+          "spin_minus_pace_wickets_per_over": -0.10920390648120748
+        },
+        "2010": {
+          "spin_overs": 64,
+          "pace_overs": 76,
+          "spin_minus_pace_wickets_per_over": 0.07072368421052633
+        },
+        "2011": {
+          "spin_overs": 84,
+          "pace_overs": 96,
+          "spin_minus_pace_wickets_per_over": -0.035714285714285726
+        },
+        "2012": {
+          "spin_overs": 86,
+          "pace_overs": 114,
+          "spin_minus_pace_wickets_per_over": -0.1413708690330477
+        },
+        "2013": {
+          "spin_overs": 51,
+          "pace_overs": 109,
+          "spin_minus_pace_wickets_per_over": -0.0528872099298435
+        },
+        "2015": {
+          "spin_overs": 53,
+          "pace_overs": 87,
+          "spin_minus_pace_wickets_per_over": -0.0223378876599436
+        },
+        "2019": {
+          "spin_overs": 83,
+          "pace_overs": 75,
+          "spin_minus_pace_wickets_per_over": 0.17734939759036142
+        },
+        "2021": {
+          "spin_overs": 90,
+          "pace_overs": 110,
+          "spin_minus_pace_wickets_per_over": -0.07474747474747478
+        },
+        "2023": {
+          "spin_overs": 83,
+          "pace_overs": 97,
+          "spin_minus_pace_wickets_per_over": -0.11464414358464786
+        },
+        "2024": {
+          "spin_overs": 61,
+          "pace_overs": 118,
+          "spin_minus_pace_wickets_per_over": -0.13434287302028344
+        },
+        "2025": {
+          "spin_overs": 51,
+          "pace_overs": 66,
+          "spin_minus_pace_wickets_per_over": 0.04188948306595364
+        },
+        "2026": {
+          "spin_overs": 37,
+          "pace_overs": 94,
+          "spin_minus_pace_wickets_per_over": -0.09229442208165611
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "batter_age",
+      "value": "0_5",
+      "spin": {
+        "overs": 314,
+        "bowler_wickets": 83,
+        "wickets_per_over": 0.2643312101910828,
+        "balls_per_wicket": 22.46987951807229,
+        "runs_per_over": 8.044585987261147,
+        "dot_rate": 0.34584450402144773,
+        "boundary_ball_rate": 0.16246648793565685
+      },
+      "pace": {
+        "overs": 1007,
+        "bowler_wickets": 282,
+        "wickets_per_over": 0.2800397219463754,
+        "balls_per_wicket": 21.19858156028369,
+        "runs_per_over": 7.815292949354518,
+        "dot_rate": 0.4342589494814319,
+        "boundary_ball_rate": 0.17514218802275008
+      },
+      "spin_minus_pace_wickets_per_over": -0.015708511755292587,
+      "comparable_years": 14,
+      "spin_higher_years": 9,
+      "supported": false,
+      "yearly": {
+        "2010": {
+          "spin_overs": 13,
+          "pace_overs": 79,
+          "spin_minus_pace_wickets_per_over": 0.04089581304771178
+        },
+        "2011": {
+          "spin_overs": 17,
+          "pace_overs": 48,
+          "spin_minus_pace_wickets_per_over": 0.20343137254901958
+        },
+        "2012": {
+          "spin_overs": 31,
+          "pace_overs": 88,
+          "spin_minus_pace_wickets_per_over": 0.017595307917888603
+        },
+        "2013": {
+          "spin_overs": 15,
+          "pace_overs": 79,
+          "spin_minus_pace_wickets_per_over": 0.1468354430379747
+        },
+        "2014": {
+          "spin_overs": 32,
+          "pace_overs": 43,
+          "spin_minus_pace_wickets_per_over": 0.017441860465116282
+        },
+        "2015": {
+          "spin_overs": 15,
+          "pace_overs": 70,
+          "spin_minus_pace_wickets_per_over": 0.05714285714285716
+        },
+        "2016": {
+          "spin_overs": 22,
+          "pace_overs": 85,
+          "spin_minus_pace_wickets_per_over": 0.025668449197860932
+        },
+        "2017": {
+          "spin_overs": 33,
+          "pace_overs": 71,
+          "spin_minus_pace_wickets_per_over": -0.13999146393512588
+        },
+        "2018": {
+          "spin_overs": 28,
+          "pace_overs": 58,
+          "spin_minus_pace_wickets_per_over": 0.07758620689655171
+        },
+        "2019": {
+          "spin_overs": 23,
+          "pace_overs": 67,
+          "spin_minus_pace_wickets_per_over": 0.0330953926022064
+        },
+        "2023": {
+          "spin_overs": 17,
+          "pace_overs": 74,
+          "spin_minus_pace_wickets_per_over": -0.062003179650238494
+        },
+        "2024": {
+          "spin_overs": 30,
+          "pace_overs": 71,
+          "spin_minus_pace_wickets_per_over": -0.10985915492957743
+        },
+        "2025": {
+          "spin_overs": 16,
+          "pace_overs": 47,
+          "spin_minus_pace_wickets_per_over": -0.3404255319148936
+        },
+        "2026": {
+          "spin_overs": 13,
+          "pace_overs": 45,
+          "spin_minus_pace_wickets_per_over": -0.03589743589743588
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "batter_age",
+      "value": "12_23",
+      "spin": {
+        "overs": 438,
+        "bowler_wickets": 96,
+        "wickets_per_over": 0.2191780821917808,
+        "balls_per_wicket": 27.28125,
+        "runs_per_over": 8.484018264840183,
+        "dot_rate": 0.3115693012600229,
+        "boundary_ball_rate": 0.16342115311187477
+      },
+      "pace": {
+        "overs": 594,
+        "bowler_wickets": 173,
+        "wickets_per_over": 0.29124579124579125,
+        "balls_per_wicket": 20.526011560693643,
+        "runs_per_over": 9.595959595959595,
+        "dot_rate": 0.3137144466347508,
+        "boundary_ball_rate": 0.21233455364686005
+      },
+      "spin_minus_pace_wickets_per_over": -0.07206770905401044,
+      "comparable_years": 15,
+      "spin_higher_years": 4,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 16,
+          "pace_overs": 59,
+          "spin_minus_pace_wickets_per_over": -0.1514830508474576
+        },
+        "2010": {
+          "spin_overs": 27,
+          "pace_overs": 48,
+          "spin_minus_pace_wickets_per_over": -0.1111111111111111
+        },
+        "2011": {
+          "spin_overs": 25,
+          "pace_overs": 36,
+          "spin_minus_pace_wickets_per_over": -0.21333333333333332
+        },
+        "2012": {
+          "spin_overs": 31,
+          "pace_overs": 52,
+          "spin_minus_pace_wickets_per_over": -0.06265508684863522
+        },
+        "2013": {
+          "spin_overs": 20,
+          "pace_overs": 54,
+          "spin_minus_pace_wickets_per_over": -0.1333333333333333
+        },
+        "2014": {
+          "spin_overs": 32,
+          "pace_overs": 34,
+          "spin_minus_pace_wickets_per_over": 0.07720588235294118
+        },
+        "2015": {
+          "spin_overs": 21,
+          "pace_overs": 33,
+          "spin_minus_pace_wickets_per_over": 0.10389610389610388
+        },
+        "2016": {
+          "spin_overs": 35,
+          "pace_overs": 44,
+          "spin_minus_pace_wickets_per_over": -0.07857142857142857
+        },
+        "2017": {
+          "spin_overs": 45,
+          "pace_overs": 40,
+          "spin_minus_pace_wickets_per_over": -0.15555555555555559
+        },
+        "2018": {
+          "spin_overs": 44,
+          "pace_overs": 42,
+          "spin_minus_pace_wickets_per_over": -0.079004329004329
+        },
+        "2019": {
+          "spin_overs": 38,
+          "pace_overs": 26,
+          "spin_minus_pace_wickets_per_over": 0.06882591093117407
+        },
+        "2023": {
+          "spin_overs": 33,
+          "pace_overs": 36,
+          "spin_minus_pace_wickets_per_over": -0.012626262626262624
+        },
+        "2024": {
+          "spin_overs": 28,
+          "pace_overs": 49,
+          "spin_minus_pace_wickets_per_over": -0.12244897959183676
+        },
+        "2025": {
+          "spin_overs": 22,
+          "pace_overs": 22,
+          "spin_minus_pace_wickets_per_over": 0.0
+        },
+        "2026": {
+          "spin_overs": 21,
+          "pace_overs": 19,
+          "spin_minus_pace_wickets_per_over": 0.022556390977443608
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "batter_age",
+      "value": "24_plus",
+      "spin": {
+        "overs": 268,
+        "bowler_wickets": 86,
+        "wickets_per_over": 0.3208955223880597,
+        "balls_per_wicket": 18.558139534883722,
+        "runs_per_over": 9.130597014925373,
+        "dot_rate": 0.29448621553884713,
+        "boundary_ball_rate": 0.17919799498746866
+      },
+      "pace": {
+        "overs": 412,
+        "bowler_wickets": 142,
+        "wickets_per_over": 0.3446601941747573,
+        "balls_per_wicket": 17.14788732394366,
+        "runs_per_over": 10.54126213592233,
+        "dot_rate": 0.2784394250513347,
+        "boundary_ball_rate": 0.24476386036960984
+      },
+      "spin_minus_pace_wickets_per_over": -0.02376467178669761,
+      "comparable_years": 15,
+      "spin_higher_years": 6,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 14,
+          "pace_overs": 31,
+          "spin_minus_pace_wickets_per_over": 0.0990783410138249
+        },
+        "2010": {
+          "spin_overs": 16,
+          "pace_overs": 22,
+          "spin_minus_pace_wickets_per_over": -0.022727272727272707
+        },
+        "2011": {
+          "spin_overs": 12,
+          "pace_overs": 28,
+          "spin_minus_pace_wickets_per_over": 0.035714285714285726
+        },
+        "2012": {
+          "spin_overs": 24,
+          "pace_overs": 33,
+          "spin_minus_pace_wickets_per_over": -0.1477272727272727
+        },
+        "2013": {
+          "spin_overs": 15,
+          "pace_overs": 44,
+          "spin_minus_pace_wickets_per_over": -0.27424242424242423
+        },
+        "2014": {
+          "spin_overs": 22,
+          "pace_overs": 23,
+          "spin_minus_pace_wickets_per_over": -0.11857707509881427
+        },
+        "2015": {
+          "spin_overs": 10,
+          "pace_overs": 16,
+          "spin_minus_pace_wickets_per_over": -0.1375
+        },
+        "2016": {
+          "spin_overs": 38,
+          "pace_overs": 60,
+          "spin_minus_pace_wickets_per_over": -0.07017543859649122
+        },
+        "2017": {
+          "spin_overs": 17,
+          "pace_overs": 15,
+          "spin_minus_pace_wickets_per_over": 0.3215686274509804
+        },
+        "2018": {
+          "spin_overs": 19,
+          "pace_overs": 29,
+          "spin_minus_pace_wickets_per_over": 0.3557168784029038
+        },
+        "2019": {
+          "spin_overs": 16,
+          "pace_overs": 22,
+          "spin_minus_pace_wickets_per_over": 0.011363636363636354
+        },
+        "2023": {
+          "spin_overs": 27,
+          "pace_overs": 33,
+          "spin_minus_pace_wickets_per_over": 0.0505050505050505
+        },
+        "2024": {
+          "spin_overs": 15,
+          "pace_overs": 21,
+          "spin_minus_pace_wickets_per_over": -0.2571428571428572
+        },
+        "2025": {
+          "spin_overs": 10,
+          "pace_overs": 17,
+          "spin_minus_pace_wickets_per_over": -0.37058823529411766
+        },
+        "2026": {
+          "spin_overs": 13,
+          "pace_overs": 18,
+          "spin_minus_pace_wickets_per_over": -0.09401709401709402
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "batter_age",
+      "value": "6_11",
+      "spin": {
+        "overs": 254,
+        "bowler_wickets": 77,
+        "wickets_per_over": 0.3031496062992126,
+        "balls_per_wicket": 19.61038961038961,
+        "runs_per_over": 7.917322834645669,
+        "dot_rate": 0.34966887417218545,
+        "boundary_ball_rate": 0.1543046357615894
+      },
+      "pace": {
+        "overs": 594,
+        "bowler_wickets": 171,
+        "wickets_per_over": 0.2878787878787879,
+        "balls_per_wicket": 20.690058479532162,
+        "runs_per_over": 9.363636363636363,
+        "dot_rate": 0.3708309779536461,
+        "boundary_ball_rate": 0.22498586772187676
+      },
+      "spin_minus_pace_wickets_per_over": 0.015270818420424714,
+      "comparable_years": 14,
+      "spin_higher_years": 7,
+      "supported": false,
+      "yearly": {
+        "2010": {
+          "spin_overs": 12,
+          "pace_overs": 51,
+          "spin_minus_pace_wickets_per_over": 0.44607843137254904
+        },
+        "2011": {
+          "spin_overs": 20,
+          "pace_overs": 31,
+          "spin_minus_pace_wickets_per_over": -0.07258064516129031
+        },
+        "2012": {
+          "spin_overs": 16,
+          "pace_overs": 44,
+          "spin_minus_pace_wickets_per_over": 0.10227272727272729
+        },
+        "2013": {
+          "spin_overs": 14,
+          "pace_overs": 48,
+          "spin_minus_pace_wickets_per_over": -0.2916666666666667
+        },
+        "2014": {
+          "spin_overs": 16,
+          "pace_overs": 35,
+          "spin_minus_pace_wickets_per_over": -0.0357142857142857
+        },
+        "2015": {
+          "spin_overs": 13,
+          "pace_overs": 36,
+          "spin_minus_pace_wickets_per_over": 0.23931623931623935
+        },
+        "2016": {
+          "spin_overs": 22,
+          "pace_overs": 40,
+          "spin_minus_pace_wickets_per_over": 0.018181818181818188
+        },
+        "2017": {
+          "spin_overs": 24,
+          "pace_overs": 43,
+          "spin_minus_pace_wickets_per_over": 0.14631782945736432
+        },
+        "2018": {
+          "spin_overs": 24,
+          "pace_overs": 34,
+          "spin_minus_pace_wickets_per_over": -0.17401960784313722
+        },
+        "2019": {
+          "spin_overs": 21,
+          "pace_overs": 35,
+          "spin_minus_pace_wickets_per_over": 0.1333333333333333
+        },
+        "2023": {
+          "spin_overs": 21,
+          "pace_overs": 36,
+          "spin_minus_pace_wickets_per_over": -0.21825396825396826
+        },
+        "2024": {
+          "spin_overs": 13,
+          "pace_overs": 44,
+          "spin_minus_pace_wickets_per_over": -0.22727272727272727
+        },
+        "2025": {
+          "spin_overs": 21,
+          "pace_overs": 28,
+          "spin_minus_pace_wickets_per_over": 0.0714285714285714
+        },
+        "2026": {
+          "spin_overs": 10,
+          "pace_overs": 41,
+          "spin_minus_pace_wickets_per_over": -0.24146341463414636
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "batter_age",
+      "value": "0_5",
+      "spin": {
+        "overs": 407,
+        "bowler_wickets": 99,
+        "wickets_per_over": 0.24324324324324326,
+        "balls_per_wicket": 24.595959595959595,
+        "runs_per_over": 6.891891891891892,
+        "dot_rate": 0.38562628336755644,
+        "boundary_ball_rate": 0.11457905544147844
+      },
+      "pace": {
+        "overs": 820,
+        "bowler_wickets": 216,
+        "wickets_per_over": 0.2634146341463415,
+        "balls_per_wicket": 22.666666666666668,
+        "runs_per_over": 7.708536585365854,
+        "dot_rate": 0.43014705882352944,
+        "boundary_ball_rate": 0.16605392156862744
+      },
+      "spin_minus_pace_wickets_per_over": -0.02017139090309822,
+      "comparable_years": 12,
+      "spin_higher_years": 6,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 13,
+          "pace_overs": 79,
+          "spin_minus_pace_wickets_per_over": 0.10516066212268746
+        },
+        "2010": {
+          "spin_overs": 41,
+          "pace_overs": 54,
+          "spin_minus_pace_wickets_per_over": 0.03342366757000903
+        },
+        "2011": {
+          "spin_overs": 46,
+          "pace_overs": 67,
+          "spin_minus_pace_wickets_per_over": 0.05191434133679429
+        },
+        "2012": {
+          "spin_overs": 42,
+          "pace_overs": 81,
+          "spin_minus_pace_wickets_per_over": 0.03968253968253971
+        },
+        "2013": {
+          "spin_overs": 21,
+          "pace_overs": 76,
+          "spin_minus_pace_wickets_per_over": -0.16791979949874686
+        },
+        "2015": {
+          "spin_overs": 25,
+          "pace_overs": 67,
+          "spin_minus_pace_wickets_per_over": -0.2083582089552239
+        },
+        "2019": {
+          "spin_overs": 35,
+          "pace_overs": 50,
+          "spin_minus_pace_wickets_per_over": 0.08285714285714285
+        },
+        "2021": {
+          "spin_overs": 56,
+          "pace_overs": 71,
+          "spin_minus_pace_wickets_per_over": 0.053822937625754574
+        },
+        "2023": {
+          "spin_overs": 43,
+          "pace_overs": 81,
+          "spin_minus_pace_wickets_per_over": -0.006316393913293139
+        },
+        "2024": {
+          "spin_overs": 32,
+          "pace_overs": 79,
+          "spin_minus_pace_wickets_per_over": -0.15348101265822783
+        },
+        "2025": {
+          "spin_overs": 27,
+          "pace_overs": 54,
+          "spin_minus_pace_wickets_per_over": -0.12962962962962965
+        },
+        "2026": {
+          "spin_overs": 20,
+          "pace_overs": 56,
+          "spin_minus_pace_wickets_per_over": -0.18214285714285716
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "batter_age",
+      "value": "12_23",
+      "spin": {
+        "overs": 494,
+        "bowler_wickets": 125,
+        "wickets_per_over": 0.25303643724696356,
+        "balls_per_wicket": 23.696,
+        "runs_per_over": 7.342105263157895,
+        "dot_rate": 0.33828494260634706,
+        "boundary_ball_rate": 0.11985145172180958
+      },
+      "pace": {
+        "overs": 533,
+        "bowler_wickets": 173,
+        "wickets_per_over": 0.324577861163227,
+        "balls_per_wicket": 18.38150289017341,
+        "runs_per_over": 8.857410881801126,
+        "dot_rate": 0.3229559748427673,
+        "boundary_ball_rate": 0.180188679245283
+      },
+      "spin_minus_pace_wickets_per_over": -0.07154142391626345,
+      "comparable_years": 12,
+      "spin_higher_years": 5,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 26,
+          "pace_overs": 48,
+          "spin_minus_pace_wickets_per_over": -0.08173076923076922
+        },
+        "2010": {
+          "spin_overs": 32,
+          "pace_overs": 34,
+          "spin_minus_pace_wickets_per_over": 0.11029411764705882
+        },
+        "2011": {
+          "spin_overs": 59,
+          "pace_overs": 35,
+          "spin_minus_pace_wickets_per_over": -0.14479418886198547
+        },
+        "2012": {
+          "spin_overs": 54,
+          "pace_overs": 45,
+          "spin_minus_pace_wickets_per_over": -0.11851851851851852
+        },
+        "2013": {
+          "spin_overs": 34,
+          "pace_overs": 58,
+          "spin_minus_pace_wickets_per_over": 0.0182555780933063
+        },
+        "2015": {
+          "spin_overs": 35,
+          "pace_overs": 45,
+          "spin_minus_pace_wickets_per_over": -0.2
+        },
+        "2019": {
+          "spin_overs": 46,
+          "pace_overs": 31,
+          "spin_minus_pace_wickets_per_over": 0.023141654978962145
+        },
+        "2021": {
+          "spin_overs": 54,
+          "pace_overs": 66,
+          "spin_minus_pace_wickets_per_over": -0.15993265993265995
+        },
+        "2023": {
+          "spin_overs": 50,
+          "pace_overs": 38,
+          "spin_minus_pace_wickets_per_over": -0.06105263157894736
+        },
+        "2024": {
+          "spin_overs": 38,
+          "pace_overs": 58,
+          "spin_minus_pace_wickets_per_over": -0.08983666061705986
+        },
+        "2025": {
+          "spin_overs": 33,
+          "pace_overs": 22,
+          "spin_minus_pace_wickets_per_over": 0.09090909090909094
+        },
+        "2026": {
+          "spin_overs": 28,
+          "pace_overs": 44,
+          "spin_minus_pace_wickets_per_over": 0.042207792207792194
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "batter_age",
+      "value": "24_plus",
+      "spin": {
+        "overs": 313,
+        "bowler_wickets": 83,
+        "wickets_per_over": 0.26517571884984026,
+        "balls_per_wicket": 22.44578313253012,
+        "runs_per_over": 7.833865814696486,
+        "dot_rate": 0.30917874396135264,
+        "boundary_ball_rate": 0.1320450885668277
+      },
+      "pace": {
+        "overs": 368,
+        "bowler_wickets": 128,
+        "wickets_per_over": 0.34782608695652173,
+        "balls_per_wicket": 17.0625,
+        "runs_per_over": 9.171195652173912,
+        "dot_rate": 0.27793040293040294,
+        "boundary_ball_rate": 0.1771978021978022
+      },
+      "spin_minus_pace_wickets_per_over": -0.08265036810668147,
+      "comparable_years": 11,
+      "spin_higher_years": 2,
+      "supported": true,
+      "yearly": {
+        "2008": {
+          "spin_overs": 14,
+          "pace_overs": 38,
+          "spin_minus_pace_wickets_per_over": -0.10150375939849623
+        },
+        "2010": {
+          "spin_overs": 31,
+          "pace_overs": 22,
+          "spin_minus_pace_wickets_per_over": -0.09237536656891496
+        },
+        "2011": {
+          "spin_overs": 42,
+          "pace_overs": 38,
+          "spin_minus_pace_wickets_per_over": -0.0012531328320801727
+        },
+        "2012": {
+          "spin_overs": 34,
+          "pace_overs": 51,
+          "spin_minus_pace_wickets_per_over": -0.2647058823529411
+        },
+        "2013": {
+          "spin_overs": 19,
+          "pace_overs": 40,
+          "spin_minus_pace_wickets_per_over": -0.08684210526315789
+        },
+        "2015": {
+          "spin_overs": 20,
+          "pace_overs": 18,
+          "spin_minus_pace_wickets_per_over": 0.27222222222222225
+        },
+        "2019": {
+          "spin_overs": 39,
+          "pace_overs": 30,
+          "spin_minus_pace_wickets_per_over": 0.06923076923076926
+        },
+        "2021": {
+          "spin_overs": 39,
+          "pace_overs": 34,
+          "spin_minus_pace_wickets_per_over": -0.10030165912518851
+        },
+        "2023": {
+          "spin_overs": 35,
+          "pace_overs": 20,
+          "spin_minus_pace_wickets_per_over": -0.28571428571428575
+        },
+        "2024": {
+          "spin_overs": 12,
+          "pace_overs": 32,
+          "spin_minus_pace_wickets_per_over": -0.17708333333333334
+        },
+        "2026": {
+          "spin_overs": 18,
+          "pace_overs": 24,
+          "spin_minus_pace_wickets_per_over": -0.06944444444444448
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "batter_age",
+      "value": "6_11",
+      "spin": {
+        "overs": 360,
+        "bowler_wickets": 105,
+        "wickets_per_over": 0.2916666666666667,
+        "balls_per_wicket": 20.428571428571427,
+        "runs_per_over": 7.613888888888889,
+        "dot_rate": 0.3710955710955711,
+        "boundary_ball_rate": 0.1407925407925408
+      },
+      "pace": {
+        "overs": 514,
+        "bowler_wickets": 147,
+        "wickets_per_over": 0.28599221789883267,
+        "balls_per_wicket": 20.85034013605442,
+        "runs_per_over": 9.309338521400779,
+        "dot_rate": 0.34714518760195756,
+        "boundary_ball_rate": 0.2159869494290375
+      },
+      "spin_minus_pace_wickets_per_over": 0.005674448767834017,
+      "comparable_years": 12,
+      "spin_higher_years": 4,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 12,
+          "pace_overs": 44,
+          "spin_minus_pace_wickets_per_over": -0.17424242424242423
+        },
+        "2010": {
+          "spin_overs": 24,
+          "pace_overs": 34,
+          "spin_minus_pace_wickets_per_over": 0.031862745098039214
+        },
+        "2011": {
+          "spin_overs": 41,
+          "pace_overs": 31,
+          "spin_minus_pace_wickets_per_over": -0.16679779701022818
+        },
+        "2012": {
+          "spin_overs": 34,
+          "pace_overs": 49,
+          "spin_minus_pace_wickets_per_over": -0.0006002400960384291
+        },
+        "2013": {
+          "spin_overs": 21,
+          "pace_overs": 51,
+          "spin_minus_pace_wickets_per_over": 0.07002801120448177
+        },
+        "2015": {
+          "spin_overs": 22,
+          "pace_overs": 48,
+          "spin_minus_pace_wickets_per_over": -0.0018939393939393923
+        },
+        "2019": {
+          "spin_overs": 43,
+          "pace_overs": 34,
+          "spin_minus_pace_wickets_per_over": 0.22503419972640218
+        },
+        "2021": {
+          "spin_overs": 37,
+          "pace_overs": 40,
+          "spin_minus_pace_wickets_per_over": -0.07972972972972969
+        },
+        "2023": {
+          "spin_overs": 38,
+          "pace_overs": 48,
+          "spin_minus_pace_wickets_per_over": -0.04385964912280699
+        },
+        "2024": {
+          "spin_overs": 30,
+          "pace_overs": 62,
+          "spin_minus_pace_wickets_per_over": -0.03978494623655915
+        },
+        "2025": {
+          "spin_overs": 33,
+          "pace_overs": 27,
+          "spin_minus_pace_wickets_per_over": 0.11447811447811451
+        },
+        "2026": {
+          "spin_overs": 19,
+          "pace_overs": 42,
+          "spin_minus_pace_wickets_per_over": -0.12781954887218044
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "recent_wicket",
+      "value": "recent_wicket",
+      "spin": {
+        "overs": 521,
+        "bowler_wickets": 142,
+        "wickets_per_over": 0.272552783109405,
+        "balls_per_wicket": 21.866197183098592,
+        "runs_per_over": 8.061420345489443,
+        "dot_rate": 0.3252818035426731,
+        "boundary_ball_rate": 0.150402576489533
+      },
+      "pace": {
+        "overs": 1078,
+        "bowler_wickets": 367,
+        "wickets_per_over": 0.3404452690166976,
+        "balls_per_wicket": 17.40599455040872,
+        "runs_per_over": 8.729128014842301,
+        "dot_rate": 0.3702254226675016,
+        "boundary_ball_rate": 0.19254852849092047
+      },
+      "spin_minus_pace_wickets_per_over": -0.06789248590729258,
+      "comparable_years": 15,
+      "spin_higher_years": 4,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 18,
+          "pace_overs": 97,
+          "spin_minus_pace_wickets_per_over": -0.041809851088201566
+        },
+        "2010": {
+          "spin_overs": 25,
+          "pace_overs": 71,
+          "spin_minus_pace_wickets_per_over": 0.010140845070422566
+        },
+        "2011": {
+          "spin_overs": 32,
+          "pace_overs": 51,
+          "spin_minus_pace_wickets_per_over": 0.01838235294117646
+        },
+        "2012": {
+          "spin_overs": 42,
+          "pace_overs": 92,
+          "spin_minus_pace_wickets_per_over": -0.0077639751552795455
+        },
+        "2013": {
+          "spin_overs": 20,
+          "pace_overs": 82,
+          "spin_minus_pace_wickets_per_over": -0.15243902439024393
+        },
+        "2014": {
+          "spin_overs": 49,
+          "pace_overs": 49,
+          "spin_minus_pace_wickets_per_over": 0.020408163265306145
+        },
+        "2015": {
+          "spin_overs": 26,
+          "pace_overs": 67,
+          "spin_minus_pace_wickets_per_over": -0.05051664753157287
+        },
+        "2016": {
+          "spin_overs": 45,
+          "pace_overs": 92,
+          "spin_minus_pace_wickets_per_over": -0.1251207729468599
+        },
+        "2017": {
+          "spin_overs": 53,
+          "pace_overs": 83,
+          "spin_minus_pace_wickets_per_over": -0.015003409865878614
+        },
+        "2018": {
+          "spin_overs": 46,
+          "pace_overs": 59,
+          "spin_minus_pace_wickets_per_over": 0.030950626381724383
+        },
+        "2019": {
+          "spin_overs": 36,
+          "pace_overs": 65,
+          "spin_minus_pace_wickets_per_over": -0.10384615384615387
+        },
+        "2023": {
+          "spin_overs": 37,
+          "pace_overs": 79,
+          "spin_minus_pace_wickets_per_over": -0.02839548409168663
+        },
+        "2024": {
+          "spin_overs": 33,
+          "pace_overs": 91,
+          "spin_minus_pace_wickets_per_over": -0.1918081918081918
+        },
+        "2025": {
+          "spin_overs": 35,
+          "pace_overs": 47,
+          "spin_minus_pace_wickets_per_over": -0.2753799392097264
+        },
+        "2026": {
+          "spin_overs": 24,
+          "pace_overs": 53,
+          "spin_minus_pace_wickets_per_over": -0.06682389937106914
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "recent_wicket",
+      "value": "stable",
+      "spin": {
+        "overs": 753,
+        "bowler_wickets": 200,
+        "wickets_per_over": 0.2656042496679947,
+        "balls_per_wicket": 22.425,
+        "runs_per_over": 8.632138114209827,
+        "dot_rate": 0.3230769230769231,
+        "boundary_ball_rate": 0.1745819397993311
+      },
+      "pace": {
+        "overs": 1529,
+        "bowler_wickets": 401,
+        "wickets_per_over": 0.2622629169391759,
+        "balls_per_wicket": 22.728179551122196,
+        "runs_per_over": 9.198822759973838,
+        "dot_rate": 0.36592056177309634,
+        "boundary_ball_rate": 0.2153829273644942
+      },
+      "spin_minus_pace_wickets_per_over": 0.0033413327288187578,
+      "comparable_years": 15,
+      "spin_higher_years": 6,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 28,
+          "pace_overs": 123,
+          "spin_minus_pace_wickets_per_over": -0.05400696864111501
+        },
+        "2010": {
+          "spin_overs": 43,
+          "pace_overs": 129,
+          "spin_minus_pace_wickets_per_over": 0.10852713178294573
+        },
+        "2011": {
+          "spin_overs": 42,
+          "pace_overs": 92,
+          "spin_minus_pace_wickets_per_over": -0.059523809523809534
+        },
+        "2012": {
+          "spin_overs": 60,
+          "pace_overs": 125,
+          "spin_minus_pace_wickets_per_over": -0.04733333333333334
+        },
+        "2013": {
+          "spin_overs": 44,
+          "pace_overs": 143,
+          "spin_minus_pace_wickets_per_over": -0.1013986013986014
+        },
+        "2014": {
+          "spin_overs": 53,
+          "pace_overs": 86,
+          "spin_minus_pace_wickets_per_over": -0.007678806494076373
+        },
+        "2015": {
+          "spin_overs": 33,
+          "pace_overs": 88,
+          "spin_minus_pace_wickets_per_over": 0.15530303030303028
+        },
+        "2016": {
+          "spin_overs": 72,
+          "pace_overs": 137,
+          "spin_minus_pace_wickets_per_over": 0.031021897810218968
+        },
+        "2017": {
+          "spin_overs": 66,
+          "pace_overs": 86,
+          "spin_minus_pace_wickets_per_over": -0.027131782945736427
+        },
+        "2018": {
+          "spin_overs": 69,
+          "pace_overs": 104,
+          "spin_minus_pace_wickets_per_over": 0.015886287625418105
+        },
+        "2019": {
+          "spin_overs": 62,
+          "pace_overs": 85,
+          "spin_minus_pace_wickets_per_over": 0.08861480075901329
+        },
+        "2023": {
+          "spin_overs": 61,
+          "pace_overs": 100,
+          "spin_minus_pace_wickets_per_over": -0.05327868852459017
+        },
+        "2024": {
+          "spin_overs": 53,
+          "pace_overs": 94,
+          "spin_minus_pace_wickets_per_over": -0.0820955439582497
+        },
+        "2025": {
+          "spin_overs": 34,
+          "pace_overs": 67,
+          "spin_minus_pace_wickets_per_over": 0.010535557506584747
+        },
+        "2026": {
+          "spin_overs": 33,
+          "pace_overs": 70,
+          "spin_minus_pace_wickets_per_over": -0.04155844155844157
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "recent_wicket",
+      "value": "recent_wicket",
+      "spin": {
+        "overs": 648,
+        "bowler_wickets": 167,
+        "wickets_per_over": 0.25771604938271603,
+        "balls_per_wicket": 23.167664670658684,
+        "runs_per_over": 6.842592592592593,
+        "dot_rate": 0.3662445076247092,
+        "boundary_ball_rate": 0.10545360558283794
+      },
+      "pace": {
+        "overs": 921,
+        "bowler_wickets": 294,
+        "wickets_per_over": 0.31921824104234525,
+        "balls_per_wicket": 18.63605442176871,
+        "runs_per_over": 8.427795874049945,
+        "dot_rate": 0.3509764555575835,
+        "boundary_ball_rate": 0.17156415404270853
+      },
+      "spin_minus_pace_wickets_per_over": -0.061502191659629224,
+      "comparable_years": 12,
+      "spin_higher_years": 2,
+      "supported": true,
+      "yearly": {
+        "2008": {
+          "spin_overs": 28,
+          "pace_overs": 83,
+          "spin_minus_pace_wickets_per_over": -0.06239242685025817
+        },
+        "2010": {
+          "spin_overs": 48,
+          "pace_overs": 48,
+          "spin_minus_pace_wickets_per_over": -0.020833333333333315
+        },
+        "2011": {
+          "spin_overs": 74,
+          "pace_overs": 65,
+          "spin_minus_pace_wickets_per_over": -0.03555093555093558
+        },
+        "2012": {
+          "spin_overs": 55,
+          "pace_overs": 87,
+          "spin_minus_pace_wickets_per_over": -0.11327063740856846
+        },
+        "2013": {
+          "spin_overs": 34,
+          "pace_overs": 102,
+          "spin_minus_pace_wickets_per_over": 0.02941176470588236
+        },
+        "2015": {
+          "spin_overs": 46,
+          "pace_overs": 79,
+          "spin_minus_pace_wickets_per_over": -0.13153549807374793
+        },
+        "2019": {
+          "spin_overs": 63,
+          "pace_overs": 62,
+          "spin_minus_pace_wickets_per_over": 0.1075268817204301
+        },
+        "2021": {
+          "spin_overs": 82,
+          "pace_overs": 81,
+          "spin_minus_pace_wickets_per_over": -0.1884974405299608
+        },
+        "2023": {
+          "spin_overs": 72,
+          "pace_overs": 87,
+          "spin_minus_pace_wickets_per_over": -0.05986590038314177
+        },
+        "2024": {
+          "spin_overs": 51,
+          "pace_overs": 92,
+          "spin_minus_pace_wickets_per_over": -0.14535379369138957
+        },
+        "2025": {
+          "spin_overs": 54,
+          "pace_overs": 61,
+          "spin_minus_pace_wickets_per_over": -0.06860959319975712
+        },
+        "2026": {
+          "spin_overs": 33,
+          "pace_overs": 64,
+          "spin_minus_pace_wickets_per_over": -0.13068181818181818
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "recent_wicket",
+      "value": "stable",
+      "spin": {
+        "overs": 926,
+        "bowler_wickets": 245,
+        "wickets_per_over": 0.26457883369330454,
+        "balls_per_wicket": 22.59591836734694,
+        "runs_per_over": 7.765658747300216,
+        "dot_rate": 0.342485549132948,
+        "boundary_ball_rate": 0.1398121387283237
+      },
+      "pace": {
+        "overs": 1314,
+        "bowler_wickets": 370,
+        "wickets_per_over": 0.2815829528158295,
+        "balls_per_wicket": 21.205405405405404,
+        "runs_per_over": 8.706240487062406,
+        "dot_rate": 0.3671934743818506,
+        "boundary_ball_rate": 0.19054295182258477
+      },
+      "spin_minus_pace_wickets_per_over": -0.017004119122524974,
+      "comparable_years": 13,
+      "spin_higher_years": 5,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 37,
+          "pace_overs": 126,
+          "spin_minus_pace_wickets_per_over": -0.031317031317031285
+        },
+        "2010": {
+          "spin_overs": 80,
+          "pace_overs": 96,
+          "spin_minus_pace_wickets_per_over": 0.05416666666666667
+        },
+        "2011": {
+          "spin_overs": 114,
+          "pace_overs": 106,
+          "spin_minus_pace_wickets_per_over": -0.055610724925521354
+        },
+        "2012": {
+          "spin_overs": 109,
+          "pace_overs": 139,
+          "spin_minus_pace_wickets_per_over": -0.05590390073262491
+        },
+        "2013": {
+          "spin_overs": 61,
+          "pace_overs": 123,
+          "spin_minus_pace_wickets_per_over": -0.07130481140876985
+        },
+        "2015": {
+          "spin_overs": 56,
+          "pace_overs": 99,
+          "spin_minus_pace_wickets_per_over": -0.0025252525252525415
+        },
+        "2018": {
+          "spin_overs": 11,
+          "pace_overs": 11,
+          "spin_minus_pace_wickets_per_over": 0.18181818181818182
+        },
+        "2019": {
+          "spin_overs": 100,
+          "pace_overs": 83,
+          "spin_minus_pace_wickets_per_over": 0.0810843373493976
+        },
+        "2021": {
+          "spin_overs": 104,
+          "pace_overs": 130,
+          "spin_minus_pace_wickets_per_over": 0.015384615384615385
+        },
+        "2023": {
+          "spin_overs": 94,
+          "pace_overs": 100,
+          "spin_minus_pace_wickets_per_over": -0.07531914893617023
+        },
+        "2024": {
+          "spin_overs": 61,
+          "pace_overs": 139,
+          "spin_minus_pace_wickets_per_over": -0.050241773794079514
+        },
+        "2025": {
+          "spin_overs": 47,
+          "pace_overs": 60,
+          "spin_minus_pace_wickets_per_over": 0.06347517730496449
+        },
+        "2026": {
+          "spin_overs": 52,
+          "pace_overs": 102,
+          "spin_minus_pace_wickets_per_over": -0.01508295625942685
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "chase_pressure",
+      "value": "high",
+      "spin": {
+        "overs": 213,
+        "bowler_wickets": 73,
+        "wickets_per_over": 0.3427230046948357,
+        "balls_per_wicket": 17.424657534246574,
+        "runs_per_over": 8.32394366197183,
+        "dot_rate": 0.34276729559748426,
+        "boundary_ball_rate": 0.16430817610062892
+      },
+      "pace": {
+        "overs": 574,
+        "bowler_wickets": 179,
+        "wickets_per_over": 0.3118466898954704,
+        "balls_per_wicket": 19.11173184357542,
+        "runs_per_over": 8.885017421602788,
+        "dot_rate": 0.36509792458345514,
+        "boundary_ball_rate": 0.19438760596316867
+      },
+      "spin_minus_pace_wickets_per_over": 0.030876314799365312,
+      "comparable_years": 11,
+      "spin_higher_years": 8,
+      "supported": false,
+      "yearly": {
+        "2010": {
+          "spin_overs": 13,
+          "pace_overs": 63,
+          "spin_minus_pace_wickets_per_over": 0.03785103785103788
+        },
+        "2011": {
+          "spin_overs": 17,
+          "pace_overs": 23,
+          "spin_minus_pace_wickets_per_over": 0.2531969309462916
+        },
+        "2012": {
+          "spin_overs": 28,
+          "pace_overs": 71,
+          "spin_minus_pace_wickets_per_over": -0.00905432595573441
+        },
+        "2013": {
+          "spin_overs": 11,
+          "pace_overs": 33,
+          "spin_minus_pace_wickets_per_over": 0.06060606060606058
+        },
+        "2014": {
+          "spin_overs": 27,
+          "pace_overs": 37,
+          "spin_minus_pace_wickets_per_over": 0.2282282282282282
+        },
+        "2015": {
+          "spin_overs": 13,
+          "pace_overs": 39,
+          "spin_minus_pace_wickets_per_over": 0.02564102564102566
+        },
+        "2016": {
+          "spin_overs": 28,
+          "pace_overs": 56,
+          "spin_minus_pace_wickets_per_over": 0.07142857142857145
+        },
+        "2017": {
+          "spin_overs": 11,
+          "pace_overs": 24,
+          "spin_minus_pace_wickets_per_over": 0.12878787878787873
+        },
+        "2018": {
+          "spin_overs": 20,
+          "pace_overs": 42,
+          "spin_minus_pace_wickets_per_over": 0.20714285714285713
+        },
+        "2023": {
+          "spin_overs": 11,
+          "pace_overs": 50,
+          "spin_minus_pace_wickets_per_over": -0.1072727272727273
+        },
+        "2024": {
+          "spin_overs": 13,
+          "pace_overs": 40,
+          "spin_minus_pace_wickets_per_over": -0.1942307692307692
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "chase_pressure",
+      "value": "low",
+      "spin": {
+        "overs": 265,
+        "bowler_wickets": 70,
+        "wickets_per_over": 0.2641509433962264,
+        "balls_per_wicket": 22.042857142857144,
+        "runs_per_over": 7.920754716981132,
+        "dot_rate": 0.3421905379131562,
+        "boundary_ball_rate": 0.16526247569669475
+      },
+      "pace": {
+        "overs": 469,
+        "bowler_wickets": 123,
+        "wickets_per_over": 0.2622601279317697,
+        "balls_per_wicket": 22.089430894308943,
+        "runs_per_over": 8.673773987206824,
+        "dot_rate": 0.3765182186234818,
+        "boundary_ball_rate": 0.2068457857931542
+      },
+      "spin_minus_pace_wickets_per_over": 0.0018908154644566855,
+      "comparable_years": 13,
+      "spin_higher_years": 7,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 19,
+          "pace_overs": 58,
+          "spin_minus_pace_wickets_per_over": -0.03176043557168784
+        },
+        "2011": {
+          "spin_overs": 20,
+          "pace_overs": 38,
+          "spin_minus_pace_wickets_per_over": -0.13421052631578945
+        },
+        "2012": {
+          "spin_overs": 13,
+          "pace_overs": 25,
+          "spin_minus_pace_wickets_per_over": 0.07076923076923078
+        },
+        "2013": {
+          "spin_overs": 13,
+          "pace_overs": 56,
+          "spin_minus_pace_wickets_per_over": -0.13186813186813184
+        },
+        "2014": {
+          "spin_overs": 16,
+          "pace_overs": 15,
+          "spin_minus_pace_wickets_per_over": 0.17916666666666667
+        },
+        "2016": {
+          "spin_overs": 10,
+          "pace_overs": 34,
+          "spin_minus_pace_wickets_per_over": 0.01764705882352946
+        },
+        "2017": {
+          "spin_overs": 39,
+          "pace_overs": 34,
+          "spin_minus_pace_wickets_per_over": 0.009803921568627416
+        },
+        "2018": {
+          "spin_overs": 16,
+          "pace_overs": 20,
+          "spin_minus_pace_wickets_per_over": 0.11249999999999999
+        },
+        "2019": {
+          "spin_overs": 30,
+          "pace_overs": 29,
+          "spin_minus_pace_wickets_per_over": -0.07701149425287357
+        },
+        "2023": {
+          "spin_overs": 21,
+          "pace_overs": 28,
+          "spin_minus_pace_wickets_per_over": -0.035714285714285754
+        },
+        "2024": {
+          "spin_overs": 16,
+          "pace_overs": 35,
+          "spin_minus_pace_wickets_per_over": 0.03214285714285714
+        },
+        "2025": {
+          "spin_overs": 17,
+          "pace_overs": 28,
+          "spin_minus_pace_wickets_per_over": -0.32352941176470584
+        },
+        "2026": {
+          "spin_overs": 18,
+          "pace_overs": 32,
+          "spin_minus_pace_wickets_per_over": 0.1701388888888889
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "chase_pressure",
+      "value": "medium",
+      "spin": {
+        "overs": 128,
+        "bowler_wickets": 29,
+        "wickets_per_over": 0.2265625,
+        "balls_per_wicket": 26.482758620689655,
+        "runs_per_over": 8.703125,
+        "dot_rate": 0.2513020833333333,
+        "boundary_ball_rate": 0.15755208333333334
+      },
+      "pace": {
+        "overs": 213,
+        "bowler_wickets": 56,
+        "wickets_per_over": 0.26291079812206575,
+        "balls_per_wicket": 22.732142857142858,
+        "runs_per_over": 9.187793427230046,
+        "dot_rate": 0.3495679497250589,
+        "boundary_ball_rate": 0.21209740769835037
+      },
+      "spin_minus_pace_wickets_per_over": -0.03634829812206575,
+      "comparable_years": 7,
+      "spin_higher_years": 1,
+      "supported": true,
+      "yearly": {
+        "2012": {
+          "spin_overs": 11,
+          "pace_overs": 11,
+          "spin_minus_pace_wickets_per_over": 0.0
+        },
+        "2013": {
+          "spin_overs": 10,
+          "pace_overs": 18,
+          "spin_minus_pace_wickets_per_over": -0.07777777777777778
+        },
+        "2014": {
+          "spin_overs": 10,
+          "pace_overs": 12,
+          "spin_minus_pace_wickets_per_over": -0.1333333333333333
+        },
+        "2016": {
+          "spin_overs": 16,
+          "pace_overs": 27,
+          "spin_minus_pace_wickets_per_over": 0.3263888888888889
+        },
+        "2018": {
+          "spin_overs": 19,
+          "pace_overs": 21,
+          "spin_minus_pace_wickets_per_over": -0.02756892230576441
+        },
+        "2023": {
+          "spin_overs": 13,
+          "pace_overs": 14,
+          "spin_minus_pace_wickets_per_over": -0.42857142857142855
+        },
+        "2024": {
+          "spin_overs": 11,
+          "pace_overs": 16,
+          "spin_minus_pace_wickets_per_over": -0.1590909090909091
+        }
+      }
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "chase_pressure",
+      "value": "not_chasing",
+      "spin": {
+        "overs": 668,
+        "bowler_wickets": 170,
+        "wickets_per_over": 0.25449101796407186,
+        "balls_per_wicket": 23.570588235294117,
+        "runs_per_over": 8.553892215568862,
+        "dot_rate": 0.3249313701023209,
+        "boundary_ball_rate": 0.16595957075118542
+      },
+      "pace": {
+        "overs": 1351,
+        "bowler_wickets": 410,
+        "wickets_per_over": 0.30347890451517395,
+        "balls_per_wicket": 19.734146341463415,
+        "runs_per_over": 9.141376757957069,
+        "dot_rate": 0.3686812507724632,
+        "boundary_ball_rate": 0.2096156222963787
+      },
+      "spin_minus_pace_wickets_per_over": -0.04898788655110209,
+      "comparable_years": 15,
+      "spin_higher_years": 5,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 22,
+          "pace_overs": 116,
+          "spin_minus_pace_wickets_per_over": 0.08777429467084641
+        },
+        "2010": {
+          "spin_overs": 38,
+          "pace_overs": 102,
+          "spin_minus_pace_wickets_per_over": 0.09029927760577913
+        },
+        "2011": {
+          "spin_overs": 36,
+          "pace_overs": 77,
+          "spin_minus_pace_wickets_per_over": -0.07467532467532467
+        },
+        "2012": {
+          "spin_overs": 50,
+          "pace_overs": 110,
+          "spin_minus_pace_wickets_per_over": -0.06545454545454546
+        },
+        "2013": {
+          "spin_overs": 30,
+          "pace_overs": 118,
+          "spin_minus_pace_wickets_per_over": -0.19717514124293786
+        },
+        "2014": {
+          "spin_overs": 49,
+          "pace_overs": 71,
+          "spin_minus_pace_wickets_per_over": -0.1402701925840759
+        },
+        "2015": {
+          "spin_overs": 38,
+          "pace_overs": 92,
+          "spin_minus_pace_wickets_per_over": 0.03318077803203662
+        },
+        "2016": {
+          "spin_overs": 63,
+          "pace_overs": 112,
+          "spin_minus_pace_wickets_per_over": -0.1607142857142857
+        },
+        "2017": {
+          "spin_overs": 60,
+          "pace_overs": 99,
+          "spin_minus_pace_wickets_per_over": -0.1106060606060606
+        },
+        "2018": {
+          "spin_overs": 60,
+          "pace_overs": 80,
+          "spin_minus_pace_wickets_per_over": -0.07500000000000001
+        },
+        "2019": {
+          "spin_overs": 52,
+          "pace_overs": 73,
+          "spin_minus_pace_wickets_per_over": 0.12170706006322446
+        },
+        "2023": {
+          "spin_overs": 53,
+          "pace_overs": 87,
+          "spin_minus_pace_wickets_per_over": 0.06050748210800258
+        },
+        "2024": {
+          "spin_overs": 46,
+          "pace_overs": 94,
+          "spin_minus_pace_wickets_per_over": -0.14523589269195192
+        },
+        "2025": {
+          "spin_overs": 39,
+          "pace_overs": 55,
+          "spin_minus_pace_wickets_per_over": -0.05594405594405594
+        },
+        "2026": {
+          "spin_overs": 32,
+          "pace_overs": 65,
+          "spin_minus_pace_wickets_per_over": -0.10384615384615387
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "chase_pressure",
+      "value": "high",
+      "spin": {
+        "overs": 262,
+        "bowler_wickets": 80,
+        "wickets_per_over": 0.3053435114503817,
+        "balls_per_wicket": 19.5875,
+        "runs_per_over": 7.721374045801527,
+        "dot_rate": 0.31397574984045945,
+        "boundary_ball_rate": 0.11869814932992981
+      },
+      "pace": {
+        "overs": 503,
+        "bowler_wickets": 177,
+        "wickets_per_over": 0.3518886679920477,
+        "balls_per_wicket": 16.954802259887007,
+        "runs_per_over": 8.681908548707753,
+        "dot_rate": 0.3692102632455848,
+        "boundary_ball_rate": 0.1826057980673109
+      },
+      "spin_minus_pace_wickets_per_over": -0.04654515654166602,
+      "comparable_years": 11,
+      "spin_higher_years": 3,
+      "supported": false,
+      "yearly": {
+        "2010": {
+          "spin_overs": 27,
+          "pace_overs": 25,
+          "spin_minus_pace_wickets_per_over": 0.007407407407407363
+        },
+        "2011": {
+          "spin_overs": 47,
+          "pace_overs": 44,
+          "spin_minus_pace_wickets_per_over": -0.020309477756286276
+        },
+        "2012": {
+          "spin_overs": 27,
+          "pace_overs": 47,
+          "spin_minus_pace_wickets_per_over": 0.06225374310480691
+        },
+        "2013": {
+          "spin_overs": 25,
+          "pace_overs": 76,
+          "spin_minus_pace_wickets_per_over": -0.008947368421052648
+        },
+        "2015": {
+          "spin_overs": 21,
+          "pace_overs": 60,
+          "spin_minus_pace_wickets_per_over": 0.011904761904761862
+        },
+        "2019": {
+          "spin_overs": 21,
+          "pace_overs": 33,
+          "spin_minus_pace_wickets_per_over": -0.27705627705627706
+        },
+        "2021": {
+          "spin_overs": 17,
+          "pace_overs": 41,
+          "spin_minus_pace_wickets_per_over": -0.21377331420373027
+        },
+        "2023": {
+          "spin_overs": 21,
+          "pace_overs": 42,
+          "spin_minus_pace_wickets_per_over": -0.047619047619047616
+        },
+        "2024": {
+          "spin_overs": 15,
+          "pace_overs": 56,
+          "spin_minus_pace_wickets_per_over": -0.07261904761904764
+        },
+        "2025": {
+          "spin_overs": 18,
+          "pace_overs": 21,
+          "spin_minus_pace_wickets_per_over": -0.1111111111111111
+        },
+        "2026": {
+          "spin_overs": 13,
+          "pace_overs": 16,
+          "spin_minus_pace_wickets_per_over": -0.08173076923076922
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "chase_pressure",
+      "value": "low",
+      "spin": {
+        "overs": 378,
+        "bowler_wickets": 79,
+        "wickets_per_over": 0.20899470899470898,
+        "balls_per_wicket": 28.27848101265823,
+        "runs_per_over": 6.783068783068783,
+        "dot_rate": 0.38495971351835273,
+        "boundary_ball_rate": 0.11504028648164727
+      },
+      "pace": {
+        "overs": 397,
+        "bowler_wickets": 85,
+        "wickets_per_over": 0.2141057934508816,
+        "balls_per_wicket": 27.41176470588235,
+        "runs_per_over": 8.181360201511335,
+        "dot_rate": 0.351931330472103,
+        "boundary_ball_rate": 0.16995708154506436
+      },
+      "spin_minus_pace_wickets_per_over": -0.005111084456172615,
+      "comparable_years": 11,
+      "spin_higher_years": 5,
+      "supported": false,
+      "yearly": {
+        "2008": {
+          "spin_overs": 22,
+          "pace_overs": 44,
+          "spin_minus_pace_wickets_per_over": 0.04545454545454544
+        },
+        "2010": {
+          "spin_overs": 30,
+          "pace_overs": 34,
+          "spin_minus_pace_wickets_per_over": -0.03529411764705881
+        },
+        "2011": {
+          "spin_overs": 35,
+          "pace_overs": 17,
+          "spin_minus_pace_wickets_per_over": -0.1512605042016807
+        },
+        "2012": {
+          "spin_overs": 35,
+          "pace_overs": 49,
+          "spin_minus_pace_wickets_per_over": -0.17142857142857143
+        },
+        "2015": {
+          "spin_overs": 17,
+          "pace_overs": 14,
+          "spin_minus_pace_wickets_per_over": 0.1638655462184874
+        },
+        "2019": {
+          "spin_overs": 38,
+          "pace_overs": 27,
+          "spin_minus_pace_wickets_per_over": 0.16764132553606237
+        },
+        "2021": {
+          "spin_overs": 62,
+          "pace_overs": 44,
+          "spin_minus_pace_wickets_per_over": 0.057184750733137835
+        },
+        "2023": {
+          "spin_overs": 43,
+          "pace_overs": 33,
+          "spin_minus_pace_wickets_per_over": 0.10429880197322058
+        },
+        "2024": {
+          "spin_overs": 33,
+          "pace_overs": 47,
+          "spin_minus_pace_wickets_per_over": -0.0006447453255963853
+        },
+        "2025": {
+          "spin_overs": 21,
+          "pace_overs": 19,
+          "spin_minus_pace_wickets_per_over": -0.22556390977443608
+        },
+        "2026": {
+          "spin_overs": 30,
+          "pace_overs": 41,
+          "spin_minus_pace_wickets_per_over": -0.04390243902439023
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "chase_pressure",
+      "value": "medium",
+      "spin": {
+        "overs": 152,
+        "bowler_wickets": 53,
+        "wickets_per_over": 0.34868421052631576,
+        "balls_per_wicket": 17.20754716981132,
+        "runs_per_over": 6.940789473684211,
+        "dot_rate": 0.3717105263157895,
+        "boundary_ball_rate": 0.11293859649122807
+      },
+      "pace": {
+        "overs": 172,
+        "bowler_wickets": 58,
+        "wickets_per_over": 0.3372093023255814,
+        "balls_per_wicket": 17.775862068965516,
+        "runs_per_over": 8.523255813953488,
+        "dot_rate": 0.3705140640155189,
+        "boundary_ball_rate": 0.19204655674102813
+      },
+      "spin_minus_pace_wickets_per_over": 0.01147490820073438,
+      "comparable_years": 8,
+      "spin_higher_years": 4,
+      "supported": false,
+      "yearly": {
+        "2011": {
+          "spin_overs": 22,
+          "pace_overs": 14,
+          "spin_minus_pace_wickets_per_over": -0.09090909090909088
+        },
+        "2012": {
+          "spin_overs": 16,
+          "pace_overs": 16,
+          "spin_minus_pace_wickets_per_over": 0.1875
+        },
+        "2013": {
+          "spin_overs": 11,
+          "pace_overs": 16,
+          "spin_minus_pace_wickets_per_over": -0.03977272727272729
+        },
+        "2015": {
+          "spin_overs": 11,
+          "pace_overs": 17,
+          "spin_minus_pace_wickets_per_over": -0.40641711229946526
+        },
+        "2019": {
+          "spin_overs": 21,
+          "pace_overs": 10,
+          "spin_minus_pace_wickets_per_over": 0.3333333333333333
+        },
+        "2021": {
+          "spin_overs": 17,
+          "pace_overs": 16,
+          "spin_minus_pace_wickets_per_over": 0.02941176470588236
+        },
+        "2023": {
+          "spin_overs": 19,
+          "pace_overs": 15,
+          "spin_minus_pace_wickets_per_over": -0.13684210526315793
+        },
+        "2025": {
+          "spin_overs": 11,
+          "pace_overs": 15,
+          "spin_minus_pace_wickets_per_over": 0.32121212121212117
+        }
+      }
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "chase_pressure",
+      "value": "not_chasing",
+      "spin": {
+        "overs": 782,
+        "bowler_wickets": 200,
+        "wickets_per_over": 0.2557544757033248,
+        "balls_per_wicket": 23.46,
+        "runs_per_over": 7.650895140664962,
+        "dot_rate": 0.345694799658994,
+        "boundary_ball_rate": 0.13554987212276215
+      },
+      "pace": {
+        "overs": 1163,
+        "bowler_wickets": 344,
+        "wickets_per_over": 0.29578675838349094,
+        "balls_per_wicket": 20.24127906976744,
+        "runs_per_over": 8.70249355116079,
+        "dot_rate": 0.358178945856671,
+        "boundary_ball_rate": 0.18569582076691082
+      },
+      "spin_minus_pace_wickets_per_over": -0.04003228268016612,
+      "comparable_years": 12,
+      "spin_higher_years": 3,
+      "supported": true,
+      "yearly": {
+        "2008": {
+          "spin_overs": 31,
+          "pace_overs": 109,
+          "spin_minus_pace_wickets_per_over": -0.10920390648120748
+        },
+        "2010": {
+          "spin_overs": 64,
+          "pace_overs": 76,
+          "spin_minus_pace_wickets_per_over": 0.07072368421052633
+        },
+        "2011": {
+          "spin_overs": 84,
+          "pace_overs": 96,
+          "spin_minus_pace_wickets_per_over": -0.035714285714285726
+        },
+        "2012": {
+          "spin_overs": 86,
+          "pace_overs": 114,
+          "spin_minus_pace_wickets_per_over": -0.1413708690330477
+        },
+        "2013": {
+          "spin_overs": 51,
+          "pace_overs": 109,
+          "spin_minus_pace_wickets_per_over": -0.0528872099298435
+        },
+        "2015": {
+          "spin_overs": 53,
+          "pace_overs": 87,
+          "spin_minus_pace_wickets_per_over": -0.0223378876599436
+        },
+        "2019": {
+          "spin_overs": 83,
+          "pace_overs": 75,
+          "spin_minus_pace_wickets_per_over": 0.17734939759036142
+        },
+        "2021": {
+          "spin_overs": 90,
+          "pace_overs": 110,
+          "spin_minus_pace_wickets_per_over": -0.07474747474747478
+        },
+        "2023": {
+          "spin_overs": 83,
+          "pace_overs": 97,
+          "spin_minus_pace_wickets_per_over": -0.11464414358464786
+        },
+        "2024": {
+          "spin_overs": 61,
+          "pace_overs": 118,
+          "spin_minus_pace_wickets_per_over": -0.13434287302028344
+        },
+        "2025": {
+          "spin_overs": 51,
+          "pace_overs": 66,
+          "spin_minus_pace_wickets_per_over": 0.04188948306595364
+        },
+        "2026": {
+          "spin_overs": 37,
+          "pace_overs": 94,
+          "spin_minus_pace_wickets_per_over": -0.09229442208165611
+        }
+      }
+    }
+  ],
+  "authorized_interactions": [
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "phase",
+      "value": "death",
+      "direction": "SPIN_LOWER"
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "innings",
+      "value": "chase",
+      "direction": "SPIN_LOWER"
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "innings",
+      "value": "first_innings",
+      "direction": "SPIN_LOWER"
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "batter_age",
+      "value": "24_plus",
+      "direction": "SPIN_LOWER"
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "recent_wicket",
+      "value": "recent_wicket",
+      "direction": "SPIN_LOWER"
+    },
+    {
+      "venue": "bengaluru_chinnaswamy",
+      "dimension": "chase_pressure",
+      "value": "medium",
+      "direction": "SPIN_LOWER"
+    },
+    {
+      "venue": "chennai_chepauk",
+      "dimension": "chase_pressure",
+      "value": "not_chasing",
+      "direction": "SPIN_LOWER"
+    }
+  ]
+}

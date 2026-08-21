@@ -1,0 +1,113 @@
+{
+  "candidate_version": "v3.11_boundary_detail",
+  "model_scope": "candidate_only",
+  "production_models_changed": false,
+  "verified_rows": 246846,
+  "holdout_rows": 60988,
+  "holdout_matches": 1704,
+  "detail_gate_accuracy": {
+    "has_four": 0.6260411884305109,
+    "has_six": 0.8286056273365252,
+    "multiple_boundaries": 0.7986817078769594,
+    "boundary_wicket_shock": 0.8788286220240047
+  },
+  "ablations": {
+    "four_six_detail_gate": {
+      "features_added": [
+        "boundary_detail_has_four_probability",
+        "boundary_detail_has_six_probability",
+        "boundary_detail_multiple_boundaries_probability",
+        "boundary_detail_boundary_wicket_shock_probability"
+      ],
+      "two_run_hit_rate": 0.31745589296255,
+      "improvement_over_v32_percentage_points": 0.3689250344330042,
+      "improvement_over_v39_percentage_points": -0.303338361644917,
+      "paired_vs_v32_p_value": 0.014889951958936318,
+      "mean_band_probability": 0.3332110133338427,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.29038022436215627
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.3403878194902336
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.3094276893849442
+        }
+      }
+    },
+    "count_plus_boundary_detail": {
+      "features_added": [
+        "boundary_gate_none_probability",
+        "boundary_gate_one_probability",
+        "boundary_gate_multiple_probability",
+        "boundary_gate_entropy",
+        "boundary_detail_has_four_probability",
+        "boundary_detail_has_six_probability",
+        "boundary_detail_multiple_boundaries_probability",
+        "boundary_detail_boundary_wicket_shock_probability"
+      ],
+      "two_run_hit_rate": 0.31789860300386963,
+      "improvement_over_v32_percentage_points": 0.4131960385649669,
+      "improvement_over_v39_percentage_points": -0.2590673575129543,
+      "paired_vs_v32_p_value": 0.008504947942037312,
+      "mean_band_probability": 0.33401477794077494,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.2895860220391145
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.3414513098656457
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.31045674028338477
+        }
+      }
+    }
+  },
+  "winner": "count_plus_boundary_detail",
+  "winner_metrics": {
+    "features_added": [
+      "boundary_gate_none_probability",
+      "boundary_gate_one_probability",
+      "boundary_gate_multiple_probability",
+      "boundary_gate_entropy",
+      "boundary_detail_has_four_probability",
+      "boundary_detail_has_six_probability",
+      "boundary_detail_multiple_boundaries_probability",
+      "boundary_detail_boundary_wicket_shock_probability"
+    ],
+    "two_run_hit_rate": 0.31789860300386963,
+    "improvement_over_v32_percentage_points": 0.4131960385649669,
+    "improvement_over_v39_percentage_points": -0.2590673575129543,
+    "paired_vs_v32_p_value": 0.008504947942037312,
+    "mean_band_probability": 0.33401477794077494,
+    "phase": {
+      "powerplay": {
+        "rows": 20146,
+        "hit_rate": 0.2895860220391145
+      },
+      "middle": {
+        "rows": 28209,
+        "hit_rate": 0.3414513098656457
+      },
+      "death": {
+        "rows": 12633,
+        "hit_rate": 0.31045674028338477
+      }
+    }
+  },
+  "promotion_gates": {
+    "accuracy_at_least_32_38pct": false,
+    "beats_v39": false,
+    "paired_vs_v32_p_below_0_01": true,
+    "complete_match_sequence_failures_zero": true
+  },
+  "integration_recommended": false
+}

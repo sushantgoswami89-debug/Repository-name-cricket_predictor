@@ -1,0 +1,12 @@
+{
+  "model": "v3.3_phase_calibrated_sharp_range",
+  "status": "accepted",
+  "scope": "male_only_ipl_and_t20i",
+  "range_definition": "inclusive three-value integer band",
+  "baseline_hit_rate": 0.2728246539222149,
+  "holdout_hit_rate": 0.28103713469567126,
+  "relative_improvement": 0.03010168126447194,
+  "holdout_matches": 1011,
+  "holdout_overs": 36408,
+  "legacy_locked_model_overwritten": false
+}
