@@ -35,6 +35,18 @@ def main() -> None:
     )
     parser.add_argument("--telegram", action="store_true")
     parser.add_argument(
+        "--stuck-alert-seconds",
+        type=float,
+        default=300.0,
+        help=(
+            "If the feed stays unreconciled (ToiFeedError) continuously for "
+            "this long, emit a clear 'feed_stuck' alert -- and one Telegram "
+            "message, if --telegram is set -- instead of silently retrying "
+            "forever. A stuck feed and a working-but-quiet one look "
+            "identical from outside without this."
+        ),
+    )
+    parser.add_argument(
         "--model-dir",
         type=Path,
         help=(
@@ -64,10 +76,15 @@ def main() -> None:
     pipeline = VerifiedLivePredictionPipeline(
         engine=engine, publisher=publisher, output_file=args.output
     )
+    match_id = reader.match_id_from_url(args.match_url)
+    feed_error_streak_started_at: float | None = None
+    stuck_alert_sent = False
     while True:
         try:
             snapshot = reader.fetch(args.match_url)
             output = pipeline.process(snapshot)
+            feed_error_streak_started_at = None
+            stuck_alert_sent = False
             print(
                 json.dumps(
                     output
@@ -93,16 +110,49 @@ def main() -> None:
                 if args.incomplete_retry_seconds is not None
                 else args.poll_seconds
             )
+            now = time.time()
+            if feed_error_streak_started_at is None:
+                feed_error_streak_started_at = now
+            stuck_seconds = now - feed_error_streak_started_at
             print(
                 json.dumps(
                     {
                         "status": "feed_sync_pending",
                         "detail": str(exc),
                         "retry_seconds": feed_retry,
+                        "unreconciled_for_seconds": round(stuck_seconds, 1),
                     },
                     indent=2,
                 )
             )
+            if stuck_seconds >= args.stuck_alert_seconds and not stuck_alert_sent:
+                stuck_alert_sent = True
+                stuck_minutes = stuck_seconds / 60.0
+                duration_text = (
+                    f"{stuck_minutes:.1f} min"
+                    if stuck_minutes >= 1
+                    else f"{int(stuck_seconds)}s"
+                )
+                stuck_message = (
+                    "⚠️ CricketBaba: this match's live feed has been "
+                    f"inconsistent for over {duration_text} -- "
+                    "predictions are paused until TOI's data reconciles. "
+                    "No action needed; will resume automatically."
+                )
+                print(
+                    json.dumps(
+                        {"status": "feed_stuck", "detail": stuck_message},
+                        indent=2,
+                    )
+                )
+                if publisher is not None:
+                    try:
+                        publisher.publish(
+                            f"stuck_alert:{match_id}:{int(feed_error_streak_started_at)}",
+                            stuck_message,
+                        )
+                    except Exception:
+                        pass
             time.sleep(max(1.0, feed_retry))
             continue
         except VerificationError as exc:
