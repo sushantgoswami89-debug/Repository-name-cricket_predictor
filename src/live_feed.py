@@ -13,7 +13,9 @@ import random
 
 # Import the new Engine and Context models we updated
 from app.ml.prediction_engine import PredictionEngine
-from app.models.match_context import MatchContext, LiveContext, PitchContext
+from app.models.live_match_state import LiveMatchState
+from app.models.match_context import MatchContext
+from app.models.pitch_context import PitchContext
 
 OUTPUT_FILE = "live_prediction.json"
 
@@ -36,18 +38,17 @@ def run_mock_feed(poll_seconds=3):
         # We build a proper MatchContext so the engine knows the format and momentum
         context = MatchContext(
             match_id="mock_match_001",
-            match_style="IPL", # Set format to stop confusion
-            live=LiveContext(
+            format="IPL",  # Set format to stop confusion
+            live=LiveMatchState(
                 over=over_num,
-                balls_in_over=0,
-                batsman=last_batsman,
+                striker=last_batsman,
                 non_striker="BB McCullum",
                 bowler=last_bowler,
-                wickets_down=wkts,
-                total_score=score,
-                current_run_rate=round(score/over_num, 2) if over_num > 1 else 0
+                wkts_down_before_over=wkts,
+                score_before_over=score,
+                current_run_rate=round(score / over_num, 2) if over_num > 1 else 0,
             ),
-            pitch=PitchContext(batting_rating=75, pace_assistance=50, spin_assistance=30)
+            pitch=PitchContext(batting_rating=75, pace_assistance=50, spin_assistance=30),
         )
 
         # 2. GENERATE PREDICTION
