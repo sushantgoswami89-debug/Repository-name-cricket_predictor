@@ -1,0 +1,10 @@
+{
+  "rows": 47756,
+  "duplicate_keys": 0,
+  "t20i_supported_rows": 35114,
+  "neutral_shrinkage_rows": 12642,
+  "shrinkage_balls": 60.0,
+  "future_information_used": false,
+  "ranji_used": false,
+  "smat_used": false
+}

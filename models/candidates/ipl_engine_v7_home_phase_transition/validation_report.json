@@ -1,0 +1,50 @@
+{
+  "candidate_version": "ipl_engine_v7_home_phase_transition",
+  "production_models_changed": false,
+  "training_rows_through_2024": 42210,
+  "holdout_rows_2025_plus": 5580,
+  "holdout_matches": 148,
+  "phase_rows": {
+    "powerplay": {
+      "training": 13142,
+      "holdout": 1755
+    },
+    "middle": {
+      "training": 19376,
+      "holdout": 2582
+    },
+    "death": {
+      "training": 9692,
+      "holdout": 1243
+    }
+  },
+  "run_head": {
+    "two_run_band_hit_rate": 0.24336917562724014,
+    "mean_band_probability": 0.3107246096101194,
+    "phase": {
+      "powerplay": {
+        "rows": 1755,
+        "hit_rate": 0.2301994301994302
+      },
+      "middle": {
+        "rows": 2582,
+        "hit_rate": 0.25755228505034855
+      },
+      "death": {
+        "rows": 1243,
+        "hit_rate": 0.2325020112630732
+      }
+    }
+  },
+  "wicket_head": {
+    "brier_score": 0.1954614834067477
+  },
+  "mean_run_and_wicket_prediction_ms": 9.066567916670465,
+  "promotion_gates": {
+    "run_accuracy_at_least_32_38pct": false,
+    "run_improves_ipl_v5": false,
+    "wicket_improves_ipl_v5": false,
+    "latency_below_50ms": true
+  },
+  "integration_recommended": false
+}

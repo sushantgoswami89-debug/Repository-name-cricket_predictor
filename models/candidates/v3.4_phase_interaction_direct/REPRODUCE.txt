@@ -1,0 +1,2 @@
+cd /Users/susha/Downloads/cricket_predictor/backend
+RUN_RANGE_VERSION=v3.4_phase_interaction_direct DIRECT_PHASE_INTERACTIONS=1 PHASE_TEMPERATURE_SCALING=0 python3 train_phase_calibrated_sharp_range_v33.py

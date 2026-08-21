@@ -1,0 +1,21 @@
+{
+  "dataset_version": "candidate_v3_verified_ball_by_ball_v1",
+  "source_manifest_sha256": "32d71917fb02d2c29b7912dd11863e114921d8d89ddeaef9faf247b855605c11",
+  "source_files_seen": 6767,
+  "matches_verified": 6761,
+  "innings_verified": 13563,
+  "deliveries_verified": 1543463,
+  "training_rows": 246846,
+  "duplicate_keys": 0,
+  "missing_values": 0,
+  "known_anomaly_exclusions": [
+    "1179017.json",
+    "1267304.json",
+    "1283040.json",
+    "1419932.json",
+    "1490882.json",
+    "1499795.json"
+  ],
+  "leakage_rule": "Every feature is calculated before the target over.",
+  "verified": true
+}

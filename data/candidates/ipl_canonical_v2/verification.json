@@ -1,0 +1,29 @@
+{
+  "dataset_version": "ipl_canonical_v2",
+  "rows": 47756,
+  "matches": 1243,
+  "duplicate_keys": 0,
+  "missing_values": 0,
+  "canonical_players": 710,
+  "canonical_teams": [
+    "team:csk",
+    "team:dc",
+    "team:deccan_chargers",
+    "team:gt",
+    "team:gujarat_lions",
+    "team:kkr",
+    "team:kochi_tuskers",
+    "team:lsg",
+    "team:mi",
+    "team:pbks",
+    "team:pune_warriors",
+    "team:rcb",
+    "team:rising_pune",
+    "team:rr",
+    "team:srh"
+  ],
+  "canonical_venues": 36,
+  "targets_unchanged": true,
+  "raw_files_modified": false,
+  "production_changed": false
+}

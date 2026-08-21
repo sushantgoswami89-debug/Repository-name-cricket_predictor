@@ -1,0 +1,14 @@
+{
+  "new_players_who_batted": 92,
+  "cold_start_batting_profiles": 59,
+  "excluded_bowlers": 33,
+  "unresolved_roles": 0,
+  "eligible_for_review": 35,
+  "temporary": 24,
+  "rules": {
+    "season_threshold": 2,
+    "consecutive_start_threshold": 5,
+    "important_innings": "runs >= 50 OR (runs >= 30 AND strike rate >= 175)",
+    "promotion_control": "Eligibility requires manual source verification before main registry promotion."
+  }
+}

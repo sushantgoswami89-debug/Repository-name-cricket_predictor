@@ -1,0 +1,310 @@
+{
+  "candidate_version": "ipl_v5_selective_calibration",
+  "production_models_changed": false,
+  "frozen_model": "ipl_engine_v5_phase_intelligence",
+  "calibration_season": 2025,
+  "untouched_test_season": 2026,
+  "calibration_rows": 2777,
+  "test_rows": 2803,
+  "selection_results": {
+    "raw_band_mass": {
+      "100pct": {
+        "threshold_selected_on_2025": -0.8002317692267537,
+        "validation_2025": {
+          "rows": 2777,
+          "coverage": 1.0,
+          "band_accuracy": 0.2646741087504501,
+          "mean_displayed_confidence": 0.2646741087504501,
+          "calibration_gap": 0.0,
+          "conditional_wicket_brier": 0.19482448777372502
+        },
+        "test_2026": {
+          "rows": 2803,
+          "coverage": 1.0,
+          "band_accuracy": 0.23439172315376383,
+          "mean_displayed_confidence": 0.2615770292039735,
+          "calibration_gap": 0.02718530605020969,
+          "conditional_wicket_brier": 0.19556156924873067
+        }
+      },
+      "75pct": {
+        "threshold_selected_on_2025": 0.2777451778391601,
+        "validation_2025": {
+          "rows": 2083,
+          "coverage": 0.750090025207058,
+          "band_accuracy": 0.2784445511281805,
+          "mean_displayed_confidence": 0.27993643539928414,
+          "calibration_gap": 0.0014918842711036384,
+          "conditional_wicket_brier": 0.19141489621096172
+        },
+        "test_2026": {
+          "rows": 2050,
+          "coverage": 0.7313592579379237,
+          "band_accuracy": 0.24341463414634146,
+          "mean_displayed_confidence": 0.2776662373538213,
+          "calibration_gap": 0.03425160320747983,
+          "conditional_wicket_brier": 0.1920893529450159
+        }
+      },
+      "50pct": {
+        "threshold_selected_on_2025": 0.30478452698488684,
+        "validation_2025": {
+          "rows": 1389,
+          "coverage": 0.500180050414116,
+          "band_accuracy": 0.28077753779697623,
+          "mean_displayed_confidence": 0.28472940971232247,
+          "calibration_gap": 0.003951871915346239,
+          "conditional_wicket_brier": 0.18494337825891094
+        },
+        "test_2026": {
+          "rows": 1359,
+          "coverage": 0.48483767392079913,
+          "band_accuracy": 0.25901398086828553,
+          "mean_displayed_confidence": 0.2813895308833342,
+          "calibration_gap": 0.02237555001504865,
+          "conditional_wicket_brier": 0.1897941039963162
+        }
+      },
+      "30pct": {
+        "threshold_selected_on_2025": 0.32928941506638204,
+        "validation_2025": {
+          "rows": 833,
+          "coverage": 0.2999639899171768,
+          "band_accuracy": 0.290516206482593,
+          "mean_displayed_confidence": 0.2935252954228286,
+          "calibration_gap": 0.0030090889402356047,
+          "conditional_wicket_brier": 0.1805780349683151
+        },
+        "test_2026": {
+          "rows": 781,
+          "coverage": 0.2786300392436675,
+          "band_accuracy": 0.26248399487836105,
+          "mean_displayed_confidence": 0.28888105277957915,
+          "calibration_gap": 0.0263970579012181,
+          "conditional_wicket_brier": 0.18736536615373167
+        }
+      },
+      "20pct": {
+        "threshold_selected_on_2025": 0.3459544876698235,
+        "validation_2025": {
+          "rows": 556,
+          "coverage": 0.20021606049693913,
+          "band_accuracy": 0.289568345323741,
+          "mean_displayed_confidence": 0.3028587882382266,
+          "calibration_gap": 0.013290442914485612,
+          "conditional_wicket_brier": 0.17961669143394157
+        },
+        "test_2026": {
+          "rows": 544,
+          "coverage": 0.19407777381377095,
+          "band_accuracy": 0.2702205882352941,
+          "mean_displayed_confidence": 0.2950195849120909,
+          "calibration_gap": 0.024798996676796803,
+          "conditional_wicket_brier": 0.18286249331996599
+        }
+      }
+    },
+    "negative_entropy": {
+      "100pct": {
+        "threshold_selected_on_2025": -4.04305648215479,
+        "validation_2025": {
+          "rows": 2777,
+          "coverage": 1.0,
+          "band_accuracy": 0.2646741087504501,
+          "mean_displayed_confidence": 0.2646741087504501,
+          "calibration_gap": 0.0,
+          "conditional_wicket_brier": 0.19482448777372502
+        },
+        "test_2026": {
+          "rows": 2803,
+          "coverage": 1.0,
+          "band_accuracy": 0.23439172315376383,
+          "mean_displayed_confidence": 0.2615770292039735,
+          "calibration_gap": 0.02718530605020969,
+          "conditional_wicket_brier": 0.19556156924873067
+        }
+      },
+      "75pct": {
+        "threshold_selected_on_2025": -2.796163702667716,
+        "validation_2025": {
+          "rows": 2083,
+          "coverage": 0.750090025207058,
+          "band_accuracy": 0.2827652424387902,
+          "mean_displayed_confidence": 0.2727475509502014,
+          "calibration_gap": 0.010017691488588776,
+          "conditional_wicket_brier": 0.1874182680427032
+        },
+        "test_2026": {
+          "rows": 2013,
+          "coverage": 0.7181591152336781,
+          "band_accuracy": 0.2473919523099851,
+          "mean_displayed_confidence": 0.2707933300373467,
+          "calibration_gap": 0.02340137772736159,
+          "conditional_wicket_brier": 0.18800385101653705
+        }
+      },
+      "50pct": {
+        "threshold_selected_on_2025": -2.7352246768242807,
+        "validation_2025": {
+          "rows": 1389,
+          "coverage": 0.500180050414116,
+          "band_accuracy": 0.2973362131029518,
+          "mean_displayed_confidence": 0.2806587675241471,
+          "calibration_gap": 0.016677445578804684,
+          "conditional_wicket_brier": 0.17892146687935023
+        },
+        "test_2026": {
+          "rows": 1301,
+          "coverage": 0.4641455583303603,
+          "band_accuracy": 0.24980784012298232,
+          "mean_displayed_confidence": 0.27807844784193547,
+          "calibration_gap": 0.02827060771895315,
+          "conditional_wicket_brier": 0.18199655021333108
+        }
+      },
+      "30pct": {
+        "threshold_selected_on_2025": -2.6848112069584698,
+        "validation_2025": {
+          "rows": 833,
+          "coverage": 0.2999639899171768,
+          "band_accuracy": 0.2917166866746699,
+          "mean_displayed_confidence": 0.29058809496184074,
+          "calibration_gap": 0.0011285917128291412,
+          "conditional_wicket_brier": 0.17383961011779478
+        },
+        "test_2026": {
+          "rows": 727,
+          "coverage": 0.2593649661077417,
+          "band_accuracy": 0.2640990371389271,
+          "mean_displayed_confidence": 0.2863973509425913,
+          "calibration_gap": 0.022298313803664205,
+          "conditional_wicket_brier": 0.17374461607946703
+        }
+      },
+      "20pct": {
+        "threshold_selected_on_2025": -2.6531498997858827,
+        "validation_2025": {
+          "rows": 556,
+          "coverage": 0.20021606049693913,
+          "band_accuracy": 0.30935251798561153,
+          "mean_displayed_confidence": 0.3004242870720491,
+          "calibration_gap": 0.00892823091356243,
+          "conditional_wicket_brier": 0.17001323576585645
+        },
+        "test_2026": {
+          "rows": 469,
+          "coverage": 0.1673207277916518,
+          "band_accuracy": 0.2515991471215352,
+          "mean_displayed_confidence": 0.29325419280910114,
+          "calibration_gap": 0.04165504568756595,
+          "conditional_wicket_brier": 0.15588474225906626
+        }
+      }
+    },
+    "calibrated_hit_probability": {
+      "100pct": {
+        "threshold_selected_on_2025": -0.8333333333333334,
+        "validation_2025": {
+          "rows": 2777,
+          "coverage": 1.0,
+          "band_accuracy": 0.2646741087504501,
+          "mean_displayed_confidence": 0.2646741087504501,
+          "calibration_gap": 0.0,
+          "conditional_wicket_brier": 0.19482448777372502
+        },
+        "test_2026": {
+          "rows": 2803,
+          "coverage": 1.0,
+          "band_accuracy": 0.23439172315376383,
+          "mean_displayed_confidence": 0.2615770292039735,
+          "calibration_gap": 0.02718530605020969,
+          "conditional_wicket_brier": 0.19556156924873067
+        }
+      },
+      "75pct": {
+        "threshold_selected_on_2025": 0.2703435804701628,
+        "validation_2025": {
+          "rows": 2090,
+          "coverage": 0.7526107310046813,
+          "band_accuracy": 0.2799043062200957,
+          "mean_displayed_confidence": 0.2799043062200957,
+          "calibration_gap": 0.0,
+          "conditional_wicket_brier": 0.19125485948640558
+        },
+        "test_2026": {
+          "rows": 2060,
+          "coverage": 0.7349268640742062,
+          "band_accuracy": 0.24320388349514563,
+          "mean_displayed_confidence": 0.2776306904757453,
+          "calibration_gap": 0.03442680698059966,
+          "conditional_wicket_brier": 0.19150063213409427
+        }
+      },
+      "50pct": {
+        "threshold_selected_on_2025": 0.2703435804701628,
+        "validation_2025": {
+          "rows": 2090,
+          "coverage": 0.7526107310046813,
+          "band_accuracy": 0.2799043062200957,
+          "mean_displayed_confidence": 0.2799043062200957,
+          "calibration_gap": 0.0,
+          "conditional_wicket_brier": 0.19125485948640558
+        },
+        "test_2026": {
+          "rows": 2060,
+          "coverage": 0.7349268640742062,
+          "band_accuracy": 0.24320388349514563,
+          "mean_displayed_confidence": 0.2776306904757453,
+          "calibration_gap": 0.03442680698059966,
+          "conditional_wicket_brier": 0.19150063213409427
+        }
+      },
+      "30pct": {
+        "threshold_selected_on_2025": 0.2747909199522102,
+        "validation_2025": {
+          "rows": 984,
+          "coverage": 0.35433921498019444,
+          "band_accuracy": 0.29065040650406504,
+          "mean_displayed_confidence": 0.29065040650406504,
+          "calibration_gap": 0.0,
+          "conditional_wicket_brier": 0.18153139776874674
+        },
+        "test_2026": {
+          "rows": 901,
+          "coverage": 0.32144131287905814,
+          "band_accuracy": 0.2563817980022198,
+          "mean_displayed_confidence": 0.2870044535128929,
+          "calibration_gap": 0.030622655510673114,
+          "conditional_wicket_brier": 0.18466098648720314
+        }
+      },
+      "20pct": {
+        "threshold_selected_on_2025": 0.2747909199522102,
+        "validation_2025": {
+          "rows": 984,
+          "coverage": 0.35433921498019444,
+          "band_accuracy": 0.29065040650406504,
+          "mean_displayed_confidence": 0.29065040650406504,
+          "calibration_gap": 0.0,
+          "conditional_wicket_brier": 0.18153139776874674
+        },
+        "test_2026": {
+          "rows": 901,
+          "coverage": 0.32144131287905814,
+          "band_accuracy": 0.2563817980022198,
+          "mean_displayed_confidence": 0.2870044535128929,
+          "calibration_gap": 0.030622655510673114,
+          "conditional_wicket_brier": 0.18466098648720314
+        }
+      }
+    }
+  },
+  "mean_prediction_ms": 6.295639166686063,
+  "promotion_gates": {
+    "accuracy_at_least_32_38pct_at_50pct_coverage": false,
+    "calibration_gap_below_5pct_at_50pct_coverage": true,
+    "conditional_wicket_brier_below_v5": true,
+    "latency_below_50ms": true
+  },
+  "integration_recommended": false
+}

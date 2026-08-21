@@ -1,0 +1,118 @@
+{
+  "rolling_origin": true,
+  "future_information_used": false,
+  "folds": {
+    "2023": {
+      "chronology": {
+        "training_through": 2021,
+        "calibration_year": 2022,
+        "holdout_years": [
+          2023
+        ]
+      },
+      "baseline": {
+        "rows": 2873,
+        "mae": 3.6111941981030093,
+        "bias": -0.20728915620954694,
+        "fixed_three_run_coverage": 0.35294117647058826,
+        "wicket_brier": 0.21518092680495823
+      },
+      "candidate": {
+        "rows": 2873,
+        "mae": 3.612315996303449,
+        "bias": -0.22721670953338083,
+        "fixed_three_run_coverage": 0.35154890358510266,
+        "wicket_brier": 0.21498651524990842,
+        "routing": "calibration-selected blend only for TEMP players with <120 prior IPL balls",
+        "enhanced_weight": 1.0,
+        "calibrated_point_offset": -0.25,
+        "cold_range_phase_shifts": {
+          "death": 0,
+          "middle": 1,
+          "powerplay": 1
+        }
+      },
+      "cold_start": {
+        "definition": "TEMP and fewer than 120 prior IPL balls",
+        "baseline": {
+          "rows": 157,
+          "mae": 3.4760471599834353,
+          "bias": -0.4291241931474734,
+          "fixed_three_run_coverage": 0.3821656050955414,
+          "wicket_brier": 0.24915486396524011
+        },
+        "enhanced": {
+          "rows": 157,
+          "mae": 3.4947781870884596,
+          "bias": -0.5437857262645106,
+          "fixed_three_run_coverage": 0.36942675159235666,
+          "wicket_brier": 0.24559725633684423
+        },
+        "gated_candidate": {
+          "rows": 157,
+          "mae": 3.4965753525303347,
+          "bias": -0.7937857262645105,
+          "fixed_three_run_coverage": 0.35668789808917195,
+          "wicket_brier": 0.24559725633684423
+        }
+      },
+      "decision": "reject_keep_research"
+    },
+    "2024": {
+      "chronology": {
+        "training_through": 2022,
+        "calibration_year": 2023,
+        "holdout_years": [
+          2024
+        ]
+      },
+      "baseline": {
+        "rows": 2738,
+        "mae": 3.853994241448733,
+        "bias": -0.4736875109390778,
+        "fixed_three_run_coverage": 0.3064280496712929,
+        "wicket_brier": 0.21918871905978884
+      },
+      "candidate": {
+        "rows": 2738,
+        "mae": 3.853894254555247,
+        "bias": -0.47533321046850907,
+        "fixed_three_run_coverage": 0.30679327976625276,
+        "wicket_brier": 0.21918238750734761,
+        "routing": "calibration-selected blend only for TEMP players with <120 prior IPL balls",
+        "enhanced_weight": 0.05,
+        "calibrated_point_offset": -0.050000000000000044,
+        "cold_range_phase_shifts": {
+          "death": 0,
+          "middle": 2,
+          "powerplay": 0
+        }
+      },
+      "cold_start": {
+        "definition": "TEMP and fewer than 120 prior IPL balls",
+        "baseline": {
+          "rows": 100,
+          "mae": 4.199478586365356,
+          "bias": -0.6439647267269276,
+          "fixed_three_run_coverage": 0.3,
+          "wicket_brier": 0.21352588731281252
+        },
+        "enhanced": {
+          "rows": 100,
+          "mae": 4.195363225861153,
+          "bias": -0.5451497890434672,
+          "fixed_three_run_coverage": 0.31,
+          "wicket_brier": 0.21109885276394225
+        },
+        "gated_candidate": {
+          "rows": 100,
+          "mae": 4.196740945221703,
+          "bias": -0.6890239798427547,
+          "fixed_three_run_coverage": 0.31,
+          "wicket_brier": 0.21335252940697147
+        }
+      },
+      "decision": "promote_candidate"
+    }
+  }
+}

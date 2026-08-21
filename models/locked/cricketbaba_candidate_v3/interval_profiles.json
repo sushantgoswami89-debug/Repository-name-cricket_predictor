@@ -1,0 +1,22 @@
+{
+  "death": {
+    "lower_residual": -5.762295252670444,
+    "upper_residual": 8.996062277549406,
+    "calibration_rows": 7758
+  },
+  "middle": {
+    "lower_residual": -4.815195437976372,
+    "upper_residual": 8.02709074031288,
+    "calibration_rows": 17261
+  },
+  "powerplay": {
+    "lower_residual": -5.562132987380748,
+    "upper_residual": 9.056089489742007,
+    "calibration_rows": 12232
+  },
+  "default": {
+    "lower_residual": -5.275576870660909,
+    "upper_residual": 8.619571384488546,
+    "calibration_rows": 37251
+  }
+}

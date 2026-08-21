@@ -1,0 +1,326 @@
+{
+  "candidate_version": "v3.8_innings_phase_bowler_type",
+  "model_scope": "candidate_only",
+  "production_models_changed": false,
+  "verified_rows": 246846,
+  "holdout_rows": 60988,
+  "holdout_matches": 1704,
+  "bowler_type_coverage": {
+    "medium": 17343,
+    "fast": 13446,
+    "off_spin": 13312,
+    "unknown": 12476,
+    "leg_spin": 4411
+  },
+  "bowler_arm_coverage": {
+    "right": 33865,
+    "unknown": 16361,
+    "left": 10762
+  },
+  "ablations": {
+    "batter_innings_phase_type": {
+      "features_added": [
+        "player_innings_is_chase",
+        "player_innings_bowler_type",
+        "player_innings_bowler_arm",
+        "player_innings_batter_samples",
+        "player_innings_batter_runs_rate",
+        "player_innings_batter_boundaries_rate",
+        "player_innings_batter_dots_rate",
+        "player_innings_batter_wickets_rate"
+      ],
+      "two_run_hit_rate": 0.31753787630353514,
+      "improvement_over_v32_percentage_points": 0.37712336853151784,
+      "improvement_over_v37_percentage_points": -0.1951203515445643,
+      "paired_vs_v32": {
+        "candidate_only_wins": 4195,
+        "baseline_only_wins": 3965,
+        "paired_exact_p_value": 0.011237892760137752
+      },
+      "mean_band_probability": 0.32837510126616826,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.28556537277871535
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.3425148002410578
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.31275231536452147
+        }
+      },
+      "mean_main_prediction_ms": 1.6025159733302037
+    },
+    "bowler_innings_phase_type": {
+      "features_added": [
+        "player_innings_is_chase",
+        "player_innings_bowler_type",
+        "player_innings_bowler_arm",
+        "player_innings_bowler_samples",
+        "player_innings_bowler_runs_rate",
+        "player_innings_bowler_boundaries_rate",
+        "player_innings_bowler_dots_rate",
+        "player_innings_bowler_wickets_rate"
+      ],
+      "two_run_hit_rate": 0.31734111628517087,
+      "improvement_over_v32_percentage_points": 0.3574473666950906,
+      "improvement_over_v37_percentage_points": -0.21479635338099157,
+      "paired_vs_v32": {
+        "candidate_only_wins": 4028,
+        "baseline_only_wins": 3810,
+        "paired_exact_p_value": 0.014237750280988436
+      },
+      "mean_band_probability": 0.3304848889574092,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.28616102452099673
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.34255024992023825
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.3107733713290588
+        }
+      },
+      "mean_main_prediction_ms": 1.5716105533162288
+    },
+    "player_profiles_combined": {
+      "features_added": [
+        "player_innings_is_chase",
+        "player_innings_bowler_type",
+        "player_innings_bowler_arm",
+        "player_innings_batter_samples",
+        "player_innings_batter_runs_rate",
+        "player_innings_batter_boundaries_rate",
+        "player_innings_batter_dots_rate",
+        "player_innings_batter_wickets_rate",
+        "player_innings_bowler_samples",
+        "player_innings_bowler_runs_rate",
+        "player_innings_bowler_boundaries_rate",
+        "player_innings_bowler_dots_rate",
+        "player_innings_bowler_wickets_rate"
+      ],
+      "two_run_hit_rate": 0.31830851970879515,
+      "improvement_over_v32_percentage_points": 0.4541877090575186,
+      "improvement_over_v37_percentage_points": -0.11805601101856356,
+      "paired_vs_v32": {
+        "candidate_only_wins": 4438,
+        "baseline_only_wins": 4161,
+        "paired_exact_p_value": 0.0029147888911483484
+      },
+      "mean_band_probability": 0.3305613318527696,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.2852179092623846
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.34464178099188203
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.3122773687960104
+        }
+      },
+      "mean_main_prediction_ms": 1.5634409699850949
+    },
+    "boundary_player_profiles": {
+      "features_added": [
+        "boundary_gate_none_probability",
+        "boundary_gate_one_probability",
+        "boundary_gate_multiple_probability",
+        "boundary_gate_entropy",
+        "player_innings_is_chase",
+        "player_innings_bowler_type",
+        "player_innings_bowler_arm",
+        "player_innings_batter_samples",
+        "player_innings_batter_runs_rate",
+        "player_innings_batter_boundaries_rate",
+        "player_innings_batter_dots_rate",
+        "player_innings_batter_wickets_rate",
+        "player_innings_bowler_samples",
+        "player_innings_bowler_runs_rate",
+        "player_innings_bowler_boundaries_rate",
+        "player_innings_bowler_dots_rate",
+        "player_innings_bowler_wickets_rate"
+      ],
+      "two_run_hit_rate": 0.3187184364137207,
+      "improvement_over_v32_percentage_points": 0.49517937955007585,
+      "improvement_over_v37_percentage_points": -0.0770643405260063,
+      "paired_vs_v32": {
+        "candidate_only_wins": 5065,
+        "baseline_only_wins": 4763,
+        "paired_exact_p_value": 0.0023939256953581308
+      },
+      "mean_band_probability": 0.3348940082059835,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.28799761739303087
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.3447481300294232
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.3095860049077812
+        }
+      },
+      "mean_main_prediction_ms": 1.562444306667506
+    },
+    "boundary_venue_player_profiles": {
+      "features_added": [
+        "boundary_gate_none_probability",
+        "boundary_gate_one_probability",
+        "boundary_gate_multiple_probability",
+        "boundary_gate_entropy",
+        "venue_track_type",
+        "venue_track_venue_samples",
+        "venue_track_batter_samples",
+        "venue_track_bowler_samples",
+        "venue_track_venue_runs_rate",
+        "venue_track_batter_runs_rate",
+        "venue_track_bowler_runs_rate",
+        "venue_track_venue_boundaries_rate",
+        "venue_track_batter_boundaries_rate",
+        "venue_track_bowler_boundaries_rate",
+        "venue_track_venue_dots_rate",
+        "venue_track_batter_dots_rate",
+        "venue_track_bowler_dots_rate",
+        "venue_track_venue_wickets_rate",
+        "venue_track_batter_wickets_rate",
+        "venue_track_bowler_wickets_rate",
+        "player_innings_is_chase",
+        "player_innings_bowler_type",
+        "player_innings_bowler_arm",
+        "player_innings_batter_samples",
+        "player_innings_batter_runs_rate",
+        "player_innings_batter_boundaries_rate",
+        "player_innings_batter_dots_rate",
+        "player_innings_batter_wickets_rate",
+        "player_innings_bowler_samples",
+        "player_innings_bowler_runs_rate",
+        "player_innings_bowler_boundaries_rate",
+        "player_innings_bowler_dots_rate",
+        "player_innings_bowler_wickets_rate"
+      ],
+      "two_run_hit_rate": 0.31720994293959465,
+      "improvement_over_v32_percentage_points": 0.3443300321374687,
+      "improvement_over_v37_percentage_points": -0.22791368793861344,
+      "paired_vs_v32": {
+        "candidate_only_wins": 5334,
+        "baseline_only_wins": 5124,
+        "paired_exact_p_value": 0.04097583591840237
+      },
+      "mean_band_probability": 0.3348204106972222,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.28705450213441874
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.342266652486795
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.3093485316235257
+        }
+      },
+      "mean_main_prediction_ms": 1.7941211099969223
+    },
+    "phase_selective_player_router": {
+      "routing": {
+        "powerplay": "boundary_venue_player_profiles",
+        "middle": "boundary_player_profiles",
+        "death": "boundary_player_profiles"
+      },
+      "two_run_hit_rate": 0.3184068997179773,
+      "improvement_over_v32_percentage_points": 0.464025709975735,
+      "improvement_over_v37_percentage_points": -0.10821801010034715,
+      "paired_vs_v32": {
+        "candidate_only_wins": 5201,
+        "baseline_only_wins": 4918,
+        "paired_exact_p_value": 0.005054689404681372
+      },
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.28705450213441874
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.3447481300294232
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.3095860049077812
+        }
+      },
+      "mean_main_prediction_ms": 1.7941211099969223
+    }
+  },
+  "winner": "boundary_player_profiles",
+  "winner_metrics": {
+    "features_added": [
+      "boundary_gate_none_probability",
+      "boundary_gate_one_probability",
+      "boundary_gate_multiple_probability",
+      "boundary_gate_entropy",
+      "player_innings_is_chase",
+      "player_innings_bowler_type",
+      "player_innings_bowler_arm",
+      "player_innings_batter_samples",
+      "player_innings_batter_runs_rate",
+      "player_innings_batter_boundaries_rate",
+      "player_innings_batter_dots_rate",
+      "player_innings_batter_wickets_rate",
+      "player_innings_bowler_samples",
+      "player_innings_bowler_runs_rate",
+      "player_innings_bowler_boundaries_rate",
+      "player_innings_bowler_dots_rate",
+      "player_innings_bowler_wickets_rate"
+    ],
+    "two_run_hit_rate": 0.3187184364137207,
+    "improvement_over_v32_percentage_points": 0.49517937955007585,
+    "improvement_over_v37_percentage_points": -0.0770643405260063,
+    "paired_vs_v32": {
+      "candidate_only_wins": 5065,
+      "baseline_only_wins": 4763,
+      "paired_exact_p_value": 0.0023939256953581308
+    },
+    "mean_band_probability": 0.3348940082059835,
+    "phase": {
+      "powerplay": {
+        "rows": 20146,
+        "hit_rate": 0.28799761739303087
+      },
+      "middle": {
+        "rows": 28209,
+        "hit_rate": 0.3447481300294232
+      },
+      "death": {
+        "rows": 12633,
+        "hit_rate": 0.3095860049077812
+      }
+    },
+    "mean_main_prediction_ms": 1.562444306667506
+  },
+  "promotion_gates": {
+    "accuracy_at_least_32_38pct": false,
+    "beats_v37": false,
+    "paired_vs_v32_p_below_0_01": true,
+    "no_phase_regresses_over_2pct": true,
+    "latency_below_50ms": true,
+    "complete_match_sequence_failures_zero": true
+  },
+  "integration_recommended": false
+}

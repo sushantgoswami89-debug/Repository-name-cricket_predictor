@@ -1,0 +1,50 @@
+{
+  "candidate_version": "ipl_engine_v3_shared_t20_adapter",
+  "model_scope": "candidate_only_ipl",
+  "production_models_changed": false,
+  "shared_backbone_training_rows_through_2022": 124352,
+  "ipl_adapter_training_rows_2023_2024": 5611,
+  "ipl_holdout_rows_2025_plus": 5580,
+  "ipl_holdout_matches": 148,
+  "run_head": {
+    "shared_backbone_hit_rate": 0.24695340501792115,
+    "adjusted_hit_rate": 0.23817204301075268,
+    "improvement_percentage_points": -0.8781362007168475,
+    "mean_adjusted_band_probability": 0.3211099346705753,
+    "mean_shared_band_probability": 0.28310947496910327,
+    "phase": {
+      "powerplay": {
+        "rows": 1755,
+        "hit_rate": 0.22735042735042735
+      },
+      "middle": {
+        "rows": 2582,
+        "hit_rate": 0.2532920216886135
+      },
+      "death": {
+        "rows": 1243,
+        "hit_rate": 0.22204344328238135
+      }
+    }
+  },
+  "wicket_head": {
+    "shared_backbone_brier": 0.19430961275992592,
+    "adjusted_brier": 0.19585945759803514,
+    "brier_improvement": -0.0015498448381092156
+  },
+  "win_head": {
+    "rows": 5440,
+    "brier_score": 0.20419574740727614,
+    "log_loss": 0.5918005434082294,
+    "accuracy_at_0_5": 0.684375
+  },
+  "mean_three_head_prediction_ms": 4.005081666667441,
+  "promotion_gates": {
+    "run_accuracy_at_least_32_38pct": false,
+    "run_adapter_improves_shared_backbone": false,
+    "wicket_brier_improves_shared_backbone": false,
+    "win_brier_below_naive_0_25": true,
+    "all_heads_latency_below_50ms": true
+  },
+  "integration_recommended": false
+}

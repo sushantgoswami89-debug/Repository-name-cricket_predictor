@@ -1,0 +1,70 @@
+{
+  "matches_seen": 6767,
+  "matches_failed": 0,
+  "matches_excluded": 6,
+  "ineligible_matches": 0,
+  "anomaly_exclusions": 6,
+  "verification_failures": 0,
+  "prediction_rows": 246846,
+  "rule_exception_rows": 0,
+  "rule_exception_matches": 0,
+  "overall": {
+    "predictions": 246846,
+    "runs_mae": 3.7902,
+    "runs_rmse": 5.1427,
+    "wicket_brier_score": 0.2564,
+    "wicket_accuracy": 0.575
+  },
+  "by_match_format": {
+    "T20": {
+      "predictions": 246846,
+      "runs_mae": 3.7902,
+      "runs_rmse": 5.1427,
+      "wicket_brier_score": 0.2564,
+      "wicket_accuracy": 0.575
+    }
+  },
+  "failures": [],
+  "exclusions": [
+    {
+      "source_file": "1179017.json",
+      "match_id": "1179017",
+      "reason": "confirmed historical bowling-limit violation",
+      "category": "known_rule_anomaly"
+    },
+    {
+      "source_file": "1267304.json",
+      "match_id": "1267304",
+      "reason": "unresolved five-over scorecard anomaly",
+      "category": "known_rule_anomaly"
+    },
+    {
+      "source_file": "1283040.json",
+      "match_id": "1283040",
+      "reason": "consecutive-over bowler-attribution inconsistency",
+      "category": "known_rule_anomaly"
+    },
+    {
+      "source_file": "1419932.json",
+      "match_id": "1419932",
+      "reason": "confirmed historical bowling-limit violation",
+      "category": "known_rule_anomaly"
+    },
+    {
+      "source_file": "1490882.json",
+      "match_id": "1490882",
+      "reason": "ball-by-ball bowler-attribution error",
+      "category": "known_rule_anomaly"
+    },
+    {
+      "source_file": "1499795.json",
+      "match_id": "1499795",
+      "reason": "final-over bowler-attribution error",
+      "category": "known_rule_anomaly"
+    }
+  ],
+  "notes": [
+    "Confidence is currently the model's fixed 0.90 value, not calibrated confidence.",
+    "The current model is trained for T20; ODI rows are labelled exploratory."
+  ]
+}

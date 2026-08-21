@@ -1,0 +1,74 @@
+{
+  "candidate_version": "v3_phase_impact_ranked_top10",
+  "ranking_snapshot": "2026-06-20",
+  "allowed_teams": [
+    "India",
+    "England",
+    "Australia",
+    "New Zealand",
+    "South Africa",
+    "Pakistan",
+    "West Indies",
+    "Bangladesh",
+    "Sri Lanka",
+    "Afghanistan"
+  ],
+  "matches": 1536,
+  "rows": 56955,
+  "split": {
+    "train_through_2023": 44144,
+    "calibration_2024": 5563,
+    "holdout_2025_plus": 7248,
+    "holdout_matches": 201
+  },
+  "candidate_metrics": {
+    "rows": 7248.0,
+    "runs_mae": 3.5579329337471295,
+    "runs_rmse": 4.603148495504969,
+    "runs_bias": -1.0359167383663015,
+    "wicket_brier": 0.2071893158432966,
+    "wicket_log_loss": 0.6052451800023876,
+    "wicket_auc": 0.5930673273234414
+  },
+  "phase_metrics": {
+    "powerplay": {
+      "rows": 2350.0,
+      "runs_mae": 3.7757522604346896,
+      "runs_rmse": 4.817125760643848,
+      "runs_bias": -1.354885895495988,
+      "wicket_brier": 0.195120266921446,
+      "wicket_log_loss": 0.5800051918598919,
+      "wicket_auc": 0.5188471086631825
+    },
+    "middle": {
+      "rows": 3374.0,
+      "runs_mae": 3.3809015352875904,
+      "runs_rmse": 4.415469873034799,
+      "runs_bias": -0.9718505010906792,
+      "wicket_brier": 0.19986572023446297,
+      "wicket_log_loss": 0.5889861381238978,
+      "wicket_auc": 0.5644778935672963
+    },
+    "death": {
+      "rows": 1524.0,
+      "runs_mae": 3.6139883935153203,
+      "runs_rmse": 4.672045476923221,
+      "runs_bias": -0.6859049045823044,
+      "wicket_brier": 0.24201351305494595,
+      "wicket_log_loss": 0.680161177005596,
+      "wicket_auc": 0.5968002617083542
+    }
+  },
+  "prediction_interval_90": {
+    "coverage": 0.8961092715231788,
+    "average_width": 14.155274276296343
+  },
+  "complete_match_test": {
+    "matches_tested": 201,
+    "innings_tested": 395,
+    "overs_predicted": 7248,
+    "sequence_failures": 0,
+    "failures": []
+  },
+  "production_models_changed": false
+}

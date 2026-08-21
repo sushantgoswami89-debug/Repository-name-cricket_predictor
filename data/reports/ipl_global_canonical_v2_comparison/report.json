@@ -1,0 +1,343 @@
+{
+  "overall_old_mae": 3.848466494020738,
+  "overall_canonical_mae": 3.851994479116314,
+  "overall_change": 0.0035279850955762804,
+  "segments": {
+    "team": {
+      "team:csk": {
+        "rows": 551,
+        "old_mae": 3.677049609965553,
+        "canonical_mae": 3.675860625357807,
+        "mae_change": -0.0011889846077459687,
+        "supported": true
+      },
+      "team:dc": {
+        "rows": 543,
+        "old_mae": 3.629848126431509,
+        "canonical_mae": 3.6275551683872327,
+        "mae_change": -0.0022929580442760944,
+        "supported": true
+      },
+      "team:gt": {
+        "rows": 619,
+        "old_mae": 3.720412858015387,
+        "canonical_mae": 3.707888425139735,
+        "mae_change": -0.012524432875651748,
+        "supported": true
+      },
+      "team:kkr": {
+        "rows": 474,
+        "old_mae": 3.7076028417692948,
+        "canonical_mae": 3.696744035456104,
+        "mae_change": -0.010858806313190694,
+        "supported": true
+      },
+      "team:lsg": {
+        "rows": 550,
+        "old_mae": 3.7908929278742454,
+        "canonical_mae": 3.817278463621075,
+        "mae_change": 0.026385535746829447,
+        "supported": true
+      },
+      "team:mi": {
+        "rows": 573,
+        "old_mae": 3.8391722450471133,
+        "canonical_mae": 3.835005247353732,
+        "mae_change": -0.004166997693381358,
+        "supported": true
+      },
+      "team:pbks": {
+        "rows": 582,
+        "old_mae": 3.9707531581606728,
+        "canonical_mae": 3.985554728540098,
+        "mae_change": 0.01480157037942531,
+        "supported": true
+      },
+      "team:rcb": {
+        "rows": 571,
+        "old_mae": 4.03758524778613,
+        "canonical_mae": 4.034902343317723,
+        "mae_change": -0.0026829044684069103,
+        "supported": true
+      },
+      "team:rr": {
+        "rows": 569,
+        "old_mae": 4.050393881744462,
+        "canonical_mae": 4.065285388380578,
+        "mae_change": 0.014891506636115714,
+        "supported": true
+      },
+      "team:srh": {
+        "rows": 544,
+        "old_mae": 4.036208744145792,
+        "canonical_mae": 4.048693582389476,
+        "mae_change": 0.01248483824368396,
+        "supported": true
+      }
+    },
+    "venue": {
+      "ahmedabad_narendra_modi": {
+        "rows": 657,
+        "old_mae": 3.8792040212511605,
+        "canonical_mae": 3.883953693372639,
+        "mae_change": 0.0047496721214783655,
+        "supported": true
+      },
+      "bengaluru_chinnaswamy": {
+        "rows": 374,
+        "old_mae": 4.152408189321249,
+        "canonical_mae": 4.1964954576142235,
+        "mae_change": 0.04408726829297471,
+        "supported": true
+      },
+      "chennai_chepauk": {
+        "rows": 504,
+        "old_mae": 3.5140574198999976,
+        "canonical_mae": 3.510742613391678,
+        "mae_change": -0.003314806508319723,
+        "supported": true
+      },
+      "delhi_arun_jaitley": {
+        "rows": 529,
+        "old_mae": 3.876125615821871,
+        "canonical_mae": 3.8743482447258217,
+        "mae_change": -0.0017773710960491407,
+        "supported": true
+      },
+      "dharamsala_hpca": {
+        "rows": 210,
+        "old_mae": 3.9898294332192283,
+        "canonical_mae": 3.97229551931244,
+        "mae_change": -0.017533913906788268,
+        "supported": true
+      },
+      "guwahati_barsapara": {
+        "rows": 171,
+        "old_mae": 3.647174165509742,
+        "canonical_mae": 3.669994576927653,
+        "mae_change": 0.022820411417911135,
+        "supported": true
+      },
+      "hyderabad_rajiv_gandhi": {
+        "rows": 486,
+        "old_mae": 3.88254027007059,
+        "canonical_mae": 3.8906042474232416,
+        "mae_change": 0.00806397735265163,
+        "supported": true
+      },
+      "jaipur_sawai_mansingh": {
+        "rows": 426,
+        "old_mae": 3.837025363539898,
+        "canonical_mae": 3.826496885027528,
+        "mae_change": -0.010528478512370043,
+        "supported": true
+      },
+      "kolkata_eden_gardens": {
+        "rows": 493,
+        "old_mae": 3.916386351580574,
+        "canonical_mae": 3.9183309902831827,
+        "mae_change": 0.0019446387026085254,
+        "supported": true
+      },
+      "lucknow_ekana": {
+        "rows": 580,
+        "old_mae": 3.5188024854383464,
+        "canonical_mae": 3.5438262561829896,
+        "mae_change": 0.025023770744643237,
+        "supported": true
+      },
+      "mumbai_wankhede": {
+        "rows": 537,
+        "old_mae": 4.208502880780498,
+        "canonical_mae": 4.218158433062102,
+        "mae_change": 0.009655552281603974,
+        "supported": true
+      },
+      "new_chandigarh_mullanpur": {
+        "rows": 454,
+        "old_mae": 3.8908555869816164,
+        "canonical_mae": 3.882348077332337,
+        "mae_change": -0.008507509649279488,
+        "supported": true
+      },
+      "raipur_shaheed_veer_narayan": {
+        "rows": 80,
+        "old_mae": 3.0677215082328164,
+        "canonical_mae": 2.9400209735911673,
+        "mae_change": -0.1277005346416491,
+        "supported": false
+      },
+      "visakhapatnam_acavdca": {
+        "rows": 75,
+        "old_mae": 4.124288254409697,
+        "canonical_mae": 4.076829065649739,
+        "mae_change": -0.047459188759957804,
+        "supported": false
+      }
+    },
+    "phase": {
+      "death": {
+        "rows": 1243,
+        "old_mae": 4.089000986353515,
+        "canonical_mae": 4.087345970888651,
+        "mae_change": -0.001655015464863574,
+        "supported": true
+      },
+      "middle": {
+        "rows": 2582,
+        "old_mae": 3.6482445787080517,
+        "canonical_mae": 3.644326343323662,
+        "mae_change": -0.003918235384389845,
+        "supported": true
+      },
+      "powerplay": {
+        "rows": 1751,
+        "old_mae": 3.9729602754985875,
+        "canonical_mae": 3.991147661494163,
+        "mae_change": 0.018187385995575234,
+        "supported": true
+      }
+    },
+    "state": {
+      "accelerating": {
+        "rows": 944,
+        "old_mae": 3.831383178932697,
+        "canonical_mae": 3.8474446816484753,
+        "mae_change": 0.016061502715778442,
+        "supported": true
+      },
+      "stable": {
+        "rows": 3972,
+        "old_mae": 3.8636648536060485,
+        "canonical_mae": 3.862692076824225,
+        "mae_change": -0.0009727767818232813,
+        "supported": true
+      },
+      "wicket_pressure": {
+        "rows": 660,
+        "old_mae": 3.781434320036274,
+        "canonical_mae": 3.7941219801978563,
+        "mae_change": 0.012687660161582404,
+        "supported": true
+      }
+    },
+    "batter_state": {
+      "established_pair": {
+        "rows": 3794,
+        "old_mae": 3.9010602767438596,
+        "canonical_mae": 3.9041721903579276,
+        "mae_change": 0.0031119136140680403,
+        "supported": true
+      },
+      "new_batter": {
+        "rows": 1782,
+        "old_mae": 3.736490729906526,
+        "canonical_mae": 3.7409045596714883,
+        "mae_change": 0.004413829764962074,
+        "supported": true
+      }
+    },
+    "chase_pressure": {
+      "high": {
+        "rows": 892,
+        "old_mae": 3.9965117678437,
+        "canonical_mae": 3.9907190964939674,
+        "mae_change": -0.005792671349732714,
+        "supported": true
+      },
+      "low": {
+        "rows": 1358,
+        "old_mae": 3.7073159426144247,
+        "canonical_mae": 3.7001287267850587,
+        "mae_change": -0.007187215829365989,
+        "supported": true
+      },
+      "medium": {
+        "rows": 425,
+        "old_mae": 3.8364497466272653,
+        "canonical_mae": 3.8409768123380053,
+        "mae_change": 0.004527065710739908,
+        "supported": true
+      },
+      "not_chasing": {
+        "rows": 2901,
+        "old_mae": 3.870780586472277,
+        "canonical_mae": 3.8820440624826564,
+        "mae_change": 0.01126347601037958,
+        "supported": true
+      }
+    },
+    "wickets_remaining": {
+      "1": {
+        "rows": 46,
+        "old_mae": 4.002557824524281,
+        "canonical_mae": 4.035885799286611,
+        "mae_change": 0.033327974762329404,
+        "supported": false
+      },
+      "10": {
+        "rows": 1243,
+        "old_mae": 3.9292758222896853,
+        "canonical_mae": 3.941734315417423,
+        "mae_change": 0.012458493127737835,
+        "supported": true
+      },
+      "2": {
+        "rows": 88,
+        "old_mae": 4.140663732870186,
+        "canonical_mae": 4.069416585696587,
+        "mae_change": -0.07124714717359915,
+        "supported": false
+      },
+      "3": {
+        "rows": 115,
+        "old_mae": 4.433241216133954,
+        "canonical_mae": 4.4778574787912575,
+        "mae_change": 0.04461626265730345,
+        "supported": true
+      },
+      "4": {
+        "rows": 265,
+        "old_mae": 4.097992136889409,
+        "canonical_mae": 4.110049449405499,
+        "mae_change": 0.01205731251608988,
+        "supported": true
+      },
+      "5": {
+        "rows": 426,
+        "old_mae": 4.300767010842542,
+        "canonical_mae": 4.300439035692295,
+        "mae_change": -0.00032797515024718393,
+        "supported": true
+      },
+      "6": {
+        "rows": 592,
+        "old_mae": 3.775869227218293,
+        "canonical_mae": 3.785842797794704,
+        "mae_change": 0.009973570576410573,
+        "supported": true
+      },
+      "7": {
+        "rows": 804,
+        "old_mae": 3.524363729787549,
+        "canonical_mae": 3.5138098034484253,
+        "mae_change": -0.010553926339123887,
+        "supported": true
+      },
+      "8": {
+        "rows": 935,
+        "old_mae": 3.584205922870189,
+        "canonical_mae": 3.5883704450370164,
+        "mae_change": 0.004164522166827389,
+        "supported": true
+      },
+      "9": {
+        "rows": 1062,
+        "old_mae": 3.934472969149523,
+        "canonical_mae": 3.9339302518316837,
+        "mae_change": -0.0005427173178391698,
+        "supported": true
+      }
+    }
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "candidate_version": "v3.7_boundary_venue_track",
+  "model_scope": "candidate_only",
+  "production_models_changed": false,
+  "verified_rows": 246846,
+  "holdout_rows": 60988,
+  "holdout_matches": 1704,
+  "boundary_gate_accuracy": 0.5169213615793271,
+  "boundary_gate_single_prediction_ms": 1.7879511133408716,
+  "winner_end_to_end_prediction_ms": 3.212685420003254,
+  "complete_match_sequence_failures": 0,
+  "ablations": {
+    "boundary_gate": {
+      "features_added": [
+        "boundary_gate_none_probability",
+        "boundary_gate_one_probability",
+        "boundary_gate_multiple_probability",
+        "boundary_gate_entropy"
+      ],
+      "two_run_hit_rate": 0.31858726306814455,
+      "improvement_over_v32_percentage_points": 0.4820620449924595,
+      "paired_exact_p_value": 0.0012858834788213526,
+      "candidate_only_wins": 4290,
+      "v32_only_wins": 3996,
+      "mean_band_probability": 0.33424211425525346,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.2901816737813958
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.34258569959941865
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.31029842476054775
+        }
+      },
+      "mean_main_prediction_ms": 1.1324969433432368
+    },
+    "venue_track": {
+      "features_added": [
+        "venue_track_type",
+        "venue_track_venue_samples",
+        "venue_track_batter_samples",
+        "venue_track_bowler_samples",
+        "venue_track_venue_runs_rate",
+        "venue_track_batter_runs_rate",
+        "venue_track_bowler_runs_rate",
+        "venue_track_venue_boundaries_rate",
+        "venue_track_batter_boundaries_rate",
+        "venue_track_bowler_boundaries_rate",
+        "venue_track_venue_dots_rate",
+        "venue_track_batter_dots_rate",
+        "venue_track_bowler_dots_rate",
+        "venue_track_venue_wickets_rate",
+        "venue_track_batter_wickets_rate",
+        "venue_track_bowler_wickets_rate"
+      ],
+      "two_run_hit_rate": 0.3158490194792418,
+      "improvement_over_v32_percentage_points": 0.20823768610218618,
+      "paired_exact_p_value": 0.20047433019306643,
+      "candidate_only_wins": 4907,
+      "v32_only_wins": 4780,
+      "mean_band_probability": 0.3338559947398734,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.2886429067805023
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.338048140664327
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.3096651626691997
+        }
+      },
+      "mean_main_prediction_ms": 1.4143195833457867
+    },
+    "boundary_venue_combined": {
+      "features_added": [
+        "boundary_gate_none_probability",
+        "boundary_gate_one_probability",
+        "boundary_gate_multiple_probability",
+        "boundary_gate_entropy",
+        "venue_track_type",
+        "venue_track_venue_samples",
+        "venue_track_batter_samples",
+        "venue_track_bowler_samples",
+        "venue_track_venue_runs_rate",
+        "venue_track_batter_runs_rate",
+        "venue_track_bowler_runs_rate",
+        "venue_track_venue_boundaries_rate",
+        "venue_track_batter_boundaries_rate",
+        "venue_track_bowler_boundaries_rate",
+        "venue_track_venue_dots_rate",
+        "venue_track_batter_dots_rate",
+        "venue_track_bowler_dots_rate",
+        "venue_track_venue_wickets_rate",
+        "venue_track_batter_wickets_rate",
+        "venue_track_bowler_wickets_rate"
+      ],
+      "two_run_hit_rate": 0.318177346363219,
+      "improvement_over_v32_percentage_points": 0.4410703744999023,
+      "paired_exact_p_value": 0.008211445384732632,
+      "candidate_only_wins": 5275,
+      "v32_only_wins": 5006,
+      "mean_band_probability": 0.3352691218899633,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.29291174426685196
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.34169945761990855
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.3059447478825299
+        }
+      },
+      "mean_main_prediction_ms": 1.4247343066623823
+    },
+    "phase_selective_router": {
+      "routing": {
+        "powerplay": "boundary_venue_combined",
+        "middle": "boundary_gate",
+        "death": "boundary_gate"
+      },
+      "two_run_hit_rate": 0.3194890798189808,
+      "improvement_over_v32_percentage_points": 0.5722437200760822,
+      "paired_exact_p_value": 0.0002447935414885702,
+      "candidate_only_wins": 4677,
+      "v32_only_wins": 4328,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.29291174426685196
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.34258569959941865
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.31029842476054775
+        }
+      },
+      "mean_main_prediction_ms": 1.4247343066623823
+    }
+  },
+  "winner": "phase_selective_router",
+  "winner_metrics": {
+    "routing": {
+      "powerplay": "boundary_venue_combined",
+      "middle": "boundary_gate",
+      "death": "boundary_gate"
+    },
+    "two_run_hit_rate": 0.3194890798189808,
+    "improvement_over_v32_percentage_points": 0.5722437200760822,
+    "paired_exact_p_value": 0.0002447935414885702,
+    "candidate_only_wins": 4677,
+    "v32_only_wins": 4328,
+    "phase": {
+      "powerplay": {
+        "rows": 20146,
+        "hit_rate": 0.29291174426685196
+      },
+      "middle": {
+        "rows": 28209,
+        "hit_rate": 0.34258569959941865
+      },
+      "death": {
+        "rows": 12633,
+        "hit_rate": 0.31029842476054775
+      }
+    },
+    "mean_main_prediction_ms": 1.4247343066623823
+  },
+  "promotion_gates": {
+    "accuracy_at_least_32_38pct": false,
+    "improvement_at_least_0_5pp": true,
+    "paired_p_below_0_01": true,
+    "no_phase_regresses_over_2pct": true,
+    "latency_below_50ms": true,
+    "complete_match_sequence_failures_zero": true
+  },
+  "integration_recommended": false
+}

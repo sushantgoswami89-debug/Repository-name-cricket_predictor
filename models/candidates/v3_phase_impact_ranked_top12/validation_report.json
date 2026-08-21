@@ -1,0 +1,76 @@
+{
+  "candidate_version": "v3_phase_impact_ranked_top12",
+  "ranking_snapshot": "2026-06-20",
+  "allowed_teams": [
+    "India",
+    "England",
+    "Australia",
+    "New Zealand",
+    "South Africa",
+    "Pakistan",
+    "West Indies",
+    "Bangladesh",
+    "Sri Lanka",
+    "Afghanistan",
+    "Zimbabwe",
+    "Ireland"
+  ],
+  "matches": 1793,
+  "rows": 66492,
+  "split": {
+    "train_through_2023": 50405,
+    "calibration_2024": 6944,
+    "holdout_2025_plus": 9143,
+    "holdout_matches": 252
+  },
+  "candidate_metrics": {
+    "rows": 9143.0,
+    "runs_mae": 3.50302370609376,
+    "runs_rmse": 4.538794808936043,
+    "runs_bias": -0.984695525370661,
+    "wicket_brier": 0.2048629731503447,
+    "wicket_log_loss": 0.5997450310917761,
+    "wicket_auc": 0.5979382711493277
+  },
+  "phase_metrics": {
+    "powerplay": {
+      "rows": 2950.0,
+      "runs_mae": 3.7524495544084444,
+      "runs_rmse": 4.773721318348172,
+      "runs_bias": -1.2649994390534383,
+      "wicket_brier": 0.19471650180719102,
+      "wicket_log_loss": 0.5788089999546039,
+      "wicket_auc": 0.5249587720973576
+    },
+    "middle": {
+      "rows": 4254.0,
+      "runs_mae": 3.297397910978182,
+      "runs_rmse": 4.320524045857774,
+      "runs_bias": -0.9128014255582325,
+      "wicket_brier": 0.1952077242021901,
+      "wicket_log_loss": 0.5786330729345881,
+      "wicket_auc": 0.563917398269282
+    },
+    "death": {
+      "rows": 1939.0,
+      "runs_mae": 3.574671916456499,
+      "runs_rmse": 4.638387388516633,
+      "runs_bias": -0.7159698705165494,
+      "wicket_brier": 0.24148263250452373,
+      "wicket_log_loss": 0.6779149959475455,
+      "wicket_auc": 0.5944632442940456
+    }
+  },
+  "prediction_interval_90": {
+    "coverage": 0.8995953188231434,
+    "average_width": 14.120066596924548
+  },
+  "complete_match_test": {
+    "matches_tested": 252,
+    "innings_tested": 495,
+    "overs_predicted": 9143,
+    "sequence_failures": 0,
+    "failures": []
+  },
+  "production_models_changed": false
+}

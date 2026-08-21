@@ -1,0 +1,26 @@
+{
+  "matches_seen": 1000,
+  "matches_failed": 0,
+  "prediction_rows": 36386,
+  "overall": {
+    "predictions": 36386,
+    "runs_mae": 3.636,
+    "runs_rmse": 4.9159,
+    "wicket_brier_score": 0.2558,
+    "wicket_accuracy": 0.5785
+  },
+  "by_match_format": {
+    "T20": {
+      "predictions": 36386,
+      "runs_mae": 3.636,
+      "runs_rmse": 4.9159,
+      "wicket_brier_score": 0.2558,
+      "wicket_accuracy": 0.5785
+    }
+  },
+  "failures": [],
+  "notes": [
+    "Confidence is currently the model's fixed 0.90 value, not calibrated confidence.",
+    "The current model is trained for T20; ODI rows are labelled exploratory."
+  ]
+}

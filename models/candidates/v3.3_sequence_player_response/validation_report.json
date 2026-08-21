@@ -1,0 +1,238 @@
+{
+  "candidate_version": "v3.3_sequence_player_response",
+  "model_scope": "candidate_only",
+  "production_models_changed": false,
+  "verified_rows": 246846,
+  "holdout_rows": 60988,
+  "holdout_matches": 1704,
+  "v32_benchmark_hit_rate": 0.31376664261821996,
+  "ablations": {
+    "generic_sequence": {
+      "features_added": [
+        "trailing_dot_streak",
+        "striker_dot_streak",
+        "bowler_dot_streak",
+        "last_ball_runs",
+        "runs_last_3_balls",
+        "boundary_rate_last_3",
+        "single_rate_last_3",
+        "wicket_rate_last_3",
+        "dot_rate_last_3",
+        "runs_last_6_balls",
+        "boundary_rate_last_6",
+        "single_rate_last_6",
+        "wicket_rate_last_6",
+        "dot_rate_last_6",
+        "runs_last_12_balls",
+        "boundary_rate_last_12",
+        "single_rate_last_12",
+        "wicket_rate_last_12",
+        "dot_rate_last_12",
+        "runs_last_18_balls",
+        "boundary_rate_last_18",
+        "single_rate_last_18",
+        "wicket_rate_last_18",
+        "dot_rate_last_18"
+      ],
+      "feature_count": 41,
+      "holdout_hit_rate": 0.3127500491900046,
+      "improvement_over_v32_percentage_points": -0.10165934282153621,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.2790628412588107
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.340246020773512
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.3050740125069263
+        }
+      }
+    },
+    "batter_response": {
+      "features_added": [
+        "batter_response_samples",
+        "batter_response_boundary_rate",
+        "batter_response_single_rate",
+        "batter_response_wicket_rate",
+        "batter_response_dot_rate"
+      ],
+      "feature_count": 22,
+      "holdout_hit_rate": 0.31586541614743885,
+      "improvement_over_v32_percentage_points": 0.20987735292188892,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.2883947185545518
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.3387925839271155
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.3084777962479221
+        }
+      }
+    },
+    "bowler_response": {
+      "features_added": [
+        "bowler_response_samples",
+        "bowler_response_boundary_rate",
+        "bowler_response_single_rate",
+        "bowler_response_wicket_rate",
+        "bowler_response_dot_rate"
+      ],
+      "feature_count": 22,
+      "holdout_hit_rate": 0.31821013969961304,
+      "improvement_over_v32_percentage_points": 0.44434970813930774,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.2864588503921374
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.3440036867666348
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.31124831789756985
+        }
+      }
+    },
+    "matchup_response": {
+      "features_added": [
+        "matchup_response_samples",
+        "matchup_response_boundary_rate",
+        "matchup_response_single_rate",
+        "matchup_response_wicket_rate",
+        "matchup_response_dot_rate",
+        "pressure_matchup_response_samples",
+        "pressure_matchup_response_boundary_rate",
+        "pressure_matchup_response_single_rate",
+        "pressure_matchup_response_wicket_rate",
+        "pressure_matchup_response_dot_rate"
+      ],
+      "feature_count": 27,
+      "holdout_hit_rate": 0.3156358627926805,
+      "improvement_over_v32_percentage_points": 0.1869220174460562,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.28765015387670007
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.34074231628203766
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.3042032771313227
+        }
+      }
+    },
+    "combined": {
+      "features_added": [
+        "trailing_dot_streak",
+        "striker_dot_streak",
+        "bowler_dot_streak",
+        "last_ball_runs",
+        "runs_last_3_balls",
+        "boundary_rate_last_3",
+        "single_rate_last_3",
+        "wicket_rate_last_3",
+        "dot_rate_last_3",
+        "runs_last_6_balls",
+        "boundary_rate_last_6",
+        "single_rate_last_6",
+        "wicket_rate_last_6",
+        "dot_rate_last_6",
+        "runs_last_12_balls",
+        "boundary_rate_last_12",
+        "single_rate_last_12",
+        "wicket_rate_last_12",
+        "dot_rate_last_12",
+        "runs_last_18_balls",
+        "boundary_rate_last_18",
+        "single_rate_last_18",
+        "wicket_rate_last_18",
+        "dot_rate_last_18",
+        "batter_response_samples",
+        "batter_response_boundary_rate",
+        "batter_response_single_rate",
+        "batter_response_wicket_rate",
+        "batter_response_dot_rate",
+        "bowler_response_samples",
+        "bowler_response_boundary_rate",
+        "bowler_response_single_rate",
+        "bowler_response_wicket_rate",
+        "bowler_response_dot_rate",
+        "matchup_response_samples",
+        "matchup_response_boundary_rate",
+        "matchup_response_single_rate",
+        "matchup_response_wicket_rate",
+        "matchup_response_dot_rate",
+        "pressure_matchup_response_samples",
+        "pressure_matchup_response_boundary_rate",
+        "pressure_matchup_response_single_rate",
+        "pressure_matchup_response_wicket_rate",
+        "pressure_matchup_response_dot_rate"
+      ],
+      "feature_count": 61,
+      "holdout_hit_rate": 0.3179805863448547,
+      "improvement_over_v32_percentage_points": 0.421394372663475,
+      "phase": {
+        "powerplay": {
+          "rows": 20146,
+          "hit_rate": 0.2917700784274794
+        },
+        "middle": {
+          "rows": 28209,
+          "hit_rate": 0.34077776596121806
+        },
+        "death": {
+          "rows": 12633,
+          "hit_rate": 0.30887358505501467
+        }
+      }
+    }
+  },
+  "winner": "bowler_response",
+  "winner_metrics": {
+    "features_added": [
+      "bowler_response_samples",
+      "bowler_response_boundary_rate",
+      "bowler_response_single_rate",
+      "bowler_response_wicket_rate",
+      "bowler_response_dot_rate"
+    ],
+    "feature_count": 22,
+    "holdout_hit_rate": 0.31821013969961304,
+    "improvement_over_v32_percentage_points": 0.44434970813930774,
+    "phase": {
+      "powerplay": {
+        "rows": 20146,
+        "hit_rate": 0.2864588503921374
+      },
+      "middle": {
+        "rows": 28209,
+        "hit_rate": 0.3440036867666348
+      },
+      "death": {
+        "rows": 12633,
+        "hit_rate": 0.31124831789756985
+      }
+    }
+  },
+  "promotion_gates": {
+    "beats_required_32_38pct": false,
+    "improves_over_v32": true,
+    "no_phase_regresses_over_2pct": true,
+    "complete_matches_at_least_100": true
+  },
+  "integration_recommended": false
+}

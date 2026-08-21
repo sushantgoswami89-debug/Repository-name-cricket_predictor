@@ -1,0 +1,2 @@
+cd /Users/susha/Downloads/cricket_predictor/backend
+python3 train_phase_calibrated_sharp_range_v33.py

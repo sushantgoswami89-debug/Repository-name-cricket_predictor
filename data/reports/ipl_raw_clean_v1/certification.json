@@ -1,0 +1,69 @@
+{
+  "certification_version": "ipl_raw_clean_v1",
+  "certified": true,
+  "raw_files_modified": false,
+  "source_files": 1243,
+  "over_rows": 47756,
+  "deliveries": 295557,
+  "failure_count": 0,
+  "failures": [],
+  "reviewed_exception_count": 6,
+  "reviewed_exceptions": {
+    "1136564.json|2|11": {
+      "type": "seven_legal_ball_over",
+      "status": "verified_historical_event",
+      "source": "contemporary match report",
+      "legal_balls": 7,
+      "runs": 8,
+      "has_illegal_delivery": false
+    },
+    "1254076.json|1|19": {
+      "type": "37_run_over_with_no_ball",
+      "status": "valid_scoring_event",
+      "source": "Cricsheet delivery record and innings scorecard",
+      "legal_balls": 6,
+      "runs": 37,
+      "has_illegal_delivery": true
+    },
+    "335994.json|2|10": {
+      "type": "seven_legal_ball_over",
+      "status": "verified_historical_event",
+      "source": "ESPN scorecard match notes",
+      "legal_balls": 7,
+      "runs": 17,
+      "has_illegal_delivery": true
+    },
+    "392198.json|2|10": {
+      "type": "seven_legal_ball_over",
+      "status": "scorecard_reconciled_historical_event",
+      "source": "Cricsheet delivery record and innings scorecard",
+      "legal_balls": 7,
+      "runs": 4,
+      "has_illegal_delivery": false
+    },
+    "419155.json|1|18": {
+      "type": "seven_legal_ball_over",
+      "status": "verified_historical_event",
+      "source": "ESPN scorecard match notes",
+      "legal_balls": 7,
+      "runs": 11,
+      "has_illegal_delivery": true
+    },
+    "501247.json|2|2": {
+      "type": "37_run_over_with_no_ball",
+      "status": "valid_scoring_event",
+      "source": "Cricsheet delivery record and innings scorecard",
+      "legal_balls": 6,
+      "runs": 37,
+      "has_illegal_delivery": true
+    }
+  },
+  "rules": {
+    "duplicate_over_keys_forbidden": true,
+    "missing_player_uuid_forbidden": true,
+    "unresolved_team_or_venue_forbidden": true,
+    "unreviewed_more_than_six_legal_balls_forbidden": true,
+    "unreviewed_more_than_36_runs_forbidden": true,
+    "super_overs_separate_from_regular_innings": true
+  }
+}

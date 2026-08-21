@@ -1,0 +1,33 @@
+{
+  "candidate_version": "ipl_engine_v8_ball_simulator",
+  "production_models_changed": false,
+  "training_deliveries_2023_2024": 34966,
+  "holdout_deliveries_2025_plus": 34812,
+  "holdout_overs": 5580,
+  "simulations_per_over": 160,
+  "two_run_band_hit_rate": 0.235663082437276,
+  "mean_simulation_band_probability": 0.2964807347670251,
+  "phase": {
+    "powerplay": {
+      "rows": 1755,
+      "hit_rate": 0.2245014245014245
+    },
+    "middle": {
+      "rows": 2582,
+      "hit_rate": 0.24903175832687838
+    },
+    "death": {
+      "rows": 1243,
+      "hit_rate": 0.2236524537409493
+    }
+  },
+  "wicket_brier": 0.2001902791778674,
+  "mean_simulation_ms_per_over": 79.65167204301092,
+  "promotion_gates": {
+    "run_accuracy_at_least_32_38pct": false,
+    "run_improves_ipl_v5": false,
+    "wicket_improves_ipl_v5": false,
+    "simulation_below_50ms_per_over": false
+  },
+  "integration_recommended": false
+}

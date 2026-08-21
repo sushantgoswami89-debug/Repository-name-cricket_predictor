@@ -1,0 +1,214 @@
+{
+  "candidate_version": "ipl_engine_v1_impact_player",
+  "model_scope": "candidate_only_ipl",
+  "production_models_changed": false,
+  "verified_ipl_rows": 47790,
+  "training_rows_through_2023": 39472,
+  "holdout_rows_2025_plus": 5580,
+  "holdout_matches": 148,
+  "impact_era_holdout_rows": 5580,
+  "ablations": {
+    "ipl_baseline": {
+      "features_added": [],
+      "two_run_hit_rate": 0.24551971326164876,
+      "mean_band_probability": 0.2913974711992888,
+      "phase": {
+        "powerplay": {
+          "rows": 1755,
+          "hit_rate": 0.22678062678062677
+        },
+        "middle": {
+          "rows": 2582,
+          "hit_rate": 0.26258714175058095
+        },
+        "death": {
+          "rows": 1243,
+          "hit_rate": 0.23652453740949317
+        }
+      },
+      "mean_main_prediction_ms": 1.076540000018819,
+      "improvement_over_ipl_baseline_percentage_points": 0.0,
+      "paired_vs_ipl_baseline_p_value": 1.0
+    },
+    "impact_player": {
+      "features_added": [
+        "ipl_impact_rule_era",
+        "ipl_impact_batting_used",
+        "ipl_impact_bowling_used",
+        "ipl_impact_batting_available",
+        "ipl_impact_bowling_available",
+        "ipl_impact_batting_role",
+        "ipl_impact_bowling_role",
+        "ipl_impact_batting_overs_since",
+        "ipl_impact_bowling_overs_since"
+      ],
+      "two_run_hit_rate": 0.2471326164874552,
+      "mean_band_probability": 0.2966430265621885,
+      "phase": {
+        "powerplay": {
+          "rows": 1755,
+          "hit_rate": 0.22735042735042735
+        },
+        "middle": {
+          "rows": 2582,
+          "hit_rate": 0.2652982184353215
+        },
+        "death": {
+          "rows": 1243,
+          "hit_rate": 0.23732904263877716
+        }
+      },
+      "mean_main_prediction_ms": 1.603756110004421,
+      "improvement_over_ipl_baseline_percentage_points": 0.1612903225806428,
+      "paired_vs_ipl_baseline_p_value": 0.7691695077155672
+    },
+    "boundary_impact": {
+      "features_added": [
+        "boundary_gate_none_probability",
+        "boundary_gate_one_probability",
+        "boundary_gate_multiple_probability",
+        "boundary_gate_entropy",
+        "ipl_impact_rule_era",
+        "ipl_impact_batting_used",
+        "ipl_impact_bowling_used",
+        "ipl_impact_batting_available",
+        "ipl_impact_bowling_available",
+        "ipl_impact_batting_role",
+        "ipl_impact_bowling_role",
+        "ipl_impact_batting_overs_since",
+        "ipl_impact_bowling_overs_since"
+      ],
+      "two_run_hit_rate": 0.2471326164874552,
+      "mean_band_probability": 0.2882268690694803,
+      "phase": {
+        "powerplay": {
+          "rows": 1755,
+          "hit_rate": 0.23703703703703705
+        },
+        "middle": {
+          "rows": 2582,
+          "hit_rate": 0.2587141750580945
+        },
+        "death": {
+          "rows": 1243,
+          "hit_rate": 0.23732904263877716
+        }
+      },
+      "mean_main_prediction_ms": 1.6217159700075474,
+      "improvement_over_ipl_baseline_percentage_points": 0.1612903225806428,
+      "paired_vs_ipl_baseline_p_value": 0.8079455736735729
+    },
+    "boundary_venue_impact": {
+      "features_added": [
+        "boundary_gate_none_probability",
+        "boundary_gate_one_probability",
+        "boundary_gate_multiple_probability",
+        "boundary_gate_entropy",
+        "venue_track_type",
+        "venue_track_venue_samples",
+        "venue_track_batter_samples",
+        "venue_track_bowler_samples",
+        "venue_track_venue_runs_rate",
+        "venue_track_batter_runs_rate",
+        "venue_track_bowler_runs_rate",
+        "venue_track_venue_boundaries_rate",
+        "venue_track_batter_boundaries_rate",
+        "venue_track_bowler_boundaries_rate",
+        "venue_track_venue_dots_rate",
+        "venue_track_batter_dots_rate",
+        "venue_track_bowler_dots_rate",
+        "venue_track_venue_wickets_rate",
+        "venue_track_batter_wickets_rate",
+        "venue_track_bowler_wickets_rate",
+        "ipl_impact_rule_era",
+        "ipl_impact_batting_used",
+        "ipl_impact_bowling_used",
+        "ipl_impact_batting_available",
+        "ipl_impact_bowling_available",
+        "ipl_impact_batting_role",
+        "ipl_impact_bowling_role",
+        "ipl_impact_batting_overs_since",
+        "ipl_impact_bowling_overs_since"
+      ],
+      "two_run_hit_rate": 0.24731182795698925,
+      "mean_band_probability": 0.2819524168706225,
+      "phase": {
+        "powerplay": {
+          "rows": 1755,
+          "hit_rate": 0.2341880341880342
+        },
+        "middle": {
+          "rows": 2582,
+          "hit_rate": 0.25910147172734316
+        },
+        "death": {
+          "rows": 1243,
+          "hit_rate": 0.2413515687851971
+        }
+      },
+      "mean_main_prediction_ms": 1.8285787500159738,
+      "improvement_over_ipl_baseline_percentage_points": 0.1792114695340491,
+      "paired_vs_ipl_baseline_p_value": 0.8003229718963007
+    }
+  },
+  "winner": "boundary_venue_impact",
+  "winner_metrics": {
+    "features_added": [
+      "boundary_gate_none_probability",
+      "boundary_gate_one_probability",
+      "boundary_gate_multiple_probability",
+      "boundary_gate_entropy",
+      "venue_track_type",
+      "venue_track_venue_samples",
+      "venue_track_batter_samples",
+      "venue_track_bowler_samples",
+      "venue_track_venue_runs_rate",
+      "venue_track_batter_runs_rate",
+      "venue_track_bowler_runs_rate",
+      "venue_track_venue_boundaries_rate",
+      "venue_track_batter_boundaries_rate",
+      "venue_track_bowler_boundaries_rate",
+      "venue_track_venue_dots_rate",
+      "venue_track_batter_dots_rate",
+      "venue_track_bowler_dots_rate",
+      "venue_track_venue_wickets_rate",
+      "venue_track_batter_wickets_rate",
+      "venue_track_bowler_wickets_rate",
+      "ipl_impact_rule_era",
+      "ipl_impact_batting_used",
+      "ipl_impact_bowling_used",
+      "ipl_impact_batting_available",
+      "ipl_impact_bowling_available",
+      "ipl_impact_batting_role",
+      "ipl_impact_bowling_role",
+      "ipl_impact_batting_overs_since",
+      "ipl_impact_bowling_overs_since"
+    ],
+    "two_run_hit_rate": 0.24731182795698925,
+    "mean_band_probability": 0.2819524168706225,
+    "phase": {
+      "powerplay": {
+        "rows": 1755,
+        "hit_rate": 0.2341880341880342
+      },
+      "middle": {
+        "rows": 2582,
+        "hit_rate": 0.25910147172734316
+      },
+      "death": {
+        "rows": 1243,
+        "hit_rate": 0.2413515687851971
+      }
+    },
+    "mean_main_prediction_ms": 1.8285787500159738,
+    "improvement_over_ipl_baseline_percentage_points": 0.1792114695340491,
+    "paired_vs_ipl_baseline_p_value": 0.8003229718963007
+  },
+  "promotion_gates": {
+    "accuracy_at_least_32_38pct": false,
+    "improvement_at_least_0_5pp": false,
+    "paired_p_below_0_01": false,
+    "latency_below_50ms": true
+  },
+  "integration_recommended": false
+}

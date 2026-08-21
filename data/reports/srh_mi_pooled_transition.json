@@ -1,0 +1,184 @@
+{
+  "scope": "One SRH+MI pool; team label retained; IPL batting overs 1-3",
+  "teams": [
+    "Sunrisers Hyderabad",
+    "Mumbai Indians"
+  ],
+  "rows": 1512,
+  "all_history": {
+    "rows": {
+      "train": 1248,
+      "holdout": 264
+    },
+    "context_baseline": {
+      "runs_mae": 4.5221572721375765,
+      "runs_bias": -2.916843229749345,
+      "wicket_brier": 0.19533622456374158,
+      "wicket_auc": 0.5192060004545799
+    },
+    "dynamic_transition": {
+      "runs_mae": 4.5356363587163955,
+      "runs_bias": -2.9535882484014593,
+      "wicket_brier": 0.19889606562633783,
+      "wicket_auc": 0.5035229941662247
+    },
+    "dynamic_with_matchup": {
+      "runs_mae": 4.617864174558668,
+      "runs_bias": -3.1848742863368122,
+      "wicket_brier": 0.2116037257459829,
+      "wicket_auc": 0.47465717099780286
+    },
+    "dynamic_with_strike_bowler": {
+      "runs_mae": 4.5588290975614,
+      "runs_bias": -3.0517719879502265,
+      "wicket_brier": 0.20574124907003977,
+      "wicket_auc": 0.4939389347677855
+    },
+    "matchup_vs_context": {
+      "runs_mae_improvement": -0.021163992462352336,
+      "wicket_brier_improvement": -0.08327949011286924
+    },
+    "strike_bowler_vs_matchup": {
+      "wicket_brier_improvement": 0.02770497851715843,
+      "wicket_auc_change": 0.01928176376998264
+    }
+  },
+  "current_team_era": {
+    "rows": {
+      "train": 544,
+      "holdout": 174
+    },
+    "context_baseline": {
+      "runs_mae": 4.249577577610994,
+      "runs_bias": -1.8870617759533346,
+      "wicket_brier": 0.2014523807542529,
+      "wicket_auc": 0.6320991790919752
+    },
+    "dynamic_transition": {
+      "runs_mae": 4.209732820696727,
+      "runs_bias": -1.9190812221743294,
+      "wicket_brier": 0.1980821594134942,
+      "wicket_auc": 0.6070531077232367
+    },
+    "dynamic_with_matchup": {
+      "runs_mae": 4.073710868615982,
+      "runs_bias": -1.4439521405722495,
+      "wicket_brier": 0.20085206884661644,
+      "wicket_auc": 0.5517674652370582
+    },
+    "dynamic_with_strike_bowler": {
+      "runs_mae": 4.042474905563292,
+      "runs_bias": -1.6253077871966612,
+      "wicket_brier": 0.19593498378015375,
+      "wicket_auc": 0.6068855754732787
+    },
+    "matchup_vs_context": {
+      "runs_mae_improvement": 0.041384515468448034,
+      "wicket_brier_improvement": 0.002979919648449153
+    },
+    "strike_bowler_vs_matchup": {
+      "wicket_brier_improvement": 0.02448112730278963,
+      "wicket_auc_change": 0.055118110236220486
+    }
+  },
+  "wicket_timing": {
+    "Sunrisers Hyderabad": {
+      "innings_with_first_over_wicket_and_later_wicket": 36,
+      "next_wicket_offset_distribution": {
+        "1": {
+          "count": 8,
+          "probability": 0.2222222222222222
+        },
+        "2": {
+          "count": 8,
+          "probability": 0.2222222222222222
+        },
+        "3": {
+          "count": 3,
+          "probability": 0.08333333333333333
+        },
+        "4": {
+          "count": 6,
+          "probability": 0.16666666666666666
+        },
+        "5": {
+          "count": 2,
+          "probability": 0.05555555555555555
+        },
+        "6": {
+          "count": 2,
+          "probability": 0.05555555555555555
+        },
+        "7": {
+          "count": 3,
+          "probability": 0.08333333333333333
+        },
+        "8": {
+          "count": 1,
+          "probability": 0.027777777777777776
+        },
+        "9": {
+          "count": 1,
+          "probability": 0.027777777777777776
+        },
+        "10": {
+          "count": 1,
+          "probability": 0.027777777777777776
+        },
+        "11": {
+          "count": 1,
+          "probability": 0.027777777777777776
+        }
+      }
+    },
+    "Mumbai Indians": {
+      "innings_with_first_over_wicket_and_later_wicket": 49,
+      "next_wicket_offset_distribution": {
+        "1": {
+          "count": 10,
+          "probability": 0.20408163265306123
+        },
+        "2": {
+          "count": 13,
+          "probability": 0.2653061224489796
+        },
+        "3": {
+          "count": 11,
+          "probability": 0.22448979591836735
+        },
+        "4": {
+          "count": 3,
+          "probability": 0.061224489795918366
+        },
+        "5": {
+          "count": 4,
+          "probability": 0.08163265306122448
+        },
+        "6": {
+          "count": 1,
+          "probability": 0.02040816326530612
+        },
+        "7": {
+          "count": 1,
+          "probability": 0.02040816326530612
+        },
+        "9": {
+          "count": 1,
+          "probability": 0.02040816326530612
+        },
+        "10": {
+          "count": 1,
+          "probability": 0.02040816326530612
+        },
+        "11": {
+          "count": 2,
+          "probability": 0.04081632653061224
+        },
+        "14": {
+          "count": 2,
+          "probability": 0.04081632653061224
+        }
+      }
+    }
+  }
+}

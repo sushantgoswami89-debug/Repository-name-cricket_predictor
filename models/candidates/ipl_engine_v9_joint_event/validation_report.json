@@ -1,0 +1,57 @@
+{
+  "candidate_version": "ipl_engine_v9_joint_event_propagation",
+  "production_models_changed": false,
+  "joint_event_classes": [
+    "legal_0_0",
+    "legal_0_1",
+    "legal_1_0",
+    "legal_1_1",
+    "legal_2_0",
+    "legal_2_1",
+    "legal_3_0",
+    "legal_4_0",
+    "legal_5_0",
+    "legal_6_0",
+    "noball_1_0",
+    "noball_1_1",
+    "noball_2_0",
+    "noball_3_0",
+    "noball_4_0",
+    "noball_5_0",
+    "noball_7_0",
+    "wide_1_0",
+    "wide_1_1",
+    "wide_2_0",
+    "wide_3_0",
+    "wide_5_0"
+  ],
+  "training_deliveries_2023_2024": 34966,
+  "holdout_deliveries_2025_plus": 34812,
+  "holdout_overs": 5580,
+  "beam_width": 24,
+  "two_run_band_hit_rate": 0.18440860215053764,
+  "mean_band_probability": 0.5535294290893219,
+  "phase": {
+    "powerplay": {
+      "rows": 1755,
+      "hit_rate": 0.13162393162393163
+    },
+    "middle": {
+      "rows": 2582,
+      "hit_rate": 0.21882261812548412
+    },
+    "death": {
+      "rows": 1243,
+      "hit_rate": 0.18744971842316976
+    }
+  },
+  "wicket_brier": 0.24205284970495552,
+  "mean_propagation_ms_per_over": 79.1338641652319,
+  "promotion_gates": {
+    "run_accuracy_at_least_32_38pct": false,
+    "run_improves_ipl_v5": false,
+    "wicket_improves_ipl_v5": false,
+    "propagation_below_50ms_per_over": false
+  },
+  "integration_recommended": false
+}

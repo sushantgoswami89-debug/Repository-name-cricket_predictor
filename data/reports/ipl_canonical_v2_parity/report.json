@@ -1,0 +1,38 @@
+{
+  "parity_version": "ipl_canonical_v2_parity_v1",
+  "passed": true,
+  "old_rows": 47756,
+  "new_rows": 47756,
+  "matched_rows": 47756,
+  "targets_identical": {
+    "runs_in_over": true,
+    "wicket_in_over": true
+  },
+  "identity_and_venue_changes": {
+    "striker": 47756,
+    "non_striker": 47756,
+    "batting_team": 47756,
+    "venue_name": 314,
+    "venue_prior_innings": 80,
+    "venue_par_score": 80,
+    "venue_par_source": 80,
+    "venue_scoring_regime": 80,
+    "phase_venue_regime": 80,
+    "batting_team_venue_context": 0,
+    "striker_prior_balls": 11,
+    "striker_prior_runs_per_ball": 11,
+    "striker_prior_dot_rate": 11,
+    "striker_prior_boundary_rate": 11,
+    "striker_prior_dismissal_rate": 11,
+    "partner_prior_balls": 14,
+    "partner_prior_runs_per_ball": 14,
+    "partner_prior_dot_rate": 14,
+    "partner_prior_boundary_rate": 14
+  },
+  "unexpected_feature_changes": {},
+  "split_counts": {
+    "training_through_2023": 39442,
+    "calibration_2024": 2738,
+    "holdout_2025_plus": 5576
+  }
+}

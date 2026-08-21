@@ -104,6 +104,118 @@ def test_parser_handles_illegal_ball_with_repeated_commentary_label() -> None:
     assert snapshot.deliveries[1].total_runs == 0
 
 
+def test_scoreboard_empty_next_over_exposes_announced_bowler() -> None:
+    scorecard = {
+        "currentInning": "First",
+        "innings": [{
+            "battingTeam": "A",
+            "bowlingTeam": "B",
+            "ballByBall": [
+                {
+                    "bowler": "Opening Bowler",
+                    "number": "1",
+                    "balls": [
+                        {
+                            "wicket": "No",
+                            "details": "",
+                            "runs": "0",
+                            "over": "1",
+                            "number": str(ball),
+                        }
+                        for ball in range(1, 7)
+                    ],
+                },
+                {"bowler": "Change Bowler", "number": "2", "balls": []},
+            ],
+        }],
+    }
+    raw = {
+        "Matchdetail": {"Match": {"Type": "T20", "Live": True}},
+        "Innings": [{"Total": "0", "Wickets": "0", "Overs": "1.0"}],
+    }
+
+    snapshot = ToiLiveReader.parse("match", raw, scorecard, [])
+
+    assert snapshot.announced_bowler == "Change Bowler"
+    assert snapshot.announced_bowler_over == 2
+
+
+def test_bowler_first_seen_with_delivery_is_not_advance_announcement() -> None:
+    scorecard = {
+        "currentInning": "First",
+        "innings": [{
+            "battingTeam": "A",
+            "bowlingTeam": "B",
+            "ballByBall": [{
+                "bowler": "Opening Bowler",
+                "number": "1",
+                "balls": [{
+                    "wicket": "No",
+                    "details": "",
+                    "runs": "0",
+                    "over": "1",
+                    "number": "1",
+                }],
+            }],
+        }],
+    }
+    raw = {
+        "Matchdetail": {"Match": {"Type": "T20", "Live": True}},
+        "Innings": [{"Total": "0", "Wickets": "0", "Overs": "0.1"}],
+    }
+
+    snapshot = ToiLiveReader.parse("match", raw, scorecard, [])
+
+    assert snapshot.announced_bowler == ""
+    assert snapshot.announced_bowler_over == 0
+
+
+def test_scorecard_handles_consecutive_illegals_with_repeated_labels() -> None:
+    scorecard = {
+        "currentInning": "First",
+        "innings": [{
+            "battingTeam": "A",
+            "bowlingTeam": "B",
+            "ballByBall": [{
+                "bowler": "Bowler",
+                "balls": [
+                    {
+                        "wicket": "No", "details": "1WD", "runs": "0",
+                        "over": "1", "number": "1",
+                    },
+                    {
+                        "wicket": "No", "details": "1NB", "runs": "2",
+                        "over": "1", "number": "1",
+                    },
+                    {
+                        "wicket": "No", "details": "1LB", "runs": "0",
+                        "over": "1", "number": "1",
+                    },
+                    {
+                        "wicket": "No", "details": "1B", "runs": "0",
+                        "over": "1", "number": "2",
+                    },
+                ],
+            }],
+        }],
+    }
+    raw = {
+        "Matchdetail": {"Match": {"Type": "T20", "Live": True}},
+        "Innings": [{"Total": "6", "Wickets": "0", "Overs": "0.2"}],
+    }
+
+    snapshot = ToiLiveReader.parse("match", raw, scorecard, [])
+
+    assert [delivery.ball for delivery in snapshot.deliveries] == [1, 2, 3, 4]
+    assert [delivery.is_legal for delivery in snapshot.deliveries] == [
+        False, False, True, True
+    ]
+    assert [
+        (delivery.total_runs, delivery.batter_runs, sum(delivery.extras.values()))
+        for delivery in snapshot.deliveries
+    ] == [(1, 0, 1), (3, 2, 1), (1, 0, 1), (1, 0, 1)]
+
+
 def test_parser_accepts_commentary_one_ball_behind_scorecard() -> None:
     scorecard = {
         "currentInning": "First",
@@ -156,10 +268,10 @@ def test_parser_accepts_commentary_one_ball_behind_scorecard() -> None:
 
     snapshot = ToiLiveReader.parse("match", raw, scorecard, commentary)
 
-    assert [(delivery.ball, delivery.total_runs) for delivery in snapshot.deliveries] == [
-        (1, 1),
-        (2, 6),
-    ]
+    assert [
+        (delivery.ball, delivery.total_runs)
+        for delivery in snapshot.deliveries
+    ] == [(1, 1), (2, 6)]
 
 
 def test_commentary_prose_with_mid_wicket_is_not_a_dismissal() -> None:
@@ -184,6 +296,31 @@ def test_commentary_prose_with_mid_wicket_is_not_a_dismissal() -> None:
 
     assert delivery is not None
     assert delivery.wicket_kind is None
+
+
+def test_parser_preserves_competition_for_engine_routing() -> None:
+    raw = {
+        "Matchdetail": {
+            "Match": {
+                "Type": "T20",
+                "Live": True,
+                "Series": "Indian Premier League",
+            }
+        },
+        "Innings": [{"Total": "0", "Wickets": "0", "Overs": "0.0"}],
+    }
+    scorecard = {
+        "currentInning": "First",
+        "innings": [{
+            "battingTeam": "A",
+            "bowlingTeam": "B",
+            "ballByBall": [],
+        }],
+    }
+
+    snapshot = ToiLiveReader.parse("match", raw, scorecard, [])
+
+    assert snapshot.competition == "Indian Premier League"
 
 
 def test_complete_over_is_verified_ball_by_ball_and_deduplicated() -> None:
