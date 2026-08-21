@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 
+import pytest
+
 from app.live.pipeline import VerifiedLivePredictionPipeline
 from app.live.toi_reader import ToiDelivery, ToiSnapshot
 from app.ml.prediction_result import PredictionResult
@@ -32,6 +34,24 @@ class FakePublisher:
         return True
 
 
+class FakeShadowPredictor:
+    def __init__(self, fail: bool = False) -> None:
+        self.calls = []
+        self.fail = fail
+
+    def predict(self, **values):
+        self.calls.append(values)
+        if self.fail:
+            raise RuntimeError("shadow failure")
+        return {
+            "status": "applied",
+            "candidate_version": "announced_bowler_current_spell_v3",
+            "publishing_enabled": False,
+            "expected_runs": 6.8,
+            "wicket_probability": 0.24,
+        }
+
+
 def _snapshot(is_live: bool = True) -> ToiSnapshot:
     deliveries = tuple(
         ToiDelivery(
@@ -55,6 +75,36 @@ def _snapshot(is_live: bool = True) -> ToiSnapshot:
     return ToiSnapshot("match", "T20", "A", "B", 1, 6, 0, "1.0", is_live, deliveries)
 
 
+def _two_over_snapshot() -> ToiSnapshot:
+    first = _snapshot().deliveries
+    second = tuple(
+        ToiDelivery(
+            "match",
+            1,
+            2,
+            ball,
+            "Other Bowler",
+            "Batter",
+            1,
+            1,
+            {},
+            None,
+            6 + ball,
+            0,
+            10 + ball,
+            "",
+        )
+        for ball in range(1, 7)
+    )
+    return ToiSnapshot(
+        "match", "T20", "A", "B", 1, 12, 0, "2.0", True, first + second
+    )
+
+
+def _empty_snapshot() -> ToiSnapshot:
+    return ToiSnapshot("match", "T20", "A", "B", 1, 0, 0, "0.0", True, ())
+
+
 def test_only_verified_completed_over_is_published() -> None:
     engine = FakeEngine()
     publisher = FakePublisher()
@@ -68,10 +118,49 @@ def test_only_verified_completed_over_is_published() -> None:
     assert engine.contexts[0].live.score_before_over == 6
     assert len(publisher.messages) == 1
     message = publisher.messages[0][1]
+    assert "Candidate v3 — Over 2 Prediction" in message
     assert "Runs: 5-9 (point 7.0)" in message
-    assert "Confidence: █████████░ 90% (HIGH)" in message
+    assert "System Health: 🟢 90%" in message
+    assert "verified" not in message.lower()
     assert pipeline.process(_snapshot()) is None
     assert len(publisher.messages) == 1
+
+
+def test_bowler_candidate_is_recorded_in_shadow_but_not_published() -> None:
+    shadow = FakeShadowPredictor()
+    publisher = FakePublisher()
+    snapshot = replace(
+        _snapshot(),
+        announced_bowler="Other Bowler",
+        announced_bowler_over=2,
+    )
+    pipeline = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(),
+        publisher=publisher,
+        shadow_predictor=shadow,
+    )
+
+    output = pipeline.process(snapshot)
+
+    assert output is not None
+    assert output["prediction"]["expected_runs"] == 7.0
+    assert output["shadow_prediction"]["expected_runs"] == 6.8
+    assert output["shadow_prediction"]["publishing_enabled"] is False
+    assert shadow.calls[0]["announced_bowler"] == "Other Bowler"
+    assert "6.8" not in publisher.messages[0][1]
+    assert "24.0%" not in publisher.messages[0][1]
+
+
+def test_shadow_failure_never_blocks_production_prediction() -> None:
+    output = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(),
+        shadow_predictor=FakeShadowPredictor(fail=True),
+    ).process(_snapshot())
+
+    assert output is not None
+    assert output["prediction"]["expected_runs"] == 7.0
+    assert output["shadow_prediction"]["status"] == "not_applied"
+    assert output["shadow_prediction"]["reason"] == "shadow_inference_failed"
 
 
 def test_chase_features_match_candidate_v3_training_definitions() -> None:
@@ -151,6 +240,64 @@ def test_completed_match_does_not_publish_prediction() -> None:
     assert publisher.messages == []
 
 
+def test_pre_innings_prediction_is_emitted_once_before_any_delivery() -> None:
+    engine = FakeEngine()
+    publisher = FakePublisher()
+    pipeline = VerifiedLivePredictionPipeline(engine=engine, publisher=publisher)
+
+    output = pipeline.process(_empty_snapshot())
+
+    assert output is not None
+    assert output["over"] == 1
+    assert output["prediction_basis"] == "pre_innings_context"
+    assert pipeline.process(_empty_snapshot()) is None
+    assert len(publisher.messages) == 1
+
+
+def test_completed_chase_does_not_publish_next_over() -> None:
+    engine = FakeEngine()
+    publisher = FakePublisher()
+    pipeline = VerifiedLivePredictionPipeline(engine=engine, publisher=publisher)
+    completed = replace(_snapshot(), target=6)
+
+    assert pipeline.process(completed) is None
+    assert publisher.messages == []
+
+
+def test_target_reached_mid_over_stops_prediction() -> None:
+    deliveries = _snapshot().deliveries[:3]
+    terminal = replace(
+        _snapshot(),
+        score=3,
+        overs="0.3",
+        deliveries=deliveries,
+        target=3,
+    )
+    engine = FakeEngine()
+
+    assert VerifiedLivePredictionPipeline(engine=engine).process(terminal) is None
+    assert engine.contexts == []
+
+
+def test_super_over_uses_one_over_limit_and_never_predicts_over_two() -> None:
+    super_over = replace(
+        _snapshot(),
+        innings=3,
+        scheduled_overs=1,
+        is_super_over=True,
+    )
+    super_over = replace(
+        super_over,
+        deliveries=tuple(
+            replace(delivery, innings=3) for delivery in super_over.deliveries
+        ),
+    )
+    engine = FakeEngine()
+
+    assert VerifiedLivePredictionPipeline(engine=engine).process(super_over) is None
+    assert engine.contexts == []
+
+
 def test_late_snapshot_does_not_backfill_prediction_after_next_over_starts() -> None:
     publisher = FakePublisher()
     engine = FakeEngine()
@@ -222,3 +369,213 @@ def test_dynamic_confidence_changes_with_match_stability() -> None:
     assert stable > volatile
     assert stable_factors["method"] == "dynamic_match_stability_v1"
     assert volatile_factors["phase"] == "death"
+
+
+def test_prediction_metadata_exposes_calibration_stages() -> None:
+    from app.ml.prediction_engine import PredictionEngine
+    from app.models.live_match_state import LiveMatchState
+    from app.models.match_context import MatchContext
+
+    result = PredictionEngine().predict(
+        MatchContext(
+            format="T20",
+            live=LiveMatchState(over=8, runs_last_3_overs=24),
+        )
+    )
+
+    assert result.metadata["centering_correction"] == 0.0
+    assert result.metadata["raw_runs"] >= 0
+    assert result.metadata["blended_runs"] >= 0
+    assert result.metadata["adjusted_runs"] == pytest.approx(
+        result.predicted_runs, abs=0.051
+    )
+
+
+def test_restart_restores_pending_prediction_and_previous_over_review(
+    tmp_path: Path,
+) -> None:
+    state_file = tmp_path / "live-state.json"
+    first = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(), state_file=state_file
+    )
+    assert first.process(_snapshot()) is not None
+
+    restarted_engine = FakeEngine()
+    restarted = VerifiedLivePredictionPipeline(
+        engine=restarted_engine, state_file=state_file
+    )
+    output = restarted.process(_two_over_snapshot())
+
+    assert output is not None
+    assert output["over"] == 3
+    evaluation = output["previous_over_evaluation"]
+    assert isinstance(evaluation, dict)
+    assert evaluation["actual_runs"] == 6
+    assert evaluation["rating"] == "EXCELLENT"
+    assert restarted_engine.actuals == [(6, 0, "Other Bowler")]
+
+
+def test_corrupt_restart_state_is_quarantined(tmp_path: Path) -> None:
+    state_file = tmp_path / "live-state.json"
+    state_file.write_text("{broken", encoding="utf-8")
+    pipeline = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(), state_file=state_file
+    )
+
+    assert pipeline.process(_snapshot()) is not None
+    assert state_file.with_suffix(".json.corrupt").exists()
+
+
+def test_incompatible_restart_state_is_quarantined(tmp_path: Path) -> None:
+    state_file = tmp_path / "live-state.json"
+    state_file.write_text('{"schema_version": 999, "scopes": {}}', encoding="utf-8")
+
+    assert VerifiedLivePredictionPipeline(
+        engine=FakeEngine(), state_file=state_file
+    ).process(_snapshot()) is not None
+    assert state_file.with_suffix(".json.corrupt").exists()
+
+
+def test_state_file_is_match_and_innings_scoped(tmp_path: Path) -> None:
+    import json
+
+    state_file = tmp_path / "live-state.json"
+    pipeline = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(), state_file=state_file
+    )
+    pipeline.process(_snapshot())
+    second = replace(
+        _empty_snapshot(), match_id="other", innings=2, target=20
+    )
+    pipeline.process(second)
+
+    payload = json.loads(state_file.read_text(encoding="utf-8"))
+    assert set(payload["scopes"]) == {"match:1", "other:2"}
+
+
+def test_pending_publication_is_persisted_before_send(tmp_path: Path) -> None:
+    import json
+
+    class InspectingPublisher(FakePublisher):
+        def publish(self, key, text):
+            payload = json.loads(state_file.read_text(encoding="utf-8"))
+            records = payload["scopes"]["match:1"]["publication_history"]
+            assert records[-1]["status"] == "pending"
+            return super().publish(key, text)
+
+    state_file = tmp_path / "live-state.json"
+    pipeline = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(),
+        publisher=InspectingPublisher(),
+        state_file=state_file,
+    )
+
+    pipeline.process(_snapshot())
+    payload = json.loads(state_file.read_text(encoding="utf-8"))
+    assert payload["scopes"]["match:1"]["publication_history"][-1]["status"] == "sent"
+
+
+def test_material_rebase_sends_one_correction_and_preserves_original(
+    tmp_path: Path,
+) -> None:
+    import json
+
+    class CorrectionPublisher(FakePublisher):
+        def publish_correction(self, key, text):
+            self.messages.append((key, text))
+            return True
+
+    state_file = tmp_path / "live-state.json"
+    publisher = CorrectionPublisher()
+    pipeline = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(), publisher=publisher, state_file=state_file
+    )
+    pipeline.process(_snapshot())
+    corrected_deliveries = tuple(
+        replace(delivery, total_runs=0, batter_runs=0, feed_total=0)
+        for delivery in _snapshot().deliveries
+    )
+    corrected = replace(_snapshot(), score=0, deliveries=corrected_deliveries)
+
+    output = pipeline.process(corrected)
+    assert output is not None
+    assert len(publisher.messages) == 2
+    assert publisher.messages[-1][1].startswith("Correction\n")
+
+    payload = json.loads(state_file.read_text(encoding="utf-8"))
+    history = payload["scopes"]["match:1"]["publication_history"]
+    assert [item["status"] for item in history] == ["sent", "sent"]
+    assert history[0]["fingerprint"] != history[1]["fingerprint"]
+    assert history[1]["correction_reason"]
+
+    assert pipeline.process(corrected) is None
+    assert len(publisher.messages) == 2
+
+
+def test_retryable_publication_is_restored_and_retried(tmp_path: Path) -> None:
+    class RetryableError(RuntimeError):
+        retryable = True
+
+    class FailingPublisher(FakePublisher):
+        def publish(self, key, text):
+            raise RetryableError("temporary")
+
+    state_file = tmp_path / "live-state.json"
+    first = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(), publisher=FailingPublisher(), state_file=state_file
+    )
+    assert first.process(_snapshot()) is not None
+
+    recovered = FakePublisher()
+    restarted = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(), publisher=recovered, state_file=state_file
+    )
+    assert restarted.process(_snapshot()) is None
+    assert [key for key, _ in recovered.messages] == ["match:1:2"]
+
+
+def test_rebase_rebuilds_deliveries_but_retains_pending_review(
+    tmp_path: Path,
+) -> None:
+    state_file = tmp_path / "live-state.json"
+    original = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(), state_file=state_file
+    )
+    original.process(_snapshot())
+
+    corrected_first = tuple(
+        replace(delivery, total_runs=0, batter_runs=0, feed_total=0)
+        for delivery in _snapshot().deliveries
+    )
+    corrected_second = tuple(
+        replace(
+            delivery,
+            feed_total=ball,
+            timestamp_ms=20 + ball,
+        )
+        for ball, delivery in enumerate(_two_over_snapshot().deliveries[6:], start=1)
+    )
+    corrected = ToiSnapshot(
+        "match",
+        "T20",
+        "A",
+        "B",
+        1,
+        6,
+        0,
+        "2.0",
+        True,
+        corrected_first + corrected_second,
+    )
+    rebased = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(),
+        state_file=state_file,
+        restore_verified_state=False,
+    )
+
+    output = rebased.process(corrected)
+
+    assert output is not None
+    evaluation = output["previous_over_evaluation"]
+    assert isinstance(evaluation, dict)
+    assert evaluation["actual_runs"] == 6

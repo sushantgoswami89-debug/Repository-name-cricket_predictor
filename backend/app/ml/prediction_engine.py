@@ -17,13 +17,31 @@ from app.models.match_context import MatchContext
 
 
 class PredictionEngine:
+    # The +1.0 correction here was tuned against the pre-fix model, which had
+    # no batter/bowler identity signal (see historical_feature_store.py) and
+    # under-predicted as a result. With real features flowing, a 20-match
+    # IPL replay grid search (tune_momentum_blend.py) found the raw model
+    # now runs close to unbiased (measured mean signed error ~-0.34 runs/over,
+    # within noise of a flat MAE plateau from -0.5 to 0.0), so the fixed
+    # additive correction is dropped; the adaptive match_bias multiplier
+    # below handles residual per-match drift.
+    RUN_CENTERING_CORRECTION = 0.0
+
     def __init__(
         self,
         repository: ModelRepository | None = None,
         feature_builder: FeatureBuilder | None = None,
+        momentum_blend_weight: float = 0.3,
+        run_centering_correction: float | None = None,
     ) -> None:
         self._repository = repository or ModelRepository()
         self._builder = feature_builder or FeatureBuilder()
+        self._momentum_blend_weight = momentum_blend_weight
+        self._run_centering_correction = (
+            run_centering_correction
+            if run_centering_correction is not None
+            else self.RUN_CENTERING_CORRECTION
+        )
 
         # --- STATE MANAGEMENT ---
         self._match_bias = 1.0
@@ -36,8 +54,51 @@ class PredictionEngine:
         self._bowler_stats = {}
         self._error_history = []
 
-    def _get_format_rules(self, style: str):
-        specification = EngineRouter.resolve(style)
+    def export_runtime_state(self) -> dict[str, object]:
+        """Return the bounded adaptive state needed for a safe restart."""
+        return {
+            "match_bias": self._match_bias,
+            "wicket_multiplier": self._wicket_multiplier,
+            "last_predicted_over": self._last_predicted_over,
+            "is_awaiting_actuals": self._is_awaiting_actuals,
+            "last_point_prediction": self._last_point_prediction,
+            "bowler_stats": dict(self._bowler_stats),
+        }
+
+    def reset_runtime_state(self) -> None:
+        """Clear match-adaptive state before rebuilding from corrected facts."""
+        self._match_bias = 1.0
+        self._wicket_multiplier = 1.0
+        self._last_predicted_over = -1
+        self._is_awaiting_actuals = False
+        self._last_point_prediction = 0.0
+        self._bowler_stats = {}
+        self._error_history = []
+
+    def restore_runtime_state(self, state: dict[str, object]) -> None:
+        """Restore validated adaptive state from live persistence."""
+        match_bias = float(state.get("match_bias", 1.0))
+        wicket_multiplier = float(state.get("wicket_multiplier", 1.0))
+        if not 0.5 <= match_bias <= 1.5:
+            raise ValueError("Persisted match bias is outside safe bounds.")
+        if not 0.0 <= wicket_multiplier <= 2.0:
+            raise ValueError("Persisted wicket multiplier is outside safe bounds.")
+        self._match_bias = match_bias
+        self._wicket_multiplier = wicket_multiplier
+        self._last_predicted_over = int(state.get("last_predicted_over", -1))
+        self._is_awaiting_actuals = bool(state.get("is_awaiting_actuals", False))
+        self._last_point_prediction = float(
+            state.get("last_point_prediction", 0.0)
+        )
+        bowler_stats = state.get("bowler_stats", {})
+        if not isinstance(bowler_stats, dict):
+            raise ValueError("Persisted bowler stats must be an object.")
+        self._bowler_stats = {
+            str(name): int(value) for name, value in bowler_stats.items()
+        }
+
+    def _get_format_rules(self, style: str, competition: str = ""):
+        specification = EngineRouter.resolve(style, competition)
         return {
             "pp": specification.powerplay_overs,
             "max_overs": 10 if specification.family is EngineFamily.ODI else 4,
@@ -130,7 +191,7 @@ class PredictionEngine:
     def predict(self, context: MatchContext) -> PredictionResult:
         current_over = context.live.over
         style = context.format or context.live.match_style
-        rules = self._get_format_rules(style)
+        rules = self._get_format_rules(style, context.competition)
 
         # 1. GATEKEEPER
         if self._is_awaiting_actuals and current_over > self._last_predicted_over:
@@ -160,19 +221,24 @@ class PredictionEngine:
         raw_wkt_prob = float(
             self._repository.get_wicket_model().predict_proba(df)[0][1]
         )
+        calibrator = self._repository.get_wicket_calibrator()
+        if calibrator is not None:
+            raw_wkt_prob = float(calibrator.predict([raw_wkt_prob])[0])
 
         # 3. MOMENTUM BLENDING (Centering the range)
         # We blend the AI prediction with the 'Match Rhythm' (Last 3 overs RR)
         recent_runs = context.live.runs_last_3_overs
         if recent_runs > 0:
-            match_rhythm = recent_runs / 3.0
-            # 50/50 blend of AI history and current Match Momentum
-            blended_runs = (raw_runs + match_rhythm) / 2
+            observed_recent_overs = min(3, max(1, current_over - 1))
+            match_rhythm = recent_runs / observed_recent_overs
+            w = self._momentum_blend_weight
+            blended_runs = (1 - w) * raw_runs + w * match_rhythm
         else:
             blended_runs = raw_runs
 
         # 4. EVOLUTION (Apply learned Match Bias)
-        evolved_runs = blended_runs * self._match_bias
+        centered_runs = blended_runs + self._run_centering_correction
+        evolved_runs = centered_runs * self._match_bias
         evolved_wkt = min(1.0, max(0.0, raw_wkt_prob * self._wicket_multiplier))
 
         # 5. ULTRA-PRECISION BRACKET
@@ -219,6 +285,14 @@ class PredictionEngine:
             metadata={
                 "match_bias": f"{self._match_bias:.2f}",
                 "momentum_blend": "Active" if recent_runs > 0 else "Inactive",
+                "raw_runs": round(raw_runs, 3),
+                "match_rhythm": (
+                    round(match_rhythm, 3) if recent_runs > 0 else None
+                ),
+                "blended_runs": round(blended_runs, 3),
+                "centering_correction": self.RUN_CENTERING_CORRECTION,
+                "adjusted_runs": round(evolved_runs, 3),
+                "display_runs": pivot,
                 "confidence_type": "dynamic stability indicator",
                 "confidence_factors": confidence_factors,
                 "engine_family": rules["engine_family"],
