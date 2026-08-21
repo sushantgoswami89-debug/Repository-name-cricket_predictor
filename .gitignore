@@ -33,6 +33,14 @@ Thumbs.db
 data/live/
 live_prediction.state.json
 
+# Ad hoc live-test/monitor runtime output -- regenerate by re-running the
+# tool, not durable source.
+backend/live_test_output.json
+backend/live_test_output.state.json
+backend/live_test_stdout.log
+backend/monitor_stdout.log
+backend/announced_bowler_monitor.log
+
 # Large regeneratable data/model caches -- not durable source, just cache.
 # data/raw/: re-downloadable from cricsheet.org (see src/parse_cricsheet.py)
 # models/candidates/*.pkl|*.cbm|*.csv: regenerate via the matching
