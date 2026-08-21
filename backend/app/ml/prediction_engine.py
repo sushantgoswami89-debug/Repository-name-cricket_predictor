@@ -221,9 +221,13 @@ class PredictionEngine:
         raw_wkt_prob = float(
             self._repository.get_wicket_model().predict_proba(df)[0][1]
         )
-        calibrator = self._repository.get_wicket_calibrator()
-        if calibrator is not None:
-            raw_wkt_prob = float(calibrator.predict([raw_wkt_prob])[0])
+        calibrators = self._repository.get_wicket_calibrator()
+        if calibrators is not None:
+            calibrator = calibrators.get(features["phase"]) if isinstance(
+                calibrators, dict
+            ) else calibrators
+            if calibrator is not None:
+                raw_wkt_prob = float(calibrator.predict([raw_wkt_prob])[0])
 
         # 3. MOMENTUM BLENDING (Centering the range)
         # We blend the AI prediction with the 'Match Rhythm' (Last 3 overs RR)
