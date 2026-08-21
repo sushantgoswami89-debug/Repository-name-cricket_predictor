@@ -614,7 +614,7 @@ class VerifiedLivePredictionPipeline:
             f"Score: {output['score_before_over']}/{output['wickets_before_over']}\n"
             f"Runs: {prediction['expected_range']} "
             f"(point {prediction['expected_runs']})\n"
-            f"Wicket probability: {probability:.1f}%\n"
+            f"Wicket risk (phase baseline): {probability:.1f}%\n"
             f"System Health: {health_color} "
             f"{prediction['confidence_percent']}%"
         )
