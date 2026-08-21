@@ -29,6 +29,25 @@ from app.ml.announced_bowler_adjustment import (
 )
 from app.ml.ipl_identities import identity_key
 
+# Process-wide cache of the heavy, static parts of _load() (CatBoost models,
+# player/profile CSVs), keyed by resolved artifact_dir. A fresh
+# BowlerSpellAdjuster() per innings/engine -- the pattern every replay
+# script in this repo uses, since only the per-innings CurrentSpellTracker
+# state needs to reset -- would otherwise re-read every artifact from disk
+# each time. Mirrors HistoricalFeatureStore's and ModelRepository's caches.
+_PROCESS_CACHE: dict[str, dict[str, Any]] = {}
+_CACHED_ATTRS = (
+    "_columns",
+    "_categoricals",
+    "_adjuster",
+    "_run_model",
+    "_wicket_model",
+    "_wicket_platt",
+    "_name_to_id",
+    "_profiles",
+    "_h2h_profiles",
+)
+
 
 class BowlerSpellAdjuster:
     """Loads the candidate artifacts once and applies the adjustment."""
@@ -54,6 +73,13 @@ class BowlerSpellAdjuster:
         self._loaded = True
         if not self._artifact_dir.exists() or not self._players_path.exists():
             self._available = False
+            return
+        cache_key = str(self._artifact_dir.resolve())
+        cached = _PROCESS_CACHE.get(cache_key)
+        if cached is not None:
+            for attr in _CACHED_ATTRS:
+                setattr(self, attr, cached[attr])
+            self._available = True
             return
         try:
             from catboost import CatBoostClassifier, CatBoostRegressor
@@ -103,6 +129,9 @@ class BowlerSpellAdjuster:
                         "boundaries": row.h2h_boundaries,
                     }
             self._available = True
+            _PROCESS_CACHE[cache_key] = {
+                attr: getattr(self, attr) for attr in _CACHED_ATTRS
+            }
         except Exception:
             self._available = False
 

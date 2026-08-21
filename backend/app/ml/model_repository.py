@@ -16,6 +16,14 @@ import sklearn
 
 logger = logging.getLogger(__name__)
 
+# Process-wide artifact cache keyed by (resolved model_dir, artifact name).
+# A fresh ModelRepository() per innings/engine (the pattern every replay
+# script in this repo uses) would otherwise re-read every .pkl from disk
+# on every instantiation -- invisible at small sample sizes, but a real
+# cost at hundreds/thousands of matches. Mirrors HistoricalFeatureStore's
+# process cache.
+_PROCESS_ARTIFACT_CACHE: dict[tuple[str, str], Any] = {}
+
 
 class ModelRepository:
     """
@@ -71,11 +79,16 @@ class ModelRepository:
         self._categorical_columns: list[str] | None = None
 
     def load_artifact(self, name: str) -> Any:
-        """Load one named joblib artifact and cache it for this repository."""
+        """Load one named joblib artifact and cache it process-wide."""
         if not name or Path(name).name != name:
             raise ValueError("Artifact name must be a single file name.")
         if name not in self._artifacts:
-            self._artifacts[name] = self._load_pickle(self.model_dir / name)
+            cache_key = (str(self.model_dir.resolve()), name)
+            if cache_key not in _PROCESS_ARTIFACT_CACHE:
+                _PROCESS_ARTIFACT_CACHE[cache_key] = self._load_pickle(
+                    self.model_dir / name
+                )
+            self._artifacts[name] = _PROCESS_ARTIFACT_CACHE[cache_key]
         return self._artifacts[name]
 
     def _load_pickle(self, path: Path) -> Any:

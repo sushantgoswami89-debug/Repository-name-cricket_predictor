@@ -40,6 +40,8 @@ backend/live_test_output.state.json
 backend/live_test_stdout.log
 backend/monitor_stdout.log
 backend/announced_bowler_monitor.log
+backend/match_pitch_holdout_result.csv
+backend/match_pitch_replay_progress.log
 
 # Large regeneratable data/model caches -- not durable source, just cache.
 # data/raw/: re-downloadable from cricsheet.org (see src/parse_cricsheet.py)
