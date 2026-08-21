@@ -40,6 +40,7 @@ class Innings:
 
     team: str
     overs: list[Over] = field(default_factory=list)
+    super_over: bool = False
 
 
 @dataclass(slots=True)
@@ -53,6 +54,9 @@ class MatchInfo:
     venue: str | None = None
     city: str | None = None
     dates: list[str] = field(default_factory=list)
+    event_name: str | None = None
+    match_type_number: int | None = None
+    team_type: str | None = None
 
 
 @dataclass(slots=True)
@@ -63,5 +67,3 @@ class Match:
 
     info: MatchInfo
     innings: list[Innings] = field(default_factory=list)
-
-

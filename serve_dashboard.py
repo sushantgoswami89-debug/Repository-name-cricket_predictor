@@ -4,6 +4,7 @@ and auto-refresh, without needing any internet connection or complicated setup.
 
 Run this, then open the printed localhost link in your browser.
 """
+
 import http.server
 import socketserver
 import os

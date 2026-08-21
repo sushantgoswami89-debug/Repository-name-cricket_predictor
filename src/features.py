@@ -11,16 +11,27 @@ information (no leakage from the over we're trying to predict):
 This mirrors what you'd compute live: "here's what we know walking into this
 over" -> predict runs & wicket probability for it.
 """
+
 import pandas as pd
 import numpy as np
 
 CATEGORICAL_COLS = [
-    "phase", "batsman_style", "batsman_class", "bowler_type",
-    "bowler_quality", "pitch_type",
+    "phase",
+    "batsman_style",
+    "batsman_class",
+    "bowler_type",
+    "bowler_quality",
+    "pitch_type",
 ]
 
-def build_features(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.sort_values(["match_id", "over"]).reset_index(drop=True)
+
+def build_features(
+    df: pd.DataFrame,
+    order_columns: list[str] | None = None,
+) -> pd.DataFrame:
+    """Build leakage-safe history in the supplied chronological row order."""
+
+    df = df.sort_values(order_columns or ["match_id", "over"]).reset_index(drop=True)
 
     # --- Historical (expanding, shifted) stats per batsman ---
     df["bat_career_overs_faced"] = df.groupby("batsman").cumcount()
@@ -93,14 +104,24 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+
 def get_feature_columns():
     numeric = [
-        "over", "score_before_over", "wkts_down_before_over",
-        "balls_faced_before_over", "venue_avg_score",
-        "bat_career_overs_faced", "bat_hist_avg_runs_per_over", "bat_hist_wicket_rate",
-        "bowl_career_overs_bowled", "bowl_hist_avg_runs_conceded", "bowl_hist_wicket_rate",
-        "h2h_overs", "h2h_avg_runs",
-        "bat_vs_bowltype_avg_runs", "bat_vs_bowltype_wicket_rate",
+        "over",
+        "score_before_over",
+        "wkts_down_before_over",
+        "balls_faced_before_over",
+        "venue_avg_score",
+        "bat_career_overs_faced",
+        "bat_hist_avg_runs_per_over",
+        "bat_hist_wicket_rate",
+        "bowl_career_overs_bowled",
+        "bowl_hist_avg_runs_conceded",
+        "bowl_hist_wicket_rate",
+        "h2h_overs",
+        "h2h_avg_runs",
+        "bat_vs_bowltype_avg_runs",
+        "bat_vs_bowltype_wicket_rate",
         "bowl_phase_avg_runs",
     ]
     return numeric, CATEGORICAL_COLS

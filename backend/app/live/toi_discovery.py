@@ -41,6 +41,7 @@ class ToiMatchSummary:
     pitch: str
     likely_track: str
     dew_outlook: str
+    team_type: str = ""
 
 
 class ToiMatchDiscovery:
@@ -68,6 +69,10 @@ class ToiMatchDiscovery:
             for match in self.matches()
             if match.is_live
         )
+
+    def live_summaries(self) -> tuple[ToiMatchSummary, ...]:
+        """Return complete metadata for matches TOI currently marks live."""
+        return tuple(match for match in self.matches() if match.is_live)
 
     def matches(self) -> tuple[ToiMatchSummary, ...]:
         """Return TOI match-center fixtures with pre-match metadata."""
@@ -120,6 +125,12 @@ class ToiMatchDiscovery:
                     likely_track=self._track_outlook(suited_for, surface),
                     dew_outlook=self._dew_outlook(
                         humidity, str(match.get("Daynight", ""))
+                    ),
+                    team_type=str(
+                        match.get("TeamType")
+                        or match.get("teamType")
+                        or detail.get("TeamType")
+                        or ""
                     ),
                 )
             )

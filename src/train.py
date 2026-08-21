@@ -15,12 +15,14 @@ from features import build_features, get_feature_columns
 
 MODEL_DIR = os.path.join(PROJECT_DIR, "models")
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--data", default="synthetic",
+        "--data",
+        default="synthetic",
         help="Which dataset to train on: 'synthetic' (default) or 'real' "
-             "(uses data/real_overs.csv from parse_cricsheet.py), or a full file path"
+        "(uses data/real_overs.csv from parse_cricsheet.py), or a full file path",
     )
     args = parser.parse_args()
 
@@ -72,13 +74,16 @@ def main():
         verbose=-1,
     )
     runs_model.fit(
-        X_train, y_runs_train,
+        X_train,
+        y_runs_train,
         categorical_feature=cat_cols,
     )
     runs_pred = runs_model.predict(X_test)
     runs_mae = mean_absolute_error(y_runs_test, runs_pred)
-    print(f"\n[Runs Model] MAE: {runs_mae:.2f} runs (baseline mean-predictor MAE: "
-          f"{mean_absolute_error(y_runs_test, [y_runs_train.mean()]*len(y_runs_test)):.2f})")
+    print(
+        f"\n[Runs Model] MAE: {runs_mae:.2f} runs (baseline mean-predictor MAE: "
+        f"{mean_absolute_error(y_runs_test, [y_runs_train.mean()]*len(y_runs_test)):.2f})"
+    )
 
     # --- Model 2: Wicket in next over (binary classification) ---
     wkt_model = lgb.LGBMClassifier(
@@ -92,21 +97,28 @@ def main():
         verbose=-1,
     )
     wkt_model.fit(
-        X_train, y_wkt_train,
+        X_train,
+        y_wkt_train,
         categorical_feature=cat_cols,
     )
     wkt_pred_proba = wkt_model.predict_proba(X_test)[:, 1]
     wkt_auc = roc_auc_score(y_wkt_test, wkt_pred_proba)
     wkt_ll = log_loss(y_wkt_test, wkt_pred_proba)
-    print(f"[Wicket Model] AUC: {wkt_auc:.3f} (0.5 = random guessing), LogLoss: {wkt_ll:.3f}")
+    print(
+        f"[Wicket Model] AUC: {wkt_auc:.3f} (0.5 = random guessing), LogLoss: {wkt_ll:.3f}"
+    )
 
     # --- Feature importance (this is the "why" you'd want for commentary) ---
     print("\nTop features driving RUNS predictions:")
-    imp = pd.Series(runs_model.feature_importances_, index=feature_cols).sort_values(ascending=False)
+    imp = pd.Series(runs_model.feature_importances_, index=feature_cols).sort_values(
+        ascending=False
+    )
     print(imp.head(8))
 
     print("\nTop features driving WICKET predictions:")
-    imp_w = pd.Series(wkt_model.feature_importances_, index=feature_cols).sort_values(ascending=False)
+    imp_w = pd.Series(wkt_model.feature_importances_, index=feature_cols).sort_values(
+        ascending=False
+    )
     print(imp_w.head(8))
 
     # Save everything needed for inference
@@ -115,6 +127,7 @@ def main():
     joblib.dump(feature_cols, f"{MODEL_DIR}/feature_cols.pkl")
     joblib.dump(cat_cols, f"{MODEL_DIR}/cat_cols.pkl")
     print(f"\nModels saved to {MODEL_DIR}/")
+
 
 if __name__ == "__main__":
     main()

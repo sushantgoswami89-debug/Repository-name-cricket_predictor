@@ -55,9 +55,12 @@ def main() -> None:
             os.environ.get("TELEGRAM_CHAT_ID", config.get("chat_id", "")),
         )
     reader = ToiLiveReader()
-    engine = None
-    if args.model_dir:
-        engine = PredictionEngine(repository=ModelRepository(args.model_dir))
+    def make_engine():
+        if args.model_dir:
+            return PredictionEngine(repository=ModelRepository(args.model_dir))
+        return None
+
+    engine = make_engine()
     pipeline = VerifiedLivePredictionPipeline(
         engine=engine, publisher=publisher, output_file=args.output
     )
@@ -118,8 +121,12 @@ def main() -> None:
                     indent=2,
                 )
             )
+            engine = make_engine()
             pipeline = VerifiedLivePredictionPipeline(
-                engine=engine, publisher=publisher, output_file=args.output
+                engine=engine,
+                publisher=publisher,
+                output_file=args.output,
+                restore_verified_state=False,
             )
             time.sleep(0.5)
             continue

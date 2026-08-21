@@ -61,6 +61,13 @@ class ToiSnapshot:
     is_live: bool
     deliveries: tuple[ToiDelivery, ...]
     target: int = 0
+    scheduled_overs: int = 0
+    innings_complete: bool = False
+    match_complete: bool = False
+    is_super_over: bool = False
+    competition: str = ""
+    announced_bowler: str = ""
+    announced_bowler_over: int = 0
     fetched_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -278,14 +285,26 @@ class ToiLiveReader:
             raise ToiFeedError(
                 "TOI ball-by-ball data does not reconcile with its scorecard."
             )
+        is_super_over = innings > 2
         target = 0
         if innings >= 2:
             try:
-                target = int(raw["Innings"][0]["Total"]) + 1
+                target_innings = innings - 2 if is_super_over else 0
+                target = int(raw["Innings"][target_innings]["Total"]) + 1
             except (KeyError, IndexError, TypeError, ValueError) as exc:
                 raise ToiFeedError(
-                    "TOI did not provide a valid first-innings chase target."
+                    "TOI did not provide a valid chase target."
                 ) from exc
+        scheduled_overs = cls._scheduled_overs(raw_match, current, is_super_over)
+        announced_bowler, announced_bowler_over = cls._announced_bowler(
+            current, deliveries
+        )
+        innings_complete = (
+            wickets >= 10
+            or (target > 0 and score >= target)
+            or cls._legal_delivery_count(deliveries) >= scheduled_overs * 6
+            or not bool(raw_match.get("Live", False))
+        )
         return ToiSnapshot(
             match_id=match_id,
             match_format=str(raw_match.get("Type", "")),
@@ -298,7 +317,40 @@ class ToiLiveReader:
             is_live=bool(raw_match.get("Live", False)),
             deliveries=deliveries,
             target=target,
+            scheduled_overs=scheduled_overs,
+            innings_complete=innings_complete,
+            match_complete=not bool(raw_match.get("Live", False)),
+            is_super_over=is_super_over,
+            competition=cls._competition_name(raw_match),
+            announced_bowler=announced_bowler,
+            announced_bowler_over=announced_bowler_over,
         )
+
+    @classmethod
+    def _announced_bowler(
+        cls,
+        current: dict[str, Any],
+        deliveries: tuple[ToiDelivery, ...],
+    ) -> tuple[str, int]:
+        """Return only a scorecard bowler announced before the over starts.
+
+        A bowler attached to an over containing a delivery is not an advance
+        announcement: it may have arrived with the first ball.  Restricting
+        this signal to an explicitly numbered, empty next-over row prevents
+        first-delivery leakage from commentary or the scorecard.
+        """
+        next_over = cls._legal_delivery_count(deliveries) // 6 + 1
+        for over in current.get("ballByBall", []):
+            if not isinstance(over, dict) or over.get("balls"):
+                continue
+            try:
+                over_number = int(over["number"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            bowler = str(over.get("bowler", "")).strip()
+            if over_number == next_over and bowler:
+                return bowler, over_number
+        return "", 0
 
     @classmethod
     def _parse_delivery(
@@ -361,23 +413,32 @@ class ToiLiveReader:
     def _scorecard_deliveries(
         cls, match_id: str, innings: int, current: dict[str, Any]
     ) -> dict[tuple[int, int, int], ToiDelivery]:
-        rows: list[tuple[int, int, str, dict[str, Any]]] = []
+        visible_rows: list[tuple[int, int, int, str, dict[str, Any]]] = []
         for over in current.get("ballByBall", []):
             if not isinstance(over, dict):
                 continue
             bowler = str(over.get("bowler", "")).strip()
-            for ball in over.get("balls", []):
+            for source_index, ball in enumerate(over.get("balls", []), start=1):
                 if not isinstance(ball, dict):
                     continue
                 try:
                     over_number = int(ball["over"])
-                    ball_number = int(ball["number"])
+                    visible_ball = int(ball["number"])
                 except (KeyError, TypeError, ValueError) as exc:
                     raise ToiFeedError(
                         "TOI scorecard has an invalid delivery number."
                     ) from exc
-                rows.append((over_number, ball_number, bowler, ball))
-        rows.sort(key=lambda value: (value[0], value[1]))
+                visible_rows.append(
+                    (over_number, visible_ball, source_index, bowler, ball)
+                )
+        visible_rows.sort(key=lambda value: (value[0], value[1], value[2]))
+        rows: list[tuple[int, int, str, dict[str, Any]]] = []
+        sequence_by_over: dict[int, int] = {}
+        for over_number, _, _, bowler, ball in visible_rows:
+            # TOI repeats the visible label for wides/no-balls.  After ordering
+            # by that label, assign every event a unique sequence identity.
+            sequence_by_over[over_number] = sequence_by_over.get(over_number, 0) + 1
+            rows.append((over_number, sequence_by_over[over_number], bowler, ball))
         parsed: dict[tuple[int, int, int], ToiDelivery] = {}
         total = wickets = 0
         for over_number, ball_number, bowler, ball in rows:
@@ -413,6 +474,43 @@ class ToiLiveReader:
                 )
             parsed[delivery.key] = delivery
         return parsed
+
+    @staticmethod
+    def _legal_delivery_count(deliveries: tuple[ToiDelivery, ...]) -> int:
+        return sum(delivery.is_legal for delivery in deliveries)
+
+    @staticmethod
+    def _scheduled_overs(
+        raw_match: dict[str, Any], current: dict[str, Any], is_super_over: bool
+    ) -> int:
+        if is_super_over:
+            return 1
+        for source in (current, raw_match):
+            for key in ("overs", "Overs", "maxOvers", "MaxOvers"):
+                try:
+                    value = int(source[key])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if value > 0:
+                    return value
+        return 50 if str(raw_match.get("Type", "")).upper() == "ODI" else 20
+
+    @staticmethod
+    def _competition_name(raw_match: dict[str, Any]) -> str:
+        for key in (
+            "Competition",
+            "competition",
+            "League",
+            "league",
+            "Series",
+            "series",
+            "Tournament",
+            "tournament",
+        ):
+            value = str(raw_match.get(key, "")).strip()
+            if value:
+                return value
+        return ""
 
     @staticmethod
     def _scorecard_extras(details: str) -> dict[str, int]:
