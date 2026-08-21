@@ -43,6 +43,7 @@ class BowlerSpellAdjuster:
             root / "models/candidates/announced_bowler_current_spell_v3"
         )
         self._players_path = root / "data/reports/ipl_canonical_identities_v1/players.csv"
+        self._h2h_path = root / "data/h2h_profiles.csv"
         self._loaded = False
         self._available = False
         self._tracker = CurrentSpellTracker()
@@ -90,6 +91,17 @@ class BowlerSpellAdjuster:
                     "runs": row.bowler_phase_history_runs_conceded,
                     "wickets": row.bowler_phase_history_wickets,
                 }
+            self._h2h_profiles: dict[tuple[str, str], dict[str, Any]] = {}
+            if self._h2h_path.exists():
+                h2h = pd.read_csv(self._h2h_path)
+                for row in h2h.itertuples(index=False):
+                    self._h2h_profiles[(row.batter_id, row.bowler_id)] = {
+                        "balls": row.h2h_balls,
+                        "runs": row.h2h_runs,
+                        "wickets": row.h2h_wickets,
+                        "dots": row.h2h_dots,
+                        "boundaries": row.h2h_boundaries,
+                    }
             self._available = True
         except Exception:
             self._available = False
@@ -98,6 +110,7 @@ class BowlerSpellAdjuster:
         self,
         *,
         bowler: str,
+        batter: str,
         over: int,
         phase: str,
         wickets_in_hand: int,
@@ -115,6 +128,7 @@ class BowlerSpellAdjuster:
         player_id = self._name_to_id.get(identity_key(bowler), "")
         if not player_id:
             return None
+        batter_id = self._name_to_id.get(identity_key(batter), "") if batter else ""
 
         announcement = BowlerAnnouncement(
             bowler=bowler,
@@ -125,14 +139,25 @@ class BowlerSpellAdjuster:
             captured_before_first_ball=True,
         )
         profile = self._profiles.get((player_id, phase), {})
+        h2h_profile = (
+            self._h2h_profiles.get((batter_id, player_id), {}) if batter_id else {}
+        )
         features = self._tracker.features(
             announcement,
             history_phase_balls=profile.get("balls", 0),
             history_phase_runs=profile.get("runs", 0),
             history_phase_wickets=profile.get("wickets", 0),
+            h2h_balls=h2h_profile.get("balls", 0),
+            h2h_runs=h2h_profile.get("runs", 0),
+            h2h_wickets=h2h_profile.get("wickets", 0),
         )
         if features.bowler_source != "scoreboard_pre_over":
             return None
+        h2h_balls = h2h_profile.get("balls", 0)
+        h2h_dot_rate = h2h_profile.get("dots", 0) / h2h_balls if h2h_balls else 0.0
+        h2h_boundary_rate = (
+            h2h_profile.get("boundaries", 0) / h2h_balls if h2h_balls else 0.0
+        )
 
         row = {
             "base_prediction": base_runs,
@@ -160,17 +185,17 @@ class BowlerSpellAdjuster:
             "bowler_phase_history_boundary_concession_rate": 0.0,
             "bowler_phase_history_strike_rate": features.history_phase_strike_rate,
             "bowler_phase_history_economy": features.history_phase_economy,
-            "h2h_balls": 0,
-            "h2h_runs": 0,
-            "h2h_wickets": 0,
-            "h2h_dot_rate": 0.0,
-            "h2h_boundary_rate": 0.0,
+            "h2h_balls": features.h2h_balls,
+            "h2h_runs": features.h2h_runs,
+            "h2h_wickets": features.h2h_wickets,
+            "h2h_dot_rate": h2h_dot_rate,
+            "h2h_boundary_rate": h2h_boundary_rate,
             "phase": phase,
             "spell_state": (
                 "new_spell" if features.current_spell_balls == 0 else "returning_spell"
             ),
             "bowler_history_supported": features.history_supported,
-            "h2h_supported": False,
+            "h2h_supported": features.h2h_supported,
         }
         frame = pd.DataFrame([row])[self._columns]
         for column in self._categoricals:

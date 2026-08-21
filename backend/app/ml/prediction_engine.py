@@ -257,6 +257,7 @@ class PredictionEngine:
         # value, only bowler identity.
         bowler_adjustment = self._bowler_adjuster.adjust(
             bowler=context.live.bowler,
+            batter=context.live.striker,
             over=current_over,
             phase=features["phase"],
             wickets_in_hand=context.live.wickets_in_hand,
