@@ -391,6 +391,57 @@ def test_prediction_metadata_exposes_calibration_stages() -> None:
     )
 
 
+def test_wicket_probability_varies_across_distinct_match_states() -> None:
+    """Regression guard for a previously reported "flat 50%" live wicket
+    display (docs/CTO_HANDOVER_2026-07-24.md). Root cause was traced to
+    serving-time feature starvation (see historical_feature_store.py):
+    with near-identical input on every call, the model had no situational
+    signal to respond to. This asserts three clearly different match
+    states produce three genuinely different, non-identical probabilities.
+    """
+
+    from app.ml.prediction_engine import PredictionEngine
+    from app.models.live_match_state import LiveMatchState
+    from app.models.match_context import MatchContext
+
+    states = [
+        LiveMatchState(
+            over=1,
+            striker="RG Sharma",
+            bowler="JJ Bumrah",
+            score_before_over=0,
+            wkts_down_before_over=0,
+            wickets_in_hand=10,
+        ),
+        LiveMatchState(
+            over=12,
+            striker="MS Dhoni",
+            bowler="YS Chahal",
+            score_before_over=95,
+            wkts_down_before_over=4,
+            wickets_in_hand=6,
+            balls_faced_before_over=30,
+        ),
+        LiveMatchState(
+            over=19,
+            striker="JJ Bumrah",
+            bowler="TA Boult",
+            score_before_over=165,
+            wkts_down_before_over=8,
+            wickets_in_hand=2,
+            balls_faced_before_over=3,
+        ),
+    ]
+    probabilities = [
+        PredictionEngine()
+        .predict(MatchContext(team1="India", team2="NZ", venue="Wankhede Stadium", format="T20", live=live))
+        .wicket_probability
+        for live in states
+    ]
+    assert len(set(probabilities)) == len(probabilities)
+    assert not all(round(p, 1) == 0.5 for p in probabilities)
+
+
 def test_restart_restores_pending_prediction_and_previous_over_review(
     tmp_path: Path,
 ) -> None:
