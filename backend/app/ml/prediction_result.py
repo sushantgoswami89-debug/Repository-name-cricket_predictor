@@ -32,10 +32,20 @@ class PredictionResult:
 
     @property
     def confidence_level(self) -> str:
-        """Return a compact user-facing confidence category."""
-        if self.confidence >= 0.80:
+        """Return a compact user-facing confidence category.
+
+        Thresholds are set against the *calibrated* confidence scale (see
+        fit_confidence_calibrator.py), not the raw 0-1 heuristic. Calibrated
+        against real range-hit outcomes, confidence is heavily concentrated
+        around ~0.337 (p10-p75 on a 764-over sample were all exactly this
+        value) with a thin tail up to ~0.38 -- the old 0.60/0.80 thresholds
+        would have shown "LOW" on almost every prediction post-calibration.
+        These bands are set relative to that real, narrow distribution so
+        the label still carries some signal instead of being degenerate.
+        """
+        if self.confidence >= 0.35:
             return "HIGH"
-        if self.confidence >= 0.60:
+        if self.confidence >= 0.25:
             return "MEDIUM"
         return "LOW"
 

@@ -59,10 +59,13 @@ class ModelRepository:
         self._cat_cols_path = model_dir / "cat_cols.pkl"
 
         self._wicket_calibrator_path = model_dir / "wkt_calibrator.pkl"
+        self._confidence_calibrator_path = model_dir / "confidence_calibrator.pkl"
 
         self._runs_model: Any | None = None
         self._wicket_model: Any | None = None
         self._wicket_calibrator: Any | None = None
+        self._confidence_calibrator: Any | None = None
+        self._confidence_calibrator_loaded = False
         self._wicket_calibrator_loaded = False
         self._feature_columns: list[str] | None = None
         self._categorical_columns: list[str] | None = None
@@ -122,6 +125,23 @@ class ModelRepository:
             self._wicket_calibrator_loaded = True
 
         return self._wicket_calibrator
+
+    def get_confidence_calibrator(self) -> Any | None:
+        """
+        Return the fitted isotonic-regression calibrator mapping the
+        engine's heuristic confidence score to the actual empirical
+        probability the predicted range covers the real outcome, or
+        ``None`` if this model directory has none.
+        """
+
+        if not self._confidence_calibrator_loaded:
+            if self._confidence_calibrator_path.exists():
+                self._confidence_calibrator = self.load_artifact(
+                    self._confidence_calibrator_path.name
+                )
+            self._confidence_calibrator_loaded = True
+
+        return self._confidence_calibrator
 
     def get_feature_columns(self) -> list[str]:
         """

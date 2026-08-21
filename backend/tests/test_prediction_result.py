@@ -65,7 +65,7 @@ def test_prediction_result_invalid_confidence() -> None:
 
 @pytest.mark.parametrize(
     ("confidence", "level"),
-    [(0.59, "LOW"), (0.60, "MEDIUM"), (0.79, "MEDIUM"), (0.80, "HIGH")],
+    [(0.24, "LOW"), (0.25, "MEDIUM"), (0.34, "MEDIUM"), (0.35, "HIGH")],
 )
 def test_confidence_level_boundaries(confidence: float, level: str) -> None:
     result = PredictionResult(7.0, 0.2, confidence, expected_range="3-12")

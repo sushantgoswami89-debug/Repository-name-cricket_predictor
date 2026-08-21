@@ -294,6 +294,12 @@ class PredictionEngine:
             evolved_runs,
             high_bound - low_bound,
         )
+        raw_confidence = confidence
+        confidence_calibrator = self._repository.get_confidence_calibrator()
+        if confidence_calibrator is not None:
+            confidence = round(
+                float(confidence_calibrator.predict([confidence])[0]), 3
+            )
 
         # Update Internal State
         self._last_predicted_over = current_over
@@ -324,6 +330,7 @@ class PredictionEngine:
                 "display_runs": pivot,
                 "bowler_adjustment_applied": bowler_adjustment is not None,
                 "confidence_type": "dynamic stability indicator",
+                "raw_confidence": round(raw_confidence, 3),
                 "confidence_factors": confidence_factors,
                 "engine_family": rules["engine_family"],
             },
