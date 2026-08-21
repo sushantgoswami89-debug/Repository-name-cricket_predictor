@@ -31,6 +31,7 @@ Thumbs.db
 .telegram.json
 .cricketdata.json
 data/live/
+live_prediction.state.json
 
 # Large regeneratable data/model caches -- not durable source, just cache.
 # data/raw/: re-downloadable from cricsheet.org (see src/parse_cricsheet.py)
