@@ -12,9 +12,6 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from app.models.live_match_state import LiveMatchState
-from app.models.pitch_context import PitchContext
-from app.models.toss_context import TossContext
-from app.models.weather_context import WeatherContext
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +28,9 @@ class MatchContext:
     country: str = ""
     format: str = ""
     competition: str = ""
-    toss: TossContext = field(default_factory=TossContext)
     batting_first: str | None = None
     bowling_first: str | None = None
     date: str | None = None
-    weather: WeatherContext = field(default_factory=WeatherContext)
-    pitch: PitchContext = field(default_factory=PitchContext)
     live: LiveMatchState = field(default_factory=LiveMatchState)
     venue_stats: dict[str, Any] = field(default_factory=dict)
     team1_players: list[str] = field(default_factory=list)
@@ -54,9 +48,6 @@ class MatchContext:
             raise ValueError("Both teams cannot be the same.")
         if not self.venue:
             raise ValueError("venue cannot be empty.")
-        self.toss.validate()
-        self.weather.validate()
-        self.pitch.validate()
         logger.info("Validation successful")
         return True
 
@@ -64,9 +55,6 @@ class MatchContext:
         """Convert MatchContext into a dictionary."""
         logger.info("Converting MatchContext to dictionary")
         data = asdict(self)
-        data["toss"] = self.toss.to_dict()
-        data["weather"] = self.weather.to_dict()
-        data["pitch"] = self.pitch.to_dict()
         data["live"] = asdict(self.live)
         return data
 
@@ -75,9 +63,6 @@ class MatchContext:
         """Create MatchContext from a dictionary."""
         logger.info("Creating MatchContext from dictionary")
         payload = dict(data)
-        payload["toss"] = TossContext(**payload.get("toss", {}))
-        payload["weather"] = WeatherContext(**payload.get("weather", {}))
-        payload["pitch"] = PitchContext(**payload.get("pitch", {}))
         payload["live"] = LiveMatchState(**payload.get("live", {}))
         return cls(**payload)
 

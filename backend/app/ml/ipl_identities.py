@@ -84,3 +84,44 @@ def canonical_player_id(name: str, registry: Mapping[str, str]) -> str:
         return f"player:{player_uuid}"
     key = identity_key(name)
     return f"player:unresolved:{key}" if key else UNKNOWN_PLAYER
+
+
+def first_last_key(full_name: str) -> str:
+    """Reduce a full legal name to its first and last token, normalized --
+    e.g. "Patrick James Cummins" -> "patrick cummins". Bridges the gap
+    between Cricsheet's own player identity (often initials, e.g.
+    "PJ Cummins") and how live feeds like TOI actually refer to players
+    (their common first name + surname, e.g. "Pat Cummins"). Doesn't
+    resolve nickname variants (Pat/Patrick, Steve/Steven) -- a known,
+    smaller remaining gap, not attempted here."""
+    tokens = str(full_name).split()
+    if len(tokens) < 2:
+        return identity_key(full_name)
+    return identity_key(f"{tokens[0]} {tokens[-1]}")
+
+
+def build_full_name_alias_index(styles_csv_path) -> dict[str, str]:
+    """Build {first_last_key(full_name): "player:<cricsheet_id>"} from
+    data/external/cricsheet_player_styles.csv's full_name column -- a
+    fallback resolution tier for names that don't match Cricsheet's own
+    (often abbreviated) unique_name convention. Best-effort: on a
+    first_last_key collision between two different players, keeps
+    whichever is seen first (same graceful-degradation philosophy as the
+    rest of this identity-resolution stack; this is a fallback tier, not
+    an authoritative one). Returns {} if the file is missing."""
+    from pathlib import Path
+
+    path = Path(styles_csv_path)
+    if not path.is_file():
+        return {}
+    import pandas as pd
+
+    styles = pd.read_csv(path)
+    index: dict[str, str] = {}
+    for cricsheet_id, full_name in zip(styles["cricsheet_id"], styles["full_name"]):
+        if not isinstance(cricsheet_id, str) or not isinstance(full_name, str):
+            continue
+        key = first_last_key(full_name)
+        if key and key not in index:
+            index[key] = f"player:{cricsheet_id}"
+    return index

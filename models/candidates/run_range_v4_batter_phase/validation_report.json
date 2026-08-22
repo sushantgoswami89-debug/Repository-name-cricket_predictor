@@ -1,0 +1,52 @@
+{
+  "candidate_version": "run_range_v4_batter_phase",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "note": "run_range_enriched_v3_batting_style (currently live, 28.49% holdout hit rate) + batter_phase_balls/runs_per_ball/boundary_rate/dismissal_rate -- the venue-agnostic batter x phase profile that never existed anywhere in this codebase before player_venue_phase_dataset.py.",
+  "split": {
+    "train_rows": 111533,
+    "calibration_rows": 24714,
+    "holdout_rows": 36384,
+    "holdout_matches": 1011
+  },
+  "phase_temperatures": {
+    "powerplay": 1.1564627165173085,
+    "middle": 1.0421070081097938,
+    "death": 1.1439001520166567
+  },
+  "calibration": {
+    "raw_nll": 2.777197913731732,
+    "phase_scaled_nll": 2.7744495218418717,
+    "hit_rate": 0.3022578295702841
+  },
+  "holdout": {
+    "v3_reference_hit_rate": 0.2849,
+    "new_hit_rate": 0.286004837291117,
+    "new_hit_rate_bowler_unknown": 0.28092018469656993,
+    "relative_improvement_over_v3": 0.0038779827698034014
+  },
+  "holdout_phase_breakdown": {
+    "powerplay": {
+      "rows": 11903,
+      "hit_rate": 0.2601865076031253
+    },
+    "middle": {
+      "rows": 16858,
+      "hit_rate": 0.3092300391505517
+    },
+    "death": {
+      "rows": 7623,
+      "hit_rate": 0.27495736586645675
+    }
+  },
+  "beats_v3_and_calibration_gate": true,
+  "batter_phase_feature_importance_rank": {
+    "batter_phase_balls": 27,
+    "batter_phase_runs_per_ball": 20,
+    "batter_phase_boundary_rate": 24,
+    "batter_phase_dismissal_rate": 19
+  },
+  "total_features": 53,
+  "decision": "promote_candidate"
+}

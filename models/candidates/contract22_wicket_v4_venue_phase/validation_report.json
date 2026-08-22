@@ -1,0 +1,39 @@
+{
+  "candidate_version": "contract22_wicket_v4_venue_phase",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v2_batter_state + shrunk batter/bowler venue x phase profiles (player_venue_phase_dataset.py). Reference: v2 scored AUC 0.6081/0.6072 (known/unknown), Brier ~0.2049 (Platt) on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v2_batter_state": {
+    "auc_known": 0.6081,
+    "auc_unknown": 0.6072,
+    "brier_platt": 0.2049
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6085002022987938,
+    "brier_platt": 0.20482682426881627,
+    "brier_uncalibrated": 0.2048721380096811,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6088549394343779,
+    "brier_platt": 0.20477901754567,
+    "brier_uncalibrated": 0.20519800276213185,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384
+  },
+  "venue_phase_feature_importance_rank": {
+    "batter_venue_phase_balls": 27,
+    "batter_venue_phase_runs_per_ball_shrunk": 26,
+    "batter_venue_phase_boundary_rate_shrunk": 18,
+    "batter_venue_phase_dismissal_rate_shrunk": 11,
+    "bowler_venue_phase_balls": 20,
+    "bowler_venue_phase_economy_shrunk": 16,
+    "bowler_venue_phase_wicket_rate_shrunk": 15
+  },
+  "total_features": 47
+}

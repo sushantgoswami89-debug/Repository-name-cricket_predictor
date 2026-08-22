@@ -4,8 +4,20 @@ Usage:
     .venv/bin/python3 backend/run_batch_replay.py [n_matches] [format]
 
 format is one of: t20i, odi, ipl (default: t20i)
+
+Fixed 2026-08-22: used to sample randomly across ALL matches regardless of
+date. The live models are trained on matches through 2023-12-31 -- a
+random sample drawn from the full corpus lands mostly inside that
+training period (found 85.5% for a similar script, fit_confidence_calibrator.py),
+so the model has already seen most of what it's being "tested" against,
+and the accuracy number this prints would be inflated, not a real
+estimate of how it performs on a genuinely new match. Now restricted to
+the holdout period (>=2025-01-01) the models were never trained or
+calibrated on, matching the standard every other accuracy number in this
+project uses.
 """
 
+import json
 import random
 import sys
 from pathlib import Path
@@ -19,12 +31,28 @@ from app.services.match_replay import MatchReplay
 
 N_MATCHES = int(sys.argv[1]) if len(sys.argv) > 1 else 30
 FORMAT = sys.argv[2] if len(sys.argv) > 2 else "t20i"
+HOLDOUT_CUTOFF = "2025-01-01"
 
 random.seed(42)
 
 match_dir = Path(f"../data/raw/cricsheet/{FORMAT}")
-all_files = sorted(match_dir.glob("*.json"))
+
+
+def _is_holdout_match(path: Path) -> bool:
+    try:
+        dates = json.loads(path.read_text(encoding="utf-8"))["info"]["dates"]
+    except (KeyError, IndexError, ValueError):
+        return False
+    return bool(dates) and str(dates[0]) >= HOLDOUT_CUTOFF
+
+
+all_files = sorted(p for p in match_dir.glob("*.json") if _is_holdout_match(p))
+if not all_files:
+    raise SystemExit(
+        f"No holdout-period (>={HOLDOUT_CUTOFF}) matches found for format={FORMAT!r}."
+    )
 sample = random.sample(all_files, min(N_MATCHES, len(all_files)))
+print(f"(sampling from {len(all_files)} holdout-period matches, >={HOLDOUT_CUTOFF})")
 
 print(f"Replaying {len(sample)} {FORMAT.upper()} matches...")
 

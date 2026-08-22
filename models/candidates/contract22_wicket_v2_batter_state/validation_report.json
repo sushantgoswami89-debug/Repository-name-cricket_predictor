@@ -1,0 +1,31 @@
+{
+  "candidate_version": "contract22_wicket_v2_batter_state",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_rigorous + partnership-age/new-batter state features (active_batter_state, new_batter, partnership_legal_ball_age, striker_match_balls, partner_match_balls) from build_ipl_phase_moe_features. Also compares Platt vs isotonic calibration on the same holdout. Reference: contract22_wicket_rigorous itself scored AUC 0.6069/0.6063 (bowler known/unknown), Brier ~0.2051 (Platt) on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_rigorous": {
+    "auc_known": 0.6069,
+    "auc_unknown": 0.6063,
+    "brier_platt": 0.2051
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6083493576862278,
+    "brier_platt": 0.20494566754268198,
+    "brier_isotonic": 0.20490597985561315,
+    "brier_uncalibrated": 0.20498930402046084,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6074857856047832,
+    "brier_platt": 0.20503365609778182,
+    "brier_isotonic": 0.20513792101495576,
+    "brier_uncalibrated": 0.20547973553901547,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384
+  }
+}

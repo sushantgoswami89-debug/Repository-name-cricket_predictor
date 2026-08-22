@@ -53,8 +53,18 @@ TEAM_HOME_VENUES = {
     "Rajasthan Royals": frozenset(
         {"jaipur_sawai_mansingh", "guwahati_barsapara"}
     ),
-    "Royal Challengers Bengaluru": frozenset({"bengaluru_chinnaswamy"}),
-    "Royal Challengers Bangalore": frozenset({"bengaluru_chinnaswamy"}),
+    # RCB plays most 2026 home fixtures at Chinnaswamy (cleared to host 5
+    # home matches after the June 2025 crowd-crush disruption), but 2 home
+    # matches are contracted to Raipur "as per prior commitments" -- same
+    # split-home-venue pattern as Delhi Capitals/Punjab Kings/Rajasthan
+    # Royals above. See docs/candidate_wicket_v4_venue_phase.md-adjacent
+    # investigation, 2026-08-22.
+    "Royal Challengers Bengaluru": frozenset(
+        {"bengaluru_chinnaswamy", "raipur_shaheed_veer_narayan"}
+    ),
+    "Royal Challengers Bangalore": frozenset(
+        {"bengaluru_chinnaswamy", "raipur_shaheed_veer_narayan"}
+    ),
     "Sunrisers Hyderabad": frozenset({"hyderabad_rajiv_gandhi"}),
 }
 

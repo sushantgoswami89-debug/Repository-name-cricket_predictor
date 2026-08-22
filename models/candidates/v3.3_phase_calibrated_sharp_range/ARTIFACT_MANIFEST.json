@@ -1,8 +1,0 @@
-{
-  "model": "v3.3_phase_calibrated_sharp_range",
-  "artifacts": {
-    "sharp_range_model.pkl": "79e142de211f2abbde7931f97935463f20e69231f61552f3c7c91d42e50556de",
-    "phase_temperatures.pkl": "b740dee292c7f7466e6d7baef31124ad9801c009af66451bcf8a3f857dc7933b",
-    "feature_cols.pkl": "023eb8ae6254829c9cf4499547bd87056ec86b402a39ecb0826326b382ee8235"
-  }
-}

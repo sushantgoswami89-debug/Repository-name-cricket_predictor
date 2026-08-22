@@ -21,14 +21,35 @@ they're gathered — don't need a single match to answer everything at once.
   (allowlist / stuck-timeout alert / just document) is the right fix.
 
 ## 3. Full predict -> verify -> publish cycle
-- [ ] Has a single over ever gone cleanly through: prediction made before
+- [x] Has a single over ever gone cleanly through: prediction made before
       the over -> over completes -> actual result verified -> review
-      scored -> next prediction made? (Never fully observed yet — every
-      live test so far got stuck on feed reconciliation before reaching
-      this.)
+      scored -> next prediction made? **Confirmed offline, 2026-08-22, via
+      `backend/run_live_pipeline_replay.py`** — a new tool that replays a
+      pre-recorded Cricsheet match through the REAL `VerifiedLivePredictionPipeline`
+      + `LiveDeliveryVerifier` (not a simplified stand-in), building
+      cumulative `ToiSnapshot`/`ToiDelivery` objects ball-by-ball from
+      historical data as a stand-in for a live feed. Ran clean (0
+      `VerificationError`s, exactly one prediction published per
+      over-completion, prior-over reviews scored correctly) across 2 full
+      hand-picked matches (1 T20I, 1 IPL) and a further 16 randomly
+      sampled matches (8 IPL + 8 T20I, `random.seed(7)`). Wicket
+      probabilities varied sensibly throughout (14%-37% observed, not
+      flat). **Caveat — this is not the same as item #2's question**: it
+      proves the pipeline's own logic handles a full match cleanly when
+      given internally-consistent delivery data; it does NOT test TOI's
+      real-world feed messiness (out-of-order commentary, lag, score
+      corrections), since the replay constructs already-consistent
+      snapshots from ground-truth historical data. A genuinely live TOI
+      test is still needed for that part. See
+      `docs/candidate_ipl_wicket_v7_2_spell_features.md`-style session
+      notes in project memory for the full run details.
 - [ ] Does the wicket model v2 adjustment (bowler_spell_adjuster) actually
       fire in live conditions (i.e. does `context.live.bowler` resolve to
-      a known player_id from real TOI data)?
+      a known player_id from real TOI data)? Not tested by the replay
+      above — the replay leaves `announced_bowler` unset throughout (no
+      simulated pre-over bowler announcement), so this is still genuinely
+      open and needs either a live TOI test or extending the replay to
+      simulate bowler announcements.
 
 ## 4. Telegram publishing, live (not just a standalone test send)
 - [ ] Run with `--telegram` for real and confirm exactly one message per
@@ -46,10 +67,14 @@ they're gathered — don't need a single match to answer everything at once.
       live session.)
 
 ## 6. The "flat 50%" wicket bug
-- [ ] Already fixed and regression-tested with synthetic match states
-      (see commit 4ae6e33). Worth a quick real-match sanity check: do
-      live wicket probabilities vary sensibly over the course of an
-      innings, not just in the unit test?
+- [x] Already fixed and regression-tested with synthetic match states
+      (see commit 4ae6e33). Real-match sanity check done, 2026-08-22, via
+      the same `run_live_pipeline_replay.py` runs as item #3: wicket
+      probabilities varied sensibly across full real innings (observed
+      range roughly 14%-37%, moving with match state), through the actual
+      live pipeline, not just the unit test. Not a live TOI feed, but real
+      historical ball-by-ball match states, which is the part this item
+      was actually asking about.
 
 ---
 

@@ -375,3 +375,89 @@ def test_completed_over_remains_visible_after_next_over_starts_with_wide() -> No
     verifier.apply(wide)
 
     assert verifier.completed_over == 1
+
+
+def _raw_with_enrichment() -> dict:
+    return {
+        "Matchdetail": {
+            "Match": {"Type": "T20", "Live": True},
+            "Tosswonby": "1",
+            "Toss_elected_to": "field",
+            "Venue": {
+                "Pitch_Detail": {
+                    "Pitch_Suited_For": "Batting friendly",
+                    "Pitch_Surface": "Dry",
+                },
+                "Venue_Weather": {
+                    "Weather": "Clear",
+                    "Humidity": "88%",
+                    "Temperature": "15.99C",
+                    "Wind_Speed": "2.06 meter/sec",
+                },
+            },
+        },
+        "Teams": {
+            "1": {
+                "Name_Full": "Australia",
+                "Players": {
+                    "1": {
+                        "Position": "1",
+                        "Name_Full": "Matt Renshaw",
+                        "Role": "Batter",
+                        "Confirm_XI": True,
+                    },
+                    "2": {
+                        "Position": "8",
+                        "Name_Full": "Pat Cummins",
+                        "Role": "Bowler",
+                        "Confirm_XI": True,
+                    },
+                },
+            },
+            "2": {"Name_Full": "Bangladesh", "Players": {}},
+        },
+    }
+
+
+def test_team_players_extracts_and_sorts_by_position() -> None:
+    players = ToiLiveReader._team_players(_raw_with_enrichment())
+
+    assert [p.name for p in players["Australia"]] == ["Matt Renshaw", "Pat Cummins"]
+    assert players["Australia"][1].role == "Bowler"
+    assert players["Bangladesh"] == ()
+
+
+def test_team_players_degrades_gracefully_when_missing() -> None:
+    assert ToiLiveReader._team_players({}) == {}
+    assert ToiLiveReader._team_players({"Teams": "not a dict"}) == {}
+
+
+def test_toss_resolves_team_index_to_name() -> None:
+    won_by, decision = ToiLiveReader._toss(_raw_with_enrichment())
+
+    assert won_by == "Australia"
+    assert decision == "field"
+
+
+def test_toss_degrades_gracefully_when_missing() -> None:
+    assert ToiLiveReader._toss({}) == ("", "")
+
+
+def test_pitch_extraction() -> None:
+    assert ToiLiveReader._pitch(_raw_with_enrichment()) == ("Batting friendly", "Dry")
+    assert ToiLiveReader._pitch({}) == ("", "")
+
+
+def test_weather_extraction_strips_units() -> None:
+    condition, humidity, temperature, wind = ToiLiveReader._weather(
+        _raw_with_enrichment()
+    )
+
+    assert condition == "Clear"
+    assert humidity == 88.0
+    assert temperature == 15.99
+    assert wind == 2.06
+
+
+def test_weather_degrades_gracefully_when_missing() -> None:
+    assert ToiLiveReader._weather({}) == ("", None, None, None)

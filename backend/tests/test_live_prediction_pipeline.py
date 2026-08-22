@@ -163,6 +163,83 @@ def test_shadow_failure_never_blocks_production_prediction() -> None:
     assert output["shadow_prediction"]["reason"] == "shadow_inference_failed"
 
 
+class FakeShadowPredictorWithBaseline:
+    """Same as FakeShadowPredictor but with the baseline_* fields the real
+    BowlerShadowPredictor always includes, needed for the run_shift math
+    in _apply_bowler_shadow."""
+
+    def __init__(self) -> None:
+        self.calls = []
+
+    def predict(self, **values):
+        self.calls.append(values)
+        return {
+            "status": "applied",
+            "candidate_version": "announced_bowler_current_spell_v3",
+            "publishing_enabled": False,
+            "expected_runs": 6.8,
+            "wicket_probability": 0.24,
+            "baseline_expected_runs": 7.0,
+            "baseline_wicket_probability": 0.2,
+        }
+
+
+def test_publish_bowler_shadow_disabled_by_default() -> None:
+    publisher = FakePublisher()
+    snapshot = replace(
+        _snapshot(), announced_bowler="Other Bowler", announced_bowler_over=2
+    )
+    pipeline = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(),
+        publisher=publisher,
+        shadow_predictor=FakeShadowPredictorWithBaseline(),
+    )
+
+    output = pipeline.process(snapshot)
+
+    assert output["prediction"]["expected_runs"] == 7.0
+    assert output["prediction"]["expected_range"] == "5-9"
+    assert output["prediction"]["wicket_probability"] == 0.2
+    assert output["shadow_prediction"]["status"] == "applied"
+
+
+def test_publish_bowler_shadow_overwrites_prediction_when_enabled() -> None:
+    publisher = FakePublisher()
+    snapshot = replace(
+        _snapshot(), announced_bowler="Other Bowler", announced_bowler_over=2
+    )
+    pipeline = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(),
+        publisher=publisher,
+        shadow_predictor=FakeShadowPredictorWithBaseline(),
+        publish_bowler_shadow=True,
+    )
+
+    output = pipeline.process(snapshot)
+
+    # run_shift = 6.8 - 7.0 = -0.2
+    assert output["prediction"]["expected_runs"] == 6.8
+    assert output["prediction"]["expected_range"] == "5-9"  # shift rounds to 0 on both ends
+    assert output["prediction"]["wicket_probability"] == 0.24
+    assert output["prediction"]["metadata"]["display_runs"] == 6.8
+    assert output["shadow_prediction"]["status"] == "published"
+
+
+def test_publish_bowler_shadow_leaves_prediction_when_shadow_not_applied() -> None:
+    publisher = FakePublisher()
+    pipeline = VerifiedLivePredictionPipeline(
+        engine=FakeEngine(),
+        publisher=publisher,
+        shadow_predictor=FakeShadowPredictor(fail=True),
+        publish_bowler_shadow=True,
+    )
+
+    output = pipeline.process(_snapshot())
+
+    assert output["prediction"]["expected_runs"] == 7.0
+    assert output["shadow_prediction"]["status"] == "not_applied"
+
+
 def test_chase_features_match_candidate_v3_training_definitions() -> None:
     engine = FakeEngine()
     pipeline = VerifiedLivePredictionPipeline(engine=engine)
@@ -367,11 +444,18 @@ def test_dynamic_confidence_changes_with_match_stability() -> None:
     )
 
     assert stable > volatile
-    assert stable_factors["method"] == "dynamic_match_stability_v1"
+    assert stable_factors["method"] == "dynamic_match_stability_v2"
     assert volatile_factors["phase"] == "death"
 
 
 def test_prediction_metadata_exposes_calibration_stages() -> None:
+    """Runs prediction is sourced from run_range_v4_batter_phase
+    (see docs/candidate_run_range_enriched_v2.md) -- its own calibrated
+    inclusive band becomes expected_range directly, no momentum-blend/
+    match_bias staging, so metadata no longer carries raw_runs/blended_runs/
+    centering_correction (removed, not renamed -- that staged pipeline
+    doesn't exist for runs anymore). This checks the fields that replaced
+    them instead."""
     from app.ml.prediction_engine import PredictionEngine
     from app.models.live_match_state import LiveMatchState
     from app.models.match_context import MatchContext
@@ -383,12 +467,39 @@ def test_prediction_metadata_exposes_calibration_stages() -> None:
         )
     )
 
-    assert result.metadata["centering_correction"] == 0.0
-    assert result.metadata["raw_runs"] >= 0
-    assert result.metadata["blended_runs"] >= 0
-    assert result.metadata["adjusted_runs"] == pytest.approx(
-        result.predicted_runs, abs=0.051
+    assert result.metadata["run_model"] == "run_range_v4_batter_phase"
+    assert 0.0 <= result.metadata["sharp_band_prob"] <= 1.0
+    assert result.metadata["sharp_band_width"] == 2
+    assert result.metadata["display_runs"] == result.predicted_runs
+    low, high = (int(x) for x in result.expected_range.split("-"))
+    assert high - low == 2
+
+
+def test_ipl_prediction_uses_wider_band() -> None:
+    """2026-08-22 finding (docs/finding_blended_holdout_masks_ipl_accuracy.md):
+    IPL's holdout hit rate at the standard width=2 band (24.19%) trails
+    T20I's (29.22%) because IPL's run-scoring distribution is genuinely
+    wider -- not a fixable training-population bug (reweighting and full
+    IPL/T20I separation were both tested and neither closed the gap).
+    IPL at width=3 (32.69%) already beats T20I's own width=2 rate, so
+    PredictionEngine gives IPL matches a wider band specifically."""
+    from app.ml.prediction_engine import PredictionEngine
+    from app.models.live_match_state import LiveMatchState
+    from app.models.match_context import MatchContext
+
+    result = PredictionEngine().predict(
+        MatchContext(
+            format="T20",
+            competition="IPL",
+            live=LiveMatchState(over=8, runs_last_3_overs=24),
+        )
     )
+
+    assert result.metadata["engine_family"] == "ipl"
+    assert result.metadata["sharp_band_width"] == 3
+    low, high = (int(x) for x in result.expected_range.split("-"))
+    assert high - low == 3
+    assert low <= result.predicted_runs <= high
 
 
 def test_wicket_probability_varies_across_distinct_match_states() -> None:

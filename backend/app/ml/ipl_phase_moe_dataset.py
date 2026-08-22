@@ -54,25 +54,38 @@ def _chase_pressure(required_rate: float, current_rate: float, is_chase: bool) -
 
 
 def build_ipl_phase_moe_features(
-    project_root: Path, *, canonical_identities: bool = False
+    project_root: Path,
+    *,
+    canonical_identities: bool = False,
+    scopes: tuple[str, ...] = ("ipl",),
 ) -> pd.DataFrame:
-    """Build one row per regular IPL over using only publish-time information.
+    """Build one row per regular T20 over using only publish-time information.
 
     Player career profiles are frozen at match start. The next-over bowler is
     deliberately represented as unknown: Cricsheet's first-delivery bowler is
     future information when the prediction is published before the over.
+
+    `scopes` selects which `data/raw/cricsheet/<scope>` directories to draw
+    matches from. Defaults to IPL-only (unchanged, existing-caller-safe
+    behavior); pass `("ipl", "t20i")` to also include T20I matches. The
+    per-player career/prior tracking (`canonical_player_id` is Cricsheet's
+    own cross-format person UUID) and chase-pressure/partnership math are
+    format-agnostic, so this works the same way regardless of scope --
+    `batting_team`'s canonical_team_id is IPL-franchise-specific and will
+    fall back to an unresolved-but-still-consistent id for national teams.
     """
 
     paths: list[tuple[str, Path]] = []
-    for path in (project_root / "data/raw/cricsheet/ipl").glob("*.json"):
-        raw = json.loads(path.read_text(encoding="utf-8"))
-        registry = raw["info"].get("registry", {}).get("people", {})
-        player_key = (
-            (lambda name: canonical_player_id(name, registry))
-            if canonical_identities
-            else (lambda name: name)
-        )
-        paths.append((str(raw["info"]["dates"][0]), path))
+    for scope in scopes:
+        for path in (project_root / "data/raw/cricsheet" / scope).glob("*.json"):
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            registry = raw["info"].get("registry", {}).get("people", {})
+            player_key = (
+                (lambda name: canonical_player_id(name, registry))
+                if canonical_identities
+                else (lambda name: name)
+            )
+            paths.append((str(raw["info"]["dates"][0]), path))
     paths.sort(key=lambda item: (item[0], item[1].name))
 
     batter_history: dict[str, dict[str, int]] = defaultdict(_empty_batter)

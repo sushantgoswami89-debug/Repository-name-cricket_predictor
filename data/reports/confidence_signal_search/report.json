@@ -1,0 +1,31 @@
+{
+  "generated_at_utc": "2026-08-22T17:39:02.868438+00:00",
+  "model_provenance": {
+    "run_model": "run_range_v4_batter_phase",
+    "wicket_model": "contract22_wicket_v2_batter_state"
+  },
+  "_staleness_note": "This file is only valid evidence for the model_provenance stamped above. If PredictionEngine's run_model/wicket_model has changed since generated_at_utc, re-run this script before trusting these numbers -- do not reuse an old copy across a model swap.",
+  "n_rows": 19261,
+  "train_rows": 16170,
+  "holdout_rows": 3091,
+  "holdout_auc_fitted_model": 0.5425332975588565,
+  "holdout_auc_existing_heuristic": 0.5304117897808117,
+  "holdout_brier_fitted_model": 0.18285744356400488,
+  "holdout_brier_constant_baseline": 0.18319362523098,
+  "coefficients": {
+    "over": -0.038974519586255384,
+    "wickets_in_hand": -0.06484923789442583,
+    "balls_remaining": 0.0024069197554926394,
+    "current_run_rate": -0.0031017946757777746,
+    "is_chase": 0.0,
+    "required_run_rate": 0.0,
+    "recent_runs_per_ball": -0.15535779211958678,
+    "recent_dot_rate": -0.09665542165939671,
+    "recent_boundary_rate": 0.26486902861078665,
+    "recent_wicket_rate": 0.9858225293574822,
+    "range_width": -0.0009619609486846936,
+    "phase_death": 0.1631689104092228,
+    "phase_middle": 0.18084585525182387,
+    "phase_powerplay": -0.34449574613469625
+  }
+}

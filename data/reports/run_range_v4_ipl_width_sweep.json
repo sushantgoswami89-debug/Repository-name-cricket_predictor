@@ -1,0 +1,37 @@
+[
+  {
+    "width": 2,
+    "band_span_runs": 3,
+    "blended_hit_rate": 0.28449318381706246,
+    "ipl_hit_rate": 0.2419296987087518,
+    "t20i_hit_rate": 0.2921968319916905
+  },
+  {
+    "width": 3,
+    "band_span_runs": 4,
+    "blended_hit_rate": 0.3738456464379947,
+    "ipl_hit_rate": 0.3269368723098996,
+    "t20i_hit_rate": 0.3823357569462477
+  },
+  {
+    "width": 4,
+    "band_span_runs": 5,
+    "blended_hit_rate": 0.45520008795074757,
+    "ipl_hit_rate": 0.39903156384505023,
+    "t20i_hit_rate": 0.46536613866528176
+  },
+  {
+    "width": 5,
+    "band_span_runs": 6,
+    "blended_hit_rate": 0.5325692612137203,
+    "ipl_hit_rate": 0.47596843615494977,
+    "t20i_hit_rate": 0.5428135549207997
+  },
+  {
+    "width": 6,
+    "band_span_runs": 7,
+    "blended_hit_rate": 0.6023801671064204,
+    "ipl_hit_rate": 0.5428622668579627,
+    "t20i_hit_rate": 0.6131524279407946
+  }
+]

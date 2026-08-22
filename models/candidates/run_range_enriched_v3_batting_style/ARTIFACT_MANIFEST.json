@@ -1,0 +1,9 @@
+{
+  "model": "run_range_enriched_v3_batting_style",
+  "artifacts": {
+    "sharp_range_model.pkl": "e949a97ab70d7b372d9015a1acb0edd8b68431b25604c97f5473cc0a7a95665a",
+    "phase_temperatures.pkl": "864eb44e8b0c06dfcf147935692e5b90c308e09a1f8dc177283420857a52fad6",
+    "feature_cols.pkl": "70f988157e6a1e3b028348ad1a40d1d82bf05a6daad3b62537537201904055d4",
+    "categorical_cols.pkl": "cf7b3dd289abadc994ee35554ca132ffd5ef104e272d23cb7a57408c18c4b9d6"
+  }
+}

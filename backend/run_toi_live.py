@@ -54,6 +54,18 @@ def main() -> None:
             "(use the locked candidate for shadow)."
         ),
     )
+    parser.add_argument(
+        "--publish-bowler-shadow",
+        action="store_true",
+        help=(
+            "Actually publish announced_bowler_current_spell_v3's adjusted "
+            "prediction instead of only logging it (metadata.bowler_shadow). "
+            "It passes every offline promotion gate on the 2025-2026 "
+            "holdout, but ONLY turn this on after confirming real "
+            "live-availability with monitor_announced_bowler.py -- that's "
+            "the one gate the offline validation couldn't check."
+        ),
+    )
     args = parser.parse_args()
 
     publisher = None
@@ -74,7 +86,10 @@ def main() -> None:
 
     engine = make_engine()
     pipeline = VerifiedLivePredictionPipeline(
-        engine=engine, publisher=publisher, output_file=args.output
+        engine=engine,
+        publisher=publisher,
+        output_file=args.output,
+        publish_bowler_shadow=args.publish_bowler_shadow,
     )
     match_id = reader.match_id_from_url(args.match_url)
     feed_error_streak_started_at: float | None = None
@@ -177,6 +192,7 @@ def main() -> None:
                 publisher=publisher,
                 output_file=args.output,
                 restore_verified_state=False,
+                publish_bowler_shadow=args.publish_bowler_shadow,
             )
             time.sleep(0.5)
             continue

@@ -1,0 +1,35 @@
+{
+  "candidate_version": "contract22_wicket_v5_innings_phase",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v2_batter_state + shrunk bowler phase x innings profile (1st-innings/defending vs 2nd-innings/chasing split of the same phase). Reference: v2 scored AUC 0.6081/0.6072 (known/unknown), Brier ~0.2049 (Platt) on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v2_batter_state": {
+    "auc_known": 0.6081,
+    "auc_unknown": 0.6072,
+    "brier_platt": 0.2049
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.60869069114976,
+    "brier_platt": 0.20483216186664846,
+    "brier_uncalibrated": 0.20488708950063944,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6072672261527104,
+    "brier_platt": 0.20495127389099066,
+    "brier_uncalibrated": 0.20537829148317396,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384
+  },
+  "bowler_phase_innings_feature_importance_rank": {
+    "bowler_phase_innings_balls": 19,
+    "bowler_phase_innings_economy_shrunk": 23,
+    "bowler_phase_innings_wicket_rate_shrunk": 17
+  },
+  "total_features": 43
+}

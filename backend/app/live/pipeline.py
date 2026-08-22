@@ -37,9 +37,22 @@ class VerifiedLivePredictionPipeline:
         state_file: Path | None = None,
         restore_verified_state: bool = True,
         shadow_predictor: BowlerShadowPredictor | None = None,
+        publish_bowler_shadow: bool = False,
     ) -> None:
         self._engine = engine or PredictionEngine()
         self._shadow_predictor = shadow_predictor or BowlerShadowPredictor()
+        # announced_bowler_current_spell_v3 is validated on a proper
+        # 2025-2026 holdout (every promotion gate passes -- see
+        # models/candidates/announced_bowler_current_spell_v3/validation_report.json)
+        # but its own decision field says "research_pass_await_live_availability":
+        # the one thing never confirmed is whether TOI actually
+        # pre-announces the next bowler often enough, and early enough,
+        # to be worth using live (see monitor_announced_bowler.py /
+        # docs/live_match_test_checklist.md item #1). Defaults to False so
+        # nothing changes until that's actually been checked against a
+        # real match -- flip explicitly (run_toi_live.py --publish-bowler-shadow)
+        # once it has.
+        self._publish_bowler_shadow = publish_bowler_shadow
         self._publisher = publisher
         self._output = output_file
         self._verifier: LiveDeliveryVerifier | None = None
@@ -235,6 +248,14 @@ class VerifiedLivePredictionPipeline:
                 ),
                 match_style=snapshot.match_format,
             ),
+            # Threads the current innings' verified deliveries through to
+            # PredictionEngine's wicket model (contract22_wicket_v2_batter_state
+            # needs these for partnership-age/new-batter tracking -- see
+            # WicketContract22FeatureComputer). No registry key: genuine
+            # live TOI has no Cricsheet-style registry, so player identity
+            # resolution falls back to the name-alias snapshot, same as
+            # everywhere else this session handles that gap.
+            metadata={"deliveries": all_deliveries},
         )
         result = self._engine.predict(context)
         prediction = result.to_dict()
@@ -253,6 +274,8 @@ class VerifiedLivePredictionPipeline:
                 "reason": "shadow_inference_failed",
                 "detail": type(exc).__name__,
             }
+        if self._publish_bowler_shadow and shadow.get("status") == "applied":
+            self._apply_bowler_shadow(prediction, shadow)
         metadata = prediction.get("metadata")
         if isinstance(metadata, dict):
             metadata["bowler_shadow"] = shadow
@@ -326,6 +349,29 @@ class VerifiedLivePredictionPipeline:
         self._publish_output(snapshot, 1, output)
         self._persist(snapshot)
         return output
+
+    @staticmethod
+    def _apply_bowler_shadow(prediction: dict[str, object], shadow: dict[str, object]) -> None:
+        """Overwrite the baseline prediction in place with the announced-
+        bowler-adjusted numbers. Only called when publish_bowler_shadow is
+        explicitly enabled and the shadow predictor actually produced an
+        adjustment (status == "applied") -- see the constructor docstring
+        for why this defaults off."""
+        run_shift = float(shadow["expected_runs"]) - float(shadow["baseline_expected_runs"])
+        predicted_runs = round(float(prediction["expected_runs"]) + run_shift, 1)
+        prediction["expected_runs"] = predicted_runs
+        try:
+            low_str, high_str = str(prediction["expected_range"]).split("-")
+            new_low = round(float(low_str) + run_shift)
+            new_high = round(float(high_str) + run_shift)
+            prediction["expected_range"] = f"{new_low}-{new_high}"
+        except (ValueError, KeyError):
+            pass  # Malformed range string -- leave it, the run/wicket fields still update.
+        prediction["wicket_probability"] = round(float(shadow["wicket_probability"]), 3)
+        metadata = prediction.get("metadata")
+        if isinstance(metadata, dict):
+            metadata["display_runs"] = predicted_runs
+        shadow["status"] = "published"
 
     def _restore(self, snapshot: ToiSnapshot) -> None:
         if self._state_store is None:

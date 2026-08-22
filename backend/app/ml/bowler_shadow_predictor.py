@@ -11,7 +11,7 @@ import pandas as pd
 from catboost import CatBoostClassifier, CatBoostRegressor
 
 from app.live.toi_reader import ToiDelivery
-from app.ml.ipl_identities import identity_key
+from app.ml.ipl_identities import build_full_name_alias_index, first_last_key, identity_key
 from app.models.match_context import MatchContext
 
 
@@ -38,6 +38,15 @@ class BowlerShadowPredictor:
         try:
             self._load()
             player_id = self._name_to_id.get(identity_key(announced_bowler), "")
+            if not player_id:
+                # This file's `names` column only lists one Cricsheet-native
+                # spelling per player (e.g. "JJ Bumrah") -- real TOI
+                # announcements consistently use the common first-name form
+                # ("Jasprit Bumrah"), which never matches. Found 2026-08-22
+                # testing this predictor directly with real TOI-style names
+                # (every one failed) -- same root cause and same fix already
+                # applied to the two feature computers.
+                player_id = self._full_name_aliases.get(first_last_key(announced_bowler), "")
             if not player_id:
                 return self._unavailable("bowler_identity_unresolved")
             phase = self._phase(context.live.over)
@@ -134,6 +143,9 @@ class BowlerShadowPredictor:
         for item in players.itertuples(index=False):
             for name in str(item.names).split(" | "):
                 self._name_to_id[identity_key(name)] = str(item.player_id)
+        self._full_name_aliases = build_full_name_alias_index(
+            self.root / "data/external/cricsheet_player_styles.csv"
+        )
         features = pd.read_csv(
             self.artifact_dir / "bowler_phase_profiles.csv"
         )

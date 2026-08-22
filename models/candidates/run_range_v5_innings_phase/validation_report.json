@@ -1,0 +1,52 @@
+{
+  "candidate_version": "run_range_v5_innings_phase",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "note": "run_range_v4_batter_phase (currently live, 28.60% holdout hit rate) + batter_phase_innings_balls/runs_per_ball/boundary_rate/dismissal_rate -- 1st-innings (setting) vs 2nd-innings (chasing) split of the same phase, shrunk toward the innings-agnostic batter_phase rate. User-flagged hypothesis: powerplay batting approach differs when setting vs. chasing.",
+  "split": {
+    "train_rows": 111533,
+    "calibration_rows": 24714,
+    "holdout_rows": 36384,
+    "holdout_matches": 1011
+  },
+  "phase_temperatures": {
+    "powerplay": 1.1592034853661901,
+    "middle": 1.0437161509863244,
+    "death": 1.1336055564674203
+  },
+  "calibration": {
+    "raw_nll": 2.7761126149998945,
+    "phase_scaled_nll": 2.7734150556640946,
+    "hit_rate": 0.3052520838391195
+  },
+  "holdout": {
+    "v4_reference_hit_rate": 0.286,
+    "new_hit_rate": 0.28366864555848725,
+    "new_hit_rate_bowler_unknown": 0.2812774846086192,
+    "relative_improvement_over_v4": -0.008151588956338192
+  },
+  "holdout_phase_breakdown": {
+    "powerplay": {
+      "rows": 11903,
+      "hit_rate": 0.2613626816768882
+    },
+    "middle": {
+      "rows": 16858,
+      "hit_rate": 0.3051963459485111
+    },
+    "death": {
+      "rows": 7623,
+      "hit_rate": 0.27089072543618
+    }
+  },
+  "beats_v4_and_calibration_gate": false,
+  "batter_phase_innings_feature_importance_rank": {
+    "batter_phase_innings_balls": 26,
+    "batter_phase_innings_runs_per_ball_shrunk": 28,
+    "batter_phase_innings_boundary_rate_shrunk": 25,
+    "batter_phase_innings_dismissal_rate_shrunk": 21
+  },
+  "total_features": 57,
+  "decision": "reject_keep_research"
+}

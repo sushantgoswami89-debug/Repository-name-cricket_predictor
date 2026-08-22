@@ -1,0 +1,9 @@
+{
+  "model": "run_range_v4_batter_phase",
+  "artifacts": {
+    "sharp_range_model.pkl": "01b025cb3f8968e31f68a68fed38ec6fef47a9dde2abb08c14ad59d70402fc83",
+    "phase_temperatures.pkl": "dd0e22456a2f4f129727908b23cdd7a9d20c77f590289f2cad8fc3134830c0ee",
+    "feature_cols.pkl": "a198d0b4f196534aa9d7b6e8160efc6cfe76c132dc0e875831eb331e4d31ec20",
+    "categorical_cols.pkl": "cf7b3dd289abadc994ee35554ca132ffd5ef104e272d23cb7a57408c18c4b9d6"
+  }
+}

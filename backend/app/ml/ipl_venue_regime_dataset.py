@@ -14,6 +14,13 @@ from app.ml.ipl_venues import normalize_ipl_venue, team_venue_context
 
 MIN_PRIOR_INNINGS = 5
 DEFAULT_PAR_SCORE = 170.0
+# Venues with 1-4 prior innings used to fall all the way back to the
+# global average -- a hard cliff that throws away real (if thin) venue
+# signal. Blend the venue average toward the global average instead,
+# weighted by how many prior innings actually exist (a pseudo-count of
+# VENUE_SHRINKAGE_INNINGS "trust" in the global prior). At 0 innings this
+# collapses to the pure global/default value exactly as before.
+VENUE_SHRINKAGE_INNINGS = 8.0
 
 
 def venue_regime(par_score: float, prior_innings: int) -> str:
@@ -67,12 +74,24 @@ def _momentum_score(recent: deque[dict[str, int]]) -> float:
     )
 
 
-def build_ipl_venue_regime_dataset(project_root: Path) -> pd.DataFrame:
-    """Return one pre-over venue regime row for every regular IPL innings."""
+def build_ipl_venue_regime_dataset(
+    project_root: Path, *, scopes: tuple[str, ...] = ("ipl",)
+) -> pd.DataFrame:
+    """Return one pre-over venue regime row for every regular T20 innings.
+
+    `scopes` selects which `data/raw/cricsheet/<scope>` directories to draw
+    matches from. Defaults to IPL-only (unchanged, existing-caller-safe
+    behavior); pass `("ipl", "t20i")` to also include T20I matches. The
+    par-score-vs-venue-history math is format-agnostic; `team_venue_context`
+    (home/away/neutral) is IPL-franchise-specific and will read as neutral
+    for national teams, since T20I doesn't have a "home franchise venue"
+    concept the way IPL does.
+    """
     paths: list[tuple[str, Path]] = []
-    for path in (project_root / "data/raw/cricsheet/ipl").glob("*.json"):
-        raw = json.loads(path.read_text(encoding="utf-8"))
-        paths.append((str(raw["info"]["dates"][0]), path))
+    for scope in scopes:
+        for path in (project_root / "data/raw/cricsheet" / scope).glob("*.json"):
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            paths.append((str(raw["info"]["dates"][0]), path))
     paths.sort(key=lambda item: (item[0], item[1].name))
 
     totals: dict[str, list[int]] = defaultdict(list)
@@ -90,11 +109,15 @@ def build_ipl_venue_regime_dataset(project_root: Path) -> pd.DataFrame:
         ).strip()
         venue = normalize_ipl_venue(source_venue)
         prior = totals[venue]
-        if len(prior) >= MIN_PRIOR_INNINGS:
-            par_score = float(sum(prior) / len(prior))
-            par_source = "venue"
+        global_avg = float(sum(global_totals) / len(global_totals)) if global_totals else DEFAULT_PAR_SCORE
+        if prior:
+            venue_avg = float(sum(prior) / len(prior))
+            par_score = (
+                len(prior) * venue_avg + VENUE_SHRINKAGE_INNINGS * global_avg
+            ) / (len(prior) + VENUE_SHRINKAGE_INNINGS)
+            par_source = "venue" if len(prior) >= MIN_PRIOR_INNINGS else "venue_blended"
         elif global_totals:
-            par_score = float(sum(global_totals) / len(global_totals))
+            par_score = global_avg
             par_source = "global"
         else:
             par_score = DEFAULT_PAR_SCORE

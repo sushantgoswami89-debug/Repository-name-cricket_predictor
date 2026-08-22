@@ -1,0 +1,86 @@
+[
+  {
+    "config": "pooled, t20i_weight=1.0",
+    "train_rows": 111533,
+    "blended_hit_rate": 0.28449318381706246,
+    "ipl_hit_rate": 0.2419296987087518,
+    "t20i_hit_rate": 0.2921968319916905,
+    "ipl_bias": -0.3755132435505679,
+    "t20i_bias": -0.07265564184711183,
+    "phase_temperatures": {
+      "powerplay": 1.1538060291754397,
+      "middle": 1.0412772078927524,
+      "death": 1.1355216919110114
+    }
+  },
+  {
+    "config": "pooled, t20i_weight=0.5",
+    "train_rows": 111533,
+    "blended_hit_rate": 0.2850428759894459,
+    "ipl_hit_rate": 0.2419296987087518,
+    "t20i_hit_rate": 0.29284601402233185,
+    "ipl_bias": -0.4051890774428083,
+    "t20i_bias": -0.08741311433557244,
+    "phase_temperatures": {
+      "powerplay": 1.1608272336200403,
+      "middle": 1.0333642778484013,
+      "death": 1.1260174050417209
+    }
+  },
+  {
+    "config": "pooled, t20i_weight=0.3",
+    "train_rows": 111533,
+    "blended_hit_rate": 0.28397097625329815,
+    "ipl_hit_rate": 0.23959827833572453,
+    "t20i_hit_rate": 0.29200207738249806,
+    "ipl_bias": -0.4669728482391872,
+    "t20i_bias": -0.09264814666207996,
+    "phase_temperatures": {
+      "powerplay": 1.1810906070404341,
+      "middle": 1.0388980686676454,
+      "death": 1.124969226651855
+    }
+  },
+  {
+    "config": "pooled, t20i_weight=0.15",
+    "train_rows": 111533,
+    "blended_hit_rate": 0.2816622691292876,
+    "ipl_hit_rate": 0.24085365853658536,
+    "t20i_hit_rate": 0.2890482991430797,
+    "ipl_bias": -0.42220017585972386,
+    "t20i_bias": -0.07199710928584983,
+    "phase_temperatures": {
+      "powerplay": 1.2177220644908497,
+      "middle": 1.0624227177989687,
+      "death": 1.1655139437676934
+    }
+  },
+  {
+    "config": "IPL-only model (T20I excluded from training)",
+    "train_rows": 39442,
+    "blended_hit_rate": 0.2727847405452946,
+    "ipl_hit_rate": 0.2383428981348637,
+    "t20i_hit_rate": 0.2790184367696702,
+    "ipl_bias": -0.23723644221657864,
+    "t20i_bias": 0.20957284846504654,
+    "phase_temperatures": {
+      "powerplay": 1.4257807440597248,
+      "middle": 1.2035757631972952,
+      "death": 1.3249140639180215
+    }
+  },
+  {
+    "config": "T20I-only model (IPL excluded from training)",
+    "train_rows": 72091,
+    "blended_hit_rate": 0.28520778364116095,
+    "ipl_hit_rate": 0.2464131994261119,
+    "t20i_hit_rate": 0.29222929109322254,
+    "ipl_bias": -0.42106528382191116,
+    "t20i_bias": -0.013438521590852622,
+    "phase_temperatures": {
+      "powerplay": 1.212928762882538,
+      "middle": 1.0758030688654072,
+      "death": 1.2360096438242432
+    }
+  }
+]

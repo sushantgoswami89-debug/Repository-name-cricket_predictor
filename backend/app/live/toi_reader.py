@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from typing import Any
@@ -49,6 +50,23 @@ class ToiDelivery:
 
 
 @dataclass(frozen=True, slots=True)
+class ToiPlayer:
+    """One player's entry from TOI's Teams[].Players block.
+
+    ``role`` is TOI's own classification (``Batter``/``All-Rounder``/
+    ``Wicket Keeper``/``Bowler``), and ``position`` is the batting-order
+    slot (1-11) -- both already computed by TOI, not derived here.
+    ``confirm_xi`` is False for a probable/predicted lineup shown before
+    the official XI is confirmed (typically around toss time).
+    """
+
+    position: int
+    name: str
+    role: str
+    confirm_xi: bool
+
+
+@dataclass(frozen=True, slots=True)
 class ToiSnapshot:
     match_id: str
     match_format: str
@@ -68,6 +86,18 @@ class ToiSnapshot:
     competition: str = ""
     announced_bowler: str = ""
     announced_bowler_over: int = 0
+    # Best-effort enrichment from the same raw payload already fetched for
+    # match state -- never required for correctness, so a missing or
+    # malformed block degrades to the empty default rather than raising.
+    team_players: dict[str, tuple[ToiPlayer, ...]] = field(default_factory=dict)
+    toss_won_by: str = ""
+    toss_decision: str = ""
+    pitch_type: str = ""
+    pitch_surface: str = ""
+    weather_condition: str = ""
+    weather_humidity_pct: float | None = None
+    weather_temperature_c: float | None = None
+    weather_wind_speed_ms: float | None = None
     fetched_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -118,10 +148,26 @@ class ToiLiveReader:
 
     def fetch(self, url_or_id: str) -> ToiSnapshot:
         match_id = self.match_id_from_url(url_or_id)
+        # Real live latency matters here (a commentator needs the next
+        # prediction with as little delay as possible) -- measured a real
+        # fetch() at ~2.1s, almost entirely these three network calls run
+        # one after another even though none depends on another's result.
+        # Running them concurrently instead cuts total wall time to
+        # roughly the slowest single call, not the sum of all three.
         try:
-            raw = self._get_json(self.RAW_URL.format(match_id=match_id))
-            scorecard = self._get_json(self.SCORECARD_URL.format(match_id=match_id))
-            commentary = self._fetch_commentary(match_id, url_or_id)
+            with ThreadPoolExecutor(max_workers=3) as pool:
+                raw_future = pool.submit(
+                    self._get_json, self.RAW_URL.format(match_id=match_id)
+                )
+                scorecard_future = pool.submit(
+                    self._get_json, self.SCORECARD_URL.format(match_id=match_id)
+                )
+                commentary_future = pool.submit(
+                    self._fetch_commentary, match_id, url_or_id
+                )
+                raw = raw_future.result()
+                scorecard = scorecard_future.result()
+                commentary = commentary_future.result()
         except requests.RequestException as exc:
             raise ToiFeedError(
                 "TOI connection failed temporarily; no snapshot was accepted."
@@ -299,6 +345,12 @@ class ToiLiveReader:
         announced_bowler, announced_bowler_over = cls._announced_bowler(
             current, deliveries
         )
+        team_players = cls._team_players(raw)
+        toss_won_by, toss_decision = cls._toss(raw)
+        pitch_type, pitch_surface = cls._pitch(raw)
+        weather_condition, humidity_pct, temperature_c, wind_speed_ms = cls._weather(
+            raw
+        )
         innings_complete = (
             wickets >= 10
             or (target > 0 and score >= target)
@@ -324,6 +376,15 @@ class ToiLiveReader:
             competition=cls._competition_name(raw_match),
             announced_bowler=announced_bowler,
             announced_bowler_over=announced_bowler_over,
+            team_players=team_players,
+            toss_won_by=toss_won_by,
+            toss_decision=toss_decision,
+            pitch_type=pitch_type,
+            pitch_surface=pitch_surface,
+            weather_condition=weather_condition,
+            weather_humidity_pct=humidity_pct,
+            weather_temperature_c=temperature_c,
+            weather_wind_speed_ms=wind_speed_ms,
         )
 
     @classmethod
@@ -511,6 +572,107 @@ class ToiLiveReader:
             if value:
                 return value
         return ""
+
+    @staticmethod
+    def _team_players(raw: dict[str, Any]) -> dict[str, tuple[ToiPlayer, ...]]:
+        """Best-effort playing-XI extraction from raw["Teams"], keyed by
+        team full name so callers can look up with the same team-name
+        strings ToiSnapshot already uses (batting_team/bowling_team).
+        Never raises: a missing or malformed Teams block just means no
+        lineup is known yet (common before the XI is confirmed near toss)."""
+        teams = raw.get("Teams")
+        if not isinstance(teams, dict):
+            return {}
+        result: dict[str, tuple[ToiPlayer, ...]] = {}
+        for team in teams.values():
+            if not isinstance(team, dict):
+                continue
+            name = str(team.get("Name_Full", "")).strip()
+            players_raw = team.get("Players")
+            if not name or not isinstance(players_raw, dict):
+                continue
+            players: list[ToiPlayer] = []
+            for entry in players_raw.values():
+                if not isinstance(entry, dict):
+                    continue
+                try:
+                    position = int(entry.get("Position", 0))
+                except (TypeError, ValueError):
+                    continue
+                player_name = str(entry.get("Name_Full", "")).strip()
+                if not player_name:
+                    continue
+                players.append(
+                    ToiPlayer(
+                        position=position,
+                        name=player_name,
+                        role=str(entry.get("Role", "")).strip(),
+                        confirm_xi=bool(entry.get("Confirm_XI", False)),
+                    )
+                )
+            players.sort(key=lambda p: p.position)
+            result[name] = tuple(players)
+        return result
+
+    @staticmethod
+    def _toss(raw: dict[str, Any]) -> tuple[str, str]:
+        """Best-effort toss extraction. Tosswonby is a team INDEX ("1"/"2")
+        into the top-level raw["Teams"], not a name -- resolve it there.
+        Never raises."""
+        matchdetail = raw.get("Matchdetail")
+        if not isinstance(matchdetail, dict):
+            return "", ""
+        teams = raw.get("Teams")
+        won_by_index = str(matchdetail.get("Tosswonby", "")).strip()
+        won_by = ""
+        if won_by_index and isinstance(teams, dict):
+            team = teams.get(won_by_index)
+            if isinstance(team, dict):
+                won_by = str(team.get("Name_Full", "")).strip()
+        decision = str(matchdetail.get("Toss_elected_to", "")).strip().lower()
+        return won_by, decision
+
+    @staticmethod
+    def _pitch(raw: dict[str, Any]) -> tuple[str, str]:
+        """Best-effort pitch extraction from Matchdetail.Venue.Pitch_Detail
+        (a sibling of Matchdetail.Match, not nested inside it). Never
+        raises."""
+        matchdetail = raw.get("Matchdetail")
+        venue = matchdetail.get("Venue") if isinstance(matchdetail, dict) else None
+        pitch = venue.get("Pitch_Detail") if isinstance(venue, dict) else None
+        if not isinstance(pitch, dict):
+            return "", ""
+        return (
+            str(pitch.get("Pitch_Suited_For", "")).strip(),
+            str(pitch.get("Pitch_Surface", "")).strip(),
+        )
+
+    @staticmethod
+    def _weather(
+        raw: dict[str, Any],
+    ) -> tuple[str, float | None, float | None, float | None]:
+        """Best-effort weather extraction from
+        Matchdetail.Venue.Venue_Weather. TOI embeds units in the value
+        strings ("88%", "15.99C", "2.06 meter/sec") -- strip a leading
+        numeric prefix, degrading to None rather than raising when a
+        value doesn't parse."""
+        matchdetail = raw.get("Matchdetail")
+        venue = matchdetail.get("Venue") if isinstance(matchdetail, dict) else None
+        weather = venue.get("Venue_Weather") if isinstance(venue, dict) else None
+        if not isinstance(weather, dict):
+            return "", None, None, None
+        condition = str(weather.get("Weather", "")).strip()
+
+        def _leading_number(value: Any) -> float | None:
+            match = re.match(r"[-+]?\d+(?:\.\d+)?", str(value).strip())
+            return float(match.group()) if match else None
+
+        return (
+            condition,
+            _leading_number(weather.get("Humidity")),
+            _leading_number(weather.get("Temperature")),
+            _leading_number(weather.get("Wind_Speed")),
+        )
 
     @staticmethod
     def _scorecard_extras(details: str) -> dict[str, int]:
