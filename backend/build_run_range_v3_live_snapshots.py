@@ -32,11 +32,24 @@ key format (`player_id|phase`) as the existing
 chronological accumulator as the venue-agnostic career totals below, just
 also keyed by phase.
 
+2026-08-22, later same day: also builds per-(player, competition) batter
+AND bowler breakdowns (`run_range_v3_batter_competition_stats.json` /
+`_bowler_competition_stats.json`) for `run_range_v7_competition_prior` --
+every player prior-stat feature before this pooled a player's IPL and
+T20I history into one number, which a 20-player spot check found
+actively misleading for players with a large swing between competitions
+(e.g. MS Wade +31 strike-rate points in T20I vs IPL). Bowler tracking is
+new to this file (previously only in wicket_contract22's own snapshots) --
+added self-contained here rather than touching that file, since it's a
+different, competition-keyed cut of the same raw deliveries.
+
 Outputs:
-  data/live/run_range_v3_player_stats.json        -- canonical_player_id -> career totals
-  data/live/run_range_v3_batter_phase_stats.json  -- "player_id|phase" -> phase totals
-  data/live/run_range_v3_venue_stats.json         -- normalized venue -> par score state
-  data/live/run_range_v3_name_aliases.json        -- identity_key(name) -> canonical_player_id
+  data/live/run_range_v3_player_stats.json             -- canonical_player_id -> career totals
+  data/live/run_range_v3_batter_phase_stats.json       -- "player_id|phase" -> phase totals
+  data/live/run_range_v3_batter_competition_stats.json -- "player_id|competition" -> batter totals
+  data/live/run_range_v3_bowler_competition_stats.json -- "player_id|competition" -> bowler totals
+  data/live/run_range_v3_venue_stats.json              -- normalized venue -> par score state
+  data/live/run_range_v3_name_aliases.json             -- identity_key(name) -> canonical_player_id
 
 Re-run this periodically (e.g. after each new match completes) to keep the
 live snapshots current -- it is NOT auto-refreshed by the runtime.
@@ -57,25 +70,31 @@ def _empty_batter() -> dict[str, int]:
     return {"balls": 0, "runs": 0, "dots": 0, "boundaries": 0, "dismissals": 0}
 
 
+def _empty_bowler() -> dict[str, int]:
+    return {"balls": 0, "runs": 0, "dots": 0, "boundaries": 0, "wickets": 0}
+
+
 def build(root: Path) -> None:
     eligible = male_source_files(root)
-    paths: list[tuple[str, Path]] = []
+    paths: list[tuple[str, str, Path]] = []  # (match_date, scope, path)
     for scope in ("ipl", "t20i"):
         for path in (root / "data/raw/cricsheet" / scope).glob("*.json"):
             if path.name not in eligible:
                 continue
             raw = json.loads(path.read_text(encoding="utf-8"))
-            paths.append((str(raw["info"]["dates"][0]), path))
-    paths.sort(key=lambda item: (item[0], item[1].name))
+            paths.append((str(raw["info"]["dates"][0]), scope, path))
+    paths.sort(key=lambda item: (item[0], item[2].name))
     print(f"Processing {len(paths)} eligible matches chronologically...")
 
     batter_history: dict[str, dict[str, int]] = {}
     batter_phase_history: dict[str, dict[str, int]] = {}
+    batter_competition_history: dict[str, dict[str, int]] = {}
+    bowler_competition_history: dict[str, dict[str, int]] = {}
     venue_totals: dict[str, list[int]] = {}
     global_totals: list[int] = []
     name_aliases: dict[str, str] = {}  # identity_key(name) -> canonical_player_id
 
-    for i, (match_date, path) in enumerate(paths):
+    for i, (match_date, scope, path) in enumerate(paths):
         if i % 500 == 0:
             print(f"  ... {i}/{len(paths)}", flush=True)
         raw = json.loads(path.read_text(encoding="utf-8"))
@@ -92,6 +111,8 @@ def build(root: Path) -> None:
         regular_innings = [i for i in raw.get("innings", []) if not bool(i.get("super_over", False))]
         match_batter_events: list[tuple[str, dict[str, int]]] = []
         match_batter_phase_events: list[tuple[str, dict[str, int]]] = []
+        match_batter_competition_events: list[tuple[str, dict[str, int]]] = []
+        match_bowler_competition_events: list[tuple[str, dict[str, int]]] = []
         first_innings_total = 0
 
         for innings_number, innings in enumerate(regular_innings, start=1):
@@ -100,12 +121,14 @@ def build(root: Path) -> None:
                 phase = _phase(int(over.get("over", 0)) + 1)
                 for delivery in over.get("deliveries", []):
                     batter = canonical_player_id(str(delivery.get("batter") or ""), registry)
+                    bowler = canonical_player_id(str(delivery.get("bowler") or ""), registry)
                     batter_runs = int(delivery.get("runs", {}).get("batter", 0))
                     total_runs = int(delivery.get("runs", {}).get("total", 0))
                     innings_total += total_runs
                     legal = int(_is_legal(delivery))
                     boundary = int(batter_runs in {4, 6})
                     dot = int(total_runs == 0)
+                    wicket = int(bool(delivery.get("wickets")))
                     if legal:
                         event = {
                             "balls": 1, "runs": batter_runs, "dots": dot,
@@ -113,6 +136,11 @@ def build(root: Path) -> None:
                         }
                         match_batter_events.append((batter, event))
                         match_batter_phase_events.append((f"{batter}|{phase}", event))
+                        match_batter_competition_events.append((f"{batter}|{scope}", event))
+                        match_bowler_competition_events.append((
+                            f"{bowler}|{scope}",
+                            {"balls": 1, "runs": total_runs, "dots": dot, "boundaries": boundary, "wickets": wicket},
+                        ))
                     for dismissal in delivery.get("wickets", []):
                         if dismissal.get("kind") not in {"retired hurt", "obstructing the field"}:
                             dismissed = canonical_player_id(str(dismissal.get("player_out") or ""), registry)
@@ -122,6 +150,7 @@ def build(root: Path) -> None:
                             }
                             match_batter_events.append((dismissed, event))
                             match_batter_phase_events.append((f"{dismissed}|{phase}", event))
+                            match_batter_competition_events.append((f"{dismissed}|{scope}", event))
             if innings_number == 1:
                 first_innings_total = innings_total
 
@@ -138,6 +167,14 @@ def build(root: Path) -> None:
             profile = batter_phase_history.setdefault(name, _empty_batter())
             for field, value in event.items():
                 profile[field] += value
+        for name, event in match_batter_competition_events:
+            profile = batter_competition_history.setdefault(name, _empty_batter())
+            for field, value in event.items():
+                profile[field] += value
+        for name, event in match_bowler_competition_events:
+            profile = bowler_competition_history.setdefault(name, _empty_bowler())
+            for field, value in event.items():
+                profile[field] += value
 
     output_dir = root / "data/live"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -146,6 +183,12 @@ def build(root: Path) -> None:
     )
     (output_dir / "run_range_v3_batter_phase_stats.json").write_text(
         json.dumps(batter_phase_history, indent=2), encoding="utf-8"
+    )
+    (output_dir / "run_range_v3_batter_competition_stats.json").write_text(
+        json.dumps(batter_competition_history, indent=2), encoding="utf-8"
+    )
+    (output_dir / "run_range_v3_bowler_competition_stats.json").write_text(
+        json.dumps(bowler_competition_history, indent=2), encoding="utf-8"
     )
     venue_stats = {
         venue: {"par_score": sum(totals) / len(totals), "prior_innings": len(totals)}
@@ -163,8 +206,11 @@ def build(root: Path) -> None:
     )
     print(
         f"Wrote {len(batter_history)} player profiles, "
-        f"{len(batter_phase_history)} player-phase profiles, {len(venue_stats)-1} "
-        f"venue profiles, and {len(name_aliases)} name aliases to {output_dir}"
+        f"{len(batter_phase_history)} player-phase profiles, "
+        f"{len(batter_competition_history)} batter-competition profiles, "
+        f"{len(bowler_competition_history)} bowler-competition profiles, "
+        f"{len(venue_stats)-1} venue profiles, and {len(name_aliases)} name "
+        f"aliases to {output_dir}"
     )
 
 

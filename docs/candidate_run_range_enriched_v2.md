@@ -404,7 +404,57 @@ range-hit rate of **30.91%**, consistent with (marginally better than)
 the offline holdout's 28.60%, same pattern seen when v3 itself was first
 wired in.
 
+## Update 2026-08-22, competition-specific player priors: `run_range_v7_competition_prior` promoted to live
+
+Follow-up to `docs/finding_blended_holdout_masks_ipl_accuracy.md`'s band-
+width fix. User-flagged: a 20-player spot check of real IPL vs T20I
+career stats found ~zero population-level bias in batting strike rate
+(mean diff -0.33) but enormous player-to-player heterogeneity (stdev 13.8
+SR points -- MS Wade +31 SR points in T20I vs IPL, MV Boucher +28 in IPL
+vs T20I, no consistent direction). Every player prior-stat feature this
+codebase has ever used (`striker_prior_runs_per_ball` etc.) pools a
+player's IPL and T20I history into one number -- for players with swings
+this large, that pooled average actively misrepresents either competition
+specifically.
+
+Distinct from the band-width fix and from the rejected reweighting/
+separation hypotheses (those were about training ROWS; this is about
+each player's own FEATURE VALUE). Built
+`app/ml/player_competition_dataset.py`: raw per-(player, competition)
+rate, shrunk toward the pooled cross-competition rate at merge time
+(`weight = balls / (balls + 150)`, matching the eligibility bar used in
+the spot check).
+
+Merged onto `run_range_v4_batter_phase`, same architecture/split, single
+holdout evaluation:
+
+| | Blended | IPL | T20I |
+|---|---:|---:|---:|
+| v4 (previous) | 28.60% | 24.19% | 29.22% |
+| **v7 (this candidate)** | **28.75%** | **25.00%** | **29.43%** |
+
+Real gain on every split, not a tradeoff -- IPL +0.81pp (+3.4% relative),
+T20I also improved. Feature importance ranked 15th-34th of 60 features.
+
+**Wired into production**: `build_run_range_v3_live_snapshots.py`
+extended to emit `run_range_v3_batter_competition_stats.json` /
+`_bowler_competition_stats.json` (bowler tracking is new to this file --
+previously only existed in `wicket_contract22`'s own snapshots).
+`RunRangeV3FeatureComputer.compute()` takes a `competition` parameter
+("ipl"/"t20i") threaded from `PredictionEngine` via
+`rules["engine_family"]` (ODI maps to "t20i" -- not part of the trained
+population, falls back gracefully to the pooled rate). `ARTIFACT_MANIFEST.json`
+generated for the new candidate directory.
+
+**Validated end-to-end**: 208 tests pass. Replayed 20 fresh matches (10
+IPL + 10 T20I, `random.seed(2026)`) through the actual
+`VerifiedLivePredictionPipeline` with `competition` set the way real TOI
+data provides it -- **0 errors**, 674 predictions published, IPL matches
+confirmed getting `sharp_band_width=3` and T20I confirmed getting
+`width=2` (the earlier band-width fix, now confirmed still wired
+correctly on top of this change too).
+
 ## Status: live
 
-`run_range_v4_batter_phase` is the runs prediction `PredictionEngine()`
-returns as of this update.
+`run_range_v7_competition_prior` is the runs prediction
+`PredictionEngine()` returns as of this update.

@@ -1,0 +1,34 @@
+{
+  "candidate_version": "run_range_v7_competition_prior",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "note": "run_range_v4_batter_phase + competition-specific (IPL vs T20I) batter/bowler prior-stat features, shrunk toward the pooled cross-competition rate. Tests whether a player's own feature value should be split by competition, not just band width.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_run_range_v4_batter_phase": {
+    "blended": 0.286,
+    "ipl": 0.2419,
+    "t20i": 0.2922
+  },
+  "holdout": {
+    "blended_hit_rate": 0.2875439753737907,
+    "ipl_hit_rate": 0.25,
+    "t20i_hit_rate": 0.29433913269280704
+  },
+  "beats_v4_blended_and_calibration_gate": true,
+  "beats_v4_on_ipl_specifically": true,
+  "competition_prior_feature_importance_rank": {
+    "batter_competition_runs_per_ball_shrunk": 32,
+    "batter_competition_boundary_rate_shrunk": 34,
+    "batter_competition_dismissal_rate_shrunk": 31,
+    "batter_competition_balls": 25,
+    "bowler_competition_economy_shrunk": 23,
+    "bowler_competition_wicket_rate_shrunk": 27,
+    "bowler_competition_balls": 15
+  },
+  "total_features": 60,
+  "decision": "promote_candidate"
+}

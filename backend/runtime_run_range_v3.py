@@ -123,9 +123,12 @@ class RunRangeRuntimeV3:
         recent_boundary_rate: float,
         recent_wicket_rate: float,
         width: int = 2,
+        competition: str = "t20i",
     ) -> dict[str, Any]:
         """Compute the enriched feature row live, then return a calibrated
         inclusive band the same way runtime_v33.py does for its own model.
+        `competition` is "ipl" or "t20i" -- see
+        RunRangeV3FeatureComputer.compute's docstring.
         """
         phase = "powerplay" if over <= 6 else ("death" if over >= 16 else "middle")
         enriched = self._computer.compute(
@@ -134,7 +137,7 @@ class RunRangeRuntimeV3:
             batting_team=batting_team, phase=phase, over=over,
             wickets_down=wkts_down_before_over, current_rate=current_run_rate,
             required_rate=required_run_rate, is_chase=bool(is_chase),
-            bowler_name=bowler_name,
+            bowler_name=bowler_name, competition=competition,
         )
         row = {
             "over": over, "score_before_over": score_before_over,

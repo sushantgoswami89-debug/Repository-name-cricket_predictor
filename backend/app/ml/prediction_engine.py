@@ -1,12 +1,16 @@
 """
 Prediction Engine v3.
 
-Runs prediction is sourced from run_range_v4_batter_phase's own calibrated
-inclusive band -- run_range_enriched_v3_batting_style (28.49% holdout hit
-rate) plus a batter x phase profile (batters had no phase split anywhere
-in this codebase before; see app/ml/player_venue_phase_dataset.py's
-docstring), 28.60% holdout hit rate, beats v3 and the same promotion gate
-(see docs/candidate_run_range_enriched_v2.md).
+Runs prediction is sourced from run_range_v7_competition_prior's own
+calibrated inclusive band -- run_range_v4_batter_phase (28.60% blended
+holdout hit rate) plus competition-specific (IPL vs T20I) batter/bowler
+prior-stat features (see app/ml/player_competition_dataset.py's
+docstring: every player prior-stat feature before this pooled a player's
+IPL and T20I history into one number, misleading for players with a
+large swing between competitions). 28.75% blended / 25.00% IPL / 29.43%
+T20I holdout hit rate, beats v4 on every split (see
+docs/candidate_run_range_enriched_v2.md and
+docs/finding_blended_holdout_masks_ipl_accuracy.md).
 Wicket prediction is sourced from contract22_wicket_v2_batter_state's
 calibrated probability (see docs/candidate_ipl_wicket_v7_2_spell_features.md's
 2026-08-22 follow-ups): contract22_wicket_rigorous plus a new-batter/
@@ -35,7 +39,7 @@ from runtime_wicket_contract22 import WicketRuntimeContract22
 
 RUN_RANGE_V3_ARTIFACTS = (
     Path(__file__).resolve().parents[3]
-    / "models/candidates/run_range_v4_batter_phase"
+    / "models/candidates/run_range_v7_competition_prior"
 )
 WICKET_CONTRACT22_ARTIFACTS = (
     Path(__file__).resolve().parents[3]
@@ -51,11 +55,11 @@ class PredictionEngine:
         wicket_runtime: WicketRuntimeContract22 | None = None,
     ) -> None:
         self._repository = repository or ModelRepository()
-        # run_range_v4_batter_phase (28.60% holdout hit rate, beats
-        # run_range_enriched_v3_batting_style's 28.49% -- see
-        # docs/candidate_run_range_enriched_v2.md) replaces the
-        # runs_model.pkl prediction entirely: its own calibrated inclusive
-        # band becomes expected_range directly.
+        # run_range_v7_competition_prior (28.75% blended / 25.00% IPL /
+        # 29.43% T20I, beats run_range_v4_batter_phase's 28.60%/24.19%/
+        # 29.22% on every split -- see docs/candidate_run_range_enriched_v2.md)
+        # replaces the runs_model.pkl prediction entirely: its own
+        # calibrated inclusive band becomes expected_range directly.
         self._run_range_runtime = run_range_runtime or RunRangeRuntimeV3(RUN_RANGE_V3_ARTIFACTS)
         # contract22_wicket_v2_batter_state (Brier skill score 3.58% vs the
         # old models/wkt_model.pkl's own naive estimate of 1.95% -- see
@@ -264,7 +268,7 @@ class PredictionEngine:
             recent_wicket_rate=context.live.recent_wicket_rate,
         )
 
-        # 3. RUN RANGE (run_range_v4_batter_phase)
+        # 3. RUN RANGE (run_range_v7_competition_prior)
         # Replaces the old runs_model.pkl point-estimate + momentum-blend +
         # match_bias + fixed-width-bracket pipeline entirely: this model's
         # own calibrated inclusive band (from a full probability
@@ -286,6 +290,13 @@ class PredictionEngine:
         # width=2 rate -- one extra run of band width closes the gap
         # without touching the model at all.
         width = 3 if rules["engine_family"] == "ipl" else 2
+        # Also feeds run_range_v7_competition_prior's competition-specific
+        # player features (see app/ml/player_competition_dataset.py) --
+        # the model trained on "ipl"/"t20i" scopes only, so ODI (not part
+        # of that population) maps to "t20i" the same way it already
+        # falls back gracefully for a player with no competition-specific
+        # history at all (shrinks to the pooled rate, doesn't crash).
+        competition_scope = "ipl" if rules["engine_family"] == "ipl" else "t20i"
         is_chase = bool(context.live.is_chase)
         batting_team = (
             (context.bowling_first or context.team2)
@@ -319,6 +330,7 @@ class PredictionEngine:
             recent_boundary_rate=context.live.recent_boundary_rate,
             recent_wicket_rate=context.live.recent_wicket_rate,
             width=width,
+            competition=competition_scope,
         )
         low_bound = run_range[f"sharp_{width}_low"]
         high_bound = run_range[f"sharp_{width}_high"]
@@ -362,7 +374,7 @@ class PredictionEngine:
             confidence=confidence,
             analysis=analysis,
             metadata={
-                "run_model": "run_range_v4_batter_phase",
+                "run_model": "run_range_v7_competition_prior",
                 "wicket_model": "contract22_wicket_v2_batter_state",
                 "sharp_band_width": width,
                 "sharp_band_prob": round(run_range[f"sharp_{width}_prob"], 3),

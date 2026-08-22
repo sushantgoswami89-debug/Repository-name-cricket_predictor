@@ -449,7 +449,7 @@ def test_dynamic_confidence_changes_with_match_stability() -> None:
 
 
 def test_prediction_metadata_exposes_calibration_stages() -> None:
-    """Runs prediction is sourced from run_range_v4_batter_phase
+    """Runs prediction is sourced from run_range_v7_competition_prior
     (see docs/candidate_run_range_enriched_v2.md) -- its own calibrated
     inclusive band becomes expected_range directly, no momentum-blend/
     match_bias staging, so metadata no longer carries raw_runs/blended_runs/
@@ -467,7 +467,7 @@ def test_prediction_metadata_exposes_calibration_stages() -> None:
         )
     )
 
-    assert result.metadata["run_model"] == "run_range_v4_batter_phase"
+    assert result.metadata["run_model"] == "run_range_v7_competition_prior"
     assert 0.0 <= result.metadata["sharp_band_prob"] <= 1.0
     assert result.metadata["sharp_band_width"] == 2
     assert result.metadata["display_runs"] == result.predicted_runs

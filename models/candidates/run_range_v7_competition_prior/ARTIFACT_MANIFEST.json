@@ -1,0 +1,9 @@
+{
+  "model": "run_range_v7_competition_prior",
+  "artifacts": {
+    "sharp_range_model.pkl": "f2f6efa453adb51042ec635f536fe777decbd67101ec10b892808f0c8b7c29f1",
+    "phase_temperatures.pkl": "312be26888d63a74e88dcd0d760fea5ad03d75450d09770ec69b0758f64ffd67",
+    "feature_cols.pkl": "a3e23f76e6a321e2bfc6f0b99a1866c37d9f52a7b5b02d7f7b13c9396192165c",
+    "categorical_cols.pkl": "cf7b3dd289abadc994ee35554ca132ffd5ef104e272d23cb7a57408c18c4b9d6"
+  }
+}

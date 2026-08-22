@@ -98,6 +98,16 @@ class RunRangeV3FeatureComputer:
             json.loads(batter_phase_path.read_text(encoding="utf-8"))
             if batter_phase_path.is_file() else {}
         )
+        batter_competition_path = live_dir / "run_range_v3_batter_competition_stats.json"
+        self._batter_competition_stats: dict[str, dict[str, int]] = (
+            json.loads(batter_competition_path.read_text(encoding="utf-8"))
+            if batter_competition_path.is_file() else {}
+        )
+        bowler_competition_path = live_dir / "run_range_v3_bowler_competition_stats.json"
+        self._bowler_competition_stats: dict[str, dict[str, int]] = (
+            json.loads(bowler_competition_path.read_text(encoding="utf-8"))
+            if bowler_competition_path.is_file() else {}
+        )
         alias_path = live_dir / "run_range_v3_name_aliases.json"
         self._name_aliases: dict[str, str] = (
             json.loads(alias_path.read_text(encoding="utf-8")) if alias_path.is_file() else {}
@@ -200,6 +210,33 @@ class RunRangeV3FeatureComputer:
             "batter_phase_dismissal_rate": profile["dismissals"] / balls,
         }
 
+    SHRINKAGE_BALLS = 150  # matches train_run_range_v7_competition_prior.py
+
+    def _batter_competition(self, player_id: str, competition: str, pooled: dict[str, float]) -> dict[str, float]:
+        profile = self._batter_competition_stats.get(
+            f"{player_id}|{competition}", {"balls": 0, "runs": 0, "dots": 0, "boundaries": 0, "dismissals": 0}
+        )
+        balls = profile["balls"]
+        weight = balls / (balls + self.SHRINKAGE_BALLS)
+        return {
+            "batter_competition_balls": balls,
+            "batter_competition_runs_per_ball_shrunk": weight * (profile["runs"] / max(1, balls)) + (1 - weight) * pooled["runs_per_ball"],
+            "batter_competition_boundary_rate_shrunk": weight * (profile["boundaries"] / max(1, balls)) + (1 - weight) * pooled["boundary_rate"],
+            "batter_competition_dismissal_rate_shrunk": weight * (profile["dismissals"] / max(1, balls)) + (1 - weight) * pooled["dismissal_rate"],
+        }
+
+    def _bowler_competition(self, player_id: str, competition: str, pooled_economy_per_ball: float, pooled_wicket_rate: float) -> dict[str, float]:
+        profile = self._bowler_competition_stats.get(
+            f"{player_id}|{competition}", {"balls": 0, "runs": 0, "dots": 0, "boundaries": 0, "wickets": 0}
+        )
+        balls = profile["balls"]
+        weight = balls / (balls + self.SHRINKAGE_BALLS)
+        return {
+            "bowler_competition_balls": balls,
+            "bowler_competition_economy_shrunk": weight * (profile["runs"] / max(1, balls)) + (1 - weight) * pooled_economy_per_ball,
+            "bowler_competition_wicket_rate_shrunk": weight * (profile["wickets"] / max(1, balls)) + (1 - weight) * pooled_wicket_rate,
+        }
+
     def _venue_state(self, venue_name: str) -> dict[str, Any]:
         # Mirrors build_ipl_venue_regime_dataset's fallback exactly:
         # venue_prior_innings is always this VENUE's own count (0 if never
@@ -264,6 +301,7 @@ class RunRangeV3FeatureComputer:
         required_rate: float,
         is_chase: bool,
         bowler_name: str = "",
+        competition: str = "t20i",
     ) -> dict[str, Any]:
         """`deliveries` are this innings' verified deliveries so far, sorted
         (over, ball) ascending -- e.g. `LiveDeliveryVerifier.accepted.values()`,
@@ -273,6 +311,11 @@ class RunRangeV3FeatureComputer:
         bowler if known -- often isn't in real live serving, in which case
         the bowler-dependent features below degrade to their unknown
         defaults, same convention as WicketContract22FeatureComputer.
+        `competition` is "ipl" or "t20i" (the two scopes this model
+        trained on -- see run_range_v7_competition_prior.py); a player
+        with no history in the given competition gracefully falls back to
+        their pooled cross-competition rate via shrinkage, so an
+        unresolved/default value here degrades safely rather than crashing.
         """
 
         striker_id = self._resolve_player_id(striker_name, registry)
@@ -342,6 +385,12 @@ class RunRangeV3FeatureComputer:
         venue_state = self._venue_state(venue_name)
         bowler_career = self._bowler_career(bowler_id, phase)
         striker_phase = self._batter_phase(striker_id, phase)
+        striker_competition = self._batter_competition(striker_id, competition, striker_prior)
+        bowler_competition = self._bowler_competition(
+            bowler_id, competition,
+            bowler_career["bowl_hist_avg_runs_conceded"] / 6.0,
+            bowler_career["bowl_hist_wicket_rate"],
+        )
 
         return {
             "active_batter_state": "new_batter" if is_new else "established_pair",
@@ -380,4 +429,11 @@ class RunRangeV3FeatureComputer:
             "bowler_match_overs_bowled": bowler_balls_this_innings / 6.0,
             "bowler_spell_over_number": spell_over_number,
             "bowler_is_return_spell": is_return_spell,
+            "batter_competition_balls": striker_competition["batter_competition_balls"],
+            "batter_competition_runs_per_ball_shrunk": striker_competition["batter_competition_runs_per_ball_shrunk"],
+            "batter_competition_boundary_rate_shrunk": striker_competition["batter_competition_boundary_rate_shrunk"],
+            "batter_competition_dismissal_rate_shrunk": striker_competition["batter_competition_dismissal_rate_shrunk"],
+            "bowler_competition_balls": bowler_competition["bowler_competition_balls"],
+            "bowler_competition_economy_shrunk": bowler_competition["bowler_competition_economy_shrunk"],
+            "bowler_competition_wicket_rate_shrunk": bowler_competition["bowler_competition_wicket_rate_shrunk"],
         }
