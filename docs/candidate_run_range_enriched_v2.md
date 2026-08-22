@@ -326,7 +326,7 @@ check what replaced them). Replayed the live pipeline
 27.3% (684 overs) — within normal sampling variance of the validated
 28.49%/31% figures, not a red flag.
 
-## Status: live
+## Status at this point: live (superseded twice since -- see the final "Status: live" at the bottom of this doc for what's actually live now)
 
 `run_range_enriched_v3_batting_style` is the runs prediction
 `PredictionEngine()` returns as of this update. `models/runs_model.pkl`
