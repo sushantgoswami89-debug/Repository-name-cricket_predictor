@@ -56,8 +56,12 @@ class EngineRouter:
             powerplay_overs=6,
             death_starts=16,
             base_features=T20_BASE_FEATURES,
+            # impact_player_state was implemented and tested against both
+            # live models (run-range and wicket) on real 2025+ holdout data
+            # and found to add no signal to either -- see
+            # docs/finding_ipl_impact_player_no_signal.md. Removed from
+            # this tuple rather than left as a stale placeholder.
             extension_features=(
-                "impact_player_state",
                 "strategic_timeout_state",
                 "ipl_team_strategy",
             ),

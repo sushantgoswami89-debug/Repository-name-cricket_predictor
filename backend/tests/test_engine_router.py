@@ -16,8 +16,8 @@ def test_ipl_inherits_t20_core_and_adds_competition_features() -> None:
     engine = EngineRouter.resolve("T20", "Indian Premier League")
     assert engine.family is EngineFamily.IPL
     assert engine.base_features == EngineRouter.resolve("T20I").base_features
-    assert "impact_player_state" in engine.extension_features
     assert "strategic_timeout_state" in engine.extension_features
+    assert "ipl_team_strategy" in engine.extension_features
 
 
 def test_odi_is_separate_fifty_over_engine() -> None:

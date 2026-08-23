@@ -1,0 +1,41 @@
+{
+  "candidate_version": "contract22_wicket_v6_impact_player",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v2_batter_state + IPL impact-player state (used/available/role/overs-since, leakage-safe as-of-start-of-over). Reference: v2 scored AUC 0.6081/0.6072 (known/unknown), Brier ~0.2049 (Platt) on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v2_batter_state": {
+    "auc_known": 0.6081,
+    "auc_unknown": 0.6072,
+    "brier_platt": 0.2049
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6074515621780783,
+    "brier_platt": 0.20493679004429757,
+    "brier_uncalibrated": 0.20498253515311587,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6053406046477482,
+    "brier_platt": 0.20520818133861368,
+    "brier_uncalibrated": 0.20565129446949107,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384
+  },
+  "impact_feature_importance_rank": {
+    "ipl_impact_rule_era": 41,
+    "ipl_impact_batting_used": 43,
+    "ipl_impact_bowling_used": 44,
+    "ipl_impact_batting_available": 42,
+    "ipl_impact_bowling_available": 45,
+    "ipl_impact_batting_role": 38,
+    "ipl_impact_bowling_role": 49,
+    "ipl_impact_batting_overs_since": 32,
+    "ipl_impact_bowling_overs_since": 35
+  },
+  "total_features": 49
+}
