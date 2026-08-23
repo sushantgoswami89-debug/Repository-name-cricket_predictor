@@ -38,7 +38,7 @@ from sklearn.metrics import brier_score_loss, roc_auc_score
 from app.ml.ipl_phase_moe_dataset import build_ipl_phase_moe_features
 from app.ml.ipl_venue_regime_dataset import build_ipl_venue_regime_dataset
 from app.ml.match_winner_dataset import build_match_winner_dataset
-from app.ml.partnership_dataset import build_partnership_dataset
+from app.ml.partnership_dataset import build_partnership_dataset, build_partnership_trend_dataset
 from app.ml.recency_weighted_prior_dataset import (
     build_batter_phase_recency_dataset, build_recency_weighted_prior_dataset,
 )
@@ -74,6 +74,7 @@ TEAM_H2H_FEATURES = ["h2h_matches_played", "h2h_batting_team_win_rate_shrunk"]
 TOSS_FEATURES = ["toss_decision", "batting_team_won_toss"]
 VENUE_CONTEXT_FEATURES = ["batting_team_venue_context"]
 VENUE_RECENCY_FEATURES = ["venue_recency_par_score", "venue_recency_prior_innings"]
+PARTNERSHIP_TREND_FEATURES = ["partnership_recent_run_rate", "partnership_trend"]
 
 FEATURES = (
     BASE_FEATURES + BATTER_FEATURES + BOWLER_FEATURES + MATCHUP_FEATURES
@@ -128,11 +129,10 @@ def _metrics(actual: np.ndarray, proba: np.ndarray) -> dict:
     }
 
 
-def main() -> None:
-    root = Path(__file__).resolve().parents[1]
-    output = root / "models/candidates" / VERSION
-    output.mkdir(parents=True, exist_ok=True)
-
+def build_dataset(root: Path) -> pd.DataFrame:
+    """Shared by main() and by anything re-evaluating/re-tuning this
+    target (train/calibration/holdout split + is_ipl already applied) --
+    factored out so those callers don't duplicate this merge logic."""
     eligible = male_source_files(root)
     base = pd.read_csv(root / "data/candidates/v3/verified_training_overs.csv")
     base = base[base["source_file"].isin(eligible)].copy()
@@ -146,6 +146,7 @@ def main() -> None:
     moe = build_ipl_phase_moe_features(root, canonical_identities=True, scopes=("ipl", "t20i"))
     recency = build_recency_weighted_prior_dataset(root, scopes=("ipl", "t20i"))
     partnership = build_partnership_dataset(root, scopes=("ipl", "t20i"))
+    partnership_trend = build_partnership_trend_dataset(root, scopes=("ipl", "t20i"))
     batter_phase_recency = build_batter_phase_recency_dataset(root, scopes=("ipl", "t20i"))
     team_composition = build_team_composition_dataset(root, scopes=("ipl", "t20i"))
     print("Building the contextual signals rejected for over-level prediction "
@@ -167,6 +168,7 @@ def main() -> None:
     data = data.merge(moe[keys + STATE_FEATURES], on=keys, how="inner", validate="one_to_one")
     data = data.merge(recency[keys + RECENCY_FEATURES], on=keys, how="inner", validate="one_to_one")
     data = data.merge(partnership[keys + PARTNERSHIP_FEATURES], on=keys, how="inner", validate="one_to_one")
+    data = data.merge(partnership_trend[keys + PARTNERSHIP_TREND_FEATURES], on=keys, how="inner", validate="one_to_one")
     data = data.merge(batter_phase_recency[keys + BATTER_PHASE_RECENCY_FEATURES], on=keys, how="inner", validate="one_to_one")
     data = data.merge(team_composition[keys + TEAM_COMPOSITION_FEATURES], on=keys, how="inner", validate="one_to_one")
     data = data.merge(team_h2h[keys + TEAM_H2H_FEATURES], on=keys, how="left", validate="one_to_one")
@@ -181,6 +183,26 @@ def main() -> None:
 
     ipl_files = {p.name for p in (root / "data/raw/cricsheet/ipl").glob("*.json")}
     data["is_ipl"] = data["source_file"].isin(ipl_files)
+    return data
+
+
+DEFAULT_LGBM_PARAMS = dict(
+    objective="binary", n_estimators=300, learning_rate=0.03, max_depth=5,
+    num_leaves=20, subsample=0.8, colsample_bytree=0.8, random_state=42, verbose=-1,
+)
+
+
+def main(
+    lgbm_params: dict | None = None,
+    extra_features: list[str] | None = None,
+    version: str = VERSION,
+) -> dict:
+    root = Path(__file__).resolve().parents[1]
+    output = root / "models/candidates" / version
+    output.mkdir(parents=True, exist_ok=True)
+
+    data = build_dataset(root)
+    features = FEATURES + (extra_features or [])
 
     train = data[data["match_date"] <= "2023-12-31"].reset_index(drop=True)
     calibration = data[data["match_date"].dt.year == 2024].reset_index(drop=True)
@@ -195,15 +217,27 @@ def main() -> None:
     baseline_model.fit(train[BASELINE_FEATURES], train["batting_team_won"])
     baseline_holdout_proba = baseline_model.predict_proba(holdout[BASELINE_FEATURES])[:, 1]
 
-    model = lgb.LGBMClassifier(
-        objective="binary", n_estimators=300, learning_rate=0.03, max_depth=5,
-        num_leaves=20, subsample=0.8, colsample_bytree=0.8, random_state=42, verbose=-1,
-    )
-    model.fit(frame(train, bowler_known=True), train["batting_team_won"], categorical_feature=CATEGORICAL)
+    def frame_local(d: pd.DataFrame, bowler_known: bool) -> pd.DataFrame:
+        result = d[features].copy()
+        if not bowler_known:
+            for col in BOWLER_FEATURES + MATCHUP_FEATURES + [
+                "bowler_recency_balls", "bowler_recency_economy", "bowler_recency_wicket_rate",
+            ]:
+                if col in CATEGORICAL:
+                    result[col] = "__UNKNOWN__"
+                else:
+                    result[col] = 0.0
+        for column in CATEGORICAL:
+            result[column] = result[column].fillna("__UNKNOWN__").astype("category")
+        return result
+
+    params = {**DEFAULT_LGBM_PARAMS, **(lgbm_params or {})}
+    model = lgb.LGBMClassifier(**params)
+    model.fit(frame_local(train, bowler_known=True), train["batting_team_won"], categorical_feature=CATEGORICAL)
 
     def evaluate(bowler_known: bool) -> dict:
-        calibration_raw = model.predict_proba(frame(calibration, bowler_known))[:, 1]
-        holdout_raw = model.predict_proba(frame(holdout, bowler_known))[:, 1]
+        calibration_raw = model.predict_proba(frame_local(calibration, bowler_known))[:, 1]
+        holdout_raw = model.predict_proba(frame_local(holdout, bowler_known))[:, 1]
         actual_cal = calibration["batting_team_won"].to_numpy()
         actual = holdout["batting_team_won"].to_numpy()
 
@@ -233,9 +267,9 @@ def main() -> None:
     # (as it should be -- T20 is highly random in the powerplay) and
     # sharpens toward the death overs (as real win-probability models do).
     by_phase = {}
-    holdout_raw_known = model.predict_proba(frame(holdout, bowler_known=True))[:, 1]
+    holdout_raw_known = model.predict_proba(frame_local(holdout, bowler_known=True))[:, 1]
     platt_known = _platt_fit(
-        model.predict_proba(frame(calibration, bowler_known=True))[:, 1],
+        model.predict_proba(frame_local(calibration, bowler_known=True))[:, 1],
         calibration["batting_team_won"].to_numpy(),
     )
     holdout_platt_known = _platt_apply(platt_known, holdout_raw_known)
@@ -243,11 +277,11 @@ def main() -> None:
         mask = (holdout["phase"].astype(str) == phase_name).to_numpy()
         by_phase[phase_name] = _metrics(holdout_actual[mask], holdout_platt_known[mask])
 
-    importances = sorted(zip(FEATURES, model.feature_importances_), key=lambda x: -x[1])
+    importances = sorted(zip(features, model.feature_importances_), key=lambda x: -x[1])
     importance_rank = {name: rank + 1 for rank, (name, _) in enumerate(importances)}
 
     report = {
-        "candidate_version": VERSION,
+        "candidate_version": version,
         "candidate_only": True,
         "production_changed": False,
         "note": (
@@ -269,19 +303,21 @@ def main() -> None:
         "contextual_feature_importance_rank": {
             f: importance_rank[f] for f in (TEAM_H2H_FEATURES + TOSS_FEATURES + VENUE_CONTEXT_FEATURES + VENUE_RECENCY_FEATURES)
         },
-        "total_features": len(FEATURES),
+        "total_features": len(features),
+        "lgbm_params": params,
         "beats_3feature_baseline": bool(ceiling["auc"] > baseline_metrics["auc"]),
     }
     import joblib
 
-    calibration_raw_prod = model.predict_proba(frame(calibration, bowler_known=True))[:, 1]
+    calibration_raw_prod = model.predict_proba(frame_local(calibration, bowler_known=True))[:, 1]
     production_calibrator = _platt_fit(calibration_raw_prod, calibration["batting_team_won"].to_numpy())
     joblib.dump(model, output / "match_winner_model.pkl")
     joblib.dump(production_calibrator, output / "match_winner_calibrator.pkl")
-    joblib.dump(FEATURES, output / "feature_cols.pkl")
+    joblib.dump(features, output / "feature_cols.pkl")
     joblib.dump(CATEGORICAL, output / "categorical_cols.pkl")
     (output / "validation_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2))
+    return report
 
 
 if __name__ == "__main__":

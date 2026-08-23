@@ -27,6 +27,18 @@
       "accuracy": 0.7753125725466786
     }
   },
+  "t20i_full_member_vs_associate": {
+    "full_member_international": {
+      "matches": 141,
+      "rows": 5274,
+      "accuracy": 0.7398558968524839
+    },
+    "associate_involved": {
+      "matches": 688,
+      "rows": 24879,
+      "accuracy": 0.7828288918364886
+    }
+  },
   "confident_predictions_ge70pct_or_le30pct": {
     "rows": 21835,
     "share_of_holdout": 0.6134633214396089,

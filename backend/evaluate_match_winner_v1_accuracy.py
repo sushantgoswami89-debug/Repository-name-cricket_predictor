@@ -7,6 +7,19 @@ accuracy overall, by phase, by IPL/T20I, and by confidence bucket (a
 model that's only confident when it's actually more likely to be right
 is doing its job even if overall accuracy looks modest near 50/50 early
 in a match).
+
+Also splits T20I further into full-member-international vs
+associate-involved matches (2026-08-23): the blended "t20i" bucket is
+heavily weighted toward associate/minor-nation fixtures -- 688 of 829
+matches in the 2025+ holdout involve at least one associate nation, only
+141 are genuine full-member internationals. Checking this directly
+(same "don't trust a blended number" practice as the earlier IPL
+run-range finding) found a real ~4.3-point gap: full-member
+internationals score 74.0% accuracy vs associate-involved matches at
+78.3% -- associate fixtures are often more lopsided (bigger skill gaps,
+easier to call), while genuine contests between full-member sides are
+closer and harder, similar in shape to why IPL (69.6%) is harder than
+the blended T20I average.
 """
 
 from __future__ import annotations
@@ -121,6 +134,51 @@ by_competition = {
     },
 }
 
+# T20I split further: does the blended t20i number above mask a gap
+# between genuine full-member internationals and associate/minor-nation
+# fixtures? See this module's docstring.
+FULL_MEMBER_NATIONS = {
+    "India", "Pakistan", "Australia", "England", "New Zealand",
+    "South Africa", "West Indies", "Sri Lanka", "Bangladesh",
+    "Zimbabwe", "Afghanistan", "Ireland",
+}
+
+
+def _is_full_member_international(source_file: str) -> bool:
+    for scope in ("t20i", "ipl"):
+        path = root / "data/raw/cricsheet" / scope / source_file
+        if path.exists():
+            teams = json.loads(path.read_text(encoding="utf-8"))["info"].get("teams", [])
+            return len(teams) == 2 and all(t in FULL_MEMBER_NATIONS for t in teams)
+    return False
+
+
+t20i_source_files = holdout.loc[~holdout_is_ipl, "source_file"].unique()
+fm_lookup = {sf: _is_full_member_international(sf) for sf in t20i_source_files}
+is_fm_row = holdout["source_file"].map(fm_lookup).fillna(False).astype(bool).to_numpy()
+t20i_mask = np.logical_not(holdout_is_ipl)
+fm_row_mask = t20i_mask & is_fm_row
+assoc_row_mask = t20i_mask & np.logical_not(is_fm_row)
+
+t20i_split = {
+    "full_member_international": {
+        "matches": int(sum(1 for v in fm_lookup.values() if v)),
+        "rows": int(fm_row_mask.sum()),
+        "accuracy": (
+            float(accuracy_score(holdout_actual[fm_row_mask], predicted[fm_row_mask]))
+            if fm_row_mask.sum() else None
+        ),
+    },
+    "associate_involved": {
+        "matches": int(sum(1 for v in fm_lookup.values() if not v)),
+        "rows": int(assoc_row_mask.sum()),
+        "accuracy": (
+            float(accuracy_score(holdout_actual[assoc_row_mask], predicted[assoc_row_mask]))
+            if assoc_row_mask.sum() else None
+        ),
+    },
+}
+
 confident_mask = (proba >= 0.7) | (proba <= 0.3)
 confident_accuracy = {
     "rows": int(confident_mask.sum()),
@@ -152,6 +210,7 @@ report = {
     "overall_accuracy": overall_accuracy,
     "accuracy_by_phase": by_phase,
     "accuracy_by_competition": by_competition,
+    "t20i_full_member_vs_associate": t20i_split,
     "confident_predictions_ge70pct_or_le30pct": confident_accuracy,
     "very_confident_predictions_ge85pct_or_le15pct": very_confident_accuracy,
     "late_chase_overs18to20_accuracy": late_chase_accuracy,
