@@ -11,35 +11,35 @@
     "holdout_matches": 1011
   },
   "phase_temperatures": {
-    "powerplay": 1.1589287976825577,
-    "middle": 1.0409065554216756,
-    "death": 1.1323487467702906
+    "powerplay": 1.1588567482304302,
+    "middle": 1.041960168897357,
+    "death": 1.1320594050773103
   },
   "calibration": {
-    "raw_nll": 2.7759578005536056,
-    "phase_scaled_nll": 2.7733067870450987,
-    "hit_rate": 0.3039572711823258
+    "raw_nll": 2.775908570734368,
+    "phase_scaled_nll": 2.773254723088953,
+    "hit_rate": 0.305980415958566
   },
   "holdout": {
     "old_v32_baseline_hit_rate": 0.2728246539222149,
     "v33_accepted_hit_rate": 0.28103713469567126,
-    "new_hit_rate": 0.2880386983289358,
-    "new_hit_rate_bowler_unknown": 0.2822119613016711,
-    "relative_improvement_over_v32": 0.05576491782541983,
-    "relative_improvement_over_v33": 0.02491330421812895
+    "new_hit_rate": 0.2877638522427441,
+    "new_hit_rate_bowler_unknown": 0.2811400615655233,
+    "relative_improvement_over_v32": 0.05475750855268571,
+    "relative_improvement_over_v33": 0.023935333507997206
   },
   "holdout_phase_breakdown": {
     "powerplay": {
       "rows": 11903,
-      "hit_rate": 0.2636310173905738
+      "hit_rate": 0.26581534067041923
     },
     "middle": {
       "rows": 16858,
-      "hit_rate": 0.31112824771621783
+      "hit_rate": 0.30875548700913513
     },
     "death": {
       "rows": 7623,
-      "hit_rate": 0.27508854781582054
+      "hit_rate": 0.2756132756132756
     }
   },
   "beats_v32_baseline_and_calibration_gate": true,

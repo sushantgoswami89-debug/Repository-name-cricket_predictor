@@ -81,5 +81,16 @@
     "venue_recency_prior_innings": 15
   },
   "total_features": 68,
+  "lgbm_params": {
+    "objective": "binary",
+    "n_estimators": 300,
+    "learning_rate": 0.03,
+    "max_depth": 5,
+    "num_leaves": 20,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "random_state": 42,
+    "verbose": -1
+  },
   "beats_3feature_baseline": true
 }
