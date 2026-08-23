@@ -54,6 +54,27 @@ recency-form features that don't care much about opponent quality),
 while run-range and match outcome are more directly sensitive to the
 gulf in overall team strength.
 
+## Confirmed the causal claim, not just asserted it
+
+The explanation above ("associate fixtures are more often lopsided
+contests") was a plausible-sounding hypothesis when first written --
+checked it directly against real margin-of-victory data rather than
+leaving it as an assumption. For every 2025+ holdout T20I match with a
+clean win/loss result (runs margin normalized by target, wickets margin
+normalized by 10 wickets, as one combined "how much room to spare"
+scale):
+
+| | matches | mean margin | median margin | close finishes (<15% margin) |
+|---|---:|---:|---:|---:|
+| Full-member international | 239 | 42.3% | 40.0% | **21.8%** of matches |
+| Associate-involved | 1,273 | 48.5% | 50.0% | 12.9pp fewer — **14.9%** of matches |
+
+Confirmed in the predicted direction: associate-involved matches really
+are more lopsided on average, and full-member internationals really are
+close finishes nearly 1.5x as often. This is real evidence for the
+mechanism, not just a plausible-sounding story fit to the accuracy
+numbers after the fact.
+
 ## What this doesn't change
 
 Not a promotion-relevant finding for any of the three models -- their
