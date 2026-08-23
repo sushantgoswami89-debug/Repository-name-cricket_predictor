@@ -138,7 +138,29 @@ No retroactive re-litigation of the rejected toss/home-away/H2H/venue-
 recency findings for those two models; those rejections stand on their
 own merits for their own targets. `match_winner_v1` is a first cut, not
 separately hyperparameter-tuned against this specific target -- reused
-the wicket line's LightGBM settings directly. A natural next step,
-untested here: does the same phase-by-phase honesty extend to the very
-final overs of a chase (over 19-20), where win probability should
-approach 0 or 1 almost deterministically -- not checked in this pass.
+the wicket line's LightGBM settings directly.
+
+## Follow-up: real classification accuracy, not just AUC
+
+AUC measures ranking quality, not "how often does it call the right
+winner" -- a more intuitive question, and the one a user actually asks.
+`evaluate_match_winner_v1_accuracy.py` answers it directly: loads the
+already-trained model/calibrator (no retrain) against the exact same
+2025+ holdout, at a plain 0.5 threshold.
+
+**Overall: 76.3% correct-winner accuracy** across the whole match (over
+1 through over 20). Sharpens through the match exactly as the AUC
+progression predicted: powerplay 71.2% -> middle 77.9% -> death 80.9%.
+IPL harder than T20I (69.6% vs 77.5%), consistent with the AUC finding
+(closer, more competitive IPL fixtures).
+
+**Confidence is doing real work, not just noise**: when the model calls
+a confident probability (>=70% or <=30%, 61% of all predictions),
+accuracy is 87.3%. At very confident (>=85% or <=15%, 35% of
+predictions), accuracy is 95.1%.
+
+**Answers the open question from the section above**: late-chase overs
+18-20 hit **91.7% accuracy** -- the model does correctly approach
+near-certainty by the death overs of a chase, not just on the aggregate
+AUC number but on the actual call it would make live. Full report:
+`models/candidates/match_winner_v1/accuracy_report.json`.

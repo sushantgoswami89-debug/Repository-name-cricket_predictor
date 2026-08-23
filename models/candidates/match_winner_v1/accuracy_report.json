@@ -1,0 +1,44 @@
+{
+  "candidate_version": "match_winner_v1",
+  "note": "Classification accuracy (correct winner called, 0.5 threshold) on the exact same 2025+ holdout as the AUC report -- not a retrain, same model/calibrator artifacts.",
+  "holdout_rows": 35593,
+  "overall_accuracy": 0.7632399629140562,
+  "accuracy_by_phase": {
+    "powerplay": {
+      "rows": 11605,
+      "accuracy": 0.7115898319689788
+    },
+    "middle": {
+      "rows": 16525,
+      "accuracy": 0.7790015128593041
+    },
+    "death": {
+      "rows": 7463,
+      "accuracy": 0.8086560364464692
+    }
+  },
+  "accuracy_by_competition": {
+    "ipl": {
+      "rows": 5440,
+      "accuracy": 0.6963235294117647
+    },
+    "t20i": {
+      "rows": 30153,
+      "accuracy": 0.7753125725466786
+    }
+  },
+  "confident_predictions_ge70pct_or_le30pct": {
+    "rows": 21835,
+    "share_of_holdout": 0.6134633214396089,
+    "accuracy": 0.872544080604534
+  },
+  "very_confident_predictions_ge85pct_or_le15pct": {
+    "rows": 12452,
+    "share_of_holdout": 0.34984407046329336,
+    "accuracy": 0.9510921940250562
+  },
+  "late_chase_overs18to20_accuracy": {
+    "rows": 1562,
+    "accuracy": 0.9174135723431498
+  }
+}
