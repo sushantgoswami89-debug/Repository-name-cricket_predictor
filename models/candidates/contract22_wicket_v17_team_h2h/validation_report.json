@@ -1,0 +1,61 @@
+{
+  "candidate_version": "contract22_wicket_v17_team_h2h",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v16_team_composition (currently live) + team-vs-team head-to-head history (IPL-only, T20I rows get neutral defaults). Reference: v16 scored AUC 0.6126/0.6114 blended (known/unknown), IPL 0.6151/0.6131, T20I 0.6113/0.6113 on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v16_team_composition": {
+    "auc_known_blended": 0.6126,
+    "auc_unknown_blended": 0.6114,
+    "auc_known_ipl": 0.6151,
+    "auc_unknown_ipl": 0.6131,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.6113
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6123136038529801,
+    "brier_platt": 0.20445466327954204,
+    "brier_uncalibrated": 0.20440571022456913,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6137449194695921,
+      "brier": 0.1935055172089612
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6109924671444767,
+      "brier": 0.20643637057925507
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6107330614647911,
+    "brier_platt": 0.2045617059880291,
+    "brier_uncalibrated": 0.2049856439254387,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6099566924541739,
+      "brier": 0.19437148860973938
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6102841260617794,
+      "brier": 0.206406053303705
+    }
+  },
+  "team_h2h_feature_importance_rank": {
+    "h2h_matches_played": 33,
+    "h2h_batting_team_win_rate_shrunk": 38
+  },
+  "total_features": 63
+}
