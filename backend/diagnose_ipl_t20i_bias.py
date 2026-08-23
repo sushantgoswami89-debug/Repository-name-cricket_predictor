@@ -10,7 +10,6 @@ distribution SYSTEMATICALLY biased low for IPL specifically?
 """
 from __future__ import annotations
 
-import pickle
 from pathlib import Path
 
 import numpy as np
@@ -30,8 +29,7 @@ import lightgbm as lgb
 
 root = Path(__file__).resolve().parents[1]
 
-with open("/private/tmp/claude-501/-Users-susha-Downloads-cricket-predictor/6f8f95cc-ff96-474d-a9b7-2f679a19c32a/scratchpad/ipl_files.pkl", "rb") as f:
-    ipl_files = pickle.load(f)
+ipl_files = {p.name for p in (root / "data/raw/cricsheet/ipl").glob("*.json")}
 
 eligible = male_source_files(root)
 base = pd.read_csv(root / "data/candidates/v3/verified_training_overs.csv")

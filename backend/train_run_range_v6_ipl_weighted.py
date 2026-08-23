@@ -26,7 +26,6 @@ Single holdout evaluation per config, no iterative peeking-and-re-choosing
 from __future__ import annotations
 
 import json
-import pickle
 from pathlib import Path
 
 import lightgbm as lgb
@@ -46,8 +45,7 @@ from train_run_range_v4_batter_phase import BATTER_PHASE_FEATURES, FEATURES, CAT
 
 root = Path(__file__).resolve().parents[1]
 
-with open("/private/tmp/claude-501/-Users-susha-Downloads-cricket-predictor/6f8f95cc-ff96-474d-a9b7-2f679a19c32a/scratchpad/ipl_files.pkl", "rb") as f:
-    ipl_files = pickle.load(f)
+ipl_files = {p.name for p in (root / "data/raw/cricsheet/ipl").glob("*.json")}
 
 eligible = male_source_files(root)
 base = pd.read_csv(root / "data/candidates/v3/verified_training_overs.csv")

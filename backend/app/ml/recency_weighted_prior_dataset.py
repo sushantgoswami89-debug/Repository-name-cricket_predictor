@@ -339,7 +339,6 @@ def build_recency_weighted_prior_dataset(
         match_bowler_events: dict[str, dict[str, float]] = {}
 
         for innings_number, innings in enumerate(regular_innings, start=1):
-            batter_match: dict[str, dict[str, float]] = {}
             for source_over in innings.get("overs", []):
                 deliveries = source_over.get("deliveries", [])
                 if not deliveries:

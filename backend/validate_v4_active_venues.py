@@ -113,9 +113,7 @@ for phase in ("powerplay", "middle", "death"):
 holdout_low, holdout_high = best_bands(holdout_scaled)
 hit = (holdout_actual >= holdout_low) & (holdout_actual <= holdout_high)
 
-import pickle
-with open("/private/tmp/claude-501/-Users-susha-Downloads-cricket-predictor/6f8f95cc-ff96-474d-a9b7-2f679a19c32a/scratchpad/ipl_files.pkl", "rb") as f:
-    ipl_files = pickle.load(f)
+ipl_files = {p.name for p in (root / "data/raw/cricsheet/ipl").glob("*.json")}
 
 holdout_venue_norm = holdout["venue_name"].astype(str)
 is_ipl_scope = holdout["source_file"].isin(ipl_files).to_numpy()

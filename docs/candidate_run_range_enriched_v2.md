@@ -454,7 +454,9 @@ confirmed getting `sharp_band_width=3` and T20I confirmed getting
 `width=2` (the earlier band-width fix, now confirmed still wired
 correctly on top of this change too).
 
-## Status: live
+## Status at this point: live (superseded since -- see app/ml/prediction_engine.py's
+module docstring for what's actually live now; as of 2026-08-23 that's
+`run_range_v11_partnership_rate`, see docs/finding_partnership_scoring_rate.md)
 
-`run_range_v7_competition_prior` is the runs prediction
-`PredictionEngine()` returns as of this update.
+`run_range_v7_competition_prior` was the runs prediction
+`PredictionEngine()` returned as of this update.

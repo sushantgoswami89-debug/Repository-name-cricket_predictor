@@ -262,7 +262,6 @@ class PredictionEngine:
             )
 
         start = time.perf_counter()
-        phase = "powerplay" if current_over <= 6 else ("death" if current_over >= 16 else "middle")
 
         # Which named team (team1/team2) is currently batting -- same
         # is_chase/batting_first/bowling_first resolution the run-range
