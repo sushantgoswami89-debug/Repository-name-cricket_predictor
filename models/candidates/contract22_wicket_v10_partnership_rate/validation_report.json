@@ -1,0 +1,62 @@
+{
+  "candidate_version": "contract22_wicket_v10_partnership_rate",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v9_recency_form (currently live) + current-partnership scoring rate (team runs/balls since the last wicket, resets at each dismissal). Reference: v9 scored AUC 0.6106/0.6085 blended (known/unknown), IPL 0.6097/0.6058, T20I 0.6100/0.6090 on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v9_recency_form": {
+    "auc_known_blended": 0.6106,
+    "auc_unknown_blended": 0.6085,
+    "auc_known_ipl": 0.6097,
+    "auc_unknown_ipl": 0.6058,
+    "auc_known_t20i": 0.61,
+    "auc_unknown_t20i": 0.609
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6118099605202871,
+    "brier_platt": 0.20459590892829238,
+    "brier_uncalibrated": 0.2046045031650181,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6103848263631014,
+      "brier": 0.19396450471984067
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6112895291635488,
+      "brier": 0.20652010750873664
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6101761854414374,
+    "brier_platt": 0.204821014976771,
+    "brier_uncalibrated": 0.20529218889550532,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.605903659361677,
+      "brier": 0.19521099580390383
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6109574731846232,
+      "brier": 0.2065603510877781
+    }
+  },
+  "partnership_feature_importance_rank": {
+    "partnership_runs": 25,
+    "partnership_balls": 9,
+    "partnership_run_rate": 17
+  },
+  "total_features": 52
+}

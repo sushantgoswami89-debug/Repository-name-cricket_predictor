@@ -1,0 +1,30 @@
+{
+  "candidate_version": "run_range_v11_partnership_rate",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "note": "run_range_v7_competition_prior + current-partnership scoring rate (team runs/balls since the last wicket, resets at each dismissal). Tests against the real current live architecture.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_run_range_v7_competition_prior": {
+    "blended": 0.2875,
+    "ipl": 0.25,
+    "t20i": 0.2943
+  },
+  "holdout": {
+    "blended_hit_rate": 0.2879562445030783,
+    "ipl_hit_rate": 0.2516140602582496,
+    "t20i_hit_rate": 0.2945338873019995
+  },
+  "beats_v7_blended_and_calibration_gate": true,
+  "beats_v7_on_ipl_specifically": true,
+  "partnership_feature_importance_rank": {
+    "partnership_runs": 20,
+    "partnership_balls": 30,
+    "partnership_run_rate": 11
+  },
+  "total_features": 63,
+  "decision": "promote_candidate"
+}

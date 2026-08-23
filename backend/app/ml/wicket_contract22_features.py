@@ -266,6 +266,15 @@ class WicketContract22FeatureComputer:
         current_spell_length = 0
         bowler_spell_count: dict[str, int] = {}
         seen_overs: set[int] = set()
+        # Current-partnership (stand) scoring rate: team runs/legal balls
+        # since the fall of the last wicket -- resets to 0 the instant any
+        # wicket falls, on any delivery (legal or not). A cleaner signal
+        # than partnership_legal_ball_age below (which sums each
+        # individual batter's own total balls faced this innings, and so
+        # overstates stand length whenever the longer-set batter has
+        # already been through an earlier partner this innings).
+        stand_runs = 0
+        stand_balls = 0
         for delivery in deliveries:
             over_number = int(delivery.over)
             if over_number not in seen_overs:
@@ -279,7 +288,14 @@ class WicketContract22FeatureComputer:
                     bowler_spell_count[over_bowler] = (
                         bowler_spell_count.get(over_bowler, 0) + 1
                     )
-            if not bool(getattr(delivery, "is_legal", True)):
+            is_legal = bool(getattr(delivery, "is_legal", True))
+            stand_runs += int(getattr(delivery, "total_runs", 0))
+            if is_legal:
+                stand_balls += 1
+            if getattr(delivery, "wicket_kind", None):
+                stand_runs = 0
+                stand_balls = 0
+            if not is_legal:
                 continue
             batter = self._resolve_player_id(str(delivery.striker), registry)
             batter_match.setdefault(batter, _empty_batter())["balls"] += 1
@@ -320,6 +336,9 @@ class WicketContract22FeatureComputer:
             "partnership_legal_ball_age": striker_balls + partner_balls,
             "striker_match_balls": striker_balls,
             "partner_match_balls": partner_balls,
+            "partnership_runs": stand_runs,
+            "partnership_balls": stand_balls,
+            "partnership_run_rate": (6.0 * stand_runs / stand_balls) if stand_balls else 0.0,
             "bowler_match_overs_bowled": bowler_balls_this_innings / 6.0,
             "bowler_spell_over_number": spell_over_number,
             "bowler_is_return_spell": is_return_spell,

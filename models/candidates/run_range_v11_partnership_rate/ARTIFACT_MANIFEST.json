@@ -1,0 +1,9 @@
+{
+  "model": "run_range_v11_partnership_rate",
+  "artifacts": {
+    "sharp_range_model.pkl": "238ad31793bd62a995d91f127737977580e4c9abd526a97ba9e58526da41070a",
+    "phase_temperatures.pkl": "4dc7f08b4ab8f3f50c21fa71ad5d9c7c3acf1fdcbe51d9674c8c78d9fcb022f6",
+    "feature_cols.pkl": "22dae57028a45f3720a5707f050745f8d721fd414304826d1e44fdf6bc293723",
+    "categorical_cols.pkl": "cf7b3dd289abadc994ee35554ca132ffd5ef104e272d23cb7a57408c18c4b9d6"
+  }
+}

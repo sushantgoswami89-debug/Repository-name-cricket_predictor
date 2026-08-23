@@ -1,0 +1,9 @@
+{
+  "model": "contract22_wicket_v10_partnership_rate",
+  "artifacts": {
+    "wicket_model.pkl": "58c3fc01a8632efae1afc7e4c262b06e700f9de5ed7479d7eba6509f4563f380",
+    "wicket_calibrator.pkl": "1244c7a533f85ec9c7e637fedff8dd90520f65e6dc5863f653cdf9344ca6f2ea",
+    "feature_cols.pkl": "2225f19f9f7d0cb9abd948703a1fb7ba0efe3737aa5293e6ec8a735692ca7d33",
+    "categorical_cols.pkl": "e5770c73eee611a4a488e21292b3f6f6ab40c7004f7ecc3995f09f0036580d53"
+  }
+}

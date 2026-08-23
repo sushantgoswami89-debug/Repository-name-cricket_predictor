@@ -1,26 +1,31 @@
 """
 Prediction Engine v3.
 
-Runs prediction is sourced from run_range_v7_competition_prior's own
-calibrated inclusive band -- run_range_v4_batter_phase (28.60% blended
-holdout hit rate) plus competition-specific (IPL vs T20I) batter/bowler
-prior-stat features (see app/ml/player_competition_dataset.py's
-docstring: every player prior-stat feature before this pooled a player's
-IPL and T20I history into one number, misleading for players with a
-large swing between competitions). 28.75% blended / 25.00% IPL / 29.43%
-T20I holdout hit rate, beats v4 on every split (see
+Runs prediction is sourced from run_range_v11_partnership_rate's own
+calibrated inclusive band (see docs/finding_partnership_scoring_rate.md):
+run_range_v7_competition_prior plus current-partnership scoring rate
+(team runs/balls since the fall of the last wicket, resets at each
+dismissal -- a cleaner signal than partnership_legal_ball_age alone,
+which only tracks how long a pair has been together, not how well).
+28.80% blended / 25.16% IPL / 29.45% T20I holdout hit rate, beats v7 on
+every split. v7 itself (28.75%/25.00%/29.43%) is
+run_range_v4_batter_phase (28.60% blended) plus competition-specific
+(IPL vs T20I) batter/bowler prior-stat features (see
+app/ml/player_competition_dataset.py's docstring) -- see
 docs/candidate_run_range_enriched_v2.md and
-docs/finding_blended_holdout_masks_ipl_accuracy.md).
-Wicket prediction is sourced from contract22_wicket_v9_recency_form's
-calibrated probability (see docs/finding_recency_weighted_form.md):
+docs/finding_blended_holdout_masks_ipl_accuracy.md.
+Wicket prediction is sourced from contract22_wicket_v10_partnership_rate's
+calibrated probability (see docs/finding_partnership_scoring_rate.md):
+contract22_wicket_v9_recency_form plus the same current-partnership
+scoring rate. AUC improves on every split tested (blended/IPL/T20I x
+known/unknown, all 6 up), Brier improves on every split too. v9 itself
+(see docs/finding_recency_weighted_form.md) is
 contract22_wicket_v2_batter_state plus recency-weighted (match-EWMA,
 decay=0.95) batter/bowler form added alongside the existing flat
 career-average features -- every flat prior-stat feature in this codebase
 weighted a player's form from 40 matches ago exactly as much as last
-week's until this. AUC improves on every split tested (known/unknown x
-IPL/T20I, all 4 up), Brier improves on every split too. Supersedes v2
-(AUC 0.6081/0.6072 blended), itself sourced from contract22_wicket_rigorous
-plus a new-batter/partnership-age signal (see
+week's until that promotion. v2 itself (AUC 0.6081/0.6072 blended) is
+contract22_wicket_rigorous plus a new-batter/partnership-age signal (see
 docs/candidate_ipl_wicket_v7_2_spell_features.md's 2026-08-22 follow-ups),
 validated end-to-end through the real VerifiedLivePredictionPipeline
 (AUC 0.6067, Brier 0.2000 on 669 replayed overs, 20 held-out matches).
@@ -46,11 +51,11 @@ from runtime_wicket_contract22 import WicketRuntimeContract22
 
 RUN_RANGE_V3_ARTIFACTS = (
     Path(__file__).resolve().parents[3]
-    / "models/candidates/run_range_v7_competition_prior"
+    / "models/candidates/run_range_v11_partnership_rate"
 )
 WICKET_CONTRACT22_ARTIFACTS = (
     Path(__file__).resolve().parents[3]
-    / "models/candidates/contract22_wicket_v9_recency_form"
+    / "models/candidates/contract22_wicket_v10_partnership_rate"
 )
 
 

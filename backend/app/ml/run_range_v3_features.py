@@ -332,6 +332,11 @@ class RunRangeV3FeatureComputer:
         current_spell_length = 0
         bowler_spell_count: dict[str, int] = {}
         seen_overs: set[int] = set()
+        # Current-partnership (stand) scoring rate -- see
+        # WicketContract22FeatureComputer._partnership_state for the full
+        # reasoning. Resets to 0 the instant any wicket falls.
+        stand_runs = 0
+        stand_balls = 0
         for delivery in deliveries:
             over_number = int(getattr(delivery, "over", 0))
             if over_number not in seen_overs:
@@ -349,6 +354,12 @@ class RunRangeV3FeatureComputer:
             batter_runs = int(delivery.batter_runs)
             wicket = int(getattr(delivery, "wicket_kind", None) is not None)
             wickets_seen += wicket
+            stand_runs += total_runs
+            if legal:
+                stand_balls += 1
+            if wicket:
+                stand_runs = 0
+                stand_balls = 0
             if legal:
                 profile = batter_match.setdefault(batter, _empty_batter())
                 profile["balls"] += 1
@@ -396,6 +407,9 @@ class RunRangeV3FeatureComputer:
             "active_batter_state": "new_batter" if is_new else "established_pair",
             "new_batter": is_new,
             "partnership_legal_ball_age": pair_age,
+            "partnership_runs": stand_runs,
+            "partnership_balls": stand_balls,
+            "partnership_run_rate": (6.0 * stand_runs / stand_balls) if stand_balls else 0.0,
             "wickets_remaining_bucket": str(max(0, 10 - wickets_down)),
             "state_regime": _pressure_state(wickets_down, recent, current_rate / 6 if current_rate else 0.0),
             "chase_pressure": _chase_pressure(required_rate, current_rate, is_chase),
