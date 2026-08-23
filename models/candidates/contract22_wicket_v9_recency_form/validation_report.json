@@ -1,0 +1,65 @@
+{
+  "candidate_version": "contract22_wicket_v9_recency_form",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v2_batter_state + recency-weighted (match-EWMA, decay=0.95) batter/bowler form, added alongside the existing flat career-average features. Reference: v2 scored AUC 0.6081/0.6072 (known/unknown), Brier ~0.2049 (Platt) on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v2_batter_state": {
+    "auc_known": 0.6081,
+    "auc_unknown": 0.6072,
+    "brier_platt": 0.2049
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6105807812521432,
+    "brier_platt": 0.20472805741471162,
+    "brier_uncalibrated": 0.204723972424071,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6096976622139777,
+      "brier": 0.19399275992305592
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.610027993842261,
+      "brier": 0.20667105984308973
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6085285003216953,
+    "brier_platt": 0.20495992302071103,
+    "brier_uncalibrated": 0.20538968728428347,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6058053899147149,
+      "brier": 0.19525988103545858
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.609040683022787,
+      "brier": 0.2067155525360891
+    }
+  },
+  "recency_feature_importance_rank": {
+    "striker_recency_balls": 4,
+    "striker_recency_runs_per_ball": 27,
+    "striker_recency_dot_rate": 11,
+    "striker_recency_boundary_rate": 20,
+    "striker_recency_dismissal_rate": 8,
+    "partner_recency_runs_per_ball": 7,
+    "bowler_recency_balls": 16,
+    "bowler_recency_economy": 28,
+    "bowler_recency_wicket_rate": 18
+  },
+  "total_features": 49
+}

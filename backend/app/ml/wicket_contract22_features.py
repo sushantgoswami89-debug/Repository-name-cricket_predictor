@@ -16,6 +16,10 @@ recompute per prediction) plus cheap per-call state:
 - Bowler career stats, batter-vs-bowler head-to-head, and bowler-phase
   history: data/live/wicket_contract22_*.json
   (build_wicket_contract22_live_snapshots.py).
+- Recency-weighted (match-EWMA, decay=0.95) batter/bowler form, added
+  2026-08-23 for contract22_wicket_v9_recency_form: data/live/
+  recency_form_*.json (build_recency_weighted_live_snapshots.py), same
+  EWMA update as app/ml/recency_weighted_prior_dataset.py.
 - New-batter/partnership-age state (active_batter_state, new_batter,
   partnership_legal_ball_age, striker_match_balls, partner_match_balls):
   computed fresh from the current innings' verified deliveries every
@@ -73,8 +77,9 @@ class WicketContract22FeatureComputer:
             path = live_dir / name
             if not path.is_file():
                 raise FileNotFoundError(
-                    f"Live snapshot missing -- run build_run_range_v3_live_snapshots.py "
-                    f"and build_wicket_contract22_live_snapshots.py first: {path}"
+                    f"Live snapshot missing -- run build_run_range_v3_live_snapshots.py, "
+                    f"build_wicket_contract22_live_snapshots.py, and "
+                    f"build_recency_weighted_live_snapshots.py first: {path}"
                 )
             return json.loads(path.read_text(encoding="utf-8"))
 
@@ -84,6 +89,8 @@ class WicketContract22FeatureComputer:
         self._bowler_stats: dict[str, dict[str, int]] = _load("wicket_contract22_bowler_stats.json")
         self._h2h_stats: dict[str, dict[str, int]] = _load("wicket_contract22_h2h_stats.json")
         self._bowler_phase_stats: dict[str, dict[str, int]] = _load("wicket_contract22_bowler_phase_stats.json")
+        self._recency_batter_stats: dict[str, dict[str, float]] = _load("recency_form_batter_stats.json")
+        self._recency_bowler_stats: dict[str, dict[str, float]] = _load("recency_form_bowler_stats.json")
 
         styles_path = root / "data/external/cricsheet_player_styles.csv"
         self._full_name_aliases: dict[str, str] = build_full_name_alias_index(styles_path)
@@ -158,6 +165,30 @@ class WicketContract22FeatureComputer:
             "bowl_hist_avg_runs_conceded": (profile["runs"] / overs) if overs > 0 else 0.0,
             "bowl_hist_wicket_rate": (profile["wickets"] / profile["balls"]) if profile["balls"] > 0 else 0.0,
             "bowl_phase_avg_runs": (phase_profile["runs"] / phase_overs) if phase_overs > 0 else 0.0,
+        }
+
+    def _batter_recency(self, player_id: str) -> dict[str, float]:
+        profile = self._recency_batter_stats.get(player_id)
+        if profile is None:
+            return {"balls": 0.0, "runs_per_ball": 0.0, "dot_rate": 0.0, "boundary_rate": 0.0, "dismissal_rate": 0.0}
+        balls = max(1.0, profile["balls"])
+        return {
+            "balls": profile["balls"],
+            "runs_per_ball": profile["runs"] / balls,
+            "dot_rate": profile["dots"] / balls,
+            "boundary_rate": profile["boundaries"] / balls,
+            "dismissal_rate": profile["dismissals"] / balls,
+        }
+
+    def _bowler_recency(self, player_id: str) -> dict[str, float]:
+        profile = self._recency_bowler_stats.get(player_id)
+        if profile is None:
+            return {"balls": 0.0, "economy": 0.0, "wicket_rate": 0.0}
+        balls = max(1.0, profile["balls"])
+        return {
+            "balls": profile["balls"],
+            "economy": 6.0 * profile["runs"] / balls,
+            "wicket_rate": profile["wickets"] / balls,
         }
 
     def _h2h(self, striker_id: str, bowler_id: str, bowler_prior_avg: float) -> dict[str, float]:
@@ -318,4 +349,16 @@ class WicketContract22FeatureComputer:
         result.update(self._h2h(striker_id, bowler_id, bowler_career["bowl_hist_avg_runs_conceded"]))
         result.update(self._venue_state(venue_name))
         result.update(self._partnership_state(deliveries, registry, striker_id, partner_id, bowler_id))
+
+        striker_recency = self._batter_recency(striker_id)
+        result["striker_recency_balls"] = striker_recency["balls"]
+        result["striker_recency_runs_per_ball"] = striker_recency["runs_per_ball"]
+        result["striker_recency_dot_rate"] = striker_recency["dot_rate"]
+        result["striker_recency_boundary_rate"] = striker_recency["boundary_rate"]
+        result["striker_recency_dismissal_rate"] = striker_recency["dismissal_rate"]
+        result["partner_recency_runs_per_ball"] = self._batter_recency(partner_id)["runs_per_ball"]
+        bowler_recency = self._bowler_recency(bowler_id)
+        result["bowler_recency_balls"] = bowler_recency["balls"]
+        result["bowler_recency_economy"] = bowler_recency["economy"]
+        result["bowler_recency_wicket_rate"] = bowler_recency["wicket_rate"]
         return result

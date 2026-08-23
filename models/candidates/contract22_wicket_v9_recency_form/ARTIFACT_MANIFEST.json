@@ -1,0 +1,9 @@
+{
+  "model": "contract22_wicket_v9_recency_form",
+  "artifacts": {
+    "wicket_model.pkl": "ab088768ec4e4f28bace4eb9992963ddec6ee9075652dbe9ae7f442e19bac6b8",
+    "wicket_calibrator.pkl": "0ba868ec367dffb073b9644cc59b72efc0459d5f7500dfa2ae933b0586d5802e",
+    "feature_cols.pkl": "fd5c5f8d3c9555d4823c276705b983682c48e157cd9b896af417563f18a510c3",
+    "categorical_cols.pkl": "e5770c73eee611a4a488e21292b3f6f6ab40c7004f7ecc3995f09f0036580d53"
+  }
+}

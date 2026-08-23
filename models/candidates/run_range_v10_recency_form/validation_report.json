@@ -1,0 +1,36 @@
+{
+  "candidate_version": "run_range_v10_recency_form",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "note": "run_range_v7_competition_prior + recency-weighted (match-EWMA, decay=0.95) batter/bowler form, added alongside the existing flat career-average features. Tests against the real current live architecture.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_run_range_v7_competition_prior": {
+    "blended": 0.2875,
+    "ipl": 0.25,
+    "t20i": 0.2943
+  },
+  "holdout": {
+    "blended_hit_rate": 0.28551011433597184,
+    "ipl_hit_rate": 0.2417503586800574,
+    "t20i_hit_rate": 0.2934302778499091
+  },
+  "beats_v7_blended_and_calibration_gate": false,
+  "beats_v7_on_ipl_specifically": false,
+  "recency_feature_importance_rank": {
+    "striker_recency_balls": 32,
+    "striker_recency_runs_per_ball": 29,
+    "striker_recency_dot_rate": 23,
+    "striker_recency_boundary_rate": 36,
+    "striker_recency_dismissal_rate": 31,
+    "partner_recency_runs_per_ball": 21,
+    "bowler_recency_balls": 18,
+    "bowler_recency_economy": 22,
+    "bowler_recency_wicket_rate": 15
+  },
+  "total_features": 69,
+  "decision": "reject_keep_research"
+}

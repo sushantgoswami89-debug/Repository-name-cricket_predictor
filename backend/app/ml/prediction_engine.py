@@ -11,10 +11,17 @@ large swing between competitions). 28.75% blended / 25.00% IPL / 29.43%
 T20I holdout hit rate, beats v4 on every split (see
 docs/candidate_run_range_enriched_v2.md and
 docs/finding_blended_holdout_masks_ipl_accuracy.md).
-Wicket prediction is sourced from contract22_wicket_v2_batter_state's
-calibrated probability (see docs/candidate_ipl_wicket_v7_2_spell_features.md's
-2026-08-22 follow-ups): contract22_wicket_rigorous plus a new-batter/
-partnership-age signal, real Brier skill score improvement 3.52% -> 3.58%,
+Wicket prediction is sourced from contract22_wicket_v9_recency_form's
+calibrated probability (see docs/finding_recency_weighted_form.md):
+contract22_wicket_v2_batter_state plus recency-weighted (match-EWMA,
+decay=0.95) batter/bowler form added alongside the existing flat
+career-average features -- every flat prior-stat feature in this codebase
+weighted a player's form from 40 matches ago exactly as much as last
+week's until this. AUC improves on every split tested (known/unknown x
+IPL/T20I, all 4 up), Brier improves on every split too. Supersedes v2
+(AUC 0.6081/0.6072 blended), itself sourced from contract22_wicket_rigorous
+plus a new-batter/partnership-age signal (see
+docs/candidate_ipl_wicket_v7_2_spell_features.md's 2026-08-22 follow-ups),
 validated end-to-end through the real VerifiedLivePredictionPipeline
 (AUC 0.6067, Brier 0.2000 on 669 replayed overs, 20 held-out matches).
 BowlerSpellAdjuster is NOT applied to either model (removed 2026-08-22):
@@ -43,7 +50,7 @@ RUN_RANGE_V3_ARTIFACTS = (
 )
 WICKET_CONTRACT22_ARTIFACTS = (
     Path(__file__).resolve().parents[3]
-    / "models/candidates/contract22_wicket_v2_batter_state"
+    / "models/candidates/contract22_wicket_v9_recency_form"
 )
 
 
