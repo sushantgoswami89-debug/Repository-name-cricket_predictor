@@ -1,0 +1,64 @@
+{
+  "candidate_version": "contract22_wicket_v16_team_composition",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v15_batter_phase_recency (currently live) + match-level team role composition (batting all-rounder depth, bowling pace/spin balance). Reference: v15 scored AUC 0.6124/0.6099 blended (known/unknown), IPL 0.6149/0.6102, T20I 0.6114/0.6104 on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v15_batter_phase_recency": {
+    "auc_known_blended": 0.6124,
+    "auc_unknown_blended": 0.6099,
+    "auc_known_ipl": 0.6149,
+    "auc_unknown_ipl": 0.6102,
+    "auc_known_t20i": 0.6114,
+    "auc_unknown_t20i": 0.6104
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.612588425325094,
+    "brier_platt": 0.20434891088718726,
+    "brier_uncalibrated": 0.20430980063290927,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.615063895997714,
+      "brier": 0.19331994910396091
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6112902852589284,
+      "brier": 0.20634506418838405
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6114481875229154,
+    "brier_platt": 0.20454091626804968,
+    "brier_uncalibrated": 0.20494590471198082,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6131110213717195,
+      "brier": 0.1943694897355988
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6112524780350979,
+      "brier": 0.2063818625918924
+    }
+  },
+  "team_composition_feature_importance_rank": {
+    "batting_team_allrounder_count": 38,
+    "batting_team_specialist_batter_count": 39,
+    "bowling_team_pace_count": 43,
+    "bowling_team_spin_count": 48,
+    "bowling_team_allrounder_count": 49
+  },
+  "total_features": 61
+}

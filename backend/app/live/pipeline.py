@@ -26,6 +26,14 @@ class PredictionPublisher(Protocol):
     def publish(self, key: str, text: str) -> bool: ...
 
 
+def _team_player_names(snapshot: ToiSnapshot, team_name: str) -> list[str]:
+    # team_players is best-effort (see ToiSnapshot's own docstring -- a
+    # missing/malformed block degrades to the empty default rather than
+    # raising), so a team with no roster fetched yet just yields an empty
+    # list -- team-composition features degrade to zero counts, not a crash.
+    return [player.name for player in snapshot.team_players.get(team_name, ())]
+
+
 class VerifiedLivePredictionPipeline:
     """Publish only predictions derived from fully reconciled deliveries."""
 
@@ -205,6 +213,8 @@ class VerifiedLivePredictionPipeline:
             match_id=snapshot.match_id,
             team1=snapshot.batting_team,
             team2=snapshot.bowling_team,
+            team1_players=_team_player_names(snapshot, snapshot.batting_team),
+            team2_players=_team_player_names(snapshot, snapshot.bowling_team),
             format=snapshot.match_format,
             competition=snapshot.competition,
             live=LiveMatchState(
@@ -313,6 +323,8 @@ class VerifiedLivePredictionPipeline:
             match_id=snapshot.match_id,
             team1=snapshot.batting_team,
             team2=snapshot.bowling_team,
+            team1_players=_team_player_names(snapshot, snapshot.batting_team),
+            team2_players=_team_player_names(snapshot, snapshot.bowling_team),
             format=snapshot.match_format,
             competition=snapshot.competition,
             live=LiveMatchState(

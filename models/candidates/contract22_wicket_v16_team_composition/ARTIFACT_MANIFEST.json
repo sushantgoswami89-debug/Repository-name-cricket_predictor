@@ -1,0 +1,9 @@
+{
+  "model": "contract22_wicket_v16_team_composition",
+  "artifacts": {
+    "wicket_model.pkl": "162e1bff363b7ee03d906b3c2333df60c0d8384b4c79aa803840affde55f9e3e",
+    "wicket_calibrator.pkl": "f0ec1e19729c95cba2458bee9d53507698ad0cd7bb48004b8bffbf64d1582b06",
+    "feature_cols.pkl": "3a217e165866ab2f3b439d1450f1deece846699698b7538e69ac4edb0d6666ca",
+    "categorical_cols.pkl": "e5770c73eee611a4a488e21292b3f6f6ab40c7004f7ecc3995f09f0036580d53"
+  }
+}

@@ -24,6 +24,13 @@ recompute per prediction) plus cheap per-call state:
   the same phase as the current over), added 2026-08-23 for
   contract22_wicket_v15_batter_phase_recency: data/live/
   recency_form_batter_phase_stats.json, keyed "player_id|phase".
+- Match-level team role composition (batting-side all-rounder depth,
+  bowling-side pace/spin balance), added 2026-08-23 for
+  contract22_wicket_v16_team_composition: no new snapshot needed, reuses
+  the same playing_role/bowling_style classification already loaded for
+  individual striker/bowler features (self._playing_role/_bowler_type),
+  aggregated over the confirmed XI (batting_team_players/
+  bowling_team_players) via _team_composition.
 - New-batter/partnership-age state (active_batter_state, new_batter,
   partnership_legal_ball_age, striker_match_balls, partner_match_balls):
   computed fresh from the current innings' verified deliveries every
@@ -101,14 +108,17 @@ class WicketContract22FeatureComputer:
         self._full_name_aliases: dict[str, str] = build_full_name_alias_index(styles_path)
         self._batting_style: dict[str, str] = {}
         self._bowler_type: dict[str, str] = {}
+        self._playing_role: dict[str, str] = {}
         if styles_path.is_file():
             import pandas as pd
 
+            from app.ml.ipl_impact_dataset import role_category
             from app.ml.player_style_registry import normalize_batting_style
 
             styles = pd.read_csv(styles_path)
-            for cid, batting, bowling in zip(
-                styles["cricsheet_id"], styles["batting_style"], styles["bowling_style"]
+            for cid, batting, bowling, role in zip(
+                styles["cricsheet_id"], styles["batting_style"], styles["bowling_style"],
+                styles["playing_role"],
             ):
                 if not isinstance(cid, str):
                     continue
@@ -117,6 +127,7 @@ class WicketContract22FeatureComputer:
                 if normalized != "unknown":
                     self._batting_style[player_id] = normalized
                 self._bowler_type[player_id] = self._classify_bowler_type(bowling)
+                self._playing_role[player_id] = role_category(role if isinstance(role, str) else "")
 
     @staticmethod
     def _classify_bowler_type(style: Any) -> str:
@@ -259,6 +270,37 @@ class WicketContract22FeatureComputer:
             "venue_scoring_regime": venue_regime(par_score, prior_innings),
         }
 
+    def _team_composition(
+        self, players: Sequence[str], registry: Mapping[str, str]
+    ) -> dict[str, int]:
+        # Same classification (role_category + bowling-arm type) already
+        # used for individual striker/bowler features, aggregated to team
+        # level for the first time -- see app/ml/team_composition_dataset.py
+        # for the training-side equivalent and its own docstring on why
+        # bowling_style is only counted for players whose role says they
+        # actually bowl (a specialist batter's nominal recorded arm, e.g.
+        # Dhoni's "Right arm Medium," doesn't mean they're part of the
+        # attack). Missing/unresolved players degrade to "unknown"/0,
+        # never raise -- same convention as every other lookup here.
+        pace = spin = allrounders = specialist_batters = 0
+        for name in players:
+            player_id = self._resolve_player_id(name, registry)
+            role = self._playing_role.get(player_id, "unknown")
+            if role == "allrounder":
+                allrounders += 1
+            elif role == "batter":
+                specialist_batters += 1
+            if role in ("bowler", "allrounder"):
+                style = self._bowler_type.get(player_id, UNKNOWN_CATEGORY)
+                if style == "pace":
+                    pace += 1
+                elif style == "spin":
+                    spin += 1
+        return {
+            "pace": pace, "spin": spin, "allrounders": allrounders,
+            "specialist_batters": specialist_batters,
+        }
+
     def _partnership_state(
         self, deliveries: Sequence[Any], registry: Mapping[str, str],
         striker_id: str, partner_id: str, bowler_id: str,
@@ -371,7 +413,14 @@ class WicketContract22FeatureComputer:
         venue_name: str,
         phase: str,
         deliveries: Sequence[Any] = (),
+        batting_team_players: Sequence[str] = (),
+        bowling_team_players: Sequence[str] = (),
     ) -> dict[str, Any]:
+        """`batting_team_players`/`bowling_team_players` are the confirmed
+        playing XI (names), used only for match-level team role
+        composition -- optional, degrades to all-zero counts (not a
+        crash) when the caller doesn't have a roster yet (e.g. before
+        lineups are confirmed)."""
         striker_id = self._resolve_player_id(striker_name, registry)
         bowler_id = self._resolve_player_id(bowler_name, registry) if bowler_name else UNKNOWN_PLAYER
         partner_id = self._resolve_player_id(non_striker_name, registry) if non_striker_name else UNKNOWN_PLAYER
@@ -403,4 +452,12 @@ class WicketContract22FeatureComputer:
         result["striker_recency_phase_runs_per_ball"] = striker_phase_recency["runs_per_ball"]
         result["striker_recency_phase_boundary_rate"] = striker_phase_recency["boundary_rate"]
         result["striker_recency_phase_dismissal_rate"] = striker_phase_recency["dismissal_rate"]
+
+        batting_composition = self._team_composition(batting_team_players, registry)
+        bowling_composition = self._team_composition(bowling_team_players, registry)
+        result["batting_team_allrounder_count"] = batting_composition["allrounders"]
+        result["batting_team_specialist_batter_count"] = batting_composition["specialist_batters"]
+        result["bowling_team_pace_count"] = bowling_composition["pace"]
+        result["bowling_team_spin_count"] = bowling_composition["spin"]
+        result["bowling_team_allrounder_count"] = bowling_composition["allrounders"]
         return result

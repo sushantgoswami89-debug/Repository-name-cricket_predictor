@@ -1,0 +1,32 @@
+{
+  "candidate_version": "run_range_v14_team_composition",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "note": "run_range_v11_partnership_rate (currently live) + match-level team role composition (batting all-rounder depth, bowling pace/spin balance). Tests against the real current live architecture.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_run_range_v11_partnership_rate": {
+    "blended": 0.288,
+    "ipl": 0.2516,
+    "t20i": 0.2945
+  },
+  "holdout": {
+    "blended_hit_rate": 0.28592238346525944,
+    "ipl_hit_rate": 0.24210903873744619,
+    "t20i_hit_rate": 0.293852246169826
+  },
+  "beats_v11_blended_and_calibration_gate": false,
+  "beats_v11_on_ipl_specifically": false,
+  "team_composition_feature_importance_rank": {
+    "batting_team_allrounder_count": 42,
+    "batting_team_specialist_batter_count": 45,
+    "bowling_team_pace_count": 48,
+    "bowling_team_spin_count": 49,
+    "bowling_team_allrounder_count": 44
+  },
+  "total_features": 68,
+  "decision": "reject_keep_research"
+}

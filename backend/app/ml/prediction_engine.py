@@ -14,13 +14,21 @@ run_range_v4_batter_phase (28.60% blended) plus competition-specific
 app/ml/player_competition_dataset.py's docstring) -- see
 docs/candidate_run_range_enriched_v2.md and
 docs/finding_blended_holdout_masks_ipl_accuracy.md.
-Wicket prediction is sourced from contract22_wicket_v15_batter_phase_recency's
-calibrated probability (see docs/finding_batter_phase_recency_promoted.md):
+Wicket prediction is sourced from contract22_wicket_v16_team_composition's
+calibrated probability (see docs/finding_team_composition.md):
+contract22_wicket_v15_batter_phase_recency plus match-level team role
+composition (batting-side all-rounder depth, bowling-side pace/spin
+balance from the confirmed XI -- known before ball 1, same timing as
+toss). Mostly flat when the bowler is known (redundant with that
+bowler's own individual stats) but a real, consistent gain specifically
+when the bowler is unknown (AUC +0.0015 blended, +0.0029 IPL, +0.0009
+T20I) -- the harder, more common real live-serving case. v15 itself (see
+docs/finding_batter_phase_recency_promoted.md) is
 contract22_wicket_v10_partnership_rate plus phase-specific batter
 recency (recent strike-rate/dismissal-rate within the same phase as the
 current over -- "finishing ability" is a distinct, form-sensitive skill,
 and death overs are the single most decisive IPL phase per external
-analysis). Real, consistent IPL gain (AUC 0.6104->0.6149 known,
+analysis). Real, consistent IPL gain there (AUC 0.6104->0.6149 known,
 0.6059->0.6102 unknown), T20I/blended roughly flat. v10 itself (see
 docs/finding_partnership_scoring_rate.md) is
 contract22_wicket_v9_recency_form plus current-partnership scoring rate
@@ -63,7 +71,7 @@ RUN_RANGE_V3_ARTIFACTS = (
 )
 WICKET_CONTRACT22_ARTIFACTS = (
     Path(__file__).resolve().parents[3]
-    / "models/candidates/contract22_wicket_v15_batter_phase_recency"
+    / "models/candidates/contract22_wicket_v16_team_composition"
 )
 
 
@@ -256,6 +264,24 @@ class PredictionEngine:
         start = time.perf_counter()
         phase = "powerplay" if current_over <= 6 else ("death" if current_over >= 16 else "middle")
 
+        # Which named team (team1/team2) is currently batting -- same
+        # is_chase/batting_first/bowling_first resolution the run-range
+        # section below already used, computed once here so the wicket
+        # model's team-composition lookup (added 2026-08-23 for
+        # contract22_wicket_v16_team_composition) and run-range's
+        # competition-prior features share one answer instead of deriving
+        # it twice.
+        is_chase_for_batting_team = bool(context.live.is_chase)
+        batting_team = (
+            (context.bowling_first or context.team2)
+            if is_chase_for_batting_team
+            else (context.batting_first or context.team1)
+        )
+        if batting_team == context.team1:
+            batting_team_players, bowling_team_players = context.team1_players, context.team2_players
+        else:
+            batting_team_players, bowling_team_players = context.team2_players, context.team1_players
+
         # 2. WICKET PROBABILITY (contract22_wicket_v2_batter_state)
         # Replaces the old models/wkt_model.pkl + phase-keyed calibrator
         # pipeline. Also retires the FeatureBuilder/HistoricalFeatureStore
@@ -286,6 +312,8 @@ class PredictionEngine:
             recent_single_rate=context.live.recent_single_rate,
             recent_boundary_rate=context.live.recent_boundary_rate,
             recent_wicket_rate=context.live.recent_wicket_rate,
+            batting_team_players=batting_team_players,
+            bowling_team_players=bowling_team_players,
         )
 
         # 3. RUN RANGE (run_range_v7_competition_prior)
@@ -317,12 +345,7 @@ class PredictionEngine:
         # falls back gracefully for a player with no competition-specific
         # history at all (shrinks to the pooled rate, doesn't crash).
         competition_scope = "ipl" if rules["engine_family"] == "ipl" else "t20i"
-        is_chase = bool(context.live.is_chase)
-        batting_team = (
-            (context.bowling_first or context.team2)
-            if is_chase
-            else (context.batting_first or context.team1)
-        )
+        is_chase = is_chase_for_batting_team
         deliveries = context.metadata.get("deliveries", [])
         registry = context.metadata.get("registry", {})
         run_range = self._run_range_runtime.predict_next_over(

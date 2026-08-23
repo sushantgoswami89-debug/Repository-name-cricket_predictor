@@ -108,11 +108,14 @@ class WicketRuntimeContract22:
         recent_single_rate: float,
         recent_boundary_rate: float,
         recent_wicket_rate: float,
+        batting_team_players: Any = (),
+        bowling_team_players: Any = (),
     ) -> float:
         phase = _phase(over)
         enriched = self._computer.compute(
             registry=registry, striker_name=striker_name, non_striker_name=non_striker_name,
             bowler_name=bowler_name, venue_name=venue_name, phase=phase, deliveries=deliveries,
+            batting_team_players=batting_team_players, bowling_team_players=bowling_team_players,
         )
         row = {
             "over": over, "score_before_over": score_before_over,
