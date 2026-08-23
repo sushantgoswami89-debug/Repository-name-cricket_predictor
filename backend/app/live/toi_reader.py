@@ -90,6 +90,7 @@ class ToiSnapshot:
     # match state -- never required for correctness, so a missing or
     # malformed block degrades to the empty default rather than raising.
     team_players: dict[str, tuple[ToiPlayer, ...]] = field(default_factory=dict)
+    venue_name: str = ""
     toss_won_by: str = ""
     toss_decision: str = ""
     pitch_type: str = ""
@@ -346,6 +347,7 @@ class ToiLiveReader:
             current, deliveries
         )
         team_players = cls._team_players(raw)
+        venue_name = cls._venue_name(raw)
         toss_won_by, toss_decision = cls._toss(raw)
         pitch_type, pitch_surface = cls._pitch(raw)
         weather_condition, humidity_pct, temperature_c, wind_speed_ms = cls._weather(
@@ -377,6 +379,7 @@ class ToiLiveReader:
             announced_bowler=announced_bowler,
             announced_bowler_over=announced_bowler_over,
             team_players=team_players,
+            venue_name=venue_name,
             toss_won_by=toss_won_by,
             toss_decision=toss_decision,
             pitch_type=pitch_type,
@@ -631,6 +634,25 @@ class ToiLiveReader:
                 won_by = str(team.get("Name_Full", "")).strip()
         decision = str(matchdetail.get("Toss_elected_to", "")).strip().lower()
         return won_by, decision
+
+    @staticmethod
+    def _venue_name(raw: dict[str, Any]) -> str:
+        """Best-effort venue extraction from Matchdetail.Venue.Name (a
+        sibling of Pitch_Detail/Venue_Weather, confirmed 2026-08-23
+        against a real cached TOI payload -- "Harare Sports Club,
+        Harare"). Falls back to City if Name is missing. Never raises;
+        venue-dependent model features (venue_par_score,
+        batting_team_venue_context, venue_recency_par_score) already
+        degrade gracefully to a global/unknown default when this is
+        empty, same as every other best-effort field here."""
+        matchdetail = raw.get("Matchdetail")
+        venue = matchdetail.get("Venue") if isinstance(matchdetail, dict) else None
+        if not isinstance(venue, dict):
+            return ""
+        name = str(venue.get("Name", "")).strip()
+        if name:
+            return name
+        return str(venue.get("City", "")).strip()
 
     @staticmethod
     def _pitch(raw: dict[str, Any]) -> tuple[str, str]:

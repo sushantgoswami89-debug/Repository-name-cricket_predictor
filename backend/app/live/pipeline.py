@@ -239,6 +239,7 @@ class VerifiedLivePredictionPipeline:
             team2=snapshot.bowling_team,
             team1_players=_team_player_names(snapshot, snapshot.batting_team),
             team2_players=_team_player_names(snapshot, snapshot.bowling_team),
+            venue=snapshot.venue_name,
             format=snapshot.match_format,
             competition=snapshot.competition,
             live=LiveMatchState(
@@ -355,6 +356,7 @@ class VerifiedLivePredictionPipeline:
             team2=snapshot.bowling_team,
             team1_players=_team_player_names(snapshot, snapshot.batting_team),
             team2_players=_team_player_names(snapshot, snapshot.bowling_team),
+            venue=snapshot.venue_name,
             format=snapshot.match_format,
             competition=snapshot.competition,
             live=LiveMatchState(
