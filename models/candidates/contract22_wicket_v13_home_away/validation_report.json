@@ -1,0 +1,60 @@
+{
+  "candidate_version": "contract22_wicket_v13_home_away",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v10_partnership_rate (currently live) + batting_team_venue_context (home/away/unknown) -- already computed by build_ipl_venue_regime_dataset and already live in run_range_v11_partnership_rate, but never selected into the wicket line's feature set before. Reference: v10 scored AUC 0.6118/0.6102 blended (known/unknown), IPL 0.6104/0.6059, T20I 0.6113/0.6110 on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v10_partnership_rate": {
+    "auc_known_blended": 0.6118,
+    "auc_unknown_blended": 0.6102,
+    "auc_known_ipl": 0.6104,
+    "auc_unknown_ipl": 0.6059,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.611
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6117516197228994,
+    "brier_platt": 0.20462012417763048,
+    "brier_uncalibrated": 0.20460535715445893,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.609462617740836,
+      "brier": 0.19391412215802487
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6112000742426746,
+      "brier": 0.2065578243613919
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6094268093056165,
+    "brier_platt": 0.20494482468881664,
+    "brier_uncalibrated": 0.20526260536198246,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.603615465316661,
+      "brier": 0.1953813900205951
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6100302964963713,
+      "brier": 0.20667572937948148
+    }
+  },
+  "home_away_feature_importance_rank": {
+    "batting_team_venue_context": 36
+  },
+  "total_features": 53
+}
