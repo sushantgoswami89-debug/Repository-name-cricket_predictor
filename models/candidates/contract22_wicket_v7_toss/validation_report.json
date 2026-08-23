@@ -1,0 +1,34 @@
+{
+  "candidate_version": "contract22_wicket_v7_toss",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v2_batter_state + toss state (toss_decision, batting_team_won_toss). Reference: v2 scored AUC 0.6081/0.6072 (known/unknown), Brier ~0.2049 (Platt) on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v2_batter_state": {
+    "auc_known": 0.6081,
+    "auc_unknown": 0.6072,
+    "brier_platt": 0.2049
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.607507584339195,
+    "brier_platt": 0.2050037875075057,
+    "brier_uncalibrated": 0.20504453642207618,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6071733649136923,
+    "brier_platt": 0.20509569985534504,
+    "brier_uncalibrated": 0.20548961649373682,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384
+  },
+  "toss_feature_importance_rank": {
+    "toss_decision": 33,
+    "batting_team_won_toss": 36
+  },
+  "total_features": 42
+}
