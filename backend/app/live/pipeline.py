@@ -259,9 +259,11 @@ class VerifiedLivePredictionPipeline:
                 match_style=snapshot.match_format,
             ),
             # Threads the current innings' verified deliveries through to
-            # PredictionEngine's wicket model (contract22_wicket_v2_batter_state
-            # needs these for partnership-age/new-batter tracking -- see
-            # WicketContract22FeatureComputer). No registry key: genuine
+            # PredictionEngine's wicket model (whichever contract22_wicket_*
+            # is currently live -- see app/ml/prediction_engine.py's module
+            # docstring; needs these for partnership-age/new-batter/
+            # recency-state tracking, see WicketContract22FeatureComputer).
+            # No registry key: genuine
             # live TOI has no Cricsheet-style registry, so player identity
             # resolution falls back to the name-alias snapshot, same as
             # everywhere else this session handles that gap.
