@@ -80,15 +80,76 @@ adding pure noise to a small model.
   independent of who they're bowling to, which muddies a naive
   population-level test built this way.
 
+## Follow-up v2: a real feature layer, not one scalar, informed by actual production research
+
+User's direct pushback on the v1 result ("we are just not digging deep") led to two further, real
+attempts rather than defending the first negative result.
+
+**External validation found first**: [Gurpinar-Morgan et al., "You Cannot Do That Ben Stokes"](https://arxiv.org/pdf/2102.01952)
+(a real, published, production-grade system using Opta ball-tracking data) confirms the underlying
+*mechanism* is real -- a personalized deep model using 46 batter/bowler features nearly doubled a naive
+baseline (10.9% -> 19.9% accuracy) for shot-type prediction. It explicitly diagnoses the exact failure
+mode v1 hit: *"the best analytics currently generated in cricket rely on either broad averages that
+ignore context or ever-diminishing sample size."* Their shrinkage method (blend a player's own data
+with the global average, weighted by sample size) matches this project's own H2H/venue shrinkage
+convention -- validates that part of the methodology was already right.
+
+**v2 test, built accordingly**: instead of one hand-built scalar, fed a real 26-feature layer -- shrunk
+batter dismissal rate per length bucket (11), batter dismissal rate vs. bowler pace-type (3), bowler's
+own shrunk delivery-length mix (11), and bowler pace-type as a categorical (1) -- letting LightGBM find
+the interaction itself, exactly per the user's direction. Same leakage-safe split
+(train<=2022/cal=2023/holdout=2024), same real IPL `wicket_in_over` target.
+
+| | AUC (holdout=2024) |
+|---|---:|
+| Context only | 0.5809 (n=798) |
+| Context + full 26-feature layer | 0.5740 -- **worse** |
+| Full layer alone | 0.5131 -- no signal |
+
+Requiring full coverage across all 26 features shrank the holdout to 798 rows (both batter and
+bowler need enough career history simultaneously) -- thinner than ideal, but the result is consistent
+with v1, not an improvement from richer features.
+
+## Follow-up v3: the field's own recommended simplification, tested directly
+
+Searched further for how practitioners actually handle this. Real cricket analysts
+([Cricmetric](https://www.cricmetric.com/blog/2012/05/the-batsman-versus-bowler-matchup-tool/),
+[Dan Weston](https://danweston.substack.com/p/quantifying-match-ups)) explicitly warn that
+individual batter-vs-bowler samples are too small to trust (even 50 balls is called unreliable) and
+recommend the opposite of a granular per-bowler profile: *"a batsman's record against pace or spin
+bowling... would generate a more robust sample from a size perspective"* -- broad pace-type
+aggregation across many bowlers, not one bowler at a time.
+
+Isolated exactly this (the literature's own most-robust recommendation, not our own invention):
+batter's shrunk dismissal rate vs. fast/medium/spin broadly (built from 2,076,860 career rows,
+4,685 batters profiled) plus the specific bowler's own pace-type.
+
+| | AUC (holdout=2024, n=2,123) |
+|---|---:|
+| Context only | 0.5726 |
+| Context + bowler_pace_type | 0.5698 |
+| Context + expert-recommended pace matchup | 0.5696 |
+| batter_rate_vs_bowler_pace alone | 0.5266 -- weak, directionally better than the granular version (0.51), still not usable |
+
+Confirms the "coarser is more robust" principle directionally (0.5266 > 0.5131/0.5057 from the
+granular attempts) -- but still doesn't clear a usable bar, and still doesn't beat context when
+combined.
+
+## Final conclusion after three real attempts
+
+Four consecutive tests -- a hand-built scalar, a rich 26-feature layer, and the field's own
+recommended simplification -- consistently show no promotable signal on **our** data (IPL, ESPNcricinfo
+commentary-derived line/length, ~920K-2M career rows depending on scope). The underlying *mechanism*
+is real (confirmed by a genuine production system using professional Opta ball-tracking data and a
+neural network with far more capacity to share statistical strength across related situations than a
+GBM with hand-aggregated features). The binding constraint here is very likely **data quality/source**
+-- commentary-scraped categorical line/length is meaningfully noisier than sensor-based ball-tracking
+-- not the underlying idea or the feature-engineering approach. Not promoted. Closing this
+investigation thread; would need a fundamentally better data source (real ball-tracking, not
+commentary-derived) to be worth reopening.
+
 ## What's kept vs. discarded
 
-No code or model changes -- this was a research-only test, not wired
-into any live path. The player-profile-building approach (precomputable
-by identity, no live-commentary dependency) remains the right
-*architecture* if a future refinement (length x line combined, or
-feeding raw profile components into the model instead of one hand-built
-scalar, letting the GBM find the interaction itself) is ever worth
-testing -- but that's a new hypothesis to test on its own merits, not
-assumed to work because this specific formulation didn't. Downloaded
-career data (294MB extracted subset) kept in session scratchpad only,
-not added to the repo.
+No code or model changes across any of the three attempts -- all research-only, none wired into any
+live path. Downloaded career data (up to 294MB extracted subset per attempt) kept in session
+scratchpad only, not added to the repo.
