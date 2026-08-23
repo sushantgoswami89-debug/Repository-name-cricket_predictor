@@ -449,14 +449,19 @@ def test_dynamic_confidence_changes_with_match_stability() -> None:
 
 
 def test_prediction_metadata_exposes_calibration_stages() -> None:
-    """Runs prediction is sourced from run_range_v7_competition_prior
-    (see docs/candidate_run_range_enriched_v2.md) -- its own calibrated
-    inclusive band becomes expected_range directly, no momentum-blend/
-    match_bias staging, so metadata no longer carries raw_runs/blended_runs/
+    """Runs prediction is sourced from whichever run-range model is
+    currently live (see app/ml/prediction_engine.py's module docstring
+    for which one that is right now) -- its own calibrated inclusive
+    band becomes expected_range directly, no momentum-blend/match_bias
+    staging, so metadata no longer carries raw_runs/blended_runs/
     centering_correction (removed, not renamed -- that staged pipeline
     doesn't exist for runs anymore). This checks the fields that replaced
-    them instead."""
-    from app.ml.prediction_engine import PredictionEngine
+    them instead. `run_model` is asserted against the actual
+    RUN_RANGE_V3_ARTIFACTS constant, not a hardcoded string, so this
+    can't silently drift out of sync with a future promotion the way the
+    metadata field itself once did (found 2026-08-23: it was hardcoded to
+    a name five promotions stale)."""
+    from app.ml.prediction_engine import RUN_RANGE_V3_ARTIFACTS, PredictionEngine
     from app.models.live_match_state import LiveMatchState
     from app.models.match_context import MatchContext
 
@@ -467,7 +472,7 @@ def test_prediction_metadata_exposes_calibration_stages() -> None:
         )
     )
 
-    assert result.metadata["run_model"] == "run_range_v7_competition_prior"
+    assert result.metadata["run_model"] == RUN_RANGE_V3_ARTIFACTS.name
     assert 0.0 <= result.metadata["sharp_band_prob"] <= 1.0
     assert result.metadata["sharp_band_width"] == 2
     assert result.metadata["display_runs"] == result.predicted_runs

@@ -416,8 +416,17 @@ class PredictionEngine:
             confidence=confidence,
             analysis=analysis,
             metadata={
-                "run_model": "run_range_v7_competition_prior",
-                "wicket_model": "contract22_wicket_v2_batter_state",
+                # Derived from the actual loaded artifact directories, not
+                # hardcoded -- a hardcoded pair here silently went stale
+                # across all five model promotions earlier in this session
+                # (found 2026-08-23 while regenerating
+                # data/reports/confidence_signal_search/report.json: its
+                # own provenance stamp, sourced from this exact field,
+                # still said run_range_v7/contract22_wicket_v2 after v11/v16
+                # had been live for hours). This self-corrects on every
+                # future promotion instead of requiring a manual edit here.
+                "run_model": self._run_range_runtime.artifact_dir.name,
+                "wicket_model": self._wicket_runtime.artifact_dir.name,
                 "sharp_band_width": width,
                 "sharp_band_prob": round(run_range[f"sharp_{width}_prob"], 3),
                 "display_runs": pivot,
