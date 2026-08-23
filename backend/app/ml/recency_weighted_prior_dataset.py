@@ -43,6 +43,7 @@ from typing import Any
 
 import pandas as pd
 
+from app.ml.candidate_v3_dataset import _phase
 from app.ml.ipl_identities import canonical_player_id
 
 MATCH_DECAY = 0.95
@@ -74,16 +75,21 @@ def _iter_matches(
 
 def compute_final_recency_state(
     project_root: Path, scopes: tuple[str, ...] = ("ipl", "t20i")
-) -> tuple[dict[str, dict[str, float]], dict[str, dict[str, float]]]:
-    """Returns (batter_form, bowler_form) as of the most recent available match.
+) -> tuple[dict[str, dict[str, float]], dict[str, dict[str, float]], dict[str, dict[str, float]]]:
+    """Returns (batter_form, bowler_form, bowler_phase_form) as of the most
+    recent available match.
 
     Same chronological EWMA update as `build_recency_weighted_prior_dataset`,
     without materializing per-over rows -- for live snapshot builders that
     only need the final state, not the full training frame. See
-    `build_recency_weighted_live_snapshots.py`.
+    `build_recency_weighted_live_snapshots.py`. `bowler_phase_form` is keyed
+    "{bowler_id}|{phase}" -- see `build_phase_recency_weighted_dataset`'s
+    docstring for why phase-specific bowler recency is a distinct signal
+    from phase-agnostic bowler recency.
     """
     batter_form: dict[str, dict[str, float]] = {}
     bowler_form: dict[str, dict[str, float]] = {}
+    bowler_phase_form: dict[str, dict[str, float]] = {}
     for match_date, path in _iter_matches(project_root, scopes):
         raw = json.loads(path.read_text(encoding="utf-8"))
         registry = raw["info"].get("registry", {}).get("people", {})
@@ -92,8 +98,11 @@ def compute_final_recency_state(
         ]
         match_batter_events: dict[str, dict[str, float]] = {}
         match_bowler_events: dict[str, dict[str, float]] = {}
+        match_bowler_phase_events: dict[str, dict[str, float]] = {}
         for innings in regular_innings:
             for source_over in innings.get("overs", []):
+                over_number = int(source_over["over"]) + 1
+                phase = _phase(over_number)
                 for delivery in source_over.get("deliveries", []):
                     batter = canonical_player_id(str(delivery.get("batter", "")), registry)
                     this_bowler = canonical_player_id(str(delivery.get("bowler", "")), registry)
@@ -118,13 +127,95 @@ def compute_final_recency_state(
                         bowler_event["balls"] += 1
                         bowler_event["runs"] += total_runs
                         bowler_event["wickets"] += int(is_wicket and delivery.get("wickets", [{}])[0].get("kind") != "run out")
+
+                        phase_key = f"{this_bowler}|{phase}"
+                        phase_event = match_bowler_phase_events.setdefault(phase_key, dict(_empty_bowler()))
+                        phase_event["balls"] += 1
+                        phase_event["runs"] += total_runs
+                        phase_event["wickets"] += int(is_wicket and delivery.get("wickets", [{}])[0].get("kind") != "run out")
         for name, event in match_batter_events.items():
             state = batter_form.get(name, _empty_batter())
             batter_form[name] = {field: MATCH_DECAY * state[field] + event[field] for field in state}
         for name, event in match_bowler_events.items():
             state = bowler_form.get(name, _empty_bowler())
             bowler_form[name] = {field: MATCH_DECAY * state[field] + event[field] for field in state}
-    return batter_form, bowler_form
+        for name, event in match_bowler_phase_events.items():
+            state = bowler_phase_form.get(name, _empty_bowler())
+            bowler_phase_form[name] = {field: MATCH_DECAY * state[field] + event[field] for field in state}
+    return batter_form, bowler_form, bowler_phase_form
+
+
+def build_bowler_phase_recency_dataset(
+    project_root: Path, scopes: tuple[str, ...] = ("ipl", "t20i")
+) -> pd.DataFrame:
+    """Phase-specific bowler recency: is a recent economy/wicket-rate
+    computed WITHIN the same phase as the current over more predictive
+    than the phase-agnostic `bowler_recency_economy`/`bowler_recency_wicket_rate`
+    from `build_recency_weighted_prior_dataset`? Motivation: bowlers are
+    often phase specialists (strong at death, weak in the powerplay, or
+    vice versa) -- a phase-agnostic recency average blurs together very
+    different situations the existing flat `bowl_phase_avg_runs` feature
+    already knows to keep separate, just without any recency weighting.
+    This combines both levers rather than testing either alone again.
+
+    Separate function (not an extension of `build_recency_weighted_prior_dataset`)
+    so the already-promoted v9/v10 training scripts' exact reproducibility
+    is untouched by this addition.
+    """
+    paths = _iter_matches(project_root, scopes)
+    bowler_phase_form: dict[str, dict[str, float]] = {}
+    rows: list[dict[str, Any]] = []
+
+    for match_date, path in paths:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        registry = raw["info"].get("registry", {}).get("people", {})
+        regular_innings = [
+            item for item in raw.get("innings", []) if not bool(item.get("super_over", False))
+        ]
+        match_bowler_phase_events: dict[str, dict[str, float]] = {}
+
+        for innings_number, innings in enumerate(regular_innings, start=1):
+            for source_over in innings.get("overs", []):
+                deliveries = source_over.get("deliveries", [])
+                if not deliveries:
+                    continue
+                over_number = int(source_over["over"]) + 1
+                phase = _phase(over_number)
+                bowler = canonical_player_id(str(deliveries[0].get("bowler", "")), registry)
+                phase_state = bowler_phase_form.get(f"{bowler}|{phase}", _empty_bowler())
+                rows.append(
+                    {
+                        "source_file": path.name,
+                        "innings": innings_number,
+                        "over": over_number,
+                        "bowler_recency_phase_balls": phase_state["balls"],
+                        "bowler_recency_phase_economy": 6.0 * _rate(phase_state, "runs"),
+                        "bowler_recency_phase_wicket_rate": _rate(phase_state, "wickets"),
+                    }
+                )
+                for delivery in deliveries:
+                    this_bowler = canonical_player_id(str(delivery.get("bowler", "")), registry)
+                    extras = delivery.get("extras", {})
+                    is_wide_or_noball = "wides" in extras or "noballs" in extras
+                    total_runs = int(delivery.get("runs", {}).get("total", 0))
+                    is_wicket = bool(delivery.get("wickets"))
+                    if not is_wide_or_noball:
+                        key = f"{this_bowler}|{phase}"
+                        event = match_bowler_phase_events.setdefault(key, dict(_empty_bowler()))
+                        event["balls"] += 1
+                        event["runs"] += total_runs
+                        event["wickets"] += int(is_wicket and delivery.get("wickets", [{}])[0].get("kind") != "run out")
+
+        for key, event in match_bowler_phase_events.items():
+            state = bowler_phase_form.get(key, _empty_bowler())
+            bowler_phase_form[key] = {
+                field: MATCH_DECAY * state[field] + event[field] for field in state
+            }
+
+    result = pd.DataFrame(rows)
+    if result.duplicated(["source_file", "innings", "over"]).any():
+        raise ValueError("Bowler-phase recency dataset contains duplicate over keys.")
+    return result
 
 
 def build_recency_weighted_prior_dataset(

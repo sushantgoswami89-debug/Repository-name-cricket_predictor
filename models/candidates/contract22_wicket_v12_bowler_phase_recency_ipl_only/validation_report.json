@@ -1,0 +1,62 @@
+{
+  "candidate_version": "contract22_wicket_v12_bowler_phase_recency_ipl_only",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v10_partnership_rate (currently live) + phase-specific bowler recency (recent economy/wicket-rate within the same phase as the current over, not phase-agnostic). Reference: v10 scored AUC 0.6118/0.6102 blended (known/unknown), IPL 0.6104/0.6059, T20I 0.6113/0.6110 on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v10_partnership_rate": {
+    "auc_known_blended": 0.6118,
+    "auc_unknown_blended": 0.6102,
+    "auc_known_ipl": 0.6104,
+    "auc_unknown_ipl": 0.6059,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.611
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6115792197883114,
+    "brier_platt": 0.20462791555230359,
+    "brier_uncalibrated": 0.20459891137175282,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.610976528763748,
+      "brier": 0.1937558566855008
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.610708464954687,
+      "brier": 0.20659567068867377
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6098968688354036,
+    "brier_platt": 0.20481481344815872,
+    "brier_uncalibrated": 0.20516269162336334,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6114266429408123,
+      "brier": 0.19477517023773186
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6098952819191716,
+      "brier": 0.20663190805155196
+    }
+  },
+  "bowler_phase_recency_feature_importance_rank": {
+    "bowler_recency_phase_balls": 28,
+    "bowler_recency_phase_economy": 34,
+    "bowler_recency_phase_wicket_rate": 31
+  },
+  "total_features": 55
+}

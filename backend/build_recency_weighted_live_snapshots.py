@@ -13,6 +13,9 @@ so live and training features are computed identically.
 Outputs:
   data/live/recency_form_batter_stats.json -- canonical_player_id -> EWMA batter state
   data/live/recency_form_bowler_stats.json -- canonical_player_id -> EWMA bowler state
+  data/live/recency_form_bowler_phase_stats.json -- "bowler_id|phase" -> EWMA bowler state,
+    for the phase-specific bowler recency test (see
+    app/ml/recency_weighted_prior_dataset.py's build_bowler_phase_recency_dataset docstring)
 
 Re-run periodically (e.g. after each completed match) to keep current --
 not auto-refreshed by the runtime.
@@ -27,7 +30,7 @@ from app.ml.recency_weighted_prior_dataset import compute_final_recency_state
 
 
 def build(root: Path) -> None:
-    batter_form, bowler_form = compute_final_recency_state(root, scopes=("ipl", "t20i"))
+    batter_form, bowler_form, bowler_phase_form = compute_final_recency_state(root, scopes=("ipl", "t20i"))
     output_dir = root / "data/live"
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "recency_form_batter_stats.json").write_text(
@@ -36,9 +39,13 @@ def build(root: Path) -> None:
     (output_dir / "recency_form_bowler_stats.json").write_text(
         json.dumps(bowler_form, indent=2), encoding="utf-8"
     )
+    (output_dir / "recency_form_bowler_phase_stats.json").write_text(
+        json.dumps(bowler_phase_form, indent=2), encoding="utf-8"
+    )
     print(
         f"Wrote {len(batter_form)} batter recency profiles, "
-        f"{len(bowler_form)} bowler recency profiles to {output_dir}"
+        f"{len(bowler_form)} bowler recency profiles, "
+        f"{len(bowler_phase_form)} bowler-phase recency profiles to {output_dir}"
     )
 
 

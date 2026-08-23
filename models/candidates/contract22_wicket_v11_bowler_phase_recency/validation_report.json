@@ -1,0 +1,62 @@
+{
+  "candidate_version": "contract22_wicket_v11_bowler_phase_recency",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v10_partnership_rate (currently live) + phase-specific bowler recency (recent economy/wicket-rate within the same phase as the current over, not phase-agnostic). Reference: v10 scored AUC 0.6118/0.6102 blended (known/unknown), IPL 0.6104/0.6059, T20I 0.6113/0.6110 on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v10_partnership_rate": {
+    "auc_known_blended": 0.6118,
+    "auc_unknown_blended": 0.6102,
+    "auc_known_ipl": 0.6104,
+    "auc_unknown_ipl": 0.6059,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.611
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6117696535605618,
+    "brier_platt": 0.20464143506659843,
+    "brier_uncalibrated": 0.20465643079195786,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6129454473810831,
+      "brier": 0.19366253392362437
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6108005858482305,
+      "brier": 0.20662852779489052
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6096454469339313,
+    "brier_platt": 0.20487351763439013,
+    "brier_uncalibrated": 0.20536179601123206,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6075294772241906,
+      "brier": 0.19488195608079492
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6100444953784332,
+      "brier": 0.20668190984494733
+    }
+  },
+  "bowler_phase_recency_feature_importance_rank": {
+    "bowler_recency_phase_balls": 14,
+    "bowler_recency_phase_economy": 34,
+    "bowler_recency_phase_wicket_rate": 25
+  },
+  "total_features": 55
+}
