@@ -1,0 +1,85 @@
+{
+  "candidate_version": "match_winner_v1",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "First cut at a live win-probability model, a third prediction alongside run-range and wicket-in-over (not a replacement). Reuses the full contract22_wicket_v16_team_composition feature lineage plus every contextual signal rejected this session for over-level prediction (toss, home/away, team H2H, venue recency) -- testing whether they matter for match-level outcome instead, per each finding doc's own hypothesis.",
+  "split": {
+    "train_rows": 109356,
+    "calibration_rows": 24369,
+    "holdout_rows": 35593
+  },
+  "excluded_no_winner_matches": "186 of 6767 (2.7%) -- see app/ml/match_winner_dataset.py",
+  "baseline_3feature_logreg": {
+    "auc": 0.7486441970634616,
+    "brier": 0.20230218410646789
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.8586723635028404,
+    "brier_platt": 0.15377795448598808,
+    "brier_uncalibrated": 0.15404790392901585,
+    "event_rate": 0.4817801253055376,
+    "rows": 35593,
+    "ipl_platt": {
+      "rows": 5440,
+      "event_rate": 0.4909926470588235,
+      "auc": 0.7889131677816614,
+      "brier": 0.19047802272753972
+    },
+    "t20i_platt": {
+      "rows": 30153,
+      "event_rate": 0.4801180645375253,
+      "auc": 0.8703353585664024,
+      "brier": 0.14715677678446448
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.8544058319506047,
+    "brier_platt": 0.15602181534497012,
+    "brier_uncalibrated": 0.15953701450395186,
+    "event_rate": 0.4817801253055376,
+    "rows": 35593,
+    "ipl_platt": {
+      "rows": 5440,
+      "event_rate": 0.4909926470588235,
+      "auc": 0.7795629772259298,
+      "brier": 0.1916394701634165
+    },
+    "t20i_platt": {
+      "rows": 30153,
+      "event_rate": 0.4801180645375253,
+      "auc": 0.8662784091114389,
+      "brier": 0.14959591934084623
+    }
+  },
+  "auc_by_phase_known_bowler": {
+    "powerplay": {
+      "rows": 11605,
+      "event_rate": 0.4984920292977165,
+      "auc": 0.8025983183193885,
+      "brier": 0.17993725314828782
+    },
+    "middle": {
+      "rows": 16525,
+      "event_rate": 0.4837518910741301,
+      "auc": 0.8735529052720848,
+      "brier": 0.14591139654744004
+    },
+    "death": {
+      "rows": 7463,
+      "event_rate": 0.4514270400643173,
+      "auc": 0.8987726538543689,
+      "brier": 0.13051870337497623
+    }
+  },
+  "contextual_feature_importance_rank": {
+    "h2h_matches_played": 17,
+    "h2h_batting_team_win_rate_shrunk": 7,
+    "toss_decision": 47,
+    "batting_team_won_toss": 36,
+    "batting_team_venue_context": 19,
+    "venue_recency_par_score": 2,
+    "venue_recency_prior_innings": 15
+  },
+  "total_features": 68,
+  "beats_3feature_baseline": true
+}

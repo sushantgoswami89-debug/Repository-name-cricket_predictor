@@ -33,6 +33,40 @@ def _pair_key(team_a: str, team_b: str) -> str:
     return "|".join(sorted((team_a, team_b)))
 
 
+def compute_final_team_h2h_state(
+    project_root: Path, scopes: tuple[str, ...] = ("ipl",)
+) -> tuple[dict[str, int], dict[str, dict[str, int]]]:
+    """Returns (pair_matches, pair_wins) as of the most recent available
+    match -- for live snapshot builders that only need the final state,
+    not the full training frame. `pair_matches` is keyed by the same
+    `_pair_key(team_a, team_b)` as the training-side dataset;
+    `pair_wins[key][team_name]` is that team's win count within the
+    pairing. See `build_team_h2h_dataset` for the full derivation.
+    """
+    paths: list[tuple[str, Path]] = []
+    for scope in scopes:
+        for path in (project_root / "data/raw/cricsheet" / scope).glob("*.json"):
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            paths.append((str(raw["info"]["dates"][0]), path))
+    paths.sort(key=lambda item: (item[0], item[1].name))
+
+    pair_matches: dict[str, int] = defaultdict(int)
+    pair_wins: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for match_date, path in paths:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        info = raw["info"]
+        teams = list(info.get("teams", []))
+        if len(teams) != 2:
+            continue
+        key = _pair_key(teams[0], teams[1])
+        outcome = info.get("outcome", {})
+        winner = str(outcome.get("winner", ""))
+        pair_matches[key] += 1
+        if winner:
+            pair_wins[key][winner] += 1
+    return dict(pair_matches), {k: dict(v) for k, v in pair_wins.items()}
+
+
 def build_team_h2h_dataset(
     project_root: Path, scopes: tuple[str, ...] = ("ipl",)
 ) -> pd.DataFrame:

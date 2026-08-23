@@ -1,0 +1,9 @@
+{
+  "model": "match_winner_v1",
+  "artifacts": {
+    "match_winner_model.pkl": "ccab522fbe08dbb96e72bfea8bc4835d76101ecb75d3a856f7abdcc56ec36c17",
+    "match_winner_calibrator.pkl": "e993981e359a958d3b57d96860d7ed9d6f711d92a36b6b6f63c11ee579afc697",
+    "feature_cols.pkl": "3383d81e0b73e78a43dcbb3cce8e7656edccdc4e70c515508b9cd9cd62f01055",
+    "categorical_cols.pkl": "18a09021c6df1452bd38a90213733bc0e7f28f3a91b6aeffbd32c0da2ea037f1"
+  }
+}

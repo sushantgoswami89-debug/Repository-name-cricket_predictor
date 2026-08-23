@@ -34,6 +34,22 @@ def _team_player_names(snapshot: ToiSnapshot, team_name: str) -> list[str]:
     return [player.name for player in snapshot.team_players.get(team_name, ())]
 
 
+def _toss_metadata(snapshot: ToiSnapshot) -> dict[str, object]:
+    # toss_won_by/toss_decision are best-effort (ToiSnapshot's own
+    # docstring), so a missing toss block degrades to "unknown"/False --
+    # match_winner_v1's feature computer already treats that as neutral,
+    # not a crash. Added 2026-08-23 for match_winner_v1 -- the same
+    # toss/decision fields ToiSnapshot has always fetched, previously
+    # dropped before reaching MatchContext (same drop pattern this
+    # session already found and fixed for team_players).
+    return {
+        "toss_decision": snapshot.toss_decision,
+        "batting_team_won_toss": bool(
+            snapshot.toss_won_by and snapshot.toss_won_by == snapshot.batting_team
+        ),
+    }
+
+
 class VerifiedLivePredictionPipeline:
     """Publish only predictions derived from fully reconciled deliveries."""
 
@@ -267,7 +283,7 @@ class VerifiedLivePredictionPipeline:
             # live TOI has no Cricsheet-style registry, so player identity
             # resolution falls back to the name-alias snapshot, same as
             # everywhere else this session handles that gap.
-            metadata={"deliveries": all_deliveries},
+            metadata={"deliveries": all_deliveries, **_toss_metadata(snapshot)},
         )
         result = self._engine.predict(context)
         prediction = result.to_dict()
@@ -340,6 +356,7 @@ class VerifiedLivePredictionPipeline:
                 ),
                 match_style=snapshot.match_format,
             ),
+            metadata=_toss_metadata(snapshot),
         )
         prediction = self._engine.predict(context).to_dict()
         self._pending_prediction = prediction
@@ -669,12 +686,19 @@ class VerifiedLivePredictionPipeline:
             "MEDIUM": "🟡",
             "LOW": "🔴",
         }.get(str(prediction["confidence_level"]), "🟡")
+        metadata = prediction.get("metadata")
+        batting_team = metadata.get("batting_team") if isinstance(metadata, dict) else None
+        win_probability = float(prediction.get("win_probability", 0.5)) * 100
+        win_line = (
+            f"\nWin Probability: {batting_team or 'Batting side'} {win_probability:.1f}%"
+        )
         message = (
             f"🏏 Candidate v3 — Over {output['over']} Prediction\n"
             f"Score: {output['score_before_over']}/{output['wickets_before_over']}\n"
             f"Runs: {prediction['expected_range']} "
             f"(point {prediction['expected_runs']})\n"
-            f"Wicket risk (phase baseline): {probability:.1f}%\n"
+            f"Wicket risk (phase baseline): {probability:.1f}%"
+            f"{win_line}\n"
             f"System Health: {health_color} "
             f"{prediction['confidence_percent']}%"
         )
