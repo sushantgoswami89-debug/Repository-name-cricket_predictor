@@ -1,0 +1,9 @@
+{
+  "model": "contract22_wicket_v15_batter_phase_recency",
+  "artifacts": {
+    "wicket_model.pkl": "0e6ae05de71538a1534d01794f18526b1186c9b3b7cfaa42560eb93f2bd818f3",
+    "wicket_calibrator.pkl": "8ac471f882a3e30bdd834c81747ee57302b53e22b27f5a1784c7d5e36f83f862",
+    "feature_cols.pkl": "17db75175483ed866a54cc05f4cdc4ad5e43f5f3a0834140ad974f61c8ff019f",
+    "categorical_cols.pkl": "e5770c73eee611a4a488e21292b3f6f6ab40c7004f7ecc3995f09f0036580d53"
+  }
+}

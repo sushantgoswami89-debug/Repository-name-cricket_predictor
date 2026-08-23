@@ -1,0 +1,31 @@
+{
+  "candidate_version": "run_range_v13_batter_phase_recency",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "note": "run_range_v11_partnership_rate (currently live) + phase-specific batter recency (recent strike-rate/dismissal-rate within the same phase as the current over), added alongside the existing flat batter_phase_* features. Tests against the real current live architecture.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_run_range_v11_partnership_rate": {
+    "blended": 0.288,
+    "ipl": 0.2516,
+    "t20i": 0.2945
+  },
+  "holdout": {
+    "blended_hit_rate": 0.28633465259454705,
+    "ipl_hit_rate": 0.2465925394548063,
+    "t20i_hit_rate": 0.2935276551545053
+  },
+  "beats_v11_blended_and_calibration_gate": false,
+  "beats_v11_on_ipl_specifically": false,
+  "batter_phase_recency_feature_importance_rank": {
+    "striker_recency_phase_balls": 35,
+    "striker_recency_phase_runs_per_ball": 32,
+    "striker_recency_phase_boundary_rate": 26,
+    "striker_recency_phase_dismissal_rate": 28
+  },
+  "total_features": 67,
+  "decision": "reject_keep_research"
+}

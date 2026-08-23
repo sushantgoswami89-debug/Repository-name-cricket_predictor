@@ -1,0 +1,63 @@
+{
+  "candidate_version": "contract22_wicket_v15_batter_phase_recency",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v10_partnership_rate (currently live) + phase-specific batter recency (recent strike-rate/dismissal-rate within the same phase as the current over). Reference: v10 scored AUC 0.6118/0.6102 blended (known/unknown), IPL 0.6104/0.6059, T20I 0.6113/0.6110 on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v10_partnership_rate": {
+    "auc_known_blended": 0.6118,
+    "auc_unknown_blended": 0.6102,
+    "auc_known_ipl": 0.6104,
+    "auc_unknown_ipl": 0.6059,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.611
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6124265436485321,
+    "brier_platt": 0.20449216334461673,
+    "brier_uncalibrated": 0.2044859356100133,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6148763417389409,
+      "brier": 0.19364461707831385
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6113694445173945,
+      "brier": 0.20645548189761934
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.609855524263738,
+    "brier_platt": 0.20470489062980773,
+    "brier_uncalibrated": 0.20503038808453408,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6102128347759288,
+      "brier": 0.19517212709385975
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6103538856799595,
+      "brier": 0.2064302440924293
+    }
+  },
+  "batter_phase_recency_feature_importance_rank": {
+    "striker_recency_phase_balls": 7,
+    "striker_recency_phase_runs_per_ball": 29,
+    "striker_recency_phase_boundary_rate": 28,
+    "striker_recency_phase_dismissal_rate": 23
+  },
+  "total_features": 56
+}

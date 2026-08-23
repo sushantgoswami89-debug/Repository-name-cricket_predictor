@@ -20,6 +20,10 @@ recompute per prediction) plus cheap per-call state:
   2026-08-23 for contract22_wicket_v9_recency_form: data/live/
   recency_form_*.json (build_recency_weighted_live_snapshots.py), same
   EWMA update as app/ml/recency_weighted_prior_dataset.py.
+- Phase-specific batter recency (recent strike-rate/dismissal-rate within
+  the same phase as the current over), added 2026-08-23 for
+  contract22_wicket_v15_batter_phase_recency: data/live/
+  recency_form_batter_phase_stats.json, keyed "player_id|phase".
 - New-batter/partnership-age state (active_batter_state, new_batter,
   partnership_legal_ball_age, striker_match_balls, partner_match_balls):
   computed fresh from the current innings' verified deliveries every
@@ -91,6 +95,7 @@ class WicketContract22FeatureComputer:
         self._bowler_phase_stats: dict[str, dict[str, int]] = _load("wicket_contract22_bowler_phase_stats.json")
         self._recency_batter_stats: dict[str, dict[str, float]] = _load("recency_form_batter_stats.json")
         self._recency_bowler_stats: dict[str, dict[str, float]] = _load("recency_form_bowler_stats.json")
+        self._recency_batter_phase_stats: dict[str, dict[str, float]] = _load("recency_form_batter_phase_stats.json")
 
         styles_path = root / "data/external/cricsheet_player_styles.csv"
         self._full_name_aliases: dict[str, str] = build_full_name_alias_index(styles_path)
@@ -176,6 +181,18 @@ class WicketContract22FeatureComputer:
             "balls": profile["balls"],
             "runs_per_ball": profile["runs"] / balls,
             "dot_rate": profile["dots"] / balls,
+            "boundary_rate": profile["boundaries"] / balls,
+            "dismissal_rate": profile["dismissals"] / balls,
+        }
+
+    def _batter_phase_recency(self, player_id: str, phase: str) -> dict[str, float]:
+        profile = self._recency_batter_phase_stats.get(f"{player_id}|{phase}")
+        if profile is None:
+            return {"balls": 0.0, "runs_per_ball": 0.0, "boundary_rate": 0.0, "dismissal_rate": 0.0}
+        balls = max(1.0, profile["balls"])
+        return {
+            "balls": profile["balls"],
+            "runs_per_ball": profile["runs"] / balls,
             "boundary_rate": profile["boundaries"] / balls,
             "dismissal_rate": profile["dismissals"] / balls,
         }
@@ -380,4 +397,10 @@ class WicketContract22FeatureComputer:
         result["bowler_recency_balls"] = bowler_recency["balls"]
         result["bowler_recency_economy"] = bowler_recency["economy"]
         result["bowler_recency_wicket_rate"] = bowler_recency["wicket_rate"]
+
+        striker_phase_recency = self._batter_phase_recency(striker_id, phase)
+        result["striker_recency_phase_balls"] = striker_phase_recency["balls"]
+        result["striker_recency_phase_runs_per_ball"] = striker_phase_recency["runs_per_ball"]
+        result["striker_recency_phase_boundary_rate"] = striker_phase_recency["boundary_rate"]
+        result["striker_recency_phase_dismissal_rate"] = striker_phase_recency["dismissal_rate"]
         return result

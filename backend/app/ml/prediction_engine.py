@@ -14,12 +14,20 @@ run_range_v4_batter_phase (28.60% blended) plus competition-specific
 app/ml/player_competition_dataset.py's docstring) -- see
 docs/candidate_run_range_enriched_v2.md and
 docs/finding_blended_holdout_masks_ipl_accuracy.md.
-Wicket prediction is sourced from contract22_wicket_v10_partnership_rate's
-calibrated probability (see docs/finding_partnership_scoring_rate.md):
-contract22_wicket_v9_recency_form plus the same current-partnership
-scoring rate. AUC improves on every split tested (blended/IPL/T20I x
-known/unknown, all 6 up), Brier improves on every split too. v9 itself
-(see docs/finding_recency_weighted_form.md) is
+Wicket prediction is sourced from contract22_wicket_v15_batter_phase_recency's
+calibrated probability (see docs/finding_batter_phase_recency_promoted.md):
+contract22_wicket_v10_partnership_rate plus phase-specific batter
+recency (recent strike-rate/dismissal-rate within the same phase as the
+current over -- "finishing ability" is a distinct, form-sensitive skill,
+and death overs are the single most decisive IPL phase per external
+analysis). Real, consistent IPL gain (AUC 0.6104->0.6149 known,
+0.6059->0.6102 unknown), T20I/blended roughly flat. v10 itself (see
+docs/finding_partnership_scoring_rate.md) is
+contract22_wicket_v9_recency_form plus current-partnership scoring rate
+(team runs/balls since the fall of the last wicket, resets at each
+dismissal). AUC improved on every split tested there too (blended/IPL/
+T20I x known/unknown, all 6 up), Brier improved on every split too. v9
+itself (see docs/finding_recency_weighted_form.md) is
 contract22_wicket_v2_batter_state plus recency-weighted (match-EWMA,
 decay=0.95) batter/bowler form added alongside the existing flat
 career-average features -- every flat prior-stat feature in this codebase
@@ -55,7 +63,7 @@ RUN_RANGE_V3_ARTIFACTS = (
 )
 WICKET_CONTRACT22_ARTIFACTS = (
     Path(__file__).resolve().parents[3]
-    / "models/candidates/contract22_wicket_v10_partnership_rate"
+    / "models/candidates/contract22_wicket_v15_batter_phase_recency"
 )
 
 
