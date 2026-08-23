@@ -1,31 +1,31 @@
 {
-  "generated_at_utc": "2026-08-22T18:39:57.930187+00:00",
+  "generated_at_utc": "2026-08-23T04:52:55.982934+00:00",
   "model_provenance": {
-    "run_model": "run_range_v7_competition_prior",
-    "wicket_model": "contract22_wicket_v2_batter_state"
+    "run_model": "run_range_v11_partnership_rate",
+    "wicket_model": "contract22_wicket_v16_team_composition"
   },
   "_staleness_note": "This file is only valid evidence for the model_provenance stamped above. If PredictionEngine's run_model/wicket_model has changed since generated_at_utc, re-run this script before trusting these numbers -- do not reuse an old copy across a model swap.",
   "n_rows": 19261,
   "train_rows": 16170,
   "holdout_rows": 3091,
-  "holdout_auc_fitted_model": 0.5505116637389554,
-  "holdout_auc_existing_heuristic": 0.5276594171529292,
-  "holdout_brier_fitted_model": 0.1785226061887007,
-  "holdout_brier_constant_baseline": 0.17875191484739755,
+  "holdout_auc_fitted_model": 0.5622527932126427,
+  "holdout_auc_existing_heuristic": 0.5255897114178167,
+  "holdout_brier_fitted_model": 0.17754556820071837,
+  "holdout_brier_constant_baseline": 0.17843681201586636,
   "coefficients": {
-    "over": -0.03913843100786947,
-    "wickets_in_hand": -0.08583860148274963,
-    "balls_remaining": 0.0034915068017917685,
-    "current_run_rate": -0.0012290068511847348,
+    "over": -0.03629250062172804,
+    "wickets_in_hand": -0.0824856767181424,
+    "balls_remaining": 0.003971230995999394,
+    "current_run_rate": -0.0016816247933904795,
     "is_chase": 0.0,
     "required_run_rate": 0.0,
-    "recent_runs_per_ball": -0.10400212707373939,
-    "recent_dot_rate": -0.11089242298613392,
-    "recent_boundary_rate": 0.1043588594018327,
-    "recent_wicket_rate": 0.9274013152543319,
-    "range_width": 0.0011506360968885144,
-    "phase_death": 0.12464892503239568,
-    "phase_middle": 0.2205317808739077,
-    "phase_powerplay": -0.344605387859493
+    "recent_runs_per_ball": -0.18754547989893694,
+    "recent_dot_rate": -0.2166596197140056,
+    "recent_boundary_rate": 0.4924681874991207,
+    "recent_wicket_rate": 1.0347439750053173,
+    "range_width": 0.0013381316702825293,
+    "phase_death": 0.1718441729561465,
+    "phase_middle": 0.2015776722174362,
+    "phase_powerplay": -0.37275277933797646
   }
 }
