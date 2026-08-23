@@ -1,0 +1,61 @@
+{
+  "candidate_version": "contract22_wicket_v14_venue_recency",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v10_partnership_rate (currently live) + recency-weighted venue par score (innings-indexed EWMA, decay=0.95), added alongside the existing flat venue_par_score. Reference: v10 scored AUC 0.6118/0.6102 blended (known/unknown), IPL 0.6104/0.6059, T20I 0.6113/0.6110 on this same population.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v10_partnership_rate": {
+    "auc_known_blended": 0.6118,
+    "auc_unknown_blended": 0.6102,
+    "auc_known_ipl": 0.6104,
+    "auc_unknown_ipl": 0.6059,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.611
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6109772769381294,
+    "brier_platt": 0.20467887019986283,
+    "brier_uncalibrated": 0.20467935369678417,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6088341746000193,
+      "brier": 0.19441490874048414
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6107696497639041,
+      "brier": 0.20653656460058656
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6087995640039909,
+    "brier_platt": 0.20499884985285516,
+    "brier_uncalibrated": 0.20540685010834864,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.606406959370036,
+      "brier": 0.19587737292745094
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6097477794939343,
+      "brier": 0.20664976374976682
+    }
+  },
+  "venue_recency_feature_importance_rank": {
+    "venue_recency_par_score": 4,
+    "venue_recency_prior_innings": 36
+  },
+  "total_features": 54
+}

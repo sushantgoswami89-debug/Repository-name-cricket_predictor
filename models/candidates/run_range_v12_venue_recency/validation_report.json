@@ -1,0 +1,29 @@
+{
+  "candidate_version": "run_range_v12_venue_recency",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "note": "run_range_v11_partnership_rate (currently live) + recency-weighted venue par score (innings-indexed EWMA, decay=0.95), added alongside the existing flat venue_par_score. Tests against the real current live architecture.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_run_range_v11_partnership_rate": {
+    "blended": 0.288,
+    "ipl": 0.2516,
+    "t20i": 0.2945
+  },
+  "holdout": {
+    "blended_hit_rate": 0.2883410290237467,
+    "ipl_hit_rate": 0.2465925394548063,
+    "t20i_hit_rate": 0.29589716956634643
+  },
+  "beats_v11_blended_and_calibration_gate": true,
+  "beats_v11_on_ipl_specifically": false,
+  "venue_recency_feature_importance_rank": {
+    "venue_recency_par_score": 3,
+    "venue_recency_prior_innings": 42
+  },
+  "total_features": 65,
+  "decision": "promote_candidate"
+}
