@@ -147,6 +147,39 @@ this audit harness already in hand (`swing_pattern_audit.py`-style
 approach, not saved to the repo -- rebuild from this doc's method if
 needed).
 
+## Follow-up: LightGBM monotone_constraints tested, also not kept
+
+Researching real-world cricket win-probability systems (WASP uses
+dynamic-programming backward induction, which is monotonic by
+construction) suggested the more "correct" fix flagged above --
+`monotone_constraints` -- was worth actually testing rather than
+speculating about. Constrained the 5 features with an unambiguous,
+universally-true relationship to the outcome (`required_run_rate`,
+`runs_required`, `wkts_down_before_over`: negative; `current_run_rate`,
+`wickets_in_hand`: positive), left everything else (recency/context/
+team features, where the "obvious" direction isn't always true) free.
+
+Tested both `monotone_constraints_method` variants against the real
+29-match audit and the full holdout:
+
+| | AUC (known) | AUC (IPL known) | Brier (known) | Trajectory agreement |
+|---|---:|---:|---:|---:|
+| Live (unconstrained) | 0.8587 | 0.7889 | 0.15378 | 81.7% |
+| `method="basic"` | 0.8579 | 0.7845 | 0.15421 | 82.6% |
+| `method="advanced"` | 0.8566 | 0.7840 | 0.15484 | 83.0% |
+
+**Not promoted, either variant.** Both buy a small trajectory-smoothness
+gain (+0.9 to +1.3 points over the already-fixed 81.7%) at a real,
+consistent cost to AUC and Brier on every cut -- IPL (already the
+harder population) hit hardest. `"advanced"` trades even more accuracy
+for barely more smoothness than `"basic"`, the opposite of what its own
+documentation would suggest. The team-swap bug fix already captured the
+overwhelming majority of the real trajectory problem (63.5 of the
+~63.5-point total gain); what's left in the remaining ~18% looks more
+like genuine model uncertainty in ambiguous match states than a
+structural monotonicity defect a blunt 5-feature constraint can cleanly
+fix without cost.
+
 ## Standing gap this surfaces
 
 No test in this repo exercised `MatchWinnerEngine`'s team-identity
