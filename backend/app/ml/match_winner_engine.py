@@ -16,6 +16,10 @@ output under its own key, never merged into `PredictionResult`.
 Uses the exact same validated model/features as before this refactor --
 this only changes where the call boundary is, not what gets predicted or
 how well it predicts.
+
+`predict()`'s team-identity resolution was fixed 2026-08-23 -- see the
+inline comment there and docs/finding_win_probability_chase_bug.md for
+the full story (a 63-point real-holdout accuracy jump from one bug).
 """
 
 from __future__ import annotations
@@ -69,17 +73,26 @@ class MatchWinnerEngine:
     def predict(self, context: MatchContext) -> MatchWinnerResult:
         current_over = context.live.over
         is_chase = bool(context.live.is_chase)
-        batting_team = (
-            (context.bowling_first or context.team2)
-            if is_chase
-            else (context.batting_first or context.team1)
-        )
-        if batting_team == context.team1:
-            batting_team_players, bowling_team_players = context.team1_players, context.team2_players
-            bowling_team = context.team2
-        else:
-            batting_team_players, bowling_team_players = context.team2_players, context.team1_players
-            bowling_team = context.team1
+        # BUG FIXED 2026-08-23 (see docs/finding_win_probability_chase_bug.md):
+        # this used to branch on is_chase and fall back to
+        # context.batting_first/bowling_first when choosing the batting
+        # team -- those two fields are never set anywhere in the codebase
+        # (pipeline.py never populates them), so the fallback always fired,
+        # and it fell back to context.team2 specifically during every
+        # chase. But app/live/pipeline.py always sets context.team1 to
+        # whichever team is CURRENTLY BATTING (snapshot.batting_team) and
+        # context.team2 to whichever is bowling, for both innings alike --
+        # the same convention app/ml/match_winner_dataset.py's training
+        # label uses (`batting_team = innings.get("team")`, per-innings,
+        # not a fixed match role). So during every second-innings chase in
+        # live production, this was silently swapping team identity: the
+        # bowling team's name and roster were fed in and labeled as the
+        # batting team. Correct fix: context.team1/team2 already ARE the
+        # right teams in the right roles, always -- no is_chase branch
+        # needed.
+        batting_team = context.team1
+        bowling_team = context.team2
+        batting_team_players, bowling_team_players = context.team1_players, context.team2_players
 
         win_probability = self._runtime.predict_win_probability(
             registry=context.metadata.get("registry", {}),
