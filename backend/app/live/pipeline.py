@@ -16,6 +16,7 @@ from app.live.toi_reader import ToiDelivery, ToiSnapshot
 from app.live.verification import LiveDeliveryVerifier, VerificationError
 from app.ml.engine_router import EngineRouter
 from app.ml.bowler_shadow_predictor import BowlerShadowPredictor
+from app.ml.match_winner_engine import MatchWinnerEngine
 from app.ml.prediction_engine import PredictionEngine
 from app.models.live_match_state import LiveMatchState
 from app.models.match_context import MatchContext
@@ -62,9 +63,16 @@ class VerifiedLivePredictionPipeline:
         restore_verified_state: bool = True,
         shadow_predictor: BowlerShadowPredictor | None = None,
         publish_bowler_shadow: bool = False,
+        match_winner_engine: MatchWinnerEngine | None = None,
     ) -> None:
         self._engine = engine or PredictionEngine()
         self._shadow_predictor = shadow_predictor or BowlerShadowPredictor()
+        # Deliberately separate from self._engine -- see
+        # app/ml/match_winner_engine.py's module docstring. Constructed
+        # lazily-tolerant: if the win-probability artifacts/snapshots
+        # aren't available, this raises here (fail fast at startup, same
+        # as PredictionEngine itself) rather than silently on every call.
+        self._match_winner_engine = match_winner_engine or MatchWinnerEngine()
         # announced_bowler_current_spell_v3 is validated on a proper
         # 2025-2026 holdout (every promotion gate passes -- see
         # models/candidates/announced_bowler_current_spell_v3/validation_report.json)
@@ -309,6 +317,9 @@ class VerifiedLivePredictionPipeline:
             metadata["bowler_shadow"] = shadow
         self._pending_prediction = prediction
         self._pending_over = next_over
+        # Separate model, separate output key -- never merged into
+        # `prediction` (see app/ml/match_winner_engine.py's docstring).
+        win_probability = self._predict_win_probability(context)
         output: dict[str, object] = {
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
@@ -324,6 +335,7 @@ class VerifiedLivePredictionPipeline:
             ),
             "prediction": prediction,
             "shadow_prediction": shadow,
+            "win_probability": win_probability,
             "previous_over_evaluation": previous_evaluation,
         }
         if self._output:
@@ -362,6 +374,7 @@ class VerifiedLivePredictionPipeline:
         self._pending_prediction = prediction
         self._pending_over = 1
         self._last_resolved_over = 0
+        win_probability = self._predict_win_probability(context)
         output: dict[str, object] = {
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
@@ -371,6 +384,7 @@ class VerifiedLivePredictionPipeline:
             "wickets_before_over": 0,
             "new_deliveries_verified": 0,
             "prediction": prediction,
+            "win_probability": win_probability,
             "previous_over_evaluation": None,
             "prediction_basis": "pre_innings_context",
         }
@@ -380,6 +394,22 @@ class VerifiedLivePredictionPipeline:
         self._publish_output(snapshot, 1, output)
         self._persist(snapshot)
         return output
+
+    def _predict_win_probability(self, context: MatchContext) -> dict[str, object]:
+        """Fault-isolated: a problem here (missing snapshot, artifact
+        issue, anything) must never break run-range/wicket prediction,
+        which is the whole point of match_winner_v1 living in its own
+        engine. Mirrors the existing BowlerShadowPredictor isolation
+        pattern in _current_over_prediction below."""
+        try:
+            return self._match_winner_engine.predict(context).to_dict()
+        except Exception as exc:
+            return {
+                "status": "not_applied",
+                "candidate_version": "match_winner_v1",
+                "reason": "win_probability_inference_failed",
+                "detail": type(exc).__name__,
+            }
 
     @staticmethod
     def _apply_bowler_shadow(prediction: dict[str, object], shadow: dict[str, object]) -> None:
@@ -686,12 +716,15 @@ class VerifiedLivePredictionPipeline:
             "MEDIUM": "🟡",
             "LOW": "🔴",
         }.get(str(prediction["confidence_level"]), "🟡")
-        metadata = prediction.get("metadata")
-        batting_team = metadata.get("batting_team") if isinstance(metadata, dict) else None
-        win_probability = float(prediction.get("win_probability", 0.5)) * 100
-        win_line = (
-            f"\nWin Probability: {batting_team or 'Batting side'} {win_probability:.1f}%"
-        )
+        # Separate model, separate key -- see app/ml/match_winner_engine.py.
+        # "status": "not_applied" is a normal, fault-isolated outcome
+        # (missing artifacts, inference error), not an exception -- the
+        # line is simply omitted rather than showing a stale/fake number.
+        win = output.get("win_probability")
+        win_line = ""
+        if isinstance(win, dict) and win.get("status") != "not_applied" and "win_probability" in win:
+            win_team = win.get("batting_team") or "Batting side"
+            win_line = f"\nWin Probability: {win_team} {float(win['win_probability']) * 100:.1f}%"
         message = (
             f"🏏 Candidate v3 — Over {output['over']} Prediction\n"
             f"Score: {output['score_before_over']}/{output['wickets_before_over']}\n"

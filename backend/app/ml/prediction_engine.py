@@ -62,7 +62,6 @@ from app.ml.engine_router import EngineFamily, EngineRouter
 from app.ml.model_repository import ModelRepository
 from app.ml.prediction_result import PredictionResult
 from app.models.match_context import MatchContext
-from runtime_match_winner import MatchWinnerRuntime
 from runtime_run_range_v3 import RunRangeRuntimeV3
 from runtime_wicket_contract22 import WicketRuntimeContract22
 
@@ -74,22 +73,13 @@ WICKET_CONTRACT22_ARTIFACTS = (
     Path(__file__).resolve().parents[3]
     / "models/candidates/contract22_wicket_v16_team_composition"
 )
-# match_winner_v1 (2026-08-23): a third prediction alongside run-range and
-# wicket, not a replacement -- see docs/finding_match_winner_v1.md. Probability
-# the currently-batting team wins the match. AUC 0.859 known-bowler blended
-# on 2025+ holdout (beats a 3-feature current-rate/required-rate/wickets/
-# balls-remaining baseline's 0.749), sensible phase progression (powerplay
-# 0.80 -> middle 0.87 -> death 0.90 -- honestly uncertain early, sharpens as
-# the match state becomes more decisive, the shape a real win-probability
-# model should have). Reuses contract22_wicket_v16_team_composition's full
-# feature lineage plus toss/home-away/team-H2H/venue-recency -- each
-# rejected this session for over-level prediction but validated here as
-# genuinely important for match-level outcome (venue_recency_par_score
-# ranked 2nd of 68 features, team H2H win rate 7th).
-MATCH_WINNER_ARTIFACTS = (
-    Path(__file__).resolve().parents[3]
-    / "models/candidates/match_winner_v1"
-)
+# Win probability (match_winner_v1, 2026-08-23) is intentionally NOT wired
+# in here -- it lives in its own app/ml/match_winner_engine.py, called
+# separately by app/live/pipeline.py, with its own output. Deliberate
+# isolation: a fault in that model must never be able to affect this
+# engine's run-range/wicket predictions. See
+# docs/finding_match_winner_v1.md for why, and
+# docs/finding_match_winner_engine_isolation.md for this refactor.
 
 
 class PredictionEngine:
@@ -98,7 +88,6 @@ class PredictionEngine:
         repository: ModelRepository | None = None,
         run_range_runtime: RunRangeRuntimeV3 | None = None,
         wicket_runtime: WicketRuntimeContract22 | None = None,
-        match_winner_runtime: MatchWinnerRuntime | None = None,
     ) -> None:
         self._repository = repository or ModelRepository()
         # run_range_v7_competition_prior (28.75% blended / 25.00% IPL /
@@ -112,9 +101,6 @@ class PredictionEngine:
         # docs/candidate_ipl_wicket_v7_2_spell_features.md's 2026-08-22
         # follow-ups) replaces the wkt_model.pkl prediction.
         self._wicket_runtime = wicket_runtime or WicketRuntimeContract22(WICKET_CONTRACT22_ARTIFACTS)
-        # match_winner_v1: third prediction, probability the currently-
-        # batting team wins the match -- see the module docstring above.
-        self._match_winner_runtime = match_winner_runtime or MatchWinnerRuntime(MATCH_WINNER_ARTIFACTS)
 
         # --- STATE MANAGEMENT ---
         self._last_predicted_over = -1
@@ -299,10 +285,8 @@ class PredictionEngine:
         )
         if batting_team == context.team1:
             batting_team_players, bowling_team_players = context.team1_players, context.team2_players
-            bowling_team = context.team2
         else:
             batting_team_players, bowling_team_players = context.team2_players, context.team1_players
-            bowling_team = context.team1
 
         # 2. WICKET PROBABILITY (contract22_wicket_v2_batter_state)
         # Replaces the old models/wkt_model.pkl + phase-keyed calibrator
@@ -336,44 +320,6 @@ class PredictionEngine:
             recent_wicket_rate=context.live.recent_wicket_rate,
             batting_team_players=batting_team_players,
             bowling_team_players=bowling_team_players,
-        )
-
-        # 2b. WIN PROBABILITY (match_winner_v1) -- a third prediction,
-        # not a replacement for runs/wicket. See MATCH_WINNER_ARTIFACTS'
-        # comment above for the validated numbers. toss_decision/
-        # batting_team_won_toss come through context.metadata (same
-        # place deliveries/registry already travel) since MatchContext
-        # itself has no dedicated toss fields -- app/live/pipeline.py
-        # populates these from ToiSnapshot.toss_won_by/toss_decision.
-        win_probability = self._match_winner_runtime.predict_win_probability(
-            registry=context.metadata.get("registry", {}),
-            striker_name=context.live.striker,
-            non_striker_name=context.live.non_striker,
-            bowler_name=context.live.bowler,
-            venue_name=context.venue,
-            deliveries=context.metadata.get("deliveries", []),
-            over=current_over,
-            score_before_over=context.live.score_before_over,
-            wkts_down_before_over=context.live.wkts_down_before_over,
-            wickets_in_hand=context.live.wickets_in_hand,
-            legal_balls_bowled=context.live.legal_balls_bowled,
-            balls_remaining=context.live.balls_remaining,
-            current_run_rate=context.live.current_run_rate,
-            is_chase=bool(context.live.is_chase),
-            runs_required=context.live.runs_required,
-            required_run_rate=context.live.required_run_rate,
-            recent_legal_balls=context.live.recent_legal_balls,
-            recent_runs_per_ball=context.live.recent_runs_per_ball,
-            recent_dot_rate=context.live.recent_dot_rate,
-            recent_single_rate=context.live.recent_single_rate,
-            recent_boundary_rate=context.live.recent_boundary_rate,
-            recent_wicket_rate=context.live.recent_wicket_rate,
-            batting_team_players=batting_team_players,
-            bowling_team_players=bowling_team_players,
-            batting_team_name=batting_team,
-            bowling_team_name=bowling_team,
-            toss_decision=context.metadata.get("toss_decision", ""),
-            batting_team_won_toss=bool(context.metadata.get("batting_team_won_toss", False)),
         )
 
         # 3. RUN RANGE (run_range_v7_competition_prior)
@@ -474,7 +420,6 @@ class PredictionEngine:
             predicted_runs=pivot,
             expected_range=f"{low_bound}-{high_bound}",
             wicket_probability=round(evolved_wkt, 3),
-            win_probability=round(win_probability, 3),
             confidence=confidence,
             analysis=analysis,
             metadata={
@@ -489,9 +434,7 @@ class PredictionEngine:
                 # future promotion instead of requiring a manual edit here.
                 "run_model": self._run_range_runtime.artifact_dir.name,
                 "wicket_model": self._wicket_runtime.artifact_dir.name,
-                "match_winner_model": self._match_winner_runtime.artifact_dir.name,
                 "batting_team": batting_team,
-                "bowling_team": bowling_team,
                 "sharp_band_width": width,
                 "sharp_band_prob": round(run_range[f"sharp_{width}_prob"], 3),
                 "display_runs": pivot,

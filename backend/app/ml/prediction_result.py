@@ -22,11 +22,6 @@ class PredictionResult:
     # NEW: Added for 90% accuracy bracketing
     expected_range: str = ""
 
-    # NEW (2026-08-23): probability the currently-batting team wins the
-    # match, from match_winner_v1 -- see docs/finding_match_winner_v1.md.
-    # A third prediction alongside runs/wicket, not a replacement.
-    win_probability: float = 0.5
-
     # NEW: Added to support additional match insights
     metadata: dict = field(default_factory=dict)
 
@@ -71,9 +66,6 @@ class PredictionResult:
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError("Confidence must be between 0 and 1.")
 
-        if not 0.0 <= self.win_probability <= 1.0:
-            raise ValueError("Win probability must be between 0 and 1.")
-
         return True
 
     def to_dict(self) -> dict:
@@ -82,7 +74,6 @@ class PredictionResult:
             "expected_runs": self.predicted_runs,
             "expected_range": self.expected_range,
             "wicket_probability": self.wicket_probability,
-            "win_probability": self.win_probability,
             "confidence": self.confidence,
             "confidence_percent": self.confidence_percent,
             "confidence_level": self.confidence_level,
