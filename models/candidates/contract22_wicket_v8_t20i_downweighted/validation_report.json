@@ -1,0 +1,103 @@
+{
+  "candidate_version": "contract22_wicket_v8_t20i_downweighted",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "Re-tests the proven ipl_wicket_v7_7_t20i_augmented lever (T20I training rows down-weighted to 0.2, IPL at 1.0) on contract22_wicket_v2_batter_state's actual live architecture and full feature set -- the two lineages were never directly comparable before this. Also reports IPL-only/T20I-only split for the first time on this model line, per the standing practice from finding_blended_holdout_masks_ipl_accuracy.md.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v2_batter_state_blended": {
+    "auc_known": 0.6081,
+    "auc_unknown": 0.6072,
+    "brier_platt": 0.2049
+  },
+  "baseline_t20i_weight_1_0": {
+    "bowler_known_ceiling": {
+      "blended": {
+        "rows": 36384,
+        "event_rate": 0.3065633245382586,
+        "auc": 0.6083493576862278,
+        "brier": 0.20494566754268198
+      },
+      "ipl": {
+        "rows": 5576,
+        "event_rate": 0.2774390243902439,
+        "auc": 0.6078619087247706,
+        "brier": 0.19442643577411353
+      },
+      "t20i": {
+        "rows": 30808,
+        "event_rate": 0.3118345884185926,
+        "auc": 0.6076797825304723,
+        "brier": 0.2068495638144795
+      }
+    },
+    "bowler_unknown_realistic": {
+      "blended": {
+        "rows": 36384,
+        "event_rate": 0.3065633245382586,
+        "auc": 0.6074857856047832,
+        "brier": 0.20503365609778182
+      },
+      "ipl": {
+        "rows": 5576,
+        "event_rate": 0.2774390243902439,
+        "auc": 0.6043254921534453,
+        "brier": 0.19560719637198087
+      },
+      "t20i": {
+        "rows": 30808,
+        "event_rate": 0.3118345884185926,
+        "auc": 0.6077879483571342,
+        "brier": 0.20673976942649727
+      }
+    }
+  },
+  "candidate_t20i_weight_0_2": {
+    "bowler_known_ceiling": {
+      "blended": {
+        "rows": 36384,
+        "event_rate": 0.3065633245382586,
+        "auc": 0.6049771739586978,
+        "brier": 0.20537784083257504
+      },
+      "ipl": {
+        "rows": 5576,
+        "event_rate": 0.2774390243902439,
+        "auc": 0.6050083244249072,
+        "brier": 0.1959693465329632
+      },
+      "t20i": {
+        "rows": 30808,
+        "event_rate": 0.3118345884185926,
+        "auc": 0.6048170016706811,
+        "brier": 0.20708070256376937
+      }
+    },
+    "bowler_unknown_realistic": {
+      "blended": {
+        "rows": 36384,
+        "event_rate": 0.3065633245382586,
+        "auc": 0.6038604814192485,
+        "brier": 0.20562432949654902
+      },
+      "ipl": {
+        "rows": 5576,
+        "event_rate": 0.2774390243902439,
+        "auc": 0.6018107569506983,
+        "brier": 0.19694297857862159
+      },
+      "t20i": {
+        "rows": 30808,
+        "event_rate": 0.3118345884185926,
+        "auc": 0.6043154600388445,
+        "brier": 0.20719558412905886
+      }
+    }
+  },
+  "beats_baseline_on_ipl_auc_known": false,
+  "beats_baseline_on_ipl_auc_unknown": false,
+  "beats_baseline_on_ipl_brier": false,
+  "decision": "reject_keep_research"
+}
