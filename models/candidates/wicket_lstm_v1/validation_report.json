@@ -1,0 +1,44 @@
+{
+  "candidate_version": "wicket_lstm_v1",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "Plain single-layer LSTM over raw per-ball sequence (9 minimal features/ball, no player identity, no engineered rolling windows, hidden=64) predicting wicket_in_over. Tests whether sequence order itself carries signal beyond the live GBM's flat/aggregated features. No bowler-identity feature at all -- compare primarily against the live model's bowler_unknown cut.",
+  "architecture": {
+    "hidden_size": 64,
+    "max_seq_len": 120,
+    "features_per_ball": 9,
+    "best_epoch_cal_auc": 0.5855837372717658
+  },
+  "split": {
+    "train_rows": 111601,
+    "cal_rows": 24726,
+    "holdout_rows": 36408
+  },
+  "reference_contract22_wicket_v16_team_composition": {
+    "auc_known_blended": 0.6126,
+    "auc_unknown_blended": 0.6114,
+    "auc_known_ipl": 0.6151,
+    "auc_unknown_ipl": 0.6131,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.6113
+  },
+  "holdout_result": {
+    "auc": 0.5877388541105488,
+    "brier_platt": 0.2067073690669995,
+    "brier_uncalibrated": 0.24416093528270721,
+    "event_rate": 0.3066633641719818,
+    "rows": 36408,
+    "ipl_platt": {
+      "rows": 5580,
+      "event_rate": 0.29928314685821533,
+      "auc": 0.584495382636262,
+      "brier": 0.20491653599424012
+    },
+    "t20i_platt": {
+      "rows": 30828,
+      "event_rate": 0.30799922347068787,
+      "auc": 0.5882337591817131,
+      "brier": 0.2070315175211969
+    }
+  }
+}

@@ -55,5 +55,7 @@ data/raw/
 models/candidates/**/*.pkl
 models/candidates/**/*.cbm
 models/candidates/**/*.csv
+models/candidates/**/*.pt
+models/candidates/**/*.npy
 data/candidates/**/*.csv
 data/reports/**/*.csv
