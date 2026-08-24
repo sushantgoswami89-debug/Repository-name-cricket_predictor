@@ -18,6 +18,7 @@ from app.ml.engine_router import EngineRouter
 from app.ml.bowler_shadow_predictor import BowlerShadowPredictor
 from app.ml.match_winner_engine import MatchWinnerEngine
 from app.ml.prediction_engine import PredictionEngine
+from app.ml.win_probability_shadow_log import WinProbabilityShadowLog
 from app.models.live_match_state import LiveMatchState
 from app.models.match_context import MatchContext
 from app.services.prediction_rating import rate_prediction
@@ -64,6 +65,7 @@ class VerifiedLivePredictionPipeline:
         shadow_predictor: BowlerShadowPredictor | None = None,
         publish_bowler_shadow: bool = False,
         match_winner_engine: MatchWinnerEngine | None = None,
+        win_probability_shadow_log: WinProbabilityShadowLog | None = None,
     ) -> None:
         self._engine = engine or PredictionEngine()
         self._shadow_predictor = shadow_predictor or BowlerShadowPredictor()
@@ -73,6 +75,12 @@ class VerifiedLivePredictionPipeline:
         # aren't available, this raises here (fail fast at startup, same
         # as PredictionEngine itself) rather than silently on every call.
         self._match_winner_engine = match_winner_engine or MatchWinnerEngine()
+        # User-requested 2026-08-24 (see app/ml/win_probability_shadow_log.py):
+        # logs every real (Monte Carlo, GBM) IPL-chase prediction pair and
+        # the real match outcome once known, so a genuine live comparison
+        # accumulates across actual matches -- not routed on yet, only
+        # observed and eventually summarized.
+        self._win_probability_shadow_log = win_probability_shadow_log or WinProbabilityShadowLog()
         # announced_bowler_current_spell_v3 is validated on a proper
         # 2025-2026 holdout (every promotion gate passes -- see
         # models/candidates/announced_bowler_current_spell_v3/validation_report.json)
@@ -140,6 +148,12 @@ class VerifiedLivePredictionPipeline:
         self._persist(snapshot)
         if self._is_complete(snapshot, verifier):
             self._persist(snapshot)
+            if snapshot.target > 0:
+                # This is the chase innings ending -- the real winner is
+                # determinable right now from the same score-vs-target
+                # comparison _is_complete already uses, same convention
+                # app/ml/match_winner_dataset.py's historical label uses.
+                self._record_win_probability_shadow_outcome(snapshot, verifier)
             return None
         completed = verifier.completed_over
         if (
@@ -321,6 +335,7 @@ class VerifiedLivePredictionPipeline:
         # Separate model, separate output key -- never merged into
         # `prediction` (see app/ml/match_winner_engine.py's docstring).
         win_probability = self._predict_win_probability(context)
+        self._log_win_probability_shadow(snapshot, next_over, win_probability)
         output: dict[str, object] = {
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
@@ -377,6 +392,7 @@ class VerifiedLivePredictionPipeline:
         self._pending_over = 1
         self._last_resolved_over = 0
         win_probability = self._predict_win_probability(context)
+        self._log_win_probability_shadow(snapshot, 1, win_probability)
         output: dict[str, object] = {
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
@@ -412,6 +428,71 @@ class VerifiedLivePredictionPipeline:
                 "reason": "win_probability_inference_failed",
                 "detail": type(exc).__name__,
             }
+
+    def _log_win_probability_shadow(
+        self, snapshot: ToiSnapshot, over: int, win_probability: dict[str, object]
+    ) -> None:
+        """Append the (Monte Carlo, GBM) pair to the live comparison log
+        whenever both are present -- see app/ml/win_probability_shadow_log.py.
+        Fault-isolated: logging must never break live prediction."""
+        try:
+            metadata = win_probability.get("metadata")
+            if not isinstance(metadata, dict):
+                return
+            monte_carlo = metadata.get("monte_carlo_shadow_win_probability")
+            gbm = win_probability.get("win_probability")
+            if monte_carlo is None or gbm is None:
+                return
+            self._win_probability_shadow_log.record_prediction(
+                match_id=snapshot.match_id,
+                innings=snapshot.innings,
+                over=over,
+                batting_team=snapshot.batting_team,
+                bowling_team=snapshot.bowling_team,
+                monte_carlo_win_probability=float(monte_carlo),
+                gbm_win_probability=float(gbm),
+            )
+        except Exception:
+            pass
+
+    def _record_win_probability_shadow_outcome(
+        self, snapshot: ToiSnapshot, verifier: LiveDeliveryVerifier
+    ) -> None:
+        """Record the real chase outcome (same score-vs-target convention
+        as app/ml/match_winner_dataset.py's historical label) once the
+        chase innings completes, then check whether enough real matches
+        have accumulated to send the one-time review reminder. Fault-
+        isolated: must never affect live prediction/publishing."""
+        try:
+            self._win_probability_shadow_log.record_outcome(
+                match_id=snapshot.match_id,
+                batting_team_won=verifier.score >= snapshot.target,
+            )
+            self._maybe_send_shadow_summary_reminder()
+        except Exception:
+            pass
+
+    def _maybe_send_shadow_summary_reminder(self) -> None:
+        """User-requested 2026-08-24: 'after 5 or 10 matches it should
+        show me summary and then remind me to pick one.' Fires once (via
+        the marker file) the first time enough real matches with a known
+        outcome have accumulated -- never re-fires on every subsequent
+        match past the threshold."""
+        if self._publisher is None:
+            return
+        count = self._win_probability_shadow_log.matches_with_outcome_count()
+        if count < self._win_probability_shadow_log.min_matches_for_summary:
+            return
+        if self._win_probability_shadow_log.reminder_already_sent():
+            return
+        text = (
+            "🏏 Win-probability model comparison ready\n\n"
+            f"{self._win_probability_shadow_log.summary_text()}\n\n"
+            "Time to review and decide whether to keep Monte Carlo, the "
+            "GBM, or keep comparing further."
+        )
+        if self._publisher.publish("win_probability_shadow_summary", text):
+            self._win_probability_shadow_log.mark_reminder_sent(match_count=count)
 
     @staticmethod
     def _apply_bowler_shadow(prediction: dict[str, object], shadow: dict[str, object]) -> None:
@@ -727,6 +808,16 @@ class VerifiedLivePredictionPipeline:
         if isinstance(win, dict) and win.get("status") != "not_applied" and "win_probability" in win:
             win_team = win.get("batting_team") or "Batting side"
             win_line = f"\nWin Probability: {win_team} {float(win['win_probability']) * 100:.1f}%"
+            # Live comparison, user-requested 2026-08-24: the GBM always
+            # serves the primary number; for IPL chases, Monte Carlo runs
+            # alongside as a logged-only shadow (see
+            # match_winner_engine.py / win_probability_shadow_log.py) so
+            # both are visible on real live matches -- not routed on yet,
+            # just observed. Omitted (not a fake 0%) if the shadow call
+            # itself failed -- see monte_carlo_shadow_error handling there.
+            shadow = win.get("metadata", {}).get("monte_carlo_shadow_win_probability")
+            if shadow is not None:
+                win_line += f" (Monte Carlo shadow: {float(shadow) * 100:.1f}%)"
         message = (
             f"🏏 Candidate v3 — Over {output['over']} Prediction\n"
             f"Score: {output['score_before_over']}/{output['wickets_before_over']}\n"

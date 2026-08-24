@@ -1,0 +1,7 @@
+{
+  "candidate_version": "win_probability_monte_carlo_v1",
+  "artifacts": {
+    "outcome_table.npy": "f0c8aa125c01f87d5ad7dde370916d18686fcb98dae38eb463522198d1a2e68a",
+    "ipl_platt_calibrator.pkl": "8642c8bc41b01e64263890801d345466843857cd9bf417f16873d1ba4175439f"
+  }
+}

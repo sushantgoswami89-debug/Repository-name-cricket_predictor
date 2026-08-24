@@ -1,0 +1,101 @@
+{
+  "candidate_version": "win_probability_monte_carlo_v1",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "Team-agnostic WinViz-style Monte Carlo (phase/wickets_in_hand/pressure-conditioned outcome distribution, 2000 sims/row) vs. the live match_winner_v1 LightGBM classifier, on the IDENTICAL real 2025+ chase-only holdout subset (same build_dataset() call, same rows, guaranteed apples-to-apples). Chases only (is_chase==1) -- see module docstring for why. MC probabilities are Platt-calibrated on the 2024 calibration chase subset, same convention as every other model here -- an earlier pass skipped this and understated MC's Brier/accuracy. Also reports a per-competition (IPL-only / T20I-only) Platt calibration, since the global one left IPL's Brier/accuracy well below what its own AUC advantage over the GBM would suggest is possible.",
+  "n_sims_per_row": 2000,
+  "chase_rows": 16699,
+  "calibration_chase_rows": 11365,
+  "monte_carlo_raw_uncalibrated": {
+    "overall": {
+      "rows": 16699,
+      "event_rate": 0.48188514282292355,
+      "auc": 0.909394154867201,
+      "brier": 0.13808737830109585,
+      "accuracy": 0.8098089705970417
+    },
+    "ipl": {
+      "rows": 2634,
+      "event_rate": 0.5637813211845103,
+      "auc": 0.9162785382106531,
+      "brier": 0.23372387177296888,
+      "accuracy": 0.6932422171602126
+    },
+    "t20i": {
+      "rows": 14065,
+      "event_rate": 0.4665481692143619,
+      "auc": 0.9208471543821768,
+      "brier": 0.12017720952719517,
+      "accuracy": 0.831638819765375
+    }
+  },
+  "monte_carlo_platt_calibrated_global": {
+    "overall": {
+      "rows": 16699,
+      "event_rate": 0.48188514282292355,
+      "auc": 0.909394154867201,
+      "brier": 0.126783131090359,
+      "accuracy": 0.8183723576262052
+    },
+    "ipl": {
+      "rows": 2634,
+      "event_rate": 0.5637813211845103,
+      "auc": 0.9162785382106531,
+      "brier": 0.18499321365521534,
+      "accuracy": 0.7198177676537585
+    },
+    "t20i": {
+      "rows": 14065,
+      "event_rate": 0.4665481692143619,
+      "auc": 0.9208471543821768,
+      "brier": 0.11588193254959601,
+      "accuracy": 0.8368290081763242
+    }
+  },
+  "monte_carlo_platt_calibrated_per_competition": {
+    "overall": {
+      "rows": 16699,
+      "event_rate": 0.48188514282292355,
+      "auc": 0.9208675628578542,
+      "brier": 0.11735772198656189,
+      "accuracy": 0.83268459189173
+    },
+    "ipl": {
+      "rows": 2634,
+      "event_rate": 0.5637813211845103,
+      "auc": 0.9162785382106531,
+      "brier": 0.11879233611901432,
+      "accuracy": 0.8386484434320425
+    },
+    "t20i": {
+      "rows": 14065,
+      "event_rate": 0.4665481692143619,
+      "auc": 0.9208471543821768,
+      "brier": 0.11708905695813104,
+      "accuracy": 0.8315677212939921
+    }
+  },
+  "live_match_winner_v1_gbm_same_rows": {
+    "overall": {
+      "rows": 16699,
+      "event_rate": 0.48188514282292355,
+      "auc": 0.9357315703207134,
+      "brier": 0.10340846832800232,
+      "accuracy": 0.8500509012515719
+    },
+    "ipl": {
+      "rows": 2634,
+      "event_rate": 0.5637813211845103,
+      "auc": 0.8971543107313343,
+      "brier": 0.13230257333972326,
+      "accuracy": 0.8059984813971146
+    },
+    "t20i": {
+      "rows": 14065,
+      "event_rate": 0.4665481692143619,
+      "auc": 0.9417676798019999,
+      "brier": 0.09799737180465552,
+      "accuracy": 0.8583007465339495
+    }
+  }
+}
