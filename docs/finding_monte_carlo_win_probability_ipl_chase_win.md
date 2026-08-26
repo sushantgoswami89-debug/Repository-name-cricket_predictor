@@ -203,3 +203,29 @@ threshold-triggered reminder -- see project memory
 `project_cricketbaba_status.md`'s "Standing plan" section for the full
 decision criteria and why the live-data-driven reminder is the primary
 mechanism, the cloud routine just a backup prompt.
+
+## Monte Carlo anticipates dramatic reversals meaningfully earlier than the GBM (2026-08-25)
+
+Extends the 2026-08-23 finding ("how early can match_winner_v1 call a
+reversal -- it's a confirming indicator, not a leading one," median lead
+over the scoreboard 0 overs) to compare both models directly, using the
+identical real dramatic-recovery IPL match set (peak required run rate
+>=11 after over 10, chasing team still won -- 19 matches, exact count
+reproduced from the original investigation).
+
+**Result** (`backend/evaluate_reversal_timing_gbm_vs_monte_carlo.py`):
+GBM reproduces the original finding exactly (mean/median lead over the
+scoreboard: 0.0 overs -- confirms fast, doesn't lead). **Monte Carlo leads
+the scoreboard by a mean of 2.5 overs (median 1.0)** -- and in a direct
+16-match head-to-head, Monte Carlo called the reversal earlier than the
+GBM in 10 matches, the same over in 5, and the GBM was earlier in only 1.
+
+**Why**: the GBM classifies the current snapshot against historical
+patterns; Monte Carlo simulates thousands of actual remaining
+trajectories from the current state, so when a team is behind but still
+has enough overs/wickets in hand for a statistically real path back, the
+simulation detects that residual chance directly -- before the scoreboard
+itself confirms the turn. A genuinely different strength from the raw
+AUC/Brier comparison, and arguably more valuable for a live-facing
+feature (catching the "is this actually turning around" moment early is
+what a nail-biting chase is watched for).

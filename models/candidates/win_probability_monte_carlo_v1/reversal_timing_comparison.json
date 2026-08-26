@@ -1,0 +1,194 @@
+{
+  "dramatic_recovery_ipl_matches": 19,
+  "gbm_vs_scoreboard": {
+    "matches_with_valid_reversal": 11,
+    "mean_lead_overs": 0.0,
+    "median_lead_overs": 0.0
+  },
+  "monte_carlo_vs_scoreboard": {
+    "matches_with_valid_reversal": 11,
+    "mean_lead_overs": 2.5454545454545454,
+    "median_lead_overs": 1.0
+  },
+  "monte_carlo_vs_gbm_direct": {
+    "matches_compared": 16,
+    "mean_mc_lead_over_gbm": 2.1875,
+    "median_mc_lead_over_gbm": 1.0,
+    "mc_earlier_count": 10,
+    "same_over_count": 5,
+    "gbm_earlier_count": 1
+  },
+  "per_match": [
+    {
+      "match_id": "1473441.json",
+      "par_crossing_over": 20,
+      "gbm_reversal_over": 20,
+      "mc_reversal_over": 19,
+      "gbm_lead_over_scoreboard": 0,
+      "mc_lead_over_scoreboard": 1,
+      "mc_lead_over_gbm": 1
+    },
+    {
+      "match_id": "1473467.json",
+      "par_crossing_over": 20,
+      "gbm_reversal_over": 20,
+      "mc_reversal_over": 1,
+      "gbm_lead_over_scoreboard": 0,
+      "mc_lead_over_scoreboard": 19,
+      "mc_lead_over_gbm": 19
+    },
+    {
+      "match_id": "1473472.json",
+      "par_crossing_over": 16,
+      "gbm_reversal_over": 14,
+      "mc_reversal_over": 13,
+      "gbm_lead_over_scoreboard": 2,
+      "mc_lead_over_scoreboard": 3,
+      "mc_lead_over_gbm": 1
+    },
+    {
+      "match_id": "1473493.json",
+      "par_crossing_over": null,
+      "gbm_reversal_over": null,
+      "mc_reversal_over": null,
+      "gbm_lead_over_scoreboard": null,
+      "mc_lead_over_scoreboard": null,
+      "mc_lead_over_gbm": null
+    },
+    {
+      "match_id": "1473507.json",
+      "par_crossing_over": 16,
+      "gbm_reversal_over": 15,
+      "mc_reversal_over": 16,
+      "gbm_lead_over_scoreboard": 1,
+      "mc_lead_over_scoreboard": 0,
+      "mc_lead_over_gbm": -1
+    },
+    {
+      "match_id": "1473510.json",
+      "par_crossing_over": null,
+      "gbm_reversal_over": 14,
+      "mc_reversal_over": 14,
+      "gbm_lead_over_scoreboard": null,
+      "mc_lead_over_scoreboard": null,
+      "mc_lead_over_gbm": 0
+    },
+    {
+      "match_id": "1485779.json",
+      "par_crossing_over": 20,
+      "gbm_reversal_over": 18,
+      "mc_reversal_over": 14,
+      "gbm_lead_over_scoreboard": 2,
+      "mc_lead_over_scoreboard": 6,
+      "mc_lead_over_gbm": 4
+    },
+    {
+      "match_id": "1527688.json",
+      "par_crossing_over": null,
+      "gbm_reversal_over": null,
+      "mc_reversal_over": 20,
+      "gbm_lead_over_scoreboard": null,
+      "mc_lead_over_scoreboard": null,
+      "mc_lead_over_gbm": null
+    },
+    {
+      "match_id": "1529269.json",
+      "par_crossing_over": null,
+      "gbm_reversal_over": 9,
+      "mc_reversal_over": 6,
+      "gbm_lead_over_scoreboard": null,
+      "mc_lead_over_scoreboard": null,
+      "mc_lead_over_gbm": 3
+    },
+    {
+      "match_id": "1529271.json",
+      "par_crossing_over": null,
+      "gbm_reversal_over": 20,
+      "mc_reversal_over": 17,
+      "gbm_lead_over_scoreboard": null,
+      "mc_lead_over_scoreboard": null,
+      "mc_lead_over_gbm": 3
+    },
+    {
+      "match_id": "1529278.json",
+      "par_crossing_over": 2,
+      "gbm_reversal_over": 17,
+      "mc_reversal_over": 15,
+      "gbm_lead_over_scoreboard": -15,
+      "mc_lead_over_scoreboard": -13,
+      "mc_lead_over_gbm": 2
+    },
+    {
+      "match_id": "1529283.json",
+      "par_crossing_over": 19,
+      "gbm_reversal_over": 17,
+      "mc_reversal_over": 16,
+      "gbm_lead_over_scoreboard": 2,
+      "mc_lead_over_scoreboard": 3,
+      "mc_lead_over_gbm": 1
+    },
+    {
+      "match_id": "1529284.json",
+      "par_crossing_over": 3,
+      "gbm_reversal_over": 12,
+      "mc_reversal_over": 12,
+      "gbm_lead_over_scoreboard": -9,
+      "mc_lead_over_scoreboard": -9,
+      "mc_lead_over_gbm": 0
+    },
+    {
+      "match_id": "1529286.json",
+      "par_crossing_over": 13,
+      "gbm_reversal_over": 13,
+      "mc_reversal_over": 13,
+      "gbm_lead_over_scoreboard": 0,
+      "mc_lead_over_scoreboard": 0,
+      "mc_lead_over_gbm": 0
+    },
+    {
+      "match_id": "1529289.json",
+      "par_crossing_over": null,
+      "gbm_reversal_over": 1,
+      "mc_reversal_over": 1,
+      "gbm_lead_over_scoreboard": null,
+      "mc_lead_over_scoreboard": null,
+      "mc_lead_over_gbm": 0
+    },
+    {
+      "match_id": "1529297.json",
+      "par_crossing_over": null,
+      "gbm_reversal_over": null,
+      "mc_reversal_over": 1,
+      "gbm_lead_over_scoreboard": null,
+      "mc_lead_over_scoreboard": null,
+      "mc_lead_over_gbm": null
+    },
+    {
+      "match_id": "1529298.json",
+      "par_crossing_over": 19,
+      "gbm_reversal_over": 19,
+      "mc_reversal_over": 18,
+      "gbm_lead_over_scoreboard": 0,
+      "mc_lead_over_scoreboard": 1,
+      "mc_lead_over_gbm": 1
+    },
+    {
+      "match_id": "1529301.json",
+      "par_crossing_over": null,
+      "gbm_reversal_over": 20,
+      "mc_reversal_over": 19,
+      "gbm_lead_over_scoreboard": null,
+      "mc_lead_over_scoreboard": null,
+      "mc_lead_over_gbm": 1
+    },
+    {
+      "match_id": "1529305.json",
+      "par_crossing_over": 19,
+      "gbm_reversal_over": 2,
+      "mc_reversal_over": 2,
+      "gbm_lead_over_scoreboard": 17,
+      "mc_lead_over_scoreboard": 17,
+      "mc_lead_over_gbm": 0
+    }
+  ]
+}
