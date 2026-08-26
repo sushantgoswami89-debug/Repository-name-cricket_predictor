@@ -1,0 +1,9 @@
+{
+  "candidate_version": "run_range_v17_pressure_scoring",
+  "artifacts": {
+    "sharp_range_model.pkl": "7458308cf1759ef0759f904be16638b5fbb15a93d92d2a1b7ad87e1e08e27934",
+    "phase_temperatures.pkl": "c08932c674d429635ec6a640cbb73aaca2cb7aff99a88626efd23ca22a3a88d0",
+    "feature_cols.pkl": "00d7b92aebca8130ec7ce2134093e70c76adf290efc68823cd21b1102d8faa84",
+    "categorical_cols.pkl": "cf7b3dd289abadc994ee35554ca132ffd5ef104e272d23cb7a57408c18c4b9d6"
+  }
+}

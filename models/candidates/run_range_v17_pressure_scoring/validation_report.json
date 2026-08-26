@@ -1,0 +1,28 @@
+{
+  "candidate_version": "run_range_v17_pressure_scoring",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "note": "run_range_v11_partnership_rate (currently live) + a batter's own historical scoring rate specifically in overs following a pressure trigger (career-to-date, shrunk). Spot-checked: AD Russell 1.55 runs/ball vs MS Dhoni 1.14 -- real, sane signal matching known playing styles.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_run_range_v11_partnership_rate_corrected": {
+    "blended": 0.3004,
+    "ipl": 0.3325,
+    "t20i": 0.2945
+  },
+  "holdout": {
+    "blended_hit_rate": 0.2990325417766051,
+    "ipl_hit_rate": 0.32747489239598276,
+    "t20i_hit_rate": 0.29388470527135807
+  },
+  "beats_v11_blended_and_calibration_gate": false,
+  "beats_v11_on_ipl_specifically": false,
+  "pressure_scoring_feature_importance_rank": {
+    "striker_pressure_scoring_rate_shrunk": 4
+  },
+  "total_features": 64,
+  "decision": "reject_keep_research"
+}

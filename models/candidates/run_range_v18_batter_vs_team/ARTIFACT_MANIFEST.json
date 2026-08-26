@@ -1,0 +1,9 @@
+{
+  "candidate_version": "run_range_v18_batter_vs_team",
+  "artifacts": {
+    "sharp_range_model.pkl": "08f81f2c21e5e135ce303ff9ad02f1a1c0161bf2678e626a5ec99be6df8be5b7",
+    "phase_temperatures.pkl": "23141c12181eab8b77b5783d5e7b422b0fc206a2b55441abd99ded223a8e4771",
+    "feature_cols.pkl": "033ee97a5ae3fd0530bfd1c8e7a59b16695b2e468c174be82fea0c7d21bd2427",
+    "categorical_cols.pkl": "cf7b3dd289abadc994ee35554ca132ffd5ef104e272d23cb7a57408c18c4b9d6"
+  }
+}

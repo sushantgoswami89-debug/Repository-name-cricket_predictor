@@ -1,0 +1,12 @@
+{
+  "candidate_version": "run_range_v21_nn_gbm_ensemble",
+  "artifacts": {
+    "gbm_model.pkl": "a2643a201f9e199d981d5cafa757c7cd146247afa6dbbf2c9f193099210db2df",
+    "feature_cols.pkl": "22dae57028a45f3720a5707f050745f8d721fd414304826d1e44fdf6bc293723",
+    "categorical_cols.pkl": "cf7b3dd289abadc994ee35554ca132ffd5ef104e272d23cb7a57408c18c4b9d6",
+    "nn_model.pt": "d350a08955528d4a7434a90b32cd1486ca38e86491f8cd97b326a69409f5fb77",
+    "nn_metadata.json": "25850806bb896a0f517d209c499b11eab24602adb6cefc25a20ef32a7c24c6aa",
+    "phase_temperatures.pkl": "ef79ec1d98ea7d30d5ef5936fcd7420d420f62a53f0871b03fef1a51b830e02c",
+    "blend_config.json": "b72524c8f6180a684cdefbe2ecb6454620109ed4172bd23436e4d08cebe49498"
+  }
+}

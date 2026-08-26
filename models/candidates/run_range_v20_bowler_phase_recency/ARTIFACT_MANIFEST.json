@@ -1,0 +1,9 @@
+{
+  "candidate_version": "run_range_v20_bowler_phase_recency",
+  "artifacts": {
+    "sharp_range_model.pkl": "6e7e2885712bc991f59f832b83f55f289ba076200b11a34e9c4f633f7478ae6d",
+    "phase_temperatures.pkl": "147632a18c24f7f0893e077bd88173ffdc72ab1cf21da5b2022d371e03612205",
+    "feature_cols.pkl": "b70d57d533952a3e7167a00e86fd20c8d5e8ac0bb65f7341fb8508319cf6207f",
+    "categorical_cols.pkl": "cf7b3dd289abadc994ee35554ca132ffd5ef104e272d23cb7a57408c18c4b9d6"
+  }
+}

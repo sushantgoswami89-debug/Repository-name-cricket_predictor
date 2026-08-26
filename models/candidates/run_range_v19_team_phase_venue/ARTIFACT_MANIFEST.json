@@ -1,0 +1,9 @@
+{
+  "candidate_version": "run_range_v19_team_phase_venue",
+  "artifacts": {
+    "sharp_range_model.pkl": "2e7efd64a29b17407fcbaf356a77f9fff1e9148aa0968be58877083fd9714988",
+    "phase_temperatures.pkl": "c22e5da00034759fcf73b8c65c343dc7bd37cc1744f3341d8b470880f86e9745",
+    "feature_cols.pkl": "b636451bea612cdc68426223ed089c630ada6fdcceaa6f2156fa056b414b2d73",
+    "categorical_cols.pkl": "cf7b3dd289abadc994ee35554ca132ffd5ef104e272d23cb7a57408c18c4b9d6"
+  }
+}

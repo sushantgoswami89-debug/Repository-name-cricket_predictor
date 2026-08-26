@@ -1,0 +1,31 @@
+{
+  "candidate_version": "run_range_v21_nn_gbm_ensemble",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "note": "Architecture test, not a new feature: does a GBM+NN ensemble (the same idea that gave a real win on the wicket target) beat the GBM alone for run-range, using the exact same feature set as the live run_range_v11_partnership_rate? Single scalar blend weight fit on calibration only.",
+  "blend_alpha_gbm_weight": 0.3069883583712415,
+  "reference_run_range_v11_partnership_rate_corrected": {
+    "blended": 0.3004,
+    "ipl": 0.3325,
+    "t20i": 0.2945
+  },
+  "gbm_alone_holdout": {
+    "blended": 0.30035180299032543,
+    "ipl": 0.33249641319942613,
+    "t20i": 0.2945338873019995
+  },
+  "nn_alone_holdout": {
+    "blended": 0.3007915567282322,
+    "ipl": 0.3299856527977044,
+    "t20i": 0.29550766034796155
+  },
+  "ensemble_holdout": {
+    "blended": 0.3022482409850484,
+    "ipl": 0.33428981348637016,
+    "t20i": 0.2964489742923916
+  },
+  "beats_v11_blended_and_calibration_gate": true,
+  "beats_v11_on_ipl_specifically": true,
+  "decision": "promote_candidate"
+}
