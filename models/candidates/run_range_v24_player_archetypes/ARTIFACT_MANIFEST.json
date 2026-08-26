@@ -1,0 +1,9 @@
+{
+  "candidate_version": "run_range_v24_player_archetypes",
+  "artifacts": {
+    "sharp_range_model.pkl": "315d79cbea29fdbd91e1583b40779595bc0f1be2d2eb6921386686161db24f16",
+    "phase_temperatures.pkl": "44f5171ae1349245ee27a35c39050b9c74872c504f7658b6d046ab234872f774",
+    "feature_cols.pkl": "3807f70586675a40d62c16af444235b61c6c774667f70f7da2530724a16d33ec",
+    "categorical_cols.pkl": "412778ac6d1c29968c96f01e08e4e713fd22bc3be2bf9c804536f91f22c1735b"
+  }
+}

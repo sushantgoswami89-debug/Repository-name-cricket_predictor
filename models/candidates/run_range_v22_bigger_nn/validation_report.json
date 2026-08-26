@@ -1,0 +1,26 @@
+{
+  "candidate_version": "run_range_v22_bigger_nn",
+  "note": "Bigger NN (256->128->64 vs v21's 128->64, embed dim 8 vs 4, LR scheduling, label smoothing, longer training budget) blended with the SAME GBM as v21 -- isolates whether NN capacity was the limiting factor in the v21 ensemble result.",
+  "blend_alpha_gbm_weight": 0.3508815937928005,
+  "reference_v11_live": {
+    "blended": 0.3004,
+    "ipl": 0.3325,
+    "t20i": 0.2945
+  },
+  "reference_v21_smaller_nn_ensemble": {
+    "blended": 0.30225,
+    "ipl": 0.33429,
+    "t20i": 0.29645
+  },
+  "nn_alone_holdout": {
+    "blended": 0.301396218117854,
+    "ipl": 0.3328550932568149,
+    "t20i": 0.295702414957154
+  },
+  "ensemble_holdout": {
+    "blended": 0.3018084872471416,
+    "ipl": 0.3359038737446198,
+    "t20i": 0.29563749675408985
+  },
+  "beats_v21_ensemble": false
+}

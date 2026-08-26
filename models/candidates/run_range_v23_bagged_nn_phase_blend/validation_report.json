@@ -1,0 +1,42 @@
+{
+  "candidate_version": "run_range_v23_bagged_nn_phase_blend",
+  "note": "3-seed bagged NN (same smaller architecture that beat the bigger single NN in v22) + per-phase blend weight instead of one global scalar alpha.",
+  "seeds": [
+    42,
+    123,
+    7
+  ],
+  "reference_v11_live": {
+    "blended": 0.3004,
+    "ipl": 0.3325,
+    "t20i": 0.2945
+  },
+  "reference_v21_single_nn_global_blend": {
+    "blended": 0.30225,
+    "ipl": 0.33429,
+    "t20i": 0.29645
+  },
+  "bagged_nn_alone_holdout": {
+    "blended": 0.2990050571679859,
+    "ipl": 0.3287302725968436,
+    "t20i": 0.29362503245910154
+  },
+  "bagged_nn_global_blend_holdout": {
+    "blended": 0.30145118733509235,
+    "ipl": 0.3353658536585366,
+    "t20i": 0.29531290573876917
+  },
+  "global_alpha": 0.2417836141666091,
+  "bagged_nn_per_phase_blend_holdout": {
+    "blended": 0.3018084872471416,
+    "ipl": 0.3350071736011478,
+    "t20i": 0.2957997922617502
+  },
+  "phase_alphas": {
+    "powerplay": 0.20841190453914507,
+    "middle": 0.2346571314897709,
+    "death": 0.27282634577501447
+  },
+  "beats_v21_with_global_blend": false,
+  "beats_v21_with_phase_blend": false
+}
