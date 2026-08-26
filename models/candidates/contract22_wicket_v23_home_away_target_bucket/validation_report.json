@@ -1,0 +1,69 @@
+{
+  "candidate_version": "contract22_wicket_v23_home_away_target_bucket",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v16_team_composition + batting_team_venue_context + target_bucket (low/medium/high chase target, or not_chase for innings 1), letting the GBM find a real interaction rather than testing venue context alone (already rejected, rank 44/62).",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v16_team_composition": {
+    "auc_known_blended": 0.6126,
+    "auc_unknown_blended": 0.6114,
+    "auc_known_ipl": 0.6151,
+    "auc_unknown_ipl": 0.6131,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.6113
+  },
+  "reference_v22_venue_context_alone": {
+    "auc_known_blended": 0.6129,
+    "auc_known_ipl": 0.6129,
+    "auc_known_t20i": 0.6118,
+    "auc_unknown_blended": 0.6112,
+    "auc_unknown_ipl": 0.6097,
+    "auc_unknown_t20i": 0.6113
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6123774951635557,
+    "brier_platt": 0.20444534934663927,
+    "brier_uncalibrated": 0.2044000156267771,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6124429495722913,
+      "brier": 0.19363729214701067
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6112001037009361,
+      "brier": 0.20640152069645518
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6113318310702378,
+    "brier_platt": 0.2044832580592819,
+    "brier_uncalibrated": 0.204832198472729,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6104514089271655,
+      "brier": 0.19419641318935613
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6110434495757806,
+      "brier": 0.20634509417310645
+    }
+  },
+  "new_feature_importance_rank": {
+    "batting_team_venue_context": 45,
+    "target_bucket": 41
+  },
+  "total_features": 63
+}

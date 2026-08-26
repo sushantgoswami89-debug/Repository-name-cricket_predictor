@@ -1,0 +1,61 @@
+{
+  "candidate_version": "contract22_wicket_v24_pressure_survival",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v16_team_composition + sustained pressure-survival duration (current spell length + this batter's own career-to-date dismissal rate once 2+ overs into a chase deficit). Survival/hazard framing, not a one-over trigger.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v16_team_composition": {
+    "auc_known_blended": 0.6126,
+    "auc_unknown_blended": 0.6114,
+    "auc_known_ipl": 0.6151,
+    "auc_unknown_ipl": 0.6131,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.6113
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6129647515406228,
+    "brier_platt": 0.20435261324093493,
+    "brier_uncalibrated": 0.20431707847428715,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.613495595844157,
+      "brier": 0.19342299715337172
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6118831425918263,
+      "brier": 0.20633078577093533
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6111482483795664,
+    "brier_platt": 0.2045404137649131,
+    "brier_uncalibrated": 0.20498217440457017,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6106869347200475,
+      "brier": 0.194377394406641
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6110129700945081,
+      "brier": 0.20637983845790597
+    }
+  },
+  "new_feature_importance_rank": {
+    "overs_under_pressure_this_spell": 51,
+    "striker_extended_pressure_dismissal_rate_shrunk": 17
+  },
+  "total_features": 63
+}

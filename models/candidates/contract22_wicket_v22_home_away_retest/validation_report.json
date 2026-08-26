@@ -1,0 +1,61 @@
+{
+  "candidate_version": "contract22_wicket_v22_home_away_retest",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "Re-test of contract22_wicket_v13_home_away (2026-08-23, rejected on an older architecture) on top of the CURRENT live contract22_wicket_v16_team_composition.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v16_team_composition": {
+    "auc_known_blended": 0.6126,
+    "auc_unknown_blended": 0.6114,
+    "auc_known_ipl": 0.6151,
+    "auc_unknown_ipl": 0.6131,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.6113
+  },
+  "reference_original_v13_test_2026_08_23": "rejected: flat-to-worse every cut, IPL unknown -0.0023, importance rank 36th of 53",
+  "bowler_known_ceiling": {
+    "auc": 0.6128996662656225,
+    "brier_platt": 0.2043842459766097,
+    "brier_uncalibrated": 0.20432853125612946,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6129146429177089,
+      "brier": 0.19345734513706558
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6118395296356174,
+      "brier": 0.20636192706857598
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6112395013748713,
+    "brier_platt": 0.20457537717800328,
+    "brier_uncalibrated": 0.20489142211997063,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6096598786143703,
+      "brier": 0.1947776558836587
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6113348433343615,
+      "brier": 0.20634868586202254
+    }
+  },
+  "new_feature_importance_rank": {
+    "batting_team_venue_context": 44
+  },
+  "total_features": 62
+}

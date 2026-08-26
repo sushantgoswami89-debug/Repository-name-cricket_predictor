@@ -217,6 +217,19 @@ def build_enriched(root: Path, eligible: set[str]) -> pd.DataFrame:
                 h2h_avg_runs = (
                     h2h_overs * h2h_raw_avg + H2H_SHRINKAGE_OVERS * bowl_hist_avg_runs_conceded
                 ) / (h2h_overs + H2H_SHRINKAGE_OVERS)
+                # User-requested (2026-08-25): this bowler's own history of
+                # dismissing THIS specific batter. h2h["wickets"] was
+                # already tracked (see match_h2h_events below) but never
+                # surfaced as a feature -- only the runs-based h2h_avg_runs
+                # was. Same shrinkage convention as h2h_avg_runs: raw H2H
+                # wicket rate is mostly noise below ~4 overs of shared
+                # history, so shrink toward the bowler's own overall
+                # wicket rate, weighted by real shared overs.
+                bowl_hist_wicket_rate = (bwp["wickets"] / bwp["balls"]) if bwp["balls"] > 0 else 0.0
+                h2h_raw_wicket_rate = (h2h["wickets"] / h2h["balls"]) if h2h["balls"] > 0 else bowl_hist_wicket_rate
+                h2h_wicket_rate = (
+                    h2h["balls"] * h2h_raw_wicket_rate + (H2H_SHRINKAGE_OVERS * 6) * bowl_hist_wicket_rate
+                ) / (h2h["balls"] + H2H_SHRINKAGE_OVERS * 6)
                 rows.append({
                     "source_file": path.name, "innings": innings_number, "over": over_number,
                     "bat_career_overs_faced": bp_overs,
@@ -233,6 +246,7 @@ def build_enriched(root: Path, eligible: set[str]) -> pd.DataFrame:
                     "bowler_type": bowling_style_lookup.get(bowler, "__UNKNOWN__"),
                     "h2h_overs": h2h_overs,
                     "h2h_avg_runs": h2h_avg_runs,
+                    "h2h_wicket_rate": h2h_wicket_rate,
                     # Bowler identity for the live-realistic evaluation variant
                     "actual_bowler_id": bowler,
                 })

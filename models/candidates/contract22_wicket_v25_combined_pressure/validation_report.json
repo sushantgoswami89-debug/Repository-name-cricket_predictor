@@ -1,0 +1,79 @@
+{
+  "candidate_version": "contract22_wicket_v25_combined_pressure",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v16_team_composition + BOTH pressure formulations tested today (one-over stall response + sustained multi-over survival response) combined -- final check before closing the batter-pressure-response investigation.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v16_team_composition": {
+    "auc_known_blended": 0.6126,
+    "auc_unknown_blended": 0.6114,
+    "auc_known_ipl": 0.6151,
+    "auc_unknown_ipl": 0.6131,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.6113
+  },
+  "reference_v20_pressure_trigger_alone": {
+    "auc_known_blended": 0.6128,
+    "auc_known_ipl": 0.6135,
+    "auc_known_t20i": 0.6117,
+    "auc_unknown_blended": 0.6116,
+    "auc_unknown_ipl": 0.6106,
+    "auc_unknown_t20i": 0.6119
+  },
+  "reference_v24_pressure_survival_alone": {
+    "auc_known_blended": 0.613,
+    "auc_known_ipl": 0.6135,
+    "auc_known_t20i": 0.6119,
+    "auc_unknown_blended": 0.6111,
+    "auc_unknown_ipl": 0.6107,
+    "auc_unknown_t20i": 0.611
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6124603193385778,
+    "brier_platt": 0.2044545757555128,
+    "brier_uncalibrated": 0.20441125598347112,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6145622003884892,
+      "brier": 0.1934461818908089
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6111856740624921,
+      "brier": 0.2064470064290258
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6104722655211999,
+    "brier_platt": 0.2046399389296401,
+    "brier_uncalibrated": 0.20488504437661345,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6107725294138504,
+      "brier": 0.1947118335151713
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6106845767594338,
+      "brier": 0.2064368460898283
+    }
+  },
+  "new_feature_importance_rank": {
+    "pressure_trigger": 61,
+    "striker_pressure_dismissal_rate_shrunk": 13,
+    "overs_under_pressure_this_spell": 53,
+    "striker_extended_pressure_dismissal_rate_shrunk": 14
+  },
+  "total_features": 65
+}

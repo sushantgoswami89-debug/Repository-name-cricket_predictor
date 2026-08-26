@@ -1,0 +1,60 @@
+{
+  "candidate_version": "contract22_wicket_v21_h2h_wicket_rate",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v16_team_composition (currently live) + h2h_wicket_rate: this specific bowler's shrunk historical dismissal rate against this specific batter. Data was already tracked in build_enriched() but never surfaced as a feature before -- only the runs-based h2h_avg_runs was.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v16_team_composition": {
+    "auc_known_blended": 0.6126,
+    "auc_unknown_blended": 0.6114,
+    "auc_known_ipl": 0.6151,
+    "auc_unknown_ipl": 0.6131,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.6113
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6127322411828037,
+    "brier_platt": 0.2044262168493334,
+    "brier_uncalibrated": 0.20437973113191935,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6161357950591887,
+      "brier": 0.19324890015716736
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6111538198623477,
+      "brier": 0.20644922119481246
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6114655213278646,
+    "brier_platt": 0.20448473387673086,
+    "brier_uncalibrated": 0.2048624765827189,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6119353176862703,
+      "brier": 0.1944432516896256
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6115426566403903,
+      "brier": 0.20630216132009943
+    }
+  },
+  "new_feature_importance_rank": {
+    "h2h_wicket_rate": 28
+  },
+  "total_features": 62
+}
