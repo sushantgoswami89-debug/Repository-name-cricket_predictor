@@ -147,8 +147,19 @@ for phase in ("powerplay", "middle", "death"):
     calibration_scaled[calibration_mask] = temperature_scale(calibration_raw[calibration_mask], temperatures[phase])
     holdout_scaled[holdout_mask] = temperature_scale(holdout_raw[holdout_mask], temperatures[phase])
 
-calibration_low, calibration_high = best_bands(calibration_scaled)
-holdout_low, holdout_high = best_bands(holdout_scaled)
+# 2026-08-26 fix: this used to call best_bands() with its width=2 default
+# for the WHOLE population, IPL included -- but live serving has used
+# width=3 (a 4-run band) for IPL since the run_range_v7 promotion
+# (docs/finding_blended_holdout_masks_ipl_accuracy.md), never width=2.
+# Every "ipl_hit_rate" reported by this script's lineage (v7 through v11)
+# has therefore understated real IPL accuracy by evaluating a narrower
+# band than what's actually served -- confirmed 2026-08-26: real
+# width-3 IPL hit rate is 33.25%, not the 25.16% this script would have
+# reported before this fix. T20I is unaffected (width=2 in both places).
+holdout_low = np.empty(len(holdout), dtype=int)
+holdout_high = np.empty(len(holdout), dtype=int)
+holdout_low[holdout_is_ipl], holdout_high[holdout_is_ipl] = best_bands(holdout_scaled[holdout_is_ipl], width=3)
+holdout_low[~holdout_is_ipl], holdout_high[~holdout_is_ipl] = best_bands(holdout_scaled[~holdout_is_ipl], width=2)
 holdout_hit = (holdout_actual >= holdout_low) & (holdout_actual <= holdout_high)
 raw_calibration_nll = nll(calibration_raw, calibration_actual)
 scaled_calibration_nll = nll(calibration_scaled, calibration_actual)

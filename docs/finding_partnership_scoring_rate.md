@@ -34,6 +34,22 @@ are modest -- smaller than the recency-form win -- but directionally
 consistent across all three populations, not a coin flip.
 `partnership_run_rate` ranks 11th of 63 features.
 
+**Correction, 2026-08-26**: the `25.16%` IPL figure above was measured
+with the wrong band width -- the script's own validation called
+`best_bands()` without width-awareness (defaulting to width=2, a 3-run
+band, for the whole population), while live serving has used width=3 (a
+4-run band) for IPL specifically since the `run_range_v7` promotion.
+Fixed and re-verified against the real live model: **real IPL hit rate is
+33.25%**, blended **30.04%** -- T20I (29.45%) was already correct (width=2
+in both places, unaffected). The model itself is unchanged; only the
+self-reported number was wrong. See `project_cricketbaba_status.md`'s
+2026-08-26 entry for the full investigation, including the honest
+band-width-vs-hit-rate tradeoff (reaching 80% would need an ~11-13 run
+band, not a model improvement) and why 5 downstream candidate scripts
+(v12-v16, all already rejected) were deliberately left with their old,
+internally-consistent-but-narrow-band numbers rather than partially
+patched.
+
 **Wicket** (`train_contract22_wicket_v10_partnership_rate.py`, vs. live `contract22_wicket_v9_recency_form`): real win, promoted.
 
 | | AUC known | AUC unknown |

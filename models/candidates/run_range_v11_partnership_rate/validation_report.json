@@ -14,8 +14,8 @@
     "t20i": 0.2943
   },
   "holdout": {
-    "blended_hit_rate": 0.2879562445030783,
-    "ipl_hit_rate": 0.2516140602582496,
+    "blended_hit_rate": 0.30035180299032543,
+    "ipl_hit_rate": 0.33249641319942613,
     "t20i_hit_rate": 0.2945338873019995
   },
   "beats_v7_blended_and_calibration_gate": true,
