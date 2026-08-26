@@ -1,0 +1,60 @@
+{
+  "candidate_version": "contract22_wicket_v18_cascade_features",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v16_team_composition (currently live) + run_range_v11_partnership_rate's own predicted expected-runs for this over, as a leakage-safe (5-fold GroupKFold OOF on train, real out-of-sample on calibration/holdout) cascade feature. Tests whether the two engines' outputs carry residual signal for each other, per the 2026-08-23 standing thread. Not a proposal to merge engines -- feature only.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v16_team_composition": {
+    "auc_known_blended": 0.6126,
+    "auc_unknown_blended": 0.6114,
+    "auc_known_ipl": 0.6151,
+    "auc_unknown_ipl": 0.6131,
+    "auc_known_t20i": 0.6113,
+    "auc_unknown_t20i": 0.6113
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6123238662614863,
+    "brier_platt": 0.20439108362274022,
+    "brier_uncalibrated": 0.20434314085570765,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6155060683990647,
+      "brier": 0.19322610364412743
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6108367900516622,
+      "brier": 0.20641185512237487
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6102737245172991,
+    "brier_platt": 0.2045748131897044,
+    "brier_uncalibrated": 0.20496416290522707,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6104462748499365,
+      "brier": 0.19485925158932307
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6103770423283845,
+      "brier": 0.20633325163049013
+    }
+  },
+  "cascade_feature_importance_rank": {
+    "run_range_cascade_expected_runs": 1
+  },
+  "total_features": 62
+}
