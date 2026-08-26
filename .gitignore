@@ -57,5 +57,6 @@ models/candidates/**/*.cbm
 models/candidates/**/*.csv
 models/candidates/**/*.pt
 models/candidates/**/*.npy
+models/candidates/**/*.npz
 data/candidates/**/*.csv
 data/reports/**/*.csv

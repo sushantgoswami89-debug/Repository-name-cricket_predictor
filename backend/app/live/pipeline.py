@@ -19,6 +19,7 @@ from app.ml.bowler_shadow_predictor import BowlerShadowPredictor
 from app.ml.match_winner_engine import MatchWinnerEngine
 from app.ml.prediction_engine import PredictionEngine
 from app.ml.win_probability_shadow_log import WinProbabilityShadowLog
+from app.ml.wicket_ensemble_shadow_log import WicketEnsembleShadowLog
 from app.models.live_match_state import LiveMatchState
 from app.models.match_context import MatchContext
 from app.services.prediction_rating import rate_prediction
@@ -66,6 +67,7 @@ class VerifiedLivePredictionPipeline:
         publish_bowler_shadow: bool = False,
         match_winner_engine: MatchWinnerEngine | None = None,
         win_probability_shadow_log: WinProbabilityShadowLog | None = None,
+        wicket_ensemble_shadow_log: WicketEnsembleShadowLog | None = None,
     ) -> None:
         self._engine = engine or PredictionEngine()
         self._shadow_predictor = shadow_predictor or BowlerShadowPredictor()
@@ -81,6 +83,11 @@ class VerifiedLivePredictionPipeline:
         # accumulates across actual matches -- not routed on yet, only
         # observed and eventually summarized.
         self._win_probability_shadow_log = win_probability_shadow_log or WinProbabilityShadowLog()
+        # GBM+NN wicket ensemble shadow (2026-08-25) -- see
+        # app/ml/wicket_ensemble_shadow_log.py. Unlike win-probability, the
+        # real outcome (did a wicket fall) is known one over later, not
+        # just at match end -- logged and resolved together below.
+        self._wicket_ensemble_shadow_log = wicket_ensemble_shadow_log or WicketEnsembleShadowLog()
         # announced_bowler_current_spell_v3 is validated on a proper
         # 2025-2026 holdout (every promotion gate passes -- see
         # models/candidates/announced_bowler_current_spell_v3/validation_report.json)
@@ -192,6 +199,9 @@ class VerifiedLivePredictionPipeline:
             ).to_dict()
             self._record_review(
                 snapshot, completed, self._pending_prediction, previous_evaluation
+            )
+            self._record_wicket_ensemble_shadow(
+                snapshot, completed, self._pending_prediction, actual_wickets
             )
         if self._last_resolved_over is not None:
             self._engine.update_actuals(
@@ -493,6 +503,53 @@ class VerifiedLivePredictionPipeline:
         )
         if self._publisher.publish("win_probability_shadow_summary", text):
             self._win_probability_shadow_log.mark_reminder_sent(match_count=count)
+
+    def _record_wicket_ensemble_shadow(
+        self, snapshot: ToiSnapshot, over: int, prediction: dict[str, object], actual_wickets: int
+    ) -> None:
+        """Logs the GBM/NN/ensemble shadow prediction made for `over` and
+        its real outcome together -- unlike win-probability, the real
+        wicket outcome is known one over later, not just at match end, so
+        both happen in one call. Fault-isolated: must never affect live
+        prediction/publishing."""
+        try:
+            metadata = prediction.get("metadata")
+            if not isinstance(metadata, dict):
+                return
+            shadow = metadata.get("wicket_ensemble_shadow")
+            if not isinstance(shadow, dict):
+                return
+            self._wicket_ensemble_shadow_log.record_prediction(
+                match_id=snapshot.match_id, innings=snapshot.innings, over=over,
+                gbm_probability=shadow["gbm_probability"], nn_probability=shadow["nn_probability"],
+                ensemble_probability=shadow["ensemble_probability"],
+            )
+            self._wicket_ensemble_shadow_log.record_outcome(
+                match_id=snapshot.match_id, innings=snapshot.innings, over=over,
+                wicket_fell=actual_wickets > 0,
+            )
+            self._maybe_send_wicket_ensemble_summary_reminder()
+        except Exception:
+            pass
+
+    def _maybe_send_wicket_ensemble_summary_reminder(self) -> None:
+        """Same 'review after N real matches' plan as the win-probability
+        shadow -- fires once via the marker file."""
+        if self._publisher is None:
+            return
+        count = self._wicket_ensemble_shadow_log.matches_with_outcome_count()
+        if count < self._wicket_ensemble_shadow_log.min_matches_for_summary:
+            return
+        if self._wicket_ensemble_shadow_log.reminder_already_sent():
+            return
+        text = (
+            "🏏 Wicket ensemble comparison ready\n\n"
+            f"{self._wicket_ensemble_shadow_log.summary_text()}\n\n"
+            "Time to review and decide whether to keep the GBM+NN ensemble, "
+            "the GBM alone, or keep comparing further."
+        )
+        if self._publisher.publish("wicket_ensemble_shadow_summary", text):
+            self._wicket_ensemble_shadow_log.mark_reminder_sent(match_count=count)
 
     @staticmethod
     def _apply_bowler_shadow(prediction: dict[str, object], shadow: dict[str, object]) -> None:

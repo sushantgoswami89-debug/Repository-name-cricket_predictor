@@ -1,0 +1,47 @@
+{
+  "candidate_version": "wicket_v19g_scoring_volatility_stacker",
+  "flat_stacker": {
+    "blended": {
+      "auc": 0.6136507374045104,
+      "brier": 0.20420134673684412,
+      "rows": 36384
+    },
+    "ipl": {
+      "auc": 0.6158232581078711,
+      "brier": 0.19276655728366796,
+      "rows": 5576
+    },
+    "t20i": {
+      "auc": 0.6120059540841835,
+      "brier": 0.20627095157944703,
+      "rows": 30808
+    }
+  },
+  "scoring_volatility_wicket_clustering_stacker": {
+    "blended": {
+      "auc": 0.6131421440943073,
+      "brier": 0.20426168108457063,
+      "rows": 36384
+    },
+    "ipl": {
+      "auc": 0.615017368422826,
+      "brier": 0.1928585967530913,
+      "rows": 5576
+    },
+    "t20i": {
+      "auc": 0.6115643943825511,
+      "brier": 0.20632554755536806,
+      "rows": 30808
+    }
+  },
+  "stacker_coefficients": {
+    "gbm": 0.5405761449004339,
+    "nn": 0.5156325426382937,
+    "runs_volatility": -0.021545831871012836,
+    "wickets_last_5": 0.029230214405431127,
+    "gbm_x_volatility": 0.009585269691729268,
+    "nn_x_volatility": -0.03432499173200532,
+    "gbm_x_wickets5": 0.0377587726301392,
+    "nn_x_wickets5": 0.014449477345048015
+  }
+}

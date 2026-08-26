@@ -1,0 +1,37 @@
+{
+  "candidate_version": "wicket_v19d_situational_stacker",
+  "flat_stacker_gbm_nn_only": {
+    "blended": {
+      "auc": 0.6136507374045104,
+      "brier": 0.20420134673684412,
+      "rows": 36384
+    },
+    "ipl": {
+      "auc": 0.6158232581078711,
+      "brier": 0.19276655728366796,
+      "rows": 5576
+    },
+    "t20i": {
+      "auc": 0.6120059540841835,
+      "brier": 0.20627095157944703,
+      "rows": 30808
+    }
+  },
+  "situational_stacker_context_aware": {
+    "blended": {
+      "auc": 0.6125067275986511,
+      "brier": 0.20430037115421537,
+      "rows": 36384
+    },
+    "ipl": {
+      "auc": 0.6157719173355807,
+      "brier": 0.19272910514457645,
+      "rows": 5576
+    },
+    "t20i": {
+      "auc": 0.6107028531558638,
+      "brier": 0.20639467715492124,
+      "rows": 30808
+    }
+  }
+}

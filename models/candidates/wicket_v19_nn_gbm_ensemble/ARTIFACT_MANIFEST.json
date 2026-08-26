@@ -1,0 +1,13 @@
+{
+  "candidate_version": "wicket_v19_nn_gbm_ensemble",
+  "artifacts": {
+    "gbm_model.pkl": "162e1bff363b7ee03d906b3c2333df60c0d8384b4c79aa803840affde55f9e3e",
+    "feature_cols.pkl": "3a217e165866ab2f3b439d1450f1deece846699698b7538e69ac4edb0d6666ca",
+    "categorical_cols.pkl": "e5770c73eee611a4a488e21292b3f6f6ab40c7004f7ecc3995f09f0036580d53",
+    "nn_model.pt": "9c2731a2b6d58f15e8ce793e22ae70abc8d8bdd2ae243b73bb23429ed8b9cf25",
+    "nn_metadata.json": "8c7a570b62f59d34e74adfe137473845e5389d3bea006aaed6ff32c3c904e699",
+    "gbm_calibrator.pkl": "f0ec1e19729c95cba2458bee9d53507698ad0cd7bb48004b8bffbf64d1582b06",
+    "nn_calibrator.pkl": "9cdfeea88f24945852c3aeda90fb814aa72375320226b6abe3096c19584ebc9a",
+    "stacker.pkl": "6426ac5ab4e31fcbf5d71c554924f6e28edd4b8c7dab27ff6c81ad8df4480a14"
+  }
+}

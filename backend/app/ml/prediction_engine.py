@@ -62,6 +62,7 @@ from app.ml.engine_router import EngineFamily, EngineRouter
 from app.ml.model_repository import ModelRepository
 from app.ml.prediction_result import PredictionResult
 from app.models.match_context import MatchContext
+from app.ml.wicket_ensemble_runtime import WicketEnsembleRuntime
 from runtime_run_range_v3 import RunRangeRuntimeV3
 from runtime_wicket_contract22 import WicketRuntimeContract22
 
@@ -72,6 +73,10 @@ RUN_RANGE_V3_ARTIFACTS = (
 WICKET_CONTRACT22_ARTIFACTS = (
     Path(__file__).resolve().parents[3]
     / "models/candidates/contract22_wicket_v16_team_composition"
+)
+WICKET_ENSEMBLE_ARTIFACTS = (
+    Path(__file__).resolve().parents[3]
+    / "models/candidates/wicket_v19_nn_gbm_ensemble"
 )
 # Win probability (match_winner_v1, 2026-08-23) is intentionally NOT wired
 # in here -- it lives in its own app/ml/match_winner_engine.py, called
@@ -88,8 +93,20 @@ class PredictionEngine:
         repository: ModelRepository | None = None,
         run_range_runtime: RunRangeRuntimeV3 | None = None,
         wicket_runtime: WicketRuntimeContract22 | None = None,
+        wicket_ensemble_runtime: WicketEnsembleRuntime | None = None,
     ) -> None:
         self._repository = repository or ModelRepository()
+        # GBM+NN ensemble shadow (2026-08-25) -- see
+        # docs/finding_wicket_nn_gbm_ensemble_real_win.md. Logged alongside
+        # the served GBM-only wicket_probability for real live comparison,
+        # never routed. Optional: if the artifacts/NN subprocess aren't
+        # available, this stays None and predict() just skips the shadow.
+        self._wicket_ensemble_runtime = wicket_ensemble_runtime
+        if self._wicket_ensemble_runtime is None:
+            try:
+                self._wicket_ensemble_runtime = WicketEnsembleRuntime(WICKET_ENSEMBLE_ARTIFACTS)
+            except Exception:
+                self._wicket_ensemble_runtime = None
         # run_range_v7_competition_prior (28.75% blended / 25.00% IPL /
         # 29.43% T20I, beats run_range_v4_batter_phase's 28.60%/24.19%/
         # 29.22% on every split -- see docs/candidate_run_range_enriched_v2.md)
@@ -322,6 +339,44 @@ class PredictionEngine:
             bowling_team_players=bowling_team_players,
         )
 
+        # GBM+NN ensemble shadow (2026-08-25) -- same inputs as the live
+        # call above, guaranteed identical batting/bowling team resolution
+        # (computed once, reused here) rather than re-derived independently
+        # elsewhere, which is exactly the kind of mismatch the 2026-08-23
+        # win-probability chase bug came from. Never affects
+        # evolved_wkt/wicket_probability below -- shadow only.
+        wicket_ensemble_shadow = None
+        if self._wicket_ensemble_runtime is not None:
+            try:
+                wicket_ensemble_shadow = self._wicket_ensemble_runtime.predict(
+                    registry=context.metadata.get("registry", {}),
+                    striker_name=context.live.striker,
+                    non_striker_name=context.live.non_striker,
+                    bowler_name=context.live.bowler,
+                    venue_name=context.venue,
+                    deliveries=context.metadata.get("deliveries", []),
+                    over=current_over,
+                    score_before_over=context.live.score_before_over,
+                    wkts_down_before_over=context.live.wkts_down_before_over,
+                    wickets_in_hand=context.live.wickets_in_hand,
+                    legal_balls_bowled=context.live.legal_balls_bowled,
+                    balls_remaining=context.live.balls_remaining,
+                    current_run_rate=context.live.current_run_rate,
+                    is_chase=bool(context.live.is_chase),
+                    runs_required=context.live.runs_required,
+                    required_run_rate=context.live.required_run_rate,
+                    recent_legal_balls=context.live.recent_legal_balls,
+                    recent_runs_per_ball=context.live.recent_runs_per_ball,
+                    recent_dot_rate=context.live.recent_dot_rate,
+                    recent_single_rate=context.live.recent_single_rate,
+                    recent_boundary_rate=context.live.recent_boundary_rate,
+                    recent_wicket_rate=context.live.recent_wicket_rate,
+                    batting_team_players=batting_team_players,
+                    bowling_team_players=bowling_team_players,
+                )
+            except Exception:
+                wicket_ensemble_shadow = None
+
         # 3. RUN RANGE (run_range_v7_competition_prior)
         # Replaces the old runs_model.pkl point-estimate + momentum-blend +
         # match_bias + fixed-width-bracket pipeline entirely: this model's
@@ -442,6 +497,7 @@ class PredictionEngine:
                 "raw_confidence": round(raw_confidence, 3),
                 "confidence_factors": confidence_factors,
                 "engine_family": rules["engine_family"],
+                "wicket_ensemble_shadow": wicket_ensemble_shadow,
             },
         )
 
