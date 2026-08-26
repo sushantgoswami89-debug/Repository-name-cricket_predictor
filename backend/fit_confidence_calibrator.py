@@ -39,6 +39,22 @@ from app.services.match_replay import MatchReplay
 _NON_DISMISSAL_KINDS = {"retired hurt", "obstructing the field"}
 
 
+class _DisabledEnsembleRuntime:
+    """Confidence has nothing to do with either GBM+NN ensemble shadow
+    (2026-08-26) -- but PredictionEngine.predict() calls both unconditionally,
+    each spawning a real NN subprocess per over. Passing one of these in
+    place of the real runtime makes predict()'s try/except immediately
+    fall back to shadow=None (no subprocess spawned at all), cutting this
+    script's runtime back down instead of paying ~10x overhead for shadow
+    computation this script never reads."""
+
+    def predict(self, **_kwargs):
+        raise RuntimeError("disabled for confidence-calibrator refitting")
+
+    def predict_next_over(self, **_kwargs):
+        raise RuntimeError("disabled for confidence-calibrator refitting")
+
+
 def _to_toi_delivery(over_number: int, ball_index: int, delivery) -> ToiDelivery:
     """Convert a Cricsheet-parsed Delivery into the ToiDelivery shape
     WicketContract22FeatureComputer expects (deliveries=[]) -- mirrors the
@@ -105,7 +121,10 @@ for path in sample:
         continue
     exclude_key = match_exclude_key(match)
     for innings in match.innings:
-        engine = PredictionEngine()
+        engine = PredictionEngine(
+            wicket_ensemble_runtime=_DisabledEnsembleRuntime(),
+            run_range_ensemble_runtime=_DisabledEnsembleRuntime(),
+        )
         # WicketContract22FeatureComputer needs the innings' deliveries so
         # far for its partnership/new-batter and bowler-spell features
         # (found missing from this exact script the same day pipeline.py's
