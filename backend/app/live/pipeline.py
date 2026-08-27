@@ -21,6 +21,7 @@ from app.ml.prediction_engine import PredictionEngine
 from app.ml.win_probability_shadow_log import WinProbabilityShadowLog
 from app.ml.wicket_ensemble_shadow_log import WicketEnsembleShadowLog
 from app.ml.run_range_ensemble_shadow_log import RunRangeEnsembleShadowLog
+from app.ml.match_winner_ensemble_shadow_log import MatchWinnerEnsembleShadowLog
 from app.models.live_match_state import LiveMatchState
 from app.models.match_context import MatchContext
 from app.services.prediction_rating import rate_prediction
@@ -70,6 +71,7 @@ class VerifiedLivePredictionPipeline:
         win_probability_shadow_log: WinProbabilityShadowLog | None = None,
         wicket_ensemble_shadow_log: WicketEnsembleShadowLog | None = None,
         run_range_ensemble_shadow_log: RunRangeEnsembleShadowLog | None = None,
+        match_winner_ensemble_shadow_log: MatchWinnerEnsembleShadowLog | None = None,
     ) -> None:
         self._engine = engine or PredictionEngine()
         self._shadow_predictor = shadow_predictor or BowlerShadowPredictor()
@@ -94,6 +96,13 @@ class VerifiedLivePredictionPipeline:
         # app/ml/run_range_ensemble_shadow_log.py. Real outcome (actual
         # over-runs) is known one over later, logged and resolved together.
         self._run_range_ensemble_shadow_log = run_range_ensemble_shadow_log or RunRangeEnsembleShadowLog()
+        # GBM+NN match-winner ensemble shadow (2026-08-26) -- see
+        # app/ml/match_winner_ensemble_shadow_log.py. Real outcome (did
+        # the batting team win) is known only at match end, same timing
+        # as the Monte Carlo win-probability shadow above.
+        self._match_winner_ensemble_shadow_log = (
+            match_winner_ensemble_shadow_log or MatchWinnerEnsembleShadowLog()
+        )
         # announced_bowler_current_spell_v3 is validated on a proper
         # 2025-2026 holdout (every promotion gate passes -- see
         # models/candidates/announced_bowler_current_spell_v3/validation_report.json)
@@ -167,6 +176,7 @@ class VerifiedLivePredictionPipeline:
                 # comparison _is_complete already uses, same convention
                 # app/ml/match_winner_dataset.py's historical label uses.
                 self._record_win_probability_shadow_outcome(snapshot, verifier)
+                self._record_match_winner_ensemble_shadow_outcome(snapshot, verifier)
             return None
         completed = verifier.completed_over
         if (
@@ -355,6 +365,7 @@ class VerifiedLivePredictionPipeline:
         # `prediction` (see app/ml/match_winner_engine.py's docstring).
         win_probability = self._predict_win_probability(context)
         self._log_win_probability_shadow(snapshot, next_over, win_probability)
+        self._log_match_winner_ensemble_shadow(snapshot, next_over, win_probability)
         output: dict[str, object] = {
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
@@ -412,6 +423,7 @@ class VerifiedLivePredictionPipeline:
         self._last_resolved_over = 0
         win_probability = self._predict_win_probability(context)
         self._log_win_probability_shadow(snapshot, 1, win_probability)
+        self._log_match_winner_ensemble_shadow(snapshot, 1, win_probability)
         output: dict[str, object] = {
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
@@ -512,6 +524,62 @@ class VerifiedLivePredictionPipeline:
         )
         if self._publisher.publish("win_probability_shadow_summary", text):
             self._win_probability_shadow_log.mark_reminder_sent(match_count=count)
+
+    def _log_match_winner_ensemble_shadow(
+        self, snapshot: ToiSnapshot, over: int, win_probability: dict[str, object]
+    ) -> None:
+        """Append the (GBM, NN, ensemble) triple to the live comparison
+        log -- see app/ml/match_winner_ensemble_shadow_log.py.
+        Fault-isolated: logging must never break live prediction."""
+        try:
+            metadata = win_probability.get("metadata")
+            if not isinstance(metadata, dict):
+                return
+            shadow = metadata.get("ensemble_shadow")
+            if not isinstance(shadow, dict):
+                return
+            self._match_winner_ensemble_shadow_log.record_prediction(
+                match_id=snapshot.match_id, innings=snapshot.innings, over=over,
+                gbm_probability=shadow["gbm_probability"], nn_probability=shadow["nn_probability"],
+                ensemble_probability=shadow["ensemble_probability"],
+            )
+        except Exception:
+            pass
+
+    def _record_match_winner_ensemble_shadow_outcome(
+        self, snapshot: ToiSnapshot, verifier: LiveDeliveryVerifier
+    ) -> None:
+        """Record the real chase outcome once the chase innings completes
+        (same convention as _record_win_probability_shadow_outcome), then
+        check whether enough real matches have accumulated to send the
+        one-time review reminder. Fault-isolated."""
+        try:
+            self._match_winner_ensemble_shadow_log.record_outcome(
+                match_id=snapshot.match_id,
+                batting_team_won=verifier.score >= snapshot.target,
+            )
+            self._maybe_send_match_winner_ensemble_summary_reminder()
+        except Exception:
+            pass
+
+    def _maybe_send_match_winner_ensemble_summary_reminder(self) -> None:
+        """Same 'review after N real matches' plan as every other shadow
+        system -- fires once via the marker file."""
+        if self._publisher is None:
+            return
+        count = self._match_winner_ensemble_shadow_log.matches_with_outcome_count()
+        if count < self._match_winner_ensemble_shadow_log.min_matches_for_summary:
+            return
+        if self._match_winner_ensemble_shadow_log.reminder_already_sent():
+            return
+        text = (
+            "🏏 Match-winner ensemble comparison ready\n\n"
+            f"{self._match_winner_ensemble_shadow_log.summary_text()}\n\n"
+            "Time to review and decide whether to keep the GBM+NN ensemble, "
+            "the GBM alone, or keep comparing further."
+        )
+        if self._publisher.publish("match_winner_ensemble_shadow_summary", text):
+            self._match_winner_ensemble_shadow_log.mark_reminder_sent(match_count=count)
 
     def _record_wicket_ensemble_shadow(
         self, snapshot: ToiSnapshot, over: int, prediction: dict[str, object], actual_wickets: int

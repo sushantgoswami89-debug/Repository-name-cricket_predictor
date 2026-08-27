@@ -1,0 +1,13 @@
+{
+  "candidate_version": "match_winner_v2_nn_gbm_ensemble",
+  "artifacts": {
+    "gbm_model.pkl": "fa424e26182dc8899dbdcc768f4d69fc5b31ee81e26a8673ddab7a8a3697d494",
+    "feature_cols.pkl": "3383d81e0b73e78a43dcbb3cce8e7656edccdc4e70c515508b9cd9cd62f01055",
+    "categorical_cols.pkl": "18a09021c6df1452bd38a90213733bc0e7f28f3a91b6aeffbd32c0da2ea037f1",
+    "nn_model.pt": "cdfc32d8f6a674240116f156ff22e37d24489c8cba518b3a7287a6bc9cf9de47",
+    "nn_metadata.json": "2def4a4b0fd77e415009ad5e809f8efdeef80dee2b56e0cf4b42a998ce369e0d",
+    "gbm_calibrator.pkl": "e993981e359a958d3b57d96860d7ed9d6f711d92a36b6b6f63c11ee579afc697",
+    "nn_calibrator.pkl": "cc2a238dc134a822e77da32f0d75ec3f01bc6f63840f9b074bdde8a0acd7025d",
+    "stacker.pkl": "fe8ccdc683f4f28042f099fd5a9026ad00c47cb6b49e541661608494ccfe088b"
+  }
+}
