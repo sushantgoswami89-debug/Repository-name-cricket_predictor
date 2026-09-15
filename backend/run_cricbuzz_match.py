@@ -33,6 +33,33 @@ def _telegram(project_root: Path) -> TelegramPublisher:
     return TelegramPublisher(config["bot_token"], config["chat_id"])
 
 
+def _match_result_text(snapshot) -> str | None:
+    """None while the match is still live. A 2nd-innings snapshot is only
+    ever handed to us once the chase has genuinely finished one way or
+    the other (innings_complete, or target reached) -- see
+    docs/live_field_test_2026-09-15.md item 17: this driver had no
+    completion detection at all before, so it never announced the result
+    or exited, just looped forever on the same frozen final scorecard."""
+    if snapshot.innings < 2:
+        return None
+    target_reached = snapshot.target > 0 and snapshot.score >= snapshot.target
+    if target_reached:
+        wickets_in_hand = 10 - snapshot.wickets
+        return (
+            f"{snapshot.batting_team} won by {wickets_in_hand} wicket"
+            f"{'s' if wickets_in_hand != 1 else ''} "
+            f"({snapshot.score}/{snapshot.wickets})"
+        )
+    if snapshot.innings_complete:
+        margin = snapshot.target - 1 - snapshot.score
+        return (
+            f"{snapshot.bowling_team} won by {margin} run"
+            f"{'s' if margin != 1 else ''} "
+            f"({snapshot.batting_team} {snapshot.score}/{snapshot.wickets})"
+        )
+    return None
+
+
 def _scorecard_line(snapshot) -> str:
     deliveries = snapshot.deliveries
     latest = deliveries[-1] if deliveries else None
@@ -97,6 +124,13 @@ def main() -> None:
                 f"{'Sent' if publisher else 'Recorded'} innings {output['innings']} "
                 f"over {output['over']} prediction."
             )
+
+        result = _match_result_text(snapshot)
+        if result:
+            print(f"MATCH COMPLETE: {result}")
+            if publisher is not None:
+                publisher.publish(f"result:{match_id}", f"🏆 {result}")
+            break
 
         time.sleep(max(1.0, args.poll_seconds))
 
