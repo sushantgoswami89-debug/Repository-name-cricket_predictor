@@ -989,7 +989,12 @@ class VerifiedLivePredictionPipeline:
         win_line = ""
         if isinstance(win, dict) and win.get("status") != "not_applied" and "win_probability" in win:
             win_team = win.get("batting_team") or "Batting side"
-            win_line = f"\nWin Probability: {win_team} {float(win['win_probability']) * 100:.1f}%"
+            bowl_team = win.get("bowling_team") or "Bowling side"
+            batting_pct = float(win["win_probability"]) * 100
+            win_line = (
+                f"\nWin Probability: {win_team} {batting_pct:.1f}% | "
+                f"{bowl_team} {100 - batting_pct:.1f}%"
+            )
             # Live comparison, user-requested 2026-08-24: the GBM always
             # serves the primary number; for IPL chases, Monte Carlo runs
             # alongside as a logged-only shadow (see

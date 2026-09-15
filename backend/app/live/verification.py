@@ -77,6 +77,23 @@ class LiveDeliveryVerifier:
             raise VerificationError(
                 f"Impossible ball number {delivery.over}.{delivery.ball}."
             )
+        if self.last_key is None and not self.accepted:
+            # Bootstrap from this very first delivery's own reported
+            # feed_total/feed_wickets rather than assuming the verifier
+            # starts at literal ball 1 of the innings. For a feed that
+            # always provides complete history from ball 1 (TOI), this is
+            # a no-op: feed_total for a genuine first ball already equals
+            # its own total_runs, so self.score bootstraps to exactly 0,
+            # identical to the prior hardcoded-zero behavior. It also
+            # correctly handles a feed that can only provide a recent
+            # window (e.g. Cricbuzz, added 2026-09-15) and is attaching
+            # mid-innings -- see docs/live_field_test_2026-09-15.md item 9.
+            # Deliberate trade-off: this specific verifier instance can no
+            # longer detect feed corruption on the very first ball it ever
+            # sees (a real but narrow loss -- every subsequent ball is
+            # still fully cross-checked as before).
+            self.score = delivery.feed_total - delivery.total_runs
+            self.wickets = delivery.feed_wickets - int(delivery.wicket_kind is not None)
         expected_score = self.score + delivery.total_runs
         expected_wickets = self.wickets + (delivery.wicket_kind is not None)
         if expected_score != delivery.feed_total:

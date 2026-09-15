@@ -9,6 +9,8 @@ import time
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
+import requests
+
 from app.live.pipeline import VerifiedLivePredictionPipeline
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery, ToiMatchSummary
@@ -42,6 +44,55 @@ def _is_t20_international(match: ToiMatchSummary) -> bool:
     return match_format in {"T20", "TWENTY20"} and any(
         marker in series for marker in international_markers
     )
+
+
+def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | None:
+    """One-time pre-match summary: toss, pitch, weather, playing XIs.
+
+    Same raw TOI feed and extraction the standalone match_briefing.py
+    already used for this -- reused here so the automated Telegram flow
+    carries it too instead of requiring a human to run that script
+    separately. Returns None on any feed error so a briefing failure
+    never blocks the per-over prediction flow that follows it.
+    """
+    try:
+        raw = reader._get_json(ToiLiveReader.RAW_URL.format(match_id=match_id))
+    except Exception:
+        return None
+    team_players = ToiLiveReader._team_players(raw)
+    toss_won_by, toss_decision = ToiLiveReader._toss(raw)
+    pitch_type, pitch_surface = ToiLiveReader._pitch(raw)
+    weather_condition, humidity, temperature, wind = ToiLiveReader._weather(raw)
+
+    lines = [f"🏏 {label} -- Match Briefing"]
+    lines.append(
+        f"Toss: {toss_won_by} won, chose to {toss_decision or 'unknown'}"
+        if toss_won_by
+        else "Toss: not yet available"
+    )
+    lines.append(
+        f"Pitch: {pitch_type or 'unknown'} / {pitch_surface or 'unknown'} surface"
+        if pitch_type or pitch_surface
+        else "Pitch: not yet available"
+    )
+    if weather_condition or humidity is not None:
+        parts = [weather_condition or "unknown"]
+        if temperature is not None:
+            parts.append(f"{temperature:.0f}C")
+        if humidity is not None:
+            parts.append(f"{humidity:.0f}% humidity")
+        if wind is not None:
+            parts.append(f"wind {wind:.1f} m/s")
+        lines.append("Weather: " + ", ".join(parts))
+    else:
+        lines.append("Weather: not yet available")
+    if team_players:
+        for team_name, players in team_players.items():
+            confirmed = sum(1 for player in players if player.confirm_xi)
+            lines.append(f"{team_name}: {confirmed}/{len(players)} confirmed XI")
+    else:
+        lines.append("Playing XIs not yet available.")
+    return "\n".join(lines)
 
 
 def _write_shadow_prediction(
@@ -86,20 +137,24 @@ def main() -> None:
     while True:
         now = time.monotonic()
         if now - last_scan >= max(10.0, args.scan_seconds):
-            if args.shadow_t20i:
+            try:
                 matches = tuple(
                     match
                     for match in discovery.live_summaries()
                     if _is_t20_international(match)
                 )
-            else:
-                matches = discovery.live_matches()
+            except requests.exceptions.RequestException as error:
+                print(f"Deferred discovery scan: {error}")
+                last_scan = now
+                time.sleep(max(1.0, args.poll_seconds))
+                continue
             live_ids = {match.match_id for match in matches}
             for match in matches:
                 if match.match_id not in active:
+                    reader = ToiLiveReader()
                     active[match.match_id] = (
                         match.url,
-                        ToiLiveReader(),
+                        reader,
                         VerifiedLivePredictionPipeline(
                             publisher=publisher,
                             output_file=(
@@ -113,6 +168,11 @@ def main() -> None:
                         ),
                     )
                     print(f"Attached automatically: {match.label}")
+                    briefing = _briefing_text(reader, match.match_id, match.label)
+                    if briefing:
+                        print(briefing)
+                        if publisher is not None:
+                            publisher.publish(f"briefing:{match.match_id}", briefing)
             for match_id in set(active) - live_ids:
                 del active[match_id]
                 print(f"Match finished: {match_id}")
