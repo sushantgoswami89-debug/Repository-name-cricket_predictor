@@ -60,6 +60,39 @@ def _match_result_text(snapshot) -> str | None:
     return None
 
 
+_EXTRA_LABELS = {"wides": "WIDE", "noballs": "NO-BALL", "byes": "BYE", "legbyes": "LEG-BYE"}
+
+
+def _delivery_event_lines(snapshot, seen_keys: set[tuple[int, int, int]]) -> list[str]:
+    """Surface every new delivery's extras/wicket kind explicitly.
+
+    docs/live_field_test_2026-09-15.md item 5 (still open): only
+    four/wicket event tags were ever confirmed against real Cricbuzz
+    data; six/wide/noball/bye/legbye and every wicket kind except
+    "caught" were unvalidated. This makes each one visible the moment it
+    happens live instead of requiring a manual archived-match audit.
+    """
+    lines = []
+    for delivery in snapshot.deliveries:
+        if delivery.key in seen_keys:
+            continue
+        seen_keys.add(delivery.key)
+        tags = []
+        if delivery.batter_runs == 6:
+            tags.append("SIX")
+        for extra_key, label in _EXTRA_LABELS.items():
+            if extra_key in delivery.extras:
+                tags.append(label)
+        if delivery.wicket_kind:
+            tags.append(f"WICKET({delivery.wicket_kind})")
+        if tags:
+            lines.append(
+                f"[event] inn{delivery.innings} {delivery.over}.{delivery.ball} "
+                f"{'/'.join(tags)} -- {delivery.striker} off {delivery.bowler}"
+            )
+    return lines
+
+
 def _scorecard_line(snapshot) -> str:
     deliveries = snapshot.deliveries
     latest = deliveries[-1] if deliveries else None
@@ -77,6 +110,39 @@ def _scorecard_line(snapshot) -> str:
         f"[scorecard] {snapshot.batting_team} {snapshot.score}/{snapshot.wickets} "
         f"({snapshot.overs} ov, RR {run_rate:.2f}) -- {bowler} to {batter}"
     )
+
+
+def _progress(snapshot) -> tuple[int, int]:
+    overs_completed, _, balls_into_over = str(snapshot.overs).partition(".")
+    legal_balls = int(overs_completed or 0) * 6 + int(balls_into_over or 0)
+    return snapshot.innings, legal_balls
+
+
+def _fetch_freshest(reader: CricbuzzLiveReader, match_url: str, attempts: int = 3):
+    """Try the fetch a few times within one poll and keep the best.
+
+    docs/live_field_test_2026-09-17.md: confirmed live tonight that three
+    back-to-back fresh requests for the same match can return three
+    different snapshots from Cricbuzz (one genuinely current, two stale)
+    -- not a client-side caching artifact (no-cache headers and a
+    cache-busting query param made no difference), a real upstream
+    inconsistency. One extra fetch or two per poll meaningfully raises
+    the odds of landing on the current one instead of waiting a full
+    --poll-seconds cycle to try again.
+    """
+    best_snapshot = None
+    best_rank = None
+    last_error: Exception | None = None
+    for _ in range(attempts):
+        try:
+            snapshot = reader.fetch(match_url)
+        except (CricbuzzFeedError, requests.exceptions.RequestException) as error:
+            last_error = error
+            continue
+        rank = _progress(snapshot)
+        if best_rank is None or rank > best_rank:
+            best_snapshot, best_rank = snapshot, rank
+    return best_snapshot, last_error
 
 
 def main() -> None:
@@ -98,19 +164,65 @@ def main() -> None:
     mode = "shadow (no Telegram)" if args.shadow else "LIVE (publishing to Telegram)"
     print(f"CricketBaba watching Cricbuzz match {match_id} -- mode: {mode}")
 
+    seen_delivery_keys: set[tuple[int, int, int]] = set()
+    last_over_sent: dict[int, int] = {}
+    # docs/live_field_test_2026-09-17.md: an over-checkpoint mismatch can
+    # get permanently stuck -- the exception fires before this poll's
+    # progress is saved, so the next poll re-derives the identical (or,
+    # seen live tonight, a *different* but still wrong) total from the
+    # same unstable upstream window, forever, with zero predictions sent.
+    # Three occurrences in one match, each only recovered by a full
+    # process restart, which works because a fresh CricbuzzLiveReader()
+    # reseeds its running total from Cricbuzz's own latest checkpoint
+    # instead of replaying the bad accumulation. Do that reseed
+    # automatically instead of requiring a human to notice and restart.
+    consecutive_feed_errors = 0
+    RESEED_AFTER_CONSECUTIVE_ERRORS = 3
+    # docs/live_field_test_2026-09-17.md: confirmed directly tonight that
+    # Cricbuzz's feed is NOT monotonic poll-to-poll -- one successful
+    # fetch returned real innings-2 progress (a wicket at over 6.2), and
+    # the very next successful fetch (no error at all) regressed straight
+    # back to innings 1's stale final scorecard. A cache-busting query
+    # param and no-cache headers on the reader's own requests (already
+    # tried) did not fix this -- it's the upstream feed itself
+    # disagreeing with itself between requests, not a client-side caching
+    # problem. Defend at this layer instead: never let a snapshot that's
+    # behind the furthest point already seen reach the scorecard print or
+    # the prediction pipeline.
+    best_progress: tuple[int, int] | None = None
+
     while True:
-        try:
-            snapshot = reader.fetch(args.match_url)
-        except CricbuzzFeedError as error:
-            print(f"Deferred: {error}")
-            time.sleep(max(1.0, args.poll_seconds))
-            continue
-        except requests.exceptions.RequestException as error:
-            print(f"Deferred (network): {error}")
+        snapshot, error = _fetch_freshest(reader, args.match_url)
+        if snapshot is None:
+            label = "Deferred" if isinstance(error, CricbuzzFeedError) else "Deferred (network)"
+            print(f"{label}: {error}")
+            consecutive_feed_errors += 1
+            if consecutive_feed_errors >= RESEED_AFTER_CONSECUTIVE_ERRORS:
+                print(
+                    f"Reseeding Cricbuzz reader after {consecutive_feed_errors} "
+                    "consecutive feed errors."
+                )
+                reader = CricbuzzLiveReader()
+                consecutive_feed_errors = 0
             time.sleep(max(1.0, args.poll_seconds))
             continue
 
+        consecutive_feed_errors = 0
+
+        progress = _progress(snapshot)
+        if best_progress is not None and progress < best_progress:
+            print(
+                f"Stale snapshot skipped: innings {snapshot.innings} at "
+                f"{snapshot.overs} ov is behind the innings {best_progress[0]} / "
+                f"{best_progress[1]} legal balls already seen."
+            )
+            time.sleep(max(1.0, args.poll_seconds))
+            continue
+        best_progress = progress if best_progress is None else max(best_progress, progress)
+
         print(_scorecard_line(snapshot))
+        for line in _delivery_event_lines(snapshot, seen_delivery_keys):
+            print(line)
 
         try:
             output = pipeline.process(snapshot)
@@ -124,6 +236,20 @@ def main() -> None:
                 f"{'Sent' if publisher else 'Recorded'} innings {output['innings']} "
                 f"over {output['over']} prediction."
             )
+            # docs/live_field_test_2026-09-15.md item 3 (unresolved): over 14
+            # was silently skipped once with no prediction and no error
+            # logged anywhere. Flag any gap in the served-over sequence the
+            # moment it happens, rather than discovering it after the fact.
+            innings = output["innings"]
+            over = output["over"]
+            prior = last_over_sent.get(innings)
+            if prior is not None and over > prior + 1:
+                print(
+                    f"OVER GAP DETECTED: innings {innings} jumped from over "
+                    f"{prior} to {over} -- over(s) {prior + 1}-{over - 1} never "
+                    f"got a prediction."
+                )
+            last_over_sent[innings] = over
 
         result = _match_result_text(snapshot)
         if result:

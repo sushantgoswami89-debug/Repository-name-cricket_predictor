@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -252,7 +253,11 @@ class CricbuzzLiveReader:
         if self._session is None:
             self._session = requests.Session()
             self._session.headers.update(
-                {"User-Agent": "Mozilla/5.0 (compatible; CricketBaba/3.0)"}
+                {
+                    "User-Agent": "Mozilla/5.0 (compatible; CricketBaba/3.0)",
+                    "Cache-Control": "no-cache, no-store",
+                    "Pragma": "no-cache",
+                }
             )
         if self._running_score is None:
             self._running_score = {}
@@ -282,7 +287,22 @@ class CricbuzzLiveReader:
             else f"https://www.cricbuzz.com/live-cricket-scores/{match_id}/x"
         )
         try:
-            response = self._session.get(url, timeout=self.timeout_seconds)
+            # Real bug found live 2026-09-17
+            # (docs/live_field_test_2026-09-17.md): reusing one Session's
+            # kept-alive connection for every poll of a match can pin
+            # requests to a single CDN edge that serves a stale cached
+            # snapshot of this page for minutes at a stretch -- seen
+            # directly, both as a whole innings' worth of scoreboard
+            # frozen mid-chase and as over-checkpoint totals that
+            # disagreed with a simultaneous fresh request. A cache-busting
+            # query param (on top of the no-cache headers set above)
+            # forces each poll to be treated as a distinct URL, which is
+            # the one thing that reliably defeats an edge cache.
+            cache_bust = "&" if "?" in url else "?"
+            response = self._session.get(
+                f"{url}{cache_bust}_cb={int(time.time() * 1000)}",
+                timeout=self.timeout_seconds,
+            )
             response.raise_for_status()
         except requests.RequestException as exc:
             raise CricbuzzFeedError(f"Could not fetch Cricbuzz match {match_id}: {exc}") from exc
