@@ -25,13 +25,8 @@ from pathlib import Path
 
 import requests
 
-from app.live.cricbuzz_discovery import (
-    CricbuzzMatchDiscovery,
-    CricbuzzMatchSummary,
-    is_t20_international,
-)
-from app.live.cricbuzz_reader import CricbuzzLiveReader, _extract_flight_chunks
-from app.live.cricbuzz_session import CricbuzzMatchSession
+from app.live.cricbuzz_discovery import CricbuzzMatchDiscovery, is_t20_international
+from app.live.cricbuzz_session import CricbuzzMatchSession, briefing_text
 from app.live.pipeline import VerifiedLivePredictionPipeline
 from app.live.telegram import TelegramPublisher
 
@@ -42,46 +37,6 @@ def _telegram(project_root: Path) -> TelegramPublisher:
         raise SystemExit("Run setup_telegram.py before starting automatic mode.")
     config = json.loads(path.read_text(encoding="utf-8"))
     return TelegramPublisher(config["bot_token"], config["chat_id"])
-
-
-def _briefing_text(match: CricbuzzMatchSummary) -> str | None:
-    """One-time pre-match summary: toss, venue, playing XIs.
-
-    Mirrors run_toi_auto.py's _briefing_text -- same idea (surface what's
-    known right when a match is first attached), same graceful
-    None-on-any-failure contract so a briefing failure never blocks the
-    per-over prediction flow that follows it. Cricbuzz's pitch/weather
-    enrichment doesn't exist (checked directly, see
-    app/live/cricbuzz_reader.py's module docstring), so those two lines
-    from TOI's briefing have no Cricbuzz equivalent here.
-    """
-    try:
-        session = requests.Session()
-        session.headers.update({"User-Agent": "Mozilla/5.0 (compatible; CricketBaba/3.0)"})
-        response = session.get(match.url, timeout=12.0)
-        response.raise_for_status()
-        chunks = _extract_flight_chunks(response.text)
-    except Exception:
-        return None
-
-    toss_won_by, toss_decision = CricbuzzLiveReader._toss_from_chunks(chunks)
-    venue = CricbuzzLiveReader._venue_from_chunks(chunks, match.match_id)
-    team_players = CricbuzzLiveReader._squads_from_chunks(chunks)
-
-    lines = [f"🏏 {match.label} -- Match Briefing"]
-    lines.append(
-        f"Toss: {toss_won_by} won, chose to {toss_decision.lower() or 'unknown'}"
-        if toss_won_by
-        else "Toss: not yet available"
-    )
-    lines.append(f"Venue: {venue}" if venue else "Venue: not yet available")
-    if team_players:
-        for team_name, players in team_players.items():
-            confirmed = sum(1 for player in players if player.confirm_xi)
-            lines.append(f"{team_name}: {confirmed}/{len(players)} confirmed XI")
-    else:
-        lines.append("Playing XIs not yet available.")
-    return "\n".join(lines)
 
 
 def main() -> None:
@@ -129,7 +84,7 @@ def main() -> None:
                         publisher=publisher,
                     )
                     print(f"Attached automatically: {match.label} ({match.match_desc})")
-                    briefing = _briefing_text(match)
+                    briefing = briefing_text(match.match_id, match.url, match.label)
                     if briefing:
                         print(briefing)
                         if publisher is not None:

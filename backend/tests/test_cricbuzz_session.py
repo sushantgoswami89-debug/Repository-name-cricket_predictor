@@ -7,8 +7,14 @@ against a real live match.
 
 from __future__ import annotations
 
+import json
+
 from app.live.cricbuzz_reader import CricbuzzFeedError
-from app.live.cricbuzz_session import RESEED_AFTER_CONSECUTIVE_ERRORS, CricbuzzMatchSession
+from app.live.cricbuzz_session import (
+    RESEED_AFTER_CONSECUTIVE_ERRORS,
+    CricbuzzMatchSession,
+    briefing_text,
+)
 from app.live.live_snapshot import LiveSnapshot
 from app.live.pipeline import VerifiedLivePredictionPipeline
 from app.ml.prediction_result import PredictionResult
@@ -121,3 +127,101 @@ def test_match_still_live_when_target_not_reached_and_not_complete():
     session.poll_once()
 
     assert session.finished is False
+
+
+class _FakeBriefingResponse:
+    def __init__(self, text: str) -> None:
+        self.text = text
+
+    def raise_for_status(self) -> None:
+        pass
+
+
+class _FakeBriefingSession:
+    def __init__(self, html: str) -> None:
+        self._html = html
+        self.headers: dict[str, str] = {}
+
+    def get(self, url, timeout):
+        return _FakeBriefingResponse(self._html)
+
+
+def _briefing_html() -> str:
+    match_info = json.dumps(
+        {
+            "matchInfo": {
+                "matchId": 152742,
+                "venueInfo": {"ground": "Harare Sports Club", "city": "Harare"},
+            }
+        },
+        separators=(",", ":"),
+    )
+    squads = json.dumps(
+        {
+            "matchId": 152742,
+            "team1": {
+                "id": 12,
+                "name": "Zimbabwe",
+                "playerDetails": [
+                    {"id": 1, "name": "Player A", "role": "Batsman", "substitute": False}
+                ],
+            },
+            "team2": {"id": 4, "name": "Australia", "playerDetails": []},
+            "tossResults": {
+                "tossWinnerId": 12,
+                "tossWinnerName": "Zimbabwe",
+                "decision": "Bowling",
+            },
+        },
+        separators=(",", ":"),
+    )
+    ldjson = (
+        '<script type="application/ld+json">'
+        '{"@type":"SportsEvent","competitor":[{"name":"Zimbabwe"},{"name":"Australia"}]}'
+        "</script>"
+    )
+    return (
+        f'<script>self.__next_f.push([1,{json.dumps(match_info)}])</script>'
+        f'<script>self.__next_f.push([2,{json.dumps(squads)}])</script>'
+        f"{ldjson}"
+    )
+
+
+def test_briefing_text_uses_page_teams_as_label(monkeypatch):
+    monkeypatch.setattr(
+        "app.live.cricbuzz_session.requests.Session",
+        lambda: _FakeBriefingSession(_briefing_html()),
+    )
+
+    text = briefing_text("152742", "https://www.cricbuzz.com/live-cricket-scores/152742/x", "152742")
+
+    assert text is not None
+    assert "Zimbabwe vs Australia -- Match Briefing" in text
+    assert "Toss: Zimbabwe won, chose to bowling" in text
+    assert "Venue: Harare Sports Club, Harare" in text
+
+
+def test_briefing_text_falls_back_to_given_label_without_ldjson(monkeypatch):
+    html = _briefing_html().replace("SportsEvent", "SomethingElse")
+    monkeypatch.setattr(
+        "app.live.cricbuzz_session.requests.Session", lambda: _FakeBriefingSession(html)
+    )
+
+    text = briefing_text("152742", "https://www.cricbuzz.com/live-cricket-scores/152742/x", "my-label")
+
+    assert text is not None
+    assert "my-label -- Match Briefing" in text
+
+
+def test_briefing_text_returns_none_on_fetch_failure(monkeypatch):
+    class _FailingSession:
+        headers: dict[str, str] = {}
+
+        def get(self, url, timeout):
+            raise ConnectionError("boom")
+
+    monkeypatch.setattr(
+        "app.live.cricbuzz_session.requests.Session", lambda: _FailingSession()
+    )
+
+    assert briefing_text("152742", "https://example.com", "label") is None

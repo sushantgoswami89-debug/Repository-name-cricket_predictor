@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 
 import requests
 
-from app.live.cricbuzz_reader import CricbuzzFeedError, CricbuzzLiveReader
+from app.live.cricbuzz_reader import CricbuzzFeedError, CricbuzzLiveReader, _extract_flight_chunks
 from app.live.pipeline import (
     MatchStateAnomaly,
     PredictionPublisher,
@@ -104,6 +104,60 @@ def _delivery_event_lines(snapshot, seen_keys: set[tuple[int, int, int]]) -> lis
                 f"{'/'.join(tags)} -- {delivery.striker} off {delivery.bowler}"
             )
     return lines
+
+
+def briefing_text(match_id: str, match_url: str, label: str) -> str | None:
+    """One-time pre-match summary: toss, venue, playing XIs.
+
+    Shared by both run_cricbuzz_match.py (single match, URL given
+    directly) and run_cricbuzz_auto.py (discovery-driven) so a briefing
+    is never available on only one of the two Cricbuzz entry points --
+    real gap found 2026-09-18: this was first built only inside
+    run_cricbuzz_auto.py, but run_cricbuzz_match.py is the driver both
+    real field tests (09-15, 09-17) actually used, so it would have had
+    no briefing at all despite the underlying extraction being real and
+    working. Mirrors run_toi_auto.py's own _briefing_text -- same idea
+    (surface what's known right when a match is first attached), same
+    graceful None-on-any-failure contract so a briefing failure never
+    blocks the per-over prediction flow that follows it. Cricbuzz's
+    pitch/weather enrichment doesn't exist at all (checked directly, see
+    cricbuzz_reader.py's module docstring), so those two lines from
+    TOI's briefing have no Cricbuzz equivalent here.
+    """
+    try:
+        session = requests.Session()
+        session.headers.update({"User-Agent": "Mozilla/5.0 (compatible; CricketBaba/3.0)"})
+        response = session.get(match_url, timeout=12.0)
+        response.raise_for_status()
+        chunks = _extract_flight_chunks(response.text)
+    except Exception:
+        return None
+
+    toss_won_by, toss_decision = CricbuzzLiveReader._toss_from_chunks(chunks)
+    venue = CricbuzzLiveReader._venue_from_chunks(chunks, match_id)
+    team_players = CricbuzzLiveReader._squads_from_chunks(chunks)
+    # run_cricbuzz_match.py (single match, given only a URL) has no
+    # discovery-derived label to pass in -- the page's own schema.org
+    # JSON-LD team names (same source _resolve_full_team_name's callers
+    # already trust) make a real one instead of falling back to the bare
+    # match id.
+    teams = CricbuzzLiveReader._teams_from_ldjson(response.text)
+    label = " vs ".join(teams) if teams else label
+
+    lines = [f"🏏 {label} -- Match Briefing"]
+    lines.append(
+        f"Toss: {toss_won_by} won, chose to {toss_decision.lower() or 'unknown'}"
+        if toss_won_by
+        else "Toss: not yet available"
+    )
+    lines.append(f"Venue: {venue}" if venue else "Venue: not yet available")
+    if team_players:
+        for team_name, players in team_players.items():
+            confirmed = sum(1 for player in players if player.confirm_xi)
+            lines.append(f"{team_name}: {confirmed}/{len(players)} confirmed XI")
+    else:
+        lines.append("Playing XIs not yet available.")
+    return "\n".join(lines)
 
 
 def _scorecard_line(snapshot) -> str:

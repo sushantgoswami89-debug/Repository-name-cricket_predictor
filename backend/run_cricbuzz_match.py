@@ -9,7 +9,12 @@ CricbuzzLiveReader instead of ToiLiveReader.
 Single-match only, no discovery -- for automatic discovery + attach
 across multiple live T20Is, see run_cricbuzz_auto.py (built 2026-09-18),
 which shares this script's per-match polling logic via
-app/live/cricbuzz_session.py's CricbuzzMatchSession.
+app/live/cricbuzz_session.py's CricbuzzMatchSession. Sends a one-time
+pre-match briefing (toss/venue/confirmed XIs) via that same module's
+briefing_text() before the first poll -- added 2026-09-18 after this
+script (the one both real field tests, 09-15 and 09-17, actually used)
+was found to have no briefing at all despite run_cricbuzz_auto.py
+getting one from the start.
 
 Usage:
     /usr/bin/python3 run_cricbuzz_match.py "<cricbuzz live-cricket-scores URL>" [--shadow]
@@ -23,7 +28,7 @@ import time
 from pathlib import Path
 
 from app.live.cricbuzz_reader import CricbuzzLiveReader
-from app.live.cricbuzz_session import CricbuzzMatchSession
+from app.live.cricbuzz_session import CricbuzzMatchSession, briefing_text
 from app.live.pipeline import VerifiedLivePredictionPipeline
 from app.live.telegram import TelegramPublisher
 
@@ -57,6 +62,12 @@ def main() -> None:
 
     mode = "shadow (no Telegram)" if args.shadow else "LIVE (publishing to Telegram)"
     print(f"CricketBaba watching Cricbuzz match {match_id} -- mode: {mode}")
+
+    briefing = briefing_text(match_id, args.match_url, match_id)
+    if briefing:
+        print(briefing)
+        if publisher is not None:
+            publisher.publish(f"briefing:{match_id}", briefing)
 
     while True:
         session.poll_once()
