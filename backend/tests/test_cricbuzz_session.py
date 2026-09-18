@@ -225,3 +225,65 @@ def test_briefing_text_returns_none_on_fetch_failure(monkeypatch):
     )
 
     assert briefing_text("152742", "https://example.com", "label") is None
+
+
+class _RecordingPublisher:
+    def __init__(self) -> None:
+        self.sent: list[tuple[str, str]] = []
+
+    def publish(self, key, text):
+        self.sent.append((key, text))
+        return True
+
+
+def test_stuck_alert_fires_once_after_threshold_and_resets_on_recovery(monkeypatch):
+    publisher = _RecordingPublisher()
+    reader = FakeReader([CricbuzzFeedError("boom")] * 100)
+    session = CricbuzzMatchSession(
+        match_id="152742",
+        match_url="https://www.cricbuzz.com/live-cricket-scores/152742/x",
+        pipeline=VerifiedLivePredictionPipeline(engine=FakeEngine(), publisher=None),
+        reader=reader,
+        publisher=publisher,
+        stuck_alert_seconds=60.0,
+    )
+
+    clock = [1000.0]
+    monkeypatch.setattr("app.live.cricbuzz_session.time.time", lambda: clock[0])
+
+    session.poll_once()  # starts the error streak at t=1000
+    assert publisher.sent == []
+
+    clock[0] = 1000.0 + 61.0  # past the 60s threshold
+    session.poll_once()
+    assert len(publisher.sent) == 1
+    key, text = publisher.sent[0]
+    assert key.startswith("stuck_alert:152742:")
+    assert "erroring" in text
+    assert "resume automatically" in text
+
+    clock[0] += 5.0
+    session.poll_once()  # still erroring -- must not repeat
+    assert len(publisher.sent) == 1
+
+    # A real snapshot arrives: the streak resets. (The 3rd consecutive
+    # failure above also triggered a reseed, replacing session.reader with
+    # a brand-new real CricbuzzLiveReader() -- reinstall the fake so this
+    # test keeps controlling what fetch() returns, same as production
+    # would keep using whatever fresh reader it just reseeded to.)
+    session.reader = reader
+    reader._queue = [_snapshot()] * 3
+    session.poll_once()
+    assert session._error_streak_started_at is None
+    assert session._stuck_alert_sent is False
+
+    # Erroring again later must be able to alert a second time.
+    session.reader = reader
+    reader._queue = [CricbuzzFeedError("boom again")] * 3
+    clock[0] += 1.0
+    session.poll_once()
+    clock[0] += 61.0
+    session.reader = reader
+    reader._queue = [CricbuzzFeedError("boom again")] * 3
+    session.poll_once()
+    assert len(publisher.sent) == 2

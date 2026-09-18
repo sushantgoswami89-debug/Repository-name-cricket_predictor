@@ -189,6 +189,18 @@ class CricbuzzMatchSession:
     _consecutive_feed_errors: int = 0
     _best_progress: tuple[int, int] | None = None
     _finished: bool = False
+    # Observability, punch-list item 11 (docs/live_field_test_2026-09-15.md):
+    # every real bug this project has found live was only ever caught
+    # because a human was watching the console. run_toi_live.py (an older,
+    # no-longer-primary single-match TOI driver) already had exactly this
+    # kind of alert for its own feed errors, but it never got ported to any
+    # driver actually in use -- not run_toi_auto.py, not the Cricbuzz
+    # drivers, not run_live_auto.py. Ported here so the ACTUAL current
+    # driver alerts automatically instead of silently retrying forever
+    # with only a console print nobody is watching.
+    stuck_alert_seconds: float = 300.0
+    _error_streak_started_at: float | None = None
+    _stuck_alert_sent: bool = False
 
     @property
     def finished(self) -> bool:
@@ -210,9 +222,12 @@ class CricbuzzMatchSession:
                 )
                 self.reader = CricbuzzLiveReader()
                 self._consecutive_feed_errors = 0
+            self._check_stuck(error)
             return
 
         self._consecutive_feed_errors = 0
+        self._error_streak_started_at = None
+        self._stuck_alert_sent = False
 
         progress = _progress(snapshot)
         if self._best_progress is not None and progress < self._best_progress:
@@ -263,3 +278,34 @@ class CricbuzzMatchSession:
             if self.publisher is not None:
                 self.publisher.publish(f"result:{self.match_id}", f"🏆 {result}")
             self._finished = True
+
+    def _check_stuck(self, error: Exception | None) -> None:
+        """One Telegram alert (deduplicated, auto-resets on recovery) if
+        the feed stays erroring continuously for stuck_alert_seconds --
+        mirrors run_toi_live.py's own --stuck-alert-seconds exactly. A
+        stuck feed and a working-but-quiet one look identical from
+        outside without this."""
+        now = time.time()
+        if self._error_streak_started_at is None:
+            self._error_streak_started_at = now
+        stuck_seconds = now - self._error_streak_started_at
+        if stuck_seconds < self.stuck_alert_seconds or self._stuck_alert_sent:
+            return
+        self._stuck_alert_sent = True
+        stuck_minutes = stuck_seconds / 60.0
+        duration_text = f"{stuck_minutes:.1f} min" if stuck_minutes >= 1 else f"{int(stuck_seconds)}s"
+        message = (
+            f"⚠️ CricketBaba: match {self.match_id}'s Cricbuzz feed has been "
+            f"erroring for over {duration_text} ({error}) -- predictions are "
+            "paused until it recovers. No action needed; will resume "
+            "automatically."
+        )
+        print(f"[{self.match_id}] {message}")
+        if self.publisher is not None:
+            try:
+                self.publisher.publish(
+                    f"stuck_alert:{self.match_id}:{int(self._error_streak_started_at)}",
+                    message,
+                )
+            except Exception:
+                pass

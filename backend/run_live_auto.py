@@ -81,13 +81,24 @@ class LiveAutoState:
     behavior) can be exercised directly in tests against fake discovery
     objects, not only by hand against whatever happens to be live."""
 
-    def __init__(self, project_root: Path, publisher: TelegramPublisher | None) -> None:
+    def __init__(
+        self,
+        project_root: Path,
+        publisher: TelegramPublisher | None,
+        stuck_alert_seconds: float = 300.0,
+    ) -> None:
         self.project_root = project_root
         self.publisher = publisher
+        self.stuck_alert_seconds = stuck_alert_seconds
         self.active_cricbuzz: dict[str, CricbuzzMatchSession] = {}
         self.active_toi: dict[
             str, tuple[str, ToiLiveReader, VerifiedLivePredictionPipeline]
         ] = {}
+        # Observability, punch-list item 11 -- mirrors CricbuzzMatchSession's
+        # own stuck-alert exactly (see its docstring), applied to the TOI
+        # backup path here since it has no session class of its own.
+        self._toi_error_streak_started_at: dict[str, float] = {}
+        self._toi_stuck_alert_sent: dict[str, bool] = {}
         # team-pair -> which source currently owns it, so the backup scan
         # never double-attaches a match the primary already claimed.
         self.covered_pairs: dict[frozenset[str], str] = {}
@@ -119,6 +130,7 @@ class LiveAutoState:
                     publisher=self.publisher, output_file=output_file
                 ),
                 publisher=self.publisher,
+                stuck_alert_seconds=self.stuck_alert_seconds,
             )
             if pair is not None:
                 self.covered_pairs[pair] = "cricbuzz"
@@ -207,18 +219,54 @@ class LiveAutoState:
                 output = pipeline.process(snapshot)
             except (ToiFeedError, VerificationError, MatchStateAnomaly) as error:
                 print(f"[toi] Deferred {match_id}: {error}")
+                self._check_toi_stuck(match_id, error)
                 continue
+            self._toi_error_streak_started_at.pop(match_id, None)
+            self._toi_stuck_alert_sent.pop(match_id, None)
             if output:
                 print(
                     f"[toi] {'Sent' if self.publisher else 'Recorded'} {match_id} "
                     f"innings {output['innings']} over {output['over']} prediction."
                 )
 
+    def _check_toi_stuck(self, match_id: str, error: Exception) -> None:
+        """Same one-alert, auto-resetting behavior as
+        CricbuzzMatchSession._check_stuck, for the TOI backup path."""
+        now = time.time()
+        started_at = self._toi_error_streak_started_at.setdefault(match_id, now)
+        stuck_seconds = now - started_at
+        if stuck_seconds < self.stuck_alert_seconds or self._toi_stuck_alert_sent.get(match_id):
+            return
+        self._toi_stuck_alert_sent[match_id] = True
+        stuck_minutes = stuck_seconds / 60.0
+        duration_text = f"{stuck_minutes:.1f} min" if stuck_minutes >= 1 else f"{int(stuck_seconds)}s"
+        message = (
+            f"⚠️ CricketBaba: match {match_id}'s TOI feed has been erroring "
+            f"for over {duration_text} ({error}) -- predictions are paused "
+            "until it recovers. No action needed; will resume automatically."
+        )
+        print(f"[toi] {message}")
+        if self.publisher is not None:
+            try:
+                self.publisher.publish(f"stuck_alert:toi:{match_id}:{int(started_at)}", message)
+            except Exception:
+                pass
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scan-seconds", type=float, default=30.0)
     parser.add_argument("--poll-seconds", type=float, default=10.0)
+    parser.add_argument(
+        "--stuck-alert-seconds",
+        type=float,
+        default=300.0,
+        help=(
+            "If an active match's feed (either source) stays erroring "
+            "continuously for this long, send one Telegram alert instead "
+            "of only printing to a console nobody may be watching."
+        ),
+    )
     parser.add_argument(
         "--shadow", action="store_true", help="Do not publish to Telegram."
     )
@@ -227,7 +275,7 @@ def main() -> None:
     cricbuzz_discovery = CricbuzzMatchDiscovery()
     toi_discovery = ToiMatchDiscovery()
     publisher = None if args.shadow else _telegram(project_root)
-    state = LiveAutoState(project_root, publisher)
+    state = LiveAutoState(project_root, publisher, stuck_alert_seconds=args.stuck_alert_seconds)
 
     last_scan = 0.0
     mode = "shadow (no Telegram)" if args.shadow else "LIVE (publishing to Telegram)"

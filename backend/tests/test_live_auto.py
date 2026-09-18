@@ -194,3 +194,50 @@ def test_unresolved_team_pair_label_never_blocks_attachment(tmp_path):
     assert "1" in state.active_cricbuzz
     assert "toi-2" in state.active_toi
     assert state.covered_pairs == {}
+
+
+class _RecordingPublisher:
+    def __init__(self) -> None:
+        self.sent: list[tuple[str, str]] = []
+
+    def publish(self, key, text):
+        self.sent.append((key, text))
+        return True
+
+
+class _AlwaysFailingToiReader:
+    def fetch(self, url):
+        from app.live.toi_reader import ToiFeedError
+
+        raise ToiFeedError("simulated: feed never reconciles.")
+
+
+def test_toi_backup_stuck_alert_fires_once_and_resets(tmp_path, monkeypatch):
+    from app.live.pipeline import VerifiedLivePredictionPipeline
+
+    publisher = _RecordingPublisher()
+    state = run_live_auto.LiveAutoState(
+        project_root=tmp_path, publisher=publisher, stuck_alert_seconds=60.0
+    )
+    state.active_toi["toi-1"] = (
+        "https://timesofindia.indiatimes.com/x",
+        _AlwaysFailingToiReader(),
+        VerifiedLivePredictionPipeline(publisher=None),
+    )
+
+    clock = [1000.0]
+    monkeypatch.setattr(run_live_auto.time, "time", lambda: clock[0])
+
+    state.poll()
+    assert publisher.sent == []
+
+    clock[0] += 61.0
+    state.poll()
+    assert len(publisher.sent) == 1
+    key, text = publisher.sent[0]
+    assert key.startswith("stuck_alert:toi:toi-1:")
+    assert "erroring" in text
+
+    clock[0] += 5.0
+    state.poll()  # still erroring -- must not repeat
+    assert len(publisher.sent) == 1
