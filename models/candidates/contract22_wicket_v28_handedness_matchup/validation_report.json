@@ -1,0 +1,74 @@
+{
+  "candidate_version": "contract22_wicket_v28_handedness_matchup",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v16_team_composition (currently live) + batter/bowler handedness matchup (bowler_arm, handedness_match) -- genuinely new information, not reconstructible from the existing pace/spin-only bowler_type. Reference is v16's own real validation_report.json numbers.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v16_team_composition_live": {
+    "known": {
+      "blended_auc": 0.612588,
+      "blended_brier_platt": 0.204349,
+      "ipl_auc": 0.615064,
+      "ipl_brier_platt": 0.19332,
+      "t20i_auc": 0.61129,
+      "t20i_brier_platt": 0.206345
+    },
+    "unknown": {
+      "blended_auc": 0.611448,
+      "blended_brier_platt": 0.204541,
+      "ipl_auc": 0.613111,
+      "ipl_brier_platt": 0.194369,
+      "t20i_auc": 0.611252,
+      "t20i_brier_platt": 0.206382
+    }
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6123050755356618,
+    "brier_platt": 0.20440249083563708,
+    "brier_uncalibrated": 0.20436388302042993,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.61482403832717,
+      "brier": 0.19335976158753826
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6108754196519607,
+      "brier": 0.20640113593714968
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6109446330268611,
+    "brier_platt": 0.20458322125877662,
+    "brier_uncalibrated": 0.20491247646716917,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6104669715987661,
+      "brier": 0.19517124832021876
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6115984996848483,
+      "brier": 0.20628671259561765
+    }
+  },
+  "beats_live_known": false,
+  "beats_live_unknown": false,
+  "handedness_feature_importance_rank": {
+    "bowler_arm": 54,
+    "handedness_match": 57
+  },
+  "total_features": 63,
+  "decision": "reject_keep_research"
+}
