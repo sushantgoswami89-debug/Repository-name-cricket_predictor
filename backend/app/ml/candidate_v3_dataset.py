@@ -49,11 +49,20 @@ def _digest(paths: Iterable[Path]) -> str:
     return digest.hexdigest()
 
 
-def build_verified_dataset(project_root: Path) -> DatasetBuildResult:
+def build_verified_dataset(project_root: Path, recent_window: int = 12) -> DatasetBuildResult:
     """Derive one pre-over row from every eligible T20 innings.
 
     All impact features use deliveries completed before the predicted over. The
     source total is reconciled independently while each innings is traversed.
+
+    `recent_window` is the number of most-recent legal balls the
+    recent_*/phase_*_pressure/phase_rotation_value features are computed
+    over -- 12 (2 overs) by default, matching the live-serving convention
+    in app/live/pipeline.py and app/services/match_replay.py. Exposed as a
+    parameter 2026-09-18 to test whether a shorter window reacts faster to
+    a genuine scoring surge without hurting real accuracy (docs/
+    live_field_test_2026-09-15.md's "run-range momentum lag" finding) --
+    see train_run_range_v25_faster_momentum.py.
     """
 
     source_files = sorted(
@@ -91,7 +100,7 @@ def build_verified_dataset(project_root: Path) -> DatasetBuildResult:
             score = 0
             wickets = 0
             legal_balls = 0
-            recent: deque[dict[str, int]] = deque(maxlen=12)
+            recent: deque[dict[str, int]] = deque(maxlen=recent_window)
             innings_rows = 0
 
             for source_over in innings.get("overs", []):
