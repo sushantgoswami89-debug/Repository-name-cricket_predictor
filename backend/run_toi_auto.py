@@ -11,6 +11,7 @@ from tempfile import NamedTemporaryFile
 
 import requests
 
+from app.live.commentary_log import append_commentary_log
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery, is_t20_international
@@ -111,6 +112,9 @@ def main() -> None:
     publisher = None if args.shadow_t20i else _telegram(project_root)
     shadow_root = project_root / "data" / "live" / "shadow-t20i"
     active: dict[str, tuple[str, ToiLiveReader, VerifiedLivePredictionPipeline]] = {}
+    # User-requested 2026-09-18: per-delivery commentary log for detailed
+    # post-match review -- see app/live/commentary_log.py's docstring.
+    logged_delivery_keys: dict[str, set[tuple[int, int, int]]] = {}
     last_scan = 0.0
     mode = "T20I shadow matches" if args.shadow_t20i else "live matches"
     print(f"CricketBaba is watching TOI for {mode}. Press Control+C to stop.")
@@ -166,6 +170,12 @@ def main() -> None:
             except (ToiFeedError, VerificationError, MatchStateAnomaly) as error:
                 print(f"Deferred {match_id}: {error}")
                 continue
+            append_commentary_log(
+                project_root / "data" / "live" / f"commentary-{match_id}.jsonl",
+                match_id,
+                snapshot,
+                logged_delivery_keys.setdefault(match_id, set()),
+            )
             if output:
                 if args.shadow_t20i:
                     _write_shadow_prediction(shadow_root, match_id, output)

@@ -17,9 +17,11 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import requests
 
+from app.live.commentary_log import append_commentary_log
 from app.live.cricbuzz_reader import CricbuzzFeedError, CricbuzzLiveReader, _extract_flight_chunks
 from app.live.pipeline import (
     MatchStateAnomaly,
@@ -201,6 +203,13 @@ class CricbuzzMatchSession:
     stuck_alert_seconds: float = 300.0
     _error_streak_started_at: float | None = None
     _stuck_alert_sent: bool = False
+    # User-requested 2026-09-18: a persistent per-delivery commentary log
+    # for detailed post-match review -- see app/live/commentary_log.py's
+    # module docstring for why (today's real bugs were only caught by
+    # reading full commentary text, not the short tagged-event console
+    # lines below). None disables logging.
+    commentary_log_path: Path | None = None
+    _logged_delivery_keys: set[tuple[int, int, int]] = field(default_factory=set)
 
     @property
     def finished(self) -> bool:
@@ -245,6 +254,10 @@ class CricbuzzMatchSession:
         print(f"[{self.match_id}] {_scorecard_line(snapshot)}")
         for line in _delivery_event_lines(snapshot, self._seen_delivery_keys):
             print(f"[{self.match_id}] {line}")
+        if self.commentary_log_path is not None:
+            append_commentary_log(
+                self.commentary_log_path, self.match_id, snapshot, self._logged_delivery_keys
+            )
 
         try:
             output = self.pipeline.process(snapshot)

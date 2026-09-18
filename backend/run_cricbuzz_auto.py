@@ -82,6 +82,10 @@ def main() -> None:
                             publisher=publisher, output_file=output_file
                         ),
                         publisher=publisher,
+                        commentary_log_path=project_root
+                        / "data"
+                        / "live"
+                        / f"commentary-{match.match_id}.jsonl",
                     )
                     print(f"Attached automatically: {match.label} ({match.match_desc})")
                     briefing = briefing_text(match.match_id, match.url, match.label)

@@ -14,7 +14,10 @@ pre-match briefing (toss/venue/confirmed XIs) via that same module's
 briefing_text() before the first poll -- added 2026-09-18 after this
 script (the one both real field tests, 09-15 and 09-17, actually used)
 was found to have no briefing at all despite run_cricbuzz_auto.py
-getting one from the start.
+getting one from the start. Also writes every delivery's full commentary
+(not just tagged events) to data/live/commentary-<match_id>.jsonl via
+app/live/commentary_log.py, for detailed post-match review -- see that
+module's docstring for why.
 
 Usage:
     /usr/bin/python3 run_cricbuzz_match.py "<cricbuzz live-cricket-scores URL>" [--shadow]
@@ -58,6 +61,7 @@ def main() -> None:
         match_url=args.match_url,
         pipeline=pipeline,
         publisher=publisher,
+        commentary_log_path=project_root / "data" / "live" / f"commentary-{match_id}.jsonl",
     )
 
     mode = "shadow (no Telegram)" if args.shadow else "LIVE (publishing to Telegram)"

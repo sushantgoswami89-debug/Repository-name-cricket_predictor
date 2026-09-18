@@ -40,11 +40,23 @@ against replays, real-but-static page fetches, and unit tests with fakes.
    has a real gap, treat as a priority bug).
 6. **"Confidence" label** (renamed from "System Health") — just confirm
    it reads correctly in the live Telegram messages.
+7. **Commentary log** (`app/live/commentary_log.py`, wired into every
+   driver — `run_cricbuzz_match.py`, `run_cricbuzz_auto.py`,
+   `run_toi_auto.py`, and both paths of `run_live_auto.py`) — confirm
+   `data/live/commentary-<match_id>.jsonl` is actually being written
+   during the match (one JSON line per delivery, every ball, not just
+   tagged events). This is the detail-analysis tool for section B below:
+   after the match, grep this file for the still-unconfirmed event types
+   instead of relying on memory of what scrolled past in the console.
 
-## B. Event types still unconfirmed against real data
+## B. Event types still unconfirmed against real data — check the commentary log for these
 
-From `docs/finding_cricbuzz_event_types_2026-09-18.md` — watch the
-`[event]` instrumentation lines for these specifically:
+From `docs/finding_cricbuzz_event_types_2026-09-18.md` — grep
+`data/live/commentary-<match_id>.jsonl` (see A.7) for these specifically
+after the match, not just the console's `[event]` lines (which only
+print for balls that already tripped a *known* tag — the commentary log
+covers every ball, so it can also catch a genuinely new, unanticipated
+parsing case the known-tag list doesn't cover):
 
 - `byes` (plain, not leg-byes) — same code path as leg-byes (already
   fixed), high confidence, not yet directly observed.

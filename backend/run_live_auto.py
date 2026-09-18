@@ -42,6 +42,7 @@ from pathlib import Path
 
 import requests
 
+from app.live.commentary_log import append_commentary_log
 from app.live.cricbuzz_discovery import CricbuzzMatchDiscovery
 from app.live.cricbuzz_discovery import is_t20_international as cricbuzz_is_t20i
 from app.live.cricbuzz_session import CricbuzzMatchSession
@@ -99,6 +100,10 @@ class LiveAutoState:
         # backup path here since it has no session class of its own.
         self._toi_error_streak_started_at: dict[str, float] = {}
         self._toi_stuck_alert_sent: dict[str, bool] = {}
+        # User-requested 2026-09-18: same per-delivery commentary log as
+        # CricbuzzMatchSession (see app/live/commentary_log.py), applied
+        # to the TOI backup path here since it has no session class.
+        self._toi_logged_delivery_keys: dict[str, set[tuple[int, int, int]]] = {}
         # team-pair -> which source currently owns it, so the backup scan
         # never double-attaches a match the primary already claimed.
         self.covered_pairs: dict[frozenset[str], str] = {}
@@ -131,6 +136,10 @@ class LiveAutoState:
                 ),
                 publisher=self.publisher,
                 stuck_alert_seconds=self.stuck_alert_seconds,
+                commentary_log_path=self.project_root
+                / "data"
+                / "live"
+                / f"commentary-{match.match_id}.jsonl",
             )
             if pair is not None:
                 self.covered_pairs[pair] = "cricbuzz"
@@ -221,6 +230,12 @@ class LiveAutoState:
                 print(f"[toi] Deferred {match_id}: {error}")
                 self._check_toi_stuck(match_id, error)
                 continue
+            append_commentary_log(
+                self.project_root / "data" / "live" / f"commentary-{match_id}.jsonl",
+                match_id,
+                snapshot,
+                self._toi_logged_delivery_keys.setdefault(match_id, set()),
+            )
             self._toi_error_streak_started_at.pop(match_id, None)
             self._toi_stuck_alert_sent.pop(match_id, None)
             if output:
