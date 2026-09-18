@@ -182,10 +182,17 @@ def _runs_and_extras(comm_text: str, events: list[str]) -> tuple[int, int, dict[
     extras: dict[str, int] = {}
 
     def _leading_run_count(after: str) -> int:
-        match = re.match(r"\s*(\d+)\s*runs?\b", after)
+        # Real bug found 2026-09-18 scanning archived matches
+        # (scan_cricbuzz_event_types.py): Cricbuzz's real phrasing always
+        # puts a comma before the explicit run count ("leg byes, 2 runs",
+        # "wide, 3 runs"), which the original `\s*` prefix here never
+        # matched -- silently falling through to the hardcoded default of
+        # 1 below on EVERY extra with more than one run, confirmed
+        # directly: a real "leg byes, 2 runs" delivery parsed as 1, not 2.
+        match = re.match(r"\s*,?\s*(\d+)\s*runs?\b", after)
         if match:
             return int(match.group(1))
-        match = re.match(r"\s*no\s*runs?\b", after)
+        match = re.match(r"\s*,?\s*no\s*runs?\b", after)
         if match:
             return 0
         return 1

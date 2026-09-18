@@ -9,7 +9,7 @@ confirmation.
 
 from __future__ import annotations
 
-from app.live.cricbuzz_reader import CricbuzzLiveReader
+from app.live.cricbuzz_reader import CricbuzzLiveReader, _classify_wicket, _runs_and_extras
 
 
 def test_toss_from_chunks_extracts_winner_and_decision():
@@ -99,3 +99,65 @@ def test_squads_from_chunks_empty_playerdetails_is_skipped():
     squads = CricbuzzLiveReader._squads_from_chunks([_squad_chunk()])
 
     assert "Australia" not in squads
+
+
+# Real commentary text, confirmed live 2026-09-18 by scanning archived
+# completed matches for event types docs/live_field_test_2026-09-15.md
+# flagged as unconfirmed (scan_cricbuzz_event_types.py). Regression tests
+# for a real bug found this way: _leading_run_count's regex didn't
+# tolerate the leading comma Cricbuzz always puts before an explicit run
+# count, silently defaulting to 1 run on every extra worth more than one.
+
+
+def test_bowled_wicket_from_real_commentary():
+    text = (
+        "Ravi Bishnoi to Rashid Khan, <b>out</b> Bowled!! 2nd wicket for "
+        "Bishnoi, well tossed up leg break on middle, Khan kneels down and "
+        "goes for the slog sweep, connects only thin air and the ball goes "
+        "past the outside edge to crash into the stumps, India are one "
+        "wicket away from a clean sweep. <b>Rashid Khan b Ravi Bishnoi "
+        "6(5) [4s-1]</b>"
+    )
+    assert _classify_wicket(text) == "bowled"
+
+
+def test_caught_wicket_from_real_commentary():
+    text = (
+        "Ravi Bishnoi to Abdullah Ahmadzai, <b>out</b> Caught by Axar "
+        "Patel!! It's all over, a clean sweep for India, well tossed up on "
+        "off, Ahmadzai goes for a wild slog across the line and miscues it "
+        "high in the air towards deep midwicket, where Axar takes a well "
+        "judged catch moving to his left. <b>Abdullah Ahmadzai c Axar "
+        "Patel b Ravi Bishnoi 6(8) [4s-1]</b>"
+    )
+    assert _classify_wicket(text) == "caught"
+
+
+def test_real_leg_bye_with_explicit_multi_run_count():
+    # The real bug: this used to parse as 1, not 2 -- the leading comma
+    # before "2 runs" broke _leading_run_count's regex.
+    text = "Josh Bohannon to S Northeast, leg byes, 2 runs"
+    assert _runs_and_extras(text, []) == (2, 0, {"legbyes": 2})
+
+
+def test_real_no_ball_with_no_explicit_run_count():
+    text = (
+        "Dushmantha Chameera to Will Jacks, <b>no ball</b>, round the "
+        "wicket, slanted away outside off, Jacks tries slapping hard but "
+        "chops it off the inside edge into the on-side. Oh wait, Chameera "
+        "has overstepped, free hit coming up"
+    )
+    # No explicit run count anywhere in real Cricbuzz text for this ball --
+    # defaults to 1 additional run (best effort, not verifiable from text
+    # alone; unchanged pre-existing limitation, not part of the comma fix).
+    assert _runs_and_extras(text, []) == (2, 1, {"noballs": 1})
+
+
+def test_wide_with_explicit_multi_run_count():
+    text = "Bowler to Batter, wide, 3 runs, way down the leg side"
+    assert _runs_and_extras(text, []) == (4, 0, {"wides": 4})
+
+
+def test_no_ball_with_explicit_multi_run_count():
+    text = "Bowler to Batter, no ball, 2 runs, edged past the keeper"
+    assert _runs_and_extras(text, []) == (3, 2, {"noballs": 1})
