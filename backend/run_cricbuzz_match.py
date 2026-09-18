@@ -22,7 +22,7 @@ from pathlib import Path
 import requests
 
 from app.live.cricbuzz_reader import CricbuzzFeedError, CricbuzzLiveReader
-from app.live.pipeline import VerifiedLivePredictionPipeline
+from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
 from app.live.telegram import TelegramPublisher
 from app.live.verification import VerificationError
 
@@ -228,6 +228,10 @@ def main() -> None:
             output = pipeline.process(snapshot)
         except VerificationError as error:
             print(f"Verification error: {error}")
+            time.sleep(max(1.0, args.poll_seconds))
+            continue
+        except MatchStateAnomaly as error:
+            print(f"MATCH STATE ANOMALY (skipped): {error}")
             time.sleep(max(1.0, args.poll_seconds))
             continue
 

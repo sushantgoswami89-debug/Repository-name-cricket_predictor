@@ -14,8 +14,9 @@ from typing import Protocol
 from app.live.persistence import LiveStateStore
 from app.live.toi_reader import ToiDelivery, ToiSnapshot
 from app.live.verification import LiveDeliveryVerifier, VerificationError
-from app.ml.engine_router import EngineRouter
+from app.ml.engine_router import EngineFamily, EngineRouter, UnsupportedCricketFormat
 from app.ml.bowler_shadow_predictor import BowlerShadowPredictor
+from app.ml.ipl_identities import UNKNOWN_TEAM, canonical_team_id
 from app.ml.match_winner_engine import MatchWinnerEngine
 from app.ml.prediction_engine import PredictionEngine
 from app.ml.win_probability_shadow_log import WinProbabilityShadowLog
@@ -29,6 +30,56 @@ from app.services.prediction_rating import rate_prediction
 
 class PredictionPublisher(Protocol):
     def publish(self, key: str, text: str) -> bool: ...
+
+
+class MatchStateAnomaly(Exception):
+    """A live snapshot's match state is internally inconsistent.
+
+    Every one of these checks codifies a real bug that previously reached
+    production and was only caught because a human was watching a live
+    match by hand (docs/live_field_test_2026-09-15.md,
+    docs/live_field_test_2026-09-17.md): the batting/bowling teams
+    silently swapped to the same team, a prediction was served for an
+    over past the innings' scheduled length, or a team name didn't
+    resolve to a real franchise. Callers should treat this the same as
+    VerificationError -- skip this poll, do not publish.
+    """
+
+
+def _check_match_state(
+    snapshot: ToiSnapshot, context: MatchContext, next_over: int
+) -> None:
+    batting = (context.team1 or "").strip()
+    bowling = (context.team2 or "").strip()
+    if not batting or not bowling:
+        raise MatchStateAnomaly(
+            f"{snapshot.match_id}: empty team name "
+            f"(batting={batting!r}, bowling={bowling!r})"
+        )
+    if batting.casefold() == bowling.casefold():
+        raise MatchStateAnomaly(
+            f"{snapshot.match_id}: batting_team == bowling_team ({batting!r})"
+        )
+    scheduled = snapshot.scheduled_overs
+    if scheduled and next_over > scheduled + 1:
+        raise MatchStateAnomaly(
+            f"{snapshot.match_id}: over {next_over} exceeds this innings' "
+            f"scheduled_overs={scheduled}"
+        )
+    try:
+        is_ipl = EngineRouter.resolve(context.format, context.competition).family == (
+            EngineFamily.IPL
+        )
+    except UnsupportedCricketFormat:
+        is_ipl = False
+    if is_ipl:
+        for label, name in (("batting", batting), ("bowling", bowling)):
+            resolved = canonical_team_id(name)
+            if resolved == UNKNOWN_TEAM or resolved.startswith("team:unresolved:"):
+                raise MatchStateAnomaly(
+                    f"{snapshot.match_id}: {label} team {name!r} does not "
+                    f"resolve to a known IPL franchise"
+                )
 
 
 def _team_player_names(snapshot: ToiSnapshot, team_name: str) -> list[str]:
@@ -337,6 +388,7 @@ class VerifiedLivePredictionPipeline:
             # everywhere else this session handles that gap.
             metadata={"deliveries": all_deliveries, **_toss_metadata(snapshot)},
         )
+        _check_match_state(snapshot, context, next_over)
         result = self._engine.predict(context)
         prediction = result.to_dict()
         try:
@@ -417,6 +469,7 @@ class VerifiedLivePredictionPipeline:
             ),
             metadata=_toss_metadata(snapshot),
         )
+        _check_match_state(snapshot, context, next_over=1)
         prediction = self._engine.predict(context).to_dict()
         self._pending_prediction = prediction
         self._pending_over = 1

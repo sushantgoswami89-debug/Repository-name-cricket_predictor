@@ -11,7 +11,7 @@ from tempfile import NamedTemporaryFile
 
 import requests
 
-from app.live.pipeline import VerifiedLivePredictionPipeline
+from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery, ToiMatchSummary
 from app.live.toi_reader import ToiFeedError, ToiLiveReader
@@ -183,7 +183,7 @@ def main() -> None:
             try:
                 snapshot = reader.fetch(url)
                 output = pipeline.process(snapshot)
-            except (ToiFeedError, VerificationError) as error:
+            except (ToiFeedError, VerificationError, MatchStateAnomaly) as error:
                 print(f"Deferred {match_id}: {error}")
                 continue
             if output:
