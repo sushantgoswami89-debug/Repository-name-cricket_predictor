@@ -375,7 +375,16 @@ def test_super_over_uses_one_over_limit_and_never_predicts_over_two() -> None:
     assert engine.contexts == []
 
 
-def test_late_snapshot_does_not_backfill_prediction_after_next_over_starts() -> None:
+def test_next_over_already_starting_still_serves_a_bounded_prediction() -> None:
+    # Regression test for the 2026-09-15/-17 over-14-skip bug (docs/
+    # live_field_test_2026-09-15.md item 16, docs/live_field_test_2026-09-17.md):
+    # when the next over's first ball(s) arrive in the same poll that
+    # finishes the current over, this used to `return None` and silently
+    # drop the completed over's prediction/review entirely, with no error
+    # logged. It must now still serve that over-boundary prediction, with
+    # every "as of end of this over" quantity correctly bounded to exclude
+    # the already-arrived next-over ball (feature leakage, not just a
+    # missing-output bug).
     publisher = FakePublisher()
     engine = FakeEngine()
     pipeline = VerifiedLivePredictionPipeline(engine=engine, publisher=publisher)
@@ -409,9 +418,19 @@ def test_late_snapshot_does_not_backfill_prediction_after_next_over_starts() -> 
         completed.deliveries + (wide,),
     )
 
-    assert pipeline.process(late) is None
-    assert engine.contexts == []
-    assert publisher.messages == []
+    output = pipeline.process(late)
+
+    assert output is not None
+    assert output["over"] == 2
+    assert output["score_before_over"] == 6
+    assert output["wickets_before_over"] == 0
+    assert len(engine.contexts) == 1
+    live = engine.contexts[0].live
+    assert live.score_before_over == 6
+    assert live.wkts_down_before_over == 0
+    assert live.legal_balls_bowled == 6
+    assert live.current_run_rate == 6.0
+    assert len(publisher.messages) == 1
 
 
 def test_dynamic_confidence_changes_with_match_stability() -> None:
