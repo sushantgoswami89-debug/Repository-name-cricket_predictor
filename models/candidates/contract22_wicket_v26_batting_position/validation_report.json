@@ -1,0 +1,74 @@
+{
+  "candidate_version": "contract22_wicket_v26_batting_position",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "contract22_wicket_v16_team_composition (currently live) + batting-order position (striker/non-striker), a real skill/role proxy checked to be unused by any live model. Reference is v16's own real validation_report.json numbers, not a stale one.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_contract22_wicket_v16_team_composition_live": {
+    "known": {
+      "blended_auc": 0.612588,
+      "blended_brier_platt": 0.204349,
+      "ipl_auc": 0.615064,
+      "ipl_brier_platt": 0.19332,
+      "t20i_auc": 0.61129,
+      "t20i_brier_platt": 0.206345
+    },
+    "unknown": {
+      "blended_auc": 0.611448,
+      "blended_brier_platt": 0.204541,
+      "ipl_auc": 0.613111,
+      "ipl_brier_platt": 0.194369,
+      "t20i_auc": 0.611252,
+      "t20i_brier_platt": 0.206382
+    }
+  },
+  "bowler_known_ceiling": {
+    "auc": 0.6127699487824796,
+    "brier_platt": 0.20435251995501696,
+    "brier_uncalibrated": 0.204321442484603,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6162458568397862,
+      "brier": 0.19314075692385474
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6112774144534908,
+      "brier": 0.2063817588105662
+    }
+  },
+  "bowler_unknown_realistic": {
+    "auc": 0.6109342480237935,
+    "brier_platt": 0.20455527882119187,
+    "brier_uncalibrated": 0.20501512449293438,
+    "event_rate": 0.3065633245382586,
+    "rows": 36384,
+    "ipl_platt": {
+      "rows": 5576,
+      "event_rate": 0.2774390243902439,
+      "auc": 0.6115436838576429,
+      "brier": 0.19444594392721593
+    },
+    "t20i_platt": {
+      "rows": 30808,
+      "event_rate": 0.3118345884185926,
+      "auc": 0.6109545494521655,
+      "brier": 0.2063849870582994
+    }
+  },
+  "beats_live_known": false,
+  "beats_live_unknown": false,
+  "batting_position_feature_importance_rank": {
+    "striker_batting_position": 44,
+    "non_striker_batting_position": 40
+  },
+  "total_features": 63,
+  "decision": "reject_keep_research"
+}
