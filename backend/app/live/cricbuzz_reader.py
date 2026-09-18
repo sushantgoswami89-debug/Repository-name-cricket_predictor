@@ -27,9 +27,13 @@ the first ~3 overs of one real match's first innings):
   event tag used only as a secondary cross-check where recognized.
 - No second-innings (chase) example has been observed, so target
   extraction is unvalidated.
-- team_players / toss / pitch / weather enrichment (present on
-  ToiSnapshot, used by MatchContext) is NOT ported here yet -- this
-  reader only covers the load-bearing delivery/score/format data.
+- team_players / toss / venue (present on LiveSnapshot, used by
+  MatchContext) were ported 2026-09-18, confirmed live against a real
+  match (Australia vs Zimbabwe, 2nd ODI) -- see _toss_from_chunks/
+  _venue_from_chunks/_squads_from_chunks. pitch/weather enrichment has
+  no equivalent found on Cricbuzz's pages at all (checked directly, not
+  assumed missing) -- those two fields stay at LiveSnapshot's defaults on
+  this path, same as before.
 
 Verification design differs from TOI on purpose, not by oversight: TOI's
 feed reports an independent cumulative score/wickets on every single
@@ -54,7 +58,7 @@ from typing import Any
 
 import requests
 
-from app.live.toi_reader import ToiDelivery, ToiSnapshot
+from app.live.live_snapshot import LiveDelivery, LivePlayer, LiveSnapshot
 
 
 class CricbuzzFeedError(RuntimeError):
@@ -224,7 +228,7 @@ def _runs_and_extras(comm_text: str, events: list[str]) -> tuple[int, int, dict[
 
 @dataclass
 class CricbuzzLiveReader:
-    """Poll Cricbuzz's match-center page and return a ToiSnapshot-shaped
+    """Poll Cricbuzz's match-center page and return a LiveSnapshot-shaped
     result so it can plug into VerifiedLivePredictionPipeline without
     changes there. Fallback-only: see module docstring for what is and
     isn't covered/validated yet."""
@@ -245,9 +249,9 @@ class CricbuzzLiveReader:
     # history on every call (it dedupes by .key itself, matching how
     # TOI's own feed returns the complete scorecard every time), not just
     # this poll's new balls.
-    _all_deliveries: dict[tuple[str, int], dict[tuple[int, int, int], ToiDelivery]] | None = None
+    _all_deliveries: dict[tuple[str, int], dict[tuple[int, int, int], LiveDelivery]] | None = None
     _seed_cutoff_ms: dict[tuple[str, int], int] | None = None
-    _last_delivery: dict[tuple[str, int], ToiDelivery] | None = None
+    _last_delivery: dict[tuple[str, int], LiveDelivery] | None = None
 
     def __post_init__(self) -> None:
         if self._session is None:
@@ -279,7 +283,7 @@ class CricbuzzLiveReader:
             return url_or_id
         raise CricbuzzFeedError(f"Could not extract a Cricbuzz match id from {url_or_id!r}")
 
-    def fetch(self, url_or_id: str) -> ToiSnapshot:
+    def fetch(self, url_or_id: str) -> LiveSnapshot:
         match_id = self.match_id_from_url(url_or_id)
         url = (
             url_or_id
@@ -364,7 +368,7 @@ class CricbuzzLiveReader:
         legal_balls_total = (latest.over - 1) * 6 + latest.ball
         # Real bug found live 2026-09-15, over 21 predicted for a finished
         # 20-over innings (docs/live_field_test_2026-09-15.md item 12):
-        # ToiSnapshot.innings_complete/match_complete default to False and
+        # LiveSnapshot.innings_complete/match_complete default to False and
         # were never set here, and pipeline._is_complete()'s own ball-count
         # fallback counts only verifier.accepted deliveries -- which, for
         # Cricbuzz's rolling window, covers just the balls seen since
@@ -379,7 +383,9 @@ class CricbuzzLiveReader:
         if any(int(obj.get("inningsId", 1)) > current_innings for obj in raw_objects):
             innings_complete = True
 
-        return ToiSnapshot(
+        toss_won_by, toss_decision = self._toss_from_chunks(chunks)
+
+        return LiveSnapshot(
             match_id=match_id,
             match_format=match_format,
             batting_team=batting_team,
@@ -393,6 +399,10 @@ class CricbuzzLiveReader:
             innings_complete=innings_complete,
             scheduled_overs=scheduled_overs,
             deliveries=tuple(deliveries),
+            team_players=self._squads_from_chunks(chunks),
+            venue_name=self._venue_from_chunks(chunks, match_id),
+            toss_won_by=toss_won_by,
+            toss_decision=toss_decision,
         )
 
     @staticmethod
@@ -429,7 +439,7 @@ class CricbuzzLiveReader:
 
     def _build_deliveries(
         self, scope: tuple[str, int], raw_objects: list[dict[str, Any]]
-    ) -> list[ToiDelivery]:
+    ) -> list[LiveDelivery]:
         match_id, innings = scope
         # Cricbuzz lists newest-first; process oldest-first so running
         # totals accumulate in real chronological order.
@@ -471,7 +481,7 @@ class CricbuzzLiveReader:
                 if isinstance(seed_ball_metric, (int, float)):
                     seed_over_index = int(seed_ball_metric)
                     seed_ball_number = round((seed_ball_metric - seed_over_index) * 10)
-                    self._last_delivery[scope] = ToiDelivery(
+                    self._last_delivery[scope] = LiveDelivery(
                         match_id=match_id,
                         innings=int(best_checkpoint_obj.get("inningsId", innings)),
                         over=seed_over_index + 1,
@@ -532,7 +542,7 @@ class CricbuzzLiveReader:
                         f"after over {obj.get('overSeparator', {}).get('overNumber')}."
                     )
 
-            known[key] = ToiDelivery(
+            known[key] = LiveDelivery(
                 match_id=match_id,
                 innings=key[0],
                 over=over_index + 1,
@@ -574,3 +584,111 @@ class CricbuzzLiveReader:
             return ""
         match = re.search(r"\b(T20I|ODI|Test|T20)\b", title.group(1))
         return match.group(1) if match else ""
+
+    @staticmethod
+    def _toss_from_chunks(chunks: list[str]) -> tuple[str, str]:
+        """(toss_winner_full_name, decision), or ("", "") pre-toss.
+
+        Closes a real gap flagged in this module's own docstring
+        (team_players/toss/pitch/weather enrichment "NOT ported here
+        yet"). Confirmed live 2026-09-18 against a real match (Australia
+        vs Zimbabwe, 2nd ODI): Cricbuzz embeds a standalone
+        "tossResults":{"tossWinnerId":...,"tossWinnerName":"Zimbabwe",
+        "decision":"Bowling"} object with the full team name already
+        resolved (no short-code translation needed, unlike batting_team/
+        bowling_team elsewhere in this file).
+        """
+        for chunk in chunks:
+            match = re.search(
+                r'"tossResults":\{"tossWinnerId":\d+,'
+                r'"tossWinnerName":"([^"]*)","decision":"([^"]*)"',
+                chunk,
+            )
+            if match and match.group(1):
+                return match.group(1), match.group(2)
+        return "", ""
+
+    @staticmethod
+    def _venue_from_chunks(chunks: list[str], match_id: str) -> str:
+        """"Ground, City", or "" if not found.
+
+        Same {"matchInfo":{"matchId":...,"venueInfo":{"ground":...,
+        "city":...}}} object CricbuzzMatchDiscovery reads for the match
+        list -- confirmed present on the individual match page too.
+        """
+        marker = f'{{"matchInfo":{{"matchId":{match_id},'
+        for chunk in chunks:
+            for found in re.finditer(re.escape(marker), chunk):
+                raw = _extract_balanced(chunk, found.start())
+                if raw is None:
+                    continue
+                try:
+                    obj = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                venue = obj.get("matchInfo", {}).get("venueInfo")
+                if isinstance(venue, dict):
+                    ground = str(venue.get("ground") or "")
+                    city = str(venue.get("city") or "")
+                    name = ", ".join(part for part in (ground, city) if part)
+                    if name:
+                        return name
+        return ""
+
+    @staticmethod
+    def _squads_from_chunks(chunks: list[str]) -> dict[str, tuple[LivePlayer, ...]]:
+        """Best-effort team_players, matching LiveSnapshot.team_players'
+        shape exactly so it plugs into MatchContext the same way TOI's
+        does.
+
+        Real gotcha confirmed live 2026-09-18 against a real squad list
+        (Australia vs Zimbabwe, 2nd ODI, 20 entries per team): this
+        playerDetails list mixes real players with coaching staff (head
+        coach, assistant/batting/bowling coaches), and the coaches are
+        NOT distinguishable by name or role text alone (a coach's `role`
+        can be absent same as an unlisted player's). The one reliable
+        signal is `substitute`: real players always carry an actual
+        boolean (False = confirmed playing XI, True = nominated bench/
+        impact substitute); coaching staff carry a literal null. Skipping
+        anything where `substitute` isn't a real bool keeps this from
+        silently feeding a coach into the wicket model's team-composition
+        features as if they were an eligible bowler/batter.
+        """
+        squads: dict[str, tuple[LivePlayer, ...]] = {}
+        for chunk in chunks:
+            for team_key in ("team1", "team2"):
+                match = re.search(
+                    rf'"{team_key}":(\{{"id":\d+,"name":"([^"]*)",'
+                    r'"playerDetails":\[\{)',
+                    chunk,
+                )
+                if not match:
+                    continue
+                team_name = match.group(2)
+                if not team_name or team_name in squads:
+                    continue
+                raw = _extract_balanced(chunk, match.start(1))
+                if raw is None:
+                    continue
+                try:
+                    team = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                real_players = [
+                    entry
+                    for entry in team.get("playerDetails", [])
+                    if isinstance(entry.get("substitute"), bool)
+                ]
+                players = tuple(
+                    LivePlayer(
+                        position=index,
+                        name=str(entry.get("name") or ""),
+                        role=str(entry.get("role") or ""),
+                        confirm_xi=not entry["substitute"],
+                    )
+                    for index, entry in enumerate(real_players, start=1)
+                    if entry.get("name")
+                )
+                if players:
+                    squads[team_name] = players
+        return squads
