@@ -120,7 +120,7 @@ def test_only_verified_completed_over_is_published() -> None:
     message = publisher.messages[0][1]
     assert "Candidate v3 — Over 2 Prediction" in message
     assert "Runs: 5-9 (point 7.0)" in message
-    assert "System Health: 🟢 90%" in message
+    assert "Confidence: 🟢 90%" in message
     assert "verified" not in message.lower()
     assert pipeline.process(_snapshot()) is None
     assert len(publisher.messages) == 1

@@ -1064,7 +1064,7 @@ class VerifiedLivePredictionPipeline:
         prediction = output["prediction"]
         assert isinstance(prediction, dict)
         probability = float(prediction["wicket_probability"]) * 100
-        health_color = {
+        confidence_color = {
             "HIGH": "🟢",
             "MEDIUM": "🟡",
             "LOW": "🔴",
@@ -1100,7 +1100,7 @@ class VerifiedLivePredictionPipeline:
             f"(point {prediction['expected_runs']})\n"
             f"Wicket risk (phase baseline): {probability:.1f}%"
             f"{win_line}\n"
-            f"System Health: {health_color} "
+            f"Confidence: {confidence_color} "
             f"{prediction['confidence_percent']}%"
         )
         evaluation = output.get("previous_over_evaluation")
