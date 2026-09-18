@@ -13,7 +13,7 @@ import requests
 
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
 from app.live.telegram import TelegramPublisher
-from app.live.toi_discovery import ToiMatchDiscovery, ToiMatchSummary
+from app.live.toi_discovery import ToiMatchDiscovery, is_t20_international
 from app.live.toi_reader import ToiFeedError, ToiLiveReader
 from app.live.verification import VerificationError
 
@@ -24,26 +24,6 @@ def _telegram(project_root: Path) -> TelegramPublisher:
         raise SystemExit("Run setup_telegram.py before starting automatic mode.")
     config = json.loads(path.read_text(encoding="utf-8"))
     return TelegramPublisher(config["bot_token"], config["chat_id"])
-
-
-def _is_t20_international(match: ToiMatchSummary) -> bool:
-    match_format = match.match_format.strip().upper()
-    team_type = match.team_type.strip().lower()
-    series = match.series.strip().lower()
-    if "indian premier league" in series or match_format == "IPL":
-        return False
-    if match_format in {"T20I", "IT20"} or "international" in team_type:
-        return True
-    international_markers = (
-        "world cup",
-        "asia cup",
-        "tour of",
-        "tri-series",
-        "international",
-    )
-    return match_format in {"T20", "TWENTY20"} and any(
-        marker in series for marker in international_markers
-    )
 
 
 def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | None:
@@ -141,7 +121,7 @@ def main() -> None:
                 matches = tuple(
                     match
                     for match in discovery.live_summaries()
-                    if _is_t20_international(match)
+                    if is_t20_international(match)
                 )
             except requests.exceptions.RequestException as error:
                 print(f"Deferred discovery scan: {error}")
