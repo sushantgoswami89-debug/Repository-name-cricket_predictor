@@ -49,6 +49,35 @@ against replays, real-but-static page fetches, and unit tests with fakes.
    after the match, grep this file for the still-unconfirmed event types
    instead of relying on memory of what scrolled past in the console.
 
+## A.5 Read the full commentary log as a human, not just as data
+
+User-requested 2026-09-18: after the match, actually READ
+`data/live/commentary-<match_id>.jsonl` end-to-end (Claude reading the
+prose directly, not a script classifying tags) and form a genuine
+narrative understanding of the match -- momentum, pressure, standout
+performances, turning points, what a piece of commentary text actually
+*means* beyond its structured fields. Demonstrated in this session on a
+real 3-ball tail-end (Australia vs Zimbabwe, 2nd ODI, 2026-09-18):
+the structured data said "wicket_kind=caught, wicket_kind=bowled, margin
+84 runs"; reading the actual prose instead surfaced that the dismissed
+batter was the recognized/set man playing a battling (not fluent)
+innings who got out attempting to force a boundary under pressure, that
+the very next ball ended the innings outright, and that the commentary's
+own framing ("untouchable today," "take the game and the series") meant
+this was a series-deciding rout, not a nervy finish -- none of which the
+per-ball structured fields alone convey.
+
+This is a genuine gap between parsing correctness (sections A.7/B below)
+and match *understanding* -- do both, they check different things:
+parsing correctness asks "did we record this ball right," a human read
+of the full log asks "do we understand what actually happened in this
+match, in the way a person watching it would." Worth doing for its own
+sake (a real, readable match summary) and as a sanity check on whether
+the model's own predictions (win-probability trajectory, run-range
+hits/misses) told the same story the real match did, or missed a
+dramatic swing / overstated a close finish that a human reading would
+have caught immediately.
+
 ## B. Event types still unconfirmed against real data — check the commentary log for these
 
 From `docs/finding_cricbuzz_event_types_2026-09-18.md` — grep
