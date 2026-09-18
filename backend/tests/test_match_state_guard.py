@@ -10,12 +10,12 @@ from __future__ import annotations
 import pytest
 
 from app.live.pipeline import MatchStateAnomaly, _check_match_state
-from app.live.toi_reader import ToiDelivery, ToiSnapshot
+from app.live.live_snapshot import LiveDelivery, LiveSnapshot
 from app.models.live_match_state import LiveMatchState
 from app.models.match_context import MatchContext
 
 
-def _snapshot(**overrides) -> ToiSnapshot:
+def _snapshot(**overrides) -> LiveSnapshot:
     values = dict(
         match_id="match",
         match_format="T20",
@@ -31,7 +31,7 @@ def _snapshot(**overrides) -> ToiSnapshot:
         competition="",
     )
     values.update(overrides)
-    return ToiSnapshot(**values)
+    return LiveSnapshot(**values)
 
 
 def _context(team1: str, team2: str, competition: str = "") -> MatchContext:

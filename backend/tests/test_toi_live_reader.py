@@ -6,7 +6,8 @@ from dataclasses import replace
 
 import pytest
 
-from app.live.toi_reader import ToiDelivery, ToiLiveReader, ToiSnapshot
+from app.live.live_snapshot import LiveDelivery, LiveSnapshot
+from app.live.toi_reader import ToiLiveReader
 from app.live.verification import LiveDeliveryVerifier, VerificationError
 
 
@@ -17,8 +18,8 @@ def _delivery(
     wickets: int = 0,
     wicket_kind: str | None = None,
     extras: dict[str, int] | None = None,
-) -> ToiDelivery:
-    return ToiDelivery(
+) -> LiveDelivery:
+    return LiveDelivery(
         match_id="match",
         innings=1,
         over=1,
@@ -325,7 +326,7 @@ def test_parser_preserves_competition_for_engine_routing() -> None:
 
 def test_complete_over_is_verified_ball_by_ball_and_deduplicated() -> None:
     deliveries = tuple(_delivery(ball, 1, ball) for ball in range(1, 7))
-    snapshot = ToiSnapshot("match", "T20", "A", "B", 1, 6, 0, "1.0", True, deliveries)
+    snapshot = LiveSnapshot("match", "T20", "A", "B", 1, 6, 0, "1.0", True, deliveries)
     verifier = LiveDeliveryVerifier("match", 1)
 
     assert len(verifier.apply_snapshot(snapshot)) == 6
@@ -344,7 +345,7 @@ def test_score_mismatch_and_silent_revision_fail_closed() -> None:
     revised = replace(first, total_runs=4, feed_total=4)
     with pytest.raises(VerificationError, match="changed between polls"):
         verifier.apply_snapshot(
-            ToiSnapshot("match", "T20", "A", "B", 1, 4, 0, "0.1", True, (revised,))
+            LiveSnapshot("match", "T20", "A", "B", 1, 4, 0, "0.1", True, (revised,))
         )
 
 

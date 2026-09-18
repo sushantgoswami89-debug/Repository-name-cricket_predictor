@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from app.live.pipeline import VerifiedLivePredictionPipeline
-from app.live.toi_reader import ToiDelivery, ToiSnapshot
+from app.live.live_snapshot import LiveDelivery, LiveSnapshot
 from app.ml.prediction_result import PredictionResult
 
 
@@ -52,9 +52,9 @@ class FakeShadowPredictor:
         }
 
 
-def _snapshot(is_live: bool = True) -> ToiSnapshot:
+def _snapshot(is_live: bool = True) -> LiveSnapshot:
     deliveries = tuple(
-        ToiDelivery(
+        LiveDelivery(
             "match",
             1,
             1,
@@ -72,13 +72,13 @@ def _snapshot(is_live: bool = True) -> ToiSnapshot:
         )
         for ball in range(1, 7)
     )
-    return ToiSnapshot("match", "T20", "A", "B", 1, 6, 0, "1.0", is_live, deliveries)
+    return LiveSnapshot("match", "T20", "A", "B", 1, 6, 0, "1.0", is_live, deliveries)
 
 
-def _two_over_snapshot() -> ToiSnapshot:
+def _two_over_snapshot() -> LiveSnapshot:
     first = _snapshot().deliveries
     second = tuple(
-        ToiDelivery(
+        LiveDelivery(
             "match",
             1,
             2,
@@ -96,13 +96,13 @@ def _two_over_snapshot() -> ToiSnapshot:
         )
         for ball in range(1, 7)
     )
-    return ToiSnapshot(
+    return LiveSnapshot(
         "match", "T20", "A", "B", 1, 12, 0, "2.0", True, first + second
     )
 
 
-def _empty_snapshot() -> ToiSnapshot:
-    return ToiSnapshot("match", "T20", "A", "B", 1, 0, 0, "0.0", True, ())
+def _empty_snapshot() -> LiveSnapshot:
+    return LiveSnapshot("match", "T20", "A", "B", 1, 0, 0, "0.0", True, ())
 
 
 def test_only_verified_completed_over_is_published() -> None:
@@ -389,7 +389,7 @@ def test_next_over_already_starting_still_serves_a_bounded_prediction() -> None:
     engine = FakeEngine()
     pipeline = VerifiedLivePredictionPipeline(engine=engine, publisher=publisher)
     completed = _snapshot()
-    wide = ToiDelivery(
+    wide = LiveDelivery(
         "match",
         1,
         2,
@@ -405,7 +405,7 @@ def test_next_over_already_starting_still_serves_a_bounded_prediction() -> None:
         7,
         "Wide",
     )
-    late = ToiSnapshot(
+    late = LiveSnapshot(
         "match",
         "T20",
         "A",
@@ -741,7 +741,7 @@ def test_rebase_rebuilds_deliveries_but_retains_pending_review(
         )
         for ball, delivery in enumerate(_two_over_snapshot().deliveries[6:], start=1)
     )
-    corrected = ToiSnapshot(
+    corrected = LiveSnapshot(
         "match",
         "T20",
         "A",

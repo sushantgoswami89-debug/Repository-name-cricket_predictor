@@ -3,16 +3,16 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from app.live.toi_reader import ToiDelivery
+from app.live.live_snapshot import LiveDelivery
 from runtime_run_range_v3 import RunRangeRuntimeV3
 
 ROOT = Path(__file__).resolve().parents[2]
 ARTIFACTS = ROOT / "models/candidates/run_range_enriched_v3_batting_style"
 
 
-def _sample_deliveries() -> list[ToiDelivery]:
+def _sample_deliveries() -> list[LiveDelivery]:
     return [
-        ToiDelivery(
+        LiveDelivery(
             match_id="test", innings=1, over=1, ball=ball,
             bowler="Bowler", striker="Batter", total_runs=1, batter_runs=1,
             extras={}, wicket_kind=None, feed_total=ball, feed_wickets=0,

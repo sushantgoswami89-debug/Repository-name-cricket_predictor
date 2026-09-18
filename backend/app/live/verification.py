@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from app.live.toi_reader import ToiDelivery, ToiSnapshot
+from app.live.live_snapshot import LiveDelivery, LiveSnapshot
 
 
 class VerificationError(ValueError):
@@ -20,12 +20,12 @@ class LiveDeliveryVerifier:
     score: int = 0
     wickets: int = 0
     last_key: tuple[int, int, int] | None = None
-    accepted: dict[tuple[int, int, int], ToiDelivery] = field(default_factory=dict)
+    accepted: dict[tuple[int, int, int], LiveDelivery] = field(default_factory=dict)
     over_runs: dict[int, int] = field(default_factory=dict)
     over_wickets: dict[int, int] = field(default_factory=dict)
 
     @staticmethod
-    def _same_cricket_state(first: ToiDelivery, second: ToiDelivery) -> bool:
+    def _same_cricket_state(first: LiveDelivery, second: LiveDelivery) -> bool:
         """Ignore TOI prose enrichment while protecting scoring facts."""
         return (
             first.match_id,
@@ -49,7 +49,7 @@ class LiveDeliveryVerifier:
             second.feed_wickets,
         )
 
-    def apply(self, delivery: ToiDelivery) -> bool:
+    def apply(self, delivery: LiveDelivery) -> bool:
         """Apply one delivery. Return False only for an identical duplicate."""
         if delivery.match_id != self.match_id or delivery.innings != self.innings:
             raise VerificationError("Delivery belongs to a different match or innings.")
@@ -118,8 +118,8 @@ class LiveDeliveryVerifier:
         ) + int(delivery.wicket_kind is not None)
         return True
 
-    def apply_snapshot(self, snapshot: ToiSnapshot) -> tuple[ToiDelivery, ...]:
-        accepted: list[ToiDelivery] = []
+    def apply_snapshot(self, snapshot: LiveSnapshot) -> tuple[LiveDelivery, ...]:
+        accepted: list[LiveDelivery] = []
         for delivery in snapshot.deliveries:
             if delivery.key not in self.accepted and self.apply(delivery):
                 accepted.append(delivery)

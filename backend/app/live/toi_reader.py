@@ -11,95 +11,18 @@ from __future__ import annotations
 import json
 import re
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field, replace
-from datetime import datetime, timezone
+from dataclasses import replace
+from datetime import datetime
 from typing import Any
 from urllib.parse import urlparse
 
 import requests
 
+from app.live.live_snapshot import LiveDelivery, LivePlayer, LiveSnapshot
+
 
 class ToiFeedError(RuntimeError):
     """Raised when a TOI response cannot be trusted or normalized."""
-
-
-@dataclass(frozen=True, slots=True)
-class ToiDelivery:
-    match_id: str
-    innings: int
-    over: int
-    ball: int
-    bowler: str
-    striker: str
-    total_runs: int
-    batter_runs: int
-    extras: dict[str, int]
-    wicket_kind: str | None
-    feed_total: int
-    feed_wickets: int
-    timestamp_ms: int
-    commentary: str
-
-    @property
-    def key(self) -> tuple[int, int, int]:
-        return self.innings, self.over, self.ball
-
-    @property
-    def is_legal(self) -> bool:
-        return "wides" not in self.extras and "noballs" not in self.extras
-
-
-@dataclass(frozen=True, slots=True)
-class ToiPlayer:
-    """One player's entry from TOI's Teams[].Players block.
-
-    ``role`` is TOI's own classification (``Batter``/``All-Rounder``/
-    ``Wicket Keeper``/``Bowler``), and ``position`` is the batting-order
-    slot (1-11) -- both already computed by TOI, not derived here.
-    ``confirm_xi`` is False for a probable/predicted lineup shown before
-    the official XI is confirmed (typically around toss time).
-    """
-
-    position: int
-    name: str
-    role: str
-    confirm_xi: bool
-
-
-@dataclass(frozen=True, slots=True)
-class ToiSnapshot:
-    match_id: str
-    match_format: str
-    batting_team: str
-    bowling_team: str
-    innings: int
-    score: int
-    wickets: int
-    overs: str
-    is_live: bool
-    deliveries: tuple[ToiDelivery, ...]
-    target: int = 0
-    scheduled_overs: int = 0
-    innings_complete: bool = False
-    match_complete: bool = False
-    is_super_over: bool = False
-    competition: str = ""
-    announced_bowler: str = ""
-    announced_bowler_over: int = 0
-    # Best-effort enrichment from the same raw payload already fetched for
-    # match state -- never required for correctness, so a missing or
-    # malformed block degrades to the empty default rather than raising.
-    team_players: dict[str, tuple[ToiPlayer, ...]] = field(default_factory=dict)
-    venue_name: str = ""
-    toss_won_by: str = ""
-    toss_decision: str = ""
-    pitch_type: str = ""
-    pitch_surface: str = ""
-    weather_condition: str = ""
-    weather_humidity_pct: float | None = None
-    weather_temperature_c: float | None = None
-    weather_wind_speed_ms: float | None = None
-    fetched_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class ToiLiveReader:
@@ -147,7 +70,7 @@ class ToiLiveReader:
             raise ToiFeedError("Could not determine the TOI match id from the URL.")
         return match_id
 
-    def fetch(self, url_or_id: str) -> ToiSnapshot:
+    def fetch(self, url_or_id: str) -> LiveSnapshot:
         match_id = self.match_id_from_url(url_or_id)
         # Real live latency matters here (a commentator needs the next
         # prediction with as little delay as possible) -- measured a real
@@ -220,7 +143,7 @@ class ToiLiveReader:
         raw: dict[str, Any],
         scorecard: dict[str, Any],
         commentary: list[dict[str, Any]],
-    ) -> ToiSnapshot:
+    ) -> LiveSnapshot:
         try:
             raw_match = raw["Matchdetail"]["Match"]
             innings_rows = scorecard["innings"]
@@ -263,7 +186,7 @@ class ToiLiveReader:
             if (delivery := cls._parse_delivery(match_id, innings, row)) is not None
             if delivery.timestamp_ms >= innings_started_ms
         ]
-        by_over: dict[int, list[ToiDelivery]] = {}
+        by_over: dict[int, list[LiveDelivery]] = {}
         for delivery in commentary_deliveries:
             by_over.setdefault(delivery.over, []).append(delivery)
         for over_number, live_rows in by_over.items():
@@ -359,7 +282,7 @@ class ToiLiveReader:
             or cls._legal_delivery_count(deliveries) >= scheduled_overs * 6
             or not bool(raw_match.get("Live", False))
         )
-        return ToiSnapshot(
+        return LiveSnapshot(
             match_id=match_id,
             match_format=str(raw_match.get("Type", "")),
             batting_team=str(batting_team),
@@ -394,7 +317,7 @@ class ToiLiveReader:
     def _announced_bowler(
         cls,
         current: dict[str, Any],
-        deliveries: tuple[ToiDelivery, ...],
+        deliveries: tuple[LiveDelivery, ...],
     ) -> tuple[str, int]:
         """Return only a scorecard bowler announced before the over starts.
 
@@ -419,7 +342,7 @@ class ToiLiveReader:
     @classmethod
     def _parse_delivery(
         cls, match_id: str, innings: int, row: dict[str, Any]
-    ) -> ToiDelivery | None:
+    ) -> LiveDelivery | None:
         text = str(row.get("smalldesc", "")).strip()
         match = cls._COMMENTARY_RE.match(text)
         if not match or row.get("type") != "cricket":
@@ -430,7 +353,7 @@ class ToiLiveReader:
         batter_runs = max(0, total_runs - sum(extras.values()))
         wicket_text = str(row.get("wicket", "")).strip()
         wicket_kind = cls._wicket_kind(result, wicket_text)
-        return ToiDelivery(
+        return LiveDelivery(
             match_id=match_id,
             innings=innings,
             # Commentary labels the first over 0.x; scorecard labels it 1.x.
@@ -476,7 +399,7 @@ class ToiLiveReader:
     @classmethod
     def _scorecard_deliveries(
         cls, match_id: str, innings: int, current: dict[str, Any]
-    ) -> dict[tuple[int, int, int], ToiDelivery]:
+    ) -> dict[tuple[int, int, int], LiveDelivery]:
         visible_rows: list[tuple[int, int, int, str, dict[str, Any]]] = []
         for over in current.get("ballByBall", []):
             if not isinstance(over, dict):
@@ -503,7 +426,7 @@ class ToiLiveReader:
             # by that label, assign every event a unique sequence identity.
             sequence_by_over[over_number] = sequence_by_over.get(over_number, 0) + 1
             rows.append((over_number, sequence_by_over[over_number], bowler, ball))
-        parsed: dict[tuple[int, int, int], ToiDelivery] = {}
+        parsed: dict[tuple[int, int, int], LiveDelivery] = {}
         total = wickets = 0
         for over_number, ball_number, bowler, ball in rows:
             details = str(ball.get("details", "")).strip()
@@ -516,7 +439,7 @@ class ToiLiveReader:
             is_wicket = str(ball.get("wicket", "")).lower() == "yes"
             total += delivery_runs
             wickets += int(is_wicket)
-            delivery = ToiDelivery(
+            delivery = LiveDelivery(
                 match_id=match_id,
                 innings=innings,
                 over=over_number,
@@ -540,7 +463,7 @@ class ToiLiveReader:
         return parsed
 
     @staticmethod
-    def _legal_delivery_count(deliveries: tuple[ToiDelivery, ...]) -> int:
+    def _legal_delivery_count(deliveries: tuple[LiveDelivery, ...]) -> int:
         return sum(delivery.is_legal for delivery in deliveries)
 
     @staticmethod
@@ -577,16 +500,16 @@ class ToiLiveReader:
         return ""
 
     @staticmethod
-    def _team_players(raw: dict[str, Any]) -> dict[str, tuple[ToiPlayer, ...]]:
+    def _team_players(raw: dict[str, Any]) -> dict[str, tuple[LivePlayer, ...]]:
         """Best-effort playing-XI extraction from raw["Teams"], keyed by
         team full name so callers can look up with the same team-name
-        strings ToiSnapshot already uses (batting_team/bowling_team).
+        strings LiveSnapshot already uses (batting_team/bowling_team).
         Never raises: a missing or malformed Teams block just means no
         lineup is known yet (common before the XI is confirmed near toss)."""
         teams = raw.get("Teams")
         if not isinstance(teams, dict):
             return {}
-        result: dict[str, tuple[ToiPlayer, ...]] = {}
+        result: dict[str, tuple[LivePlayer, ...]] = {}
         for team in teams.values():
             if not isinstance(team, dict):
                 continue
@@ -594,7 +517,7 @@ class ToiLiveReader:
             players_raw = team.get("Players")
             if not name or not isinstance(players_raw, dict):
                 continue
-            players: list[ToiPlayer] = []
+            players: list[LivePlayer] = []
             for entry in players_raw.values():
                 if not isinstance(entry, dict):
                     continue
@@ -606,7 +529,7 @@ class ToiLiveReader:
                 if not player_name:
                     continue
                 players.append(
-                    ToiPlayer(
+                    LivePlayer(
                         position=position,
                         name=player_name,
                         role=str(entry.get("Role", "")).strip(),
