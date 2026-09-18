@@ -78,6 +78,29 @@ hits/misses) told the same story the real match did, or missed a
 dramatic swing / overstated a close finish that a human reading would
 have caught immediately.
 
+## A.6 Confirm shot-quality/near-wicket detection live, and log the correlation
+
+`app/live/shot_quality.py` (built 2026-09-18, directly from a user
+example: an edge for four scores identically to a well-timed four in
+every structured field) flags `edge`/`beaten`/`well_timed` shot quality
+and `dropped_catch`/`survived_close_call` near-wicket events, live, in
+both the console (a `⚠️` line) and the commentary log. `edge`/`beaten`
+were verified against real commentary text; `well_timed`/
+`dropped_catch`/`survived_close_call` are standard broadcast vocabulary
+not yet confirmed against a real live instance -- check they fire
+correctly (or add a real counter-example if the wording turns out
+different in practice).
+
+More importantly: this is the start of the accumulation process
+discussed with the user (same "how many matches" answer already given --
+~5 real matches, the same bar the live ensemble shadows use). For every
+`edge`/`beaten`/`dropped_catch`/`survived_close_call` flag that fires,
+note in the field-test log whether a real wicket actually followed
+within the next few balls. That is the raw material for eventually
+testing, honestly, whether these prose-only signals predict outcomes
+the structured features miss -- not yet enough data to conclude
+anything from a single match.
+
 ## B. Event types still unconfirmed against real data — check the commentary log for these
 
 From `docs/finding_cricbuzz_event_types_2026-09-18.md` — grep
