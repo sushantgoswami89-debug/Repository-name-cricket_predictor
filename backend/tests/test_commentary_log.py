@@ -97,6 +97,24 @@ def test_wicket_and_extras_are_captured(tmp_path):
     assert logged_row["wicket_kind"] == "bowled"
 
 
+def test_shot_quality_and_near_wicket_are_derived_and_logged(tmp_path):
+    path = tmp_path / "commentary.jsonl"
+    logged: set[tuple[int, int, int]] = set()
+    delivery = _delivery(
+        1, 1,
+        total_runs=4,
+        batter_runs=4,
+        commentary="chops it off the inside edge into the on-side for four",
+    )
+    snapshot = _snapshot((delivery,))
+
+    append_commentary_log(path, "match", snapshot, logged)
+
+    logged_row = json.loads(path.read_text(encoding="utf-8").splitlines()[0])
+    assert logged_row["shot_quality"] == "edge"
+    assert logged_row["near_wicket"] is None
+
+
 def test_no_new_deliveries_does_not_create_a_file(tmp_path):
     path = tmp_path / "commentary.jsonl"
     logged: set[tuple[int, int, int]] = set()

@@ -16,12 +16,21 @@ across every ball, not just the ones that happened to trip a known tag.
 Source-agnostic: works on the shared LiveSnapshot/LiveDelivery contract
 (app/live/live_snapshot.py), so both the Cricbuzz session and the TOI
 backup polling loop in run_live_auto.py can use the same function.
+
+Also logs each delivery's app/live/shot_quality.py classification
+(shot_quality/near_wicket) -- signals visible only in the prose, not in
+the structured total_runs/wicket_kind fields already logged. See that
+module's docstring for why this matters and why it can't be trained
+into the live models yet: this is the raw material for the accumulation
+process that will eventually make it testable.
 """
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
+
+from app.live.shot_quality import classify_near_wicket, classify_shot_quality
 
 
 def append_commentary_log(
@@ -51,6 +60,8 @@ def append_commentary_log(
                     "batter_runs": delivery.batter_runs,
                     "extras": delivery.extras,
                     "wicket_kind": delivery.wicket_kind,
+                    "shot_quality": classify_shot_quality(delivery.commentary),
+                    "near_wicket": classify_near_wicket(delivery.commentary),
                     "commentary": delivery.commentary,
                 }
             )

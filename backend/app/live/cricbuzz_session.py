@@ -28,6 +28,7 @@ from app.live.pipeline import (
     PredictionPublisher,
     VerifiedLivePredictionPipeline,
 )
+from app.live.shot_quality import classify_near_wicket, classify_shot_quality
 from app.live.verification import VerificationError
 
 _EXTRA_LABELS = {"wides": "WIDE", "noballs": "NO-BALL", "byes": "BYE", "legbyes": "LEG-BYE"}
@@ -104,6 +105,30 @@ def _delivery_event_lines(snapshot, seen_keys: set[tuple[int, int, int]]) -> lis
             lines.append(
                 f"[event] inn{delivery.innings} {delivery.over}.{delivery.ball} "
                 f"{'/'.join(tags)} -- {delivery.striker} off {delivery.bowler}"
+            )
+        # User-requested 2026-09-18: surface shot quality/near-wicket
+        # signals live, not just log them for later -- see
+        # app/live/shot_quality.py's docstring. An edge for four scores
+        # exactly like a well-timed four in every structured field
+        # above; this is the only place that distinction is visible.
+        quality = classify_shot_quality(delivery.commentary)
+        if quality == "edge" and not delivery.wicket_kind:
+            note = (
+                f"⚠️  STREAKY: inn{delivery.innings} {delivery.over}.{delivery.ball} "
+                f"{delivery.striker} edged that for {delivery.total_runs} off "
+                f"{delivery.bowler} -- not a clean shot despite the runs"
+            )
+            lines.append(note)
+        elif quality == "beaten" and not delivery.wicket_kind:
+            lines.append(
+                f"⚠️  BEATEN: inn{delivery.innings} {delivery.over}.{delivery.ball} "
+                f"{delivery.striker} played and missed off {delivery.bowler}"
+            )
+        near_wicket = classify_near_wicket(delivery.commentary)
+        if near_wicket:
+            lines.append(
+                f"⚠️  {near_wicket.upper()}: inn{delivery.innings} {delivery.over}.{delivery.ball} "
+                f"{delivery.striker} off {delivery.bowler} -- real wicket chance, not on the scorecard"
             )
     return lines
 
