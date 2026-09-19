@@ -79,3 +79,31 @@ def test_umpires_call_detected():
 def test_ordinary_delivery_has_no_near_wicket_signal():
     text = "Full and straight, defended back to the bowler, no run."
     assert classify_near_wicket(text) is None
+
+
+def test_real_inner_half_is_mistimed():
+    # Real 2026-09-19 text, Sri Lanka v England.
+    text = ("Nissanka uses his feet to the floaty delivery on off and tries "
+            "to go downtown but gets it off the inner half towards long-on")
+    assert classify_shot_quality(text) == "mistimed"
+
+
+def test_real_hyphenated_top_edge_is_edge():
+    text = "tries to pull it over mid-wicket but only manages to get a top-edge behind"
+    assert classify_shot_quality(text) == "edge"
+
+
+def test_real_heavy_outfield_condition():
+    from app.live.shot_quality import classify_conditions
+
+    text = ("There was a lot of rain early in the morning so the outfield is "
+            "heavy and the ball is plugging in it")
+    assert classify_conditions(text) == ["heavy_outfield"]
+
+
+def test_real_swing_and_seam_conditions():
+    from app.live.shot_quality import classify_conditions
+
+    assert "swing_seam" in classify_conditions("hard length delivery seaming in on off")
+    assert "swing_seam" in classify_conditions("The ball was swirling in the wind")
+    assert classify_conditions("Full and straight, defended back to the bowler") == []

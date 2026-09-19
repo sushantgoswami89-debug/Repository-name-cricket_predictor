@@ -46,7 +46,17 @@ import re
 _EDGE_RE = re.compile(
     r"\b(gets?|got|takes?|off|via)\s+(?:an?\s+)?"
     r"(outside|inside|thick|thin|faint|top|leading|bottom|under)?[\s-]*edge\b"
-    r"|\bedged?\b",
+    r"|\bedged?\b|\b(?:top|leading|inside|outside|thick|thin|bottom)[\s-]edge[sd]?\b",
+    re.IGNORECASE,
+)
+# Confirmed real 2026-09-19 (Sri Lanka v England, 3rd T20I): "tries to go
+# downtown but gets it off the inner half towards long-on" -- contact,
+# but not the middle of the bat. Weaker than an edge (ball off the bat,
+# not the edge), stronger evidence of a batter forcing the shot than a
+# clean stroke.
+_MISTIMED_RE = re.compile(
+    r"\b(?:inner|outer)\s+half\b|\bmis-?timed?\b|\bmis-?hit\b|\btoe-?end(?:ed|s)?\b"
+    r"|\bskied\b|\bballooned?\b|\bcloses?\s+the\s+face\b",
     re.IGNORECASE,
 )
 # Confirmed real 2026-09-18: "connects only thin air and the ball goes
@@ -91,7 +101,7 @@ _SURVIVED_CLOSE_CALL_RE = re.compile(
 
 
 def classify_shot_quality(commentary: str) -> str | None:
-    """Returns "edge", "beaten", "well_timed", or None (no signal
+    """Returns "edge", "beaten", "mistimed", "well_timed", or None (no signal
     detected -- most deliveries; not the same as "clean shot"). "beaten"
     is checked before "edge" since a clear beat sometimes mentions
     "edge" only in the "went past the edge" sense (no contact)."""
@@ -101,6 +111,8 @@ def classify_shot_quality(commentary: str) -> str | None:
         return "beaten"
     if _EDGE_RE.search(commentary):
         return "edge"
+    if _MISTIMED_RE.search(commentary):
+        return "mistimed"
     if _WELL_TIMED_RE.search(commentary):
         return "well_timed"
     return None
@@ -118,3 +130,38 @@ def classify_near_wicket(commentary: str) -> str | None:
     if _SURVIVED_CLOSE_CALL_RE.search(commentary):
         return "survived_close_call"
     return None
+
+
+# Pitch/weather remarks -- match-level context, not a shot property.
+# "heavy"/"plugging in" confirmed real 2026-09-19 ("a lot of rain early in
+# the morning so the outfield is heavy and the ball is plugging in it");
+# "seaming in"/"swirling in the wind" confirmed same match. The rest
+# (turn, dew, two-paced, sticky) are standard commentary vocabulary,
+# not yet seen live.
+_CONDITION_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("heavy_outfield", re.compile(
+        r"\bheavy\s+outfield\b|\boutfield\s+is\s+(?:heavy|slow|wet)\b"
+        r"|\bplugg?ing\s+in\b|\bball\s+(?:stops|sticks)\s+in\s+the\s+outfield\b",
+        re.IGNORECASE)),
+    ("swing_seam", re.compile(
+        r"\bseam(?:ing|s|ed)\b|\bswing(?:ing|s)?\b|\bswirl(?:ing|s)?\b"
+        r"|\bmoves?\s+(?:away|in)\s+off\s+the\s+(?:seam|pitch)\b",
+        re.IGNORECASE)),
+    ("turn_grip", re.compile(
+        r"\bgrips?\s+and\s+turns?\b|\bturn(?:ing|s)?\s+(?:sharply|square|big)\b"
+        r"|\bspinning\s+(?:sharply|square)\b|\bgripped\b",
+        re.IGNORECASE)),
+    ("dew", re.compile(r"\bdew\b|\bwet\s+ball\b", re.IGNORECASE)),
+    ("slow_pitch", re.compile(
+        r"\btwo-?paced\b|\bsticky\b|\bslow\s+(?:pitch|surface|wicket)\b|\bstopping\s+on\b",
+        re.IGNORECASE)),
+)
+
+
+def classify_conditions(commentary: str) -> list[str]:
+    """Returns every pitch/weather condition named in this delivery's
+    commentary (possibly empty). A list, not a single label: one line can
+    name several ("swing" and "heavy outfield")."""
+    if not commentary:
+        return []
+    return [name for name, pattern in _CONDITION_PATTERNS if pattern.search(commentary)]
