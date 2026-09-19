@@ -27,18 +27,48 @@ from app.live.cricbuzz_reader import CricbuzzLiveReader
 from app.live.commentary_log import append_commentary_log
 
 
+# Top-10 full-member national sides (men's and women's share the names; a
+# trailing " Women" is stripped before matching). Static list written from
+# general knowledge of the ICC T20I rankings as of early 2026, NOT fetched
+# live -- edit it, or pass --teams, when the rankings move.
+TOP_TEAMS = (
+    "India", "Australia", "England", "South Africa", "New Zealand",
+    "Pakistan", "West Indies", "Sri Lanka", "Afghanistan", "Bangladesh",
+)
+
+
+def involves_top_team(label: str, teams: tuple[str, ...]) -> bool:
+    """True if either side of "A vs B" is one of `teams` (case-insensitive,
+    " Women"/" W" suffix ignored). Exact-name match, so domestic sides such
+    as "Western Province" or "Eastern Storm" never qualify."""
+    wanted = {t.lower() for t in teams}
+    for side in label.split(" vs "):
+        name = side.strip().lower()
+        if name.endswith(" women"):
+            name = name[: -len(" women")]
+        if name in wanted:
+            return True
+    return False
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scan-seconds", type=float, default=60.0)
     parser.add_argument("--poll-seconds", type=float, default=15.0)
+    parser.add_argument(
+        "--teams", default=",".join(TOP_TEAMS),
+        help="Comma-separated team names to follow (a match qualifies if either side is listed). "
+             "Pass an empty string to follow every live match.",
+    )
     args = parser.parse_args()
+    teams = tuple(t.strip() for t in args.teams.split(",") if t.strip())
     out_dir = Path(__file__).resolve().parents[1] / "data" / "live" / "study"
     out_dir.mkdir(parents=True, exist_ok=True)
     discovery = CricbuzzMatchDiscovery()
     active: dict[str, tuple[str, CricbuzzLiveReader, set]] = {}
     index: dict[str, str] = {}
     last_scan = 0.0
-    print("Commentary study logger running (no predictions, no Telegram). Control+C to stop.")
+    print(f"Commentary study logger running (no predictions, no Telegram). Following: {', '.join(teams) or 'every live match'}. Control+C to stop.")
 
     while True:
         if time.monotonic() - last_scan >= max(20.0, args.scan_seconds):
@@ -48,8 +78,12 @@ def main() -> None:
             except Exception as error:  # noqa: BLE001 - keep watching
                 print(f"Discovery failed: {type(error).__name__}: {error}")
                 live = []
-            live_ids = {m.match_id for m in live}
+            live_ids = {
+                m.match_id for m in live if not teams or involves_top_team(m.label, teams)
+            }
             for match in live:
+                if teams and not involves_top_team(match.label, teams):
+                    continue
                 if match.match_id not in active:
                     active[match.match_id] = (match.url, CricbuzzLiveReader(), set())
                     index[match.match_id] = f"{match.label} ({match.match_desc}, {match.match_format})"
