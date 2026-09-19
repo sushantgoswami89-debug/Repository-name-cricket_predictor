@@ -61,6 +61,23 @@ import requests
 from app.live.live_snapshot import LiveDelivery, LivePlayer, LiveSnapshot
 
 
+
+def _int_field(obj: dict[str, Any], key: str, default: int) -> int:
+    """Read an integer field from a Cricbuzz flight object.
+
+    Next.js serializes a missing value as the literal string "$undefined"
+    (seen live 2026-09-19 in inningsId, which crashed the whole driver),
+    so anything non-numeric falls back to the default instead of raising.
+    """
+    value = obj.get(key, default)
+    if isinstance(value, bool):
+        return default
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, str) and value.strip().lstrip("-").isdigit():
+        return int(value)
+    return default
+
 class CricbuzzFeedError(RuntimeError):
     """Raised when a Cricbuzz response cannot be trusted or normalized."""
 
@@ -335,11 +352,11 @@ class CricbuzzLiveReader:
         # around to seed that innings' own already-persisted state, never
         # mixed into the new one's.
         current_innings = max(
-            (int(obj.get("inningsId", 1)) for obj in raw_objects), default=1
+            (_int_field(obj, "inningsId", 1) for obj in raw_objects), default=1
         )
         scope = (match_id, current_innings)
         current_innings_objects = [
-            obj for obj in raw_objects if int(obj.get("inningsId", 1)) == current_innings
+            obj for obj in raw_objects if _int_field(obj, "inningsId", 1) == current_innings
         ]
 
         deliveries = self._build_deliveries(scope, current_innings_objects)
@@ -387,7 +404,7 @@ class CricbuzzLiveReader:
         # An even-later innings appearing in the raw window (not just the
         # current scope) is the clearest unambiguous signal this innings
         # ended, independent of the over/wicket-count heuristics above.
-        if any(int(obj.get("inningsId", 1)) > current_innings for obj in raw_objects):
+        if any(_int_field(obj, "inningsId", 1) > current_innings for obj in raw_objects):
             innings_complete = True
 
         toss_won_by, toss_decision = self._toss_from_chunks(chunks)
@@ -470,7 +487,7 @@ class CricbuzzLiveReader:
             for obj in ordered:
                 checkpoint = self._checkpoint(obj)
                 if checkpoint is not None:
-                    timestamp = int(obj.get("timestamp", 0))
+                    timestamp = _int_field(obj, "timestamp", 0)
                     if best_checkpoint is None or timestamp > best_checkpoint[0]:
                         best_checkpoint = (timestamp, checkpoint[0], checkpoint[1])
                         best_checkpoint_obj = obj
@@ -490,7 +507,7 @@ class CricbuzzLiveReader:
                     seed_ball_number = round((seed_ball_metric - seed_over_index) * 10)
                     self._last_delivery[scope] = LiveDelivery(
                         match_id=match_id,
-                        innings=int(best_checkpoint_obj.get("inningsId", innings)),
+                        innings=_int_field(best_checkpoint_obj, "inningsId", innings),
                         over=seed_over_index + 1,
                         ball=seed_ball_number,
                         bowler=best_checkpoint_obj.get("bowlerDetails", {}).get("playerName", ""),
@@ -519,12 +536,12 @@ class CricbuzzLiveReader:
             ball_metric = obj.get("ballMetric")
             if not isinstance(ball_metric, (int, float)):
                 continue  # non-ball commentary (bowling change, milestone, etc.)
-            timestamp = int(obj.get("timestamp", 0))
+            timestamp = _int_field(obj, "timestamp", 0)
             if timestamp <= cutoff_ms:
                 continue  # already folded into the seed checkpoint above
             over_index = int(ball_metric)
             ball_number = round((ball_metric - over_index) * 10)
-            key = (int(obj.get("inningsId", 1)), over_index + 1, ball_number)
+            key = (_int_field(obj, "inningsId", 1), over_index + 1, ball_number)
             if key in known:
                 continue  # already accumulated on an earlier poll
 
@@ -562,7 +579,7 @@ class CricbuzzLiveReader:
                 wicket_kind=wicket_kind,
                 feed_total=running_score,
                 feed_wickets=running_wickets,
-                timestamp_ms=int(obj.get("timestamp", 0)),
+                timestamp_ms=_int_field(obj, "timestamp", 0),
                 commentary=re.sub(r"<[^>]+>", "", comm_text),
             )
 

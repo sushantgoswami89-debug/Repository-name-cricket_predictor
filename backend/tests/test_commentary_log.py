@@ -123,3 +123,14 @@ def test_no_new_deliveries_does_not_create_a_file(tmp_path):
     append_commentary_log(path, "match", snapshot, logged)
 
     assert not path.exists()
+
+
+def test_restart_with_fresh_keys_does_not_relog_existing_balls(tmp_path):
+    path = tmp_path / "commentary.jsonl"
+    snapshot = _snapshot((_delivery(1, 1), _delivery(1, 2)))
+    append_commentary_log(path, "match", snapshot, set())
+
+    # Simulated driver restart: new process, empty in-memory key set.
+    append_commentary_log(path, "match", snapshot, set())
+
+    assert len(path.read_text(encoding="utf-8").splitlines()) == 2

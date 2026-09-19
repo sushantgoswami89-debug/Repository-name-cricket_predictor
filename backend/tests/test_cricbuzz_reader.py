@@ -161,3 +161,15 @@ def test_wide_with_explicit_multi_run_count():
 def test_no_ball_with_explicit_multi_run_count():
     text = "Bowler to Batter, no ball, 2 runs, edged past the keeper"
     assert _runs_and_extras(text, []) == (3, 2, {"noballs": 1})
+
+
+def test_int_field_tolerates_next_js_undefined_marker():
+    # Seen live 2026-09-19: inningsId arrived as the string "$undefined"
+    # and crashed the whole driver with a ValueError.
+    from app.live.cricbuzz_reader import _int_field
+
+    assert _int_field({"inningsId": "$undefined"}, "inningsId", 1) == 1
+    assert _int_field({}, "inningsId", 2) == 2
+    assert _int_field({"inningsId": "2"}, "inningsId", 1) == 2
+    assert _int_field({"inningsId": 2}, "inningsId", 1) == 2
+    assert _int_field({"timestamp": None}, "timestamp", 0) == 0

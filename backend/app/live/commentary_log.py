@@ -41,7 +41,18 @@ def append_commentary_log(
 ) -> None:
     """Append every delivery in `snapshot` not already in `logged_keys`
     as one JSON line each, then mark it logged. Never raises -- a logging
-    failure must never interrupt the actual live prediction flow."""
+    failure must never interrupt the actual live prediction flow.
+
+    A fresh (empty) `logged_keys` is seeded from any existing file first,
+    so a driver restart or crash mid-match doesn't re-log the balls still
+    in the feed's rolling window (seen 2026-09-19 dry runs)."""
+    if not logged_keys and path.exists():
+        try:
+            for line in path.read_text(encoding="utf-8").splitlines():
+                row = json.loads(line)
+                logged_keys.add((row["innings"], row["over"], row["ball"]))
+        except (OSError, ValueError, KeyError):
+            pass
     new_lines: list[str] = []
     for delivery in snapshot.deliveries:
         if delivery.key in logged_keys:

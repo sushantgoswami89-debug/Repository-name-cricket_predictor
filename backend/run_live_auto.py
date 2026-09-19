@@ -218,7 +218,11 @@ class LiveAutoState:
 
     def poll(self) -> None:
         for match_id, session in tuple(self.active_cricbuzz.items()):
-            session.poll_once()
+            try:
+                session.poll_once()
+            except Exception as error:  # one bad match must not kill the watcher
+                print(f"[cricbuzz] Unexpected error on {match_id}: {type(error).__name__}: {error}")
+                continue
             if session.finished:
                 del self.active_cricbuzz[match_id]
 
