@@ -198,7 +198,7 @@ def _runs_and_extras(comm_text: str, events: list[str]) -> tuple[int, int, dict[
     lower = text.lower()
     extras: dict[str, int] = {}
 
-    def _leading_run_count(after: str) -> int:
+    def _leading_run_count(after: str, default: int = 1) -> int:
         # Real bug found 2026-09-18 scanning archived matches
         # (scan_cricbuzz_event_types.py): Cricbuzz's real phrasing always
         # puts a comma before the explicit run count ("leg byes, 2 runs",
@@ -212,7 +212,7 @@ def _runs_and_extras(comm_text: str, events: list[str]) -> tuple[int, int, dict[
         match = re.match(r"\s*,?\s*no\s*runs?\b", after)
         if match:
             return 0
-        return 1
+        return default
 
     wide_match = re.search(r",\s*wide(?:s)?\b(.*)", lower)
     noball_match = re.search(r",\s*no\s*ball\b(.*)", lower)
@@ -224,7 +224,9 @@ def _runs_and_extras(comm_text: str, events: list[str]) -> tuple[int, int, dict[
         return 6, 6, extras
 
     if wide_match:
-        runs = 1 + _leading_run_count(wide_match.group(1))
+        # No explicit count means just the wide itself (seen live 2026-09-19:
+        # descriptive prose after "wide," was scoring an extra run).
+        runs = 1 + _leading_run_count(wide_match.group(1), default=0)
         extras["wides"] = runs
         return runs, 0, extras
     if noball_match:

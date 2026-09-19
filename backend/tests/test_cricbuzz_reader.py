@@ -173,3 +173,10 @@ def test_int_field_tolerates_next_js_undefined_marker():
     assert _int_field({"inningsId": "2"}, "inningsId", 1) == 2
     assert _int_field({"inningsId": 2}, "inningsId", 1) == 2
     assert _int_field({"timestamp": None}, "timestamp", 0) == 0
+
+
+def test_plain_wide_with_prose_is_one_run():
+    # Real 2026-09-19 commentary: scored 2 before the fix, feed said 1.
+    text = "Will Jacks to Kamil Mishara, wide, the slider and it's on a length but it's down leg. Wided"
+    assert _runs_and_extras(text, []) == (1, 0, {"wides": 1})
+
