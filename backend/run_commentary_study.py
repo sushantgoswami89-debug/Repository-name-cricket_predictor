@@ -27,10 +27,9 @@ from app.live.cricbuzz_reader import CricbuzzLiveReader
 from app.live.commentary_log import append_commentary_log
 
 
-# Top-10 full-member national sides (men's and women's share the names; a
-# trailing " Women" is stripped before matching). Static list written from
-# general knowledge of the ICC T20I rankings as of early 2026, NOT fetched
-# live -- edit it, or pass --teams, when the rankings move.
+# Top-10 men's full-member national sides. Static list written from
+# general knowledge of the ICC men's T20I rankings as of early 2026, NOT
+# fetched live -- edit it, or pass --teams, when the rankings move.
 TOP_TEAMS = (
     "India", "Australia", "England", "South Africa", "New Zealand",
     "Pakistan", "West Indies", "Sri Lanka", "Afghanistan", "Bangladesh",
@@ -38,17 +37,15 @@ TOP_TEAMS = (
 
 
 def involves_top_team(label: str, teams: tuple[str, ...]) -> bool:
-    """True if either side of "A vs B" is one of `teams` (case-insensitive,
-    " Women"/" W" suffix ignored). Exact-name match, so domestic sides such
-    as "Western Province" or "Eastern Storm" never qualify."""
+    """True only for a men's match where BOTH sides of "A vs B" are in
+    `teams` (case-insensitive, exact names). Women's sides ("... Women"),
+    "A"/age-group/domestic sides, and any match with one unlisted side
+    never qualify."""
     wanted = {t.lower() for t in teams}
-    for side in label.split(" vs "):
-        name = side.strip().lower()
-        if name.endswith(" women"):
-            name = name[: -len(" women")]
-        if name in wanted:
-            return True
-    return False
+    sides = [side.strip().lower() for side in label.split(" vs ")]
+    if len(sides) != 2:
+        return False
+    return all(side in wanted for side in sides)
 
 
 def main() -> None:
@@ -57,7 +54,7 @@ def main() -> None:
     parser.add_argument("--poll-seconds", type=float, default=15.0)
     parser.add_argument(
         "--teams", default=",".join(TOP_TEAMS),
-        help="Comma-separated team names to follow (a match qualifies if either side is listed). "
+        help="Comma-separated team names to follow (a match qualifies only if BOTH sides are listed; men's only). "
              "Pass an empty string to follow every live match.",
     )
     args = parser.parse_args()
