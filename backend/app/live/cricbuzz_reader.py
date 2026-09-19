@@ -218,10 +218,25 @@ def _runs_and_extras(comm_text: str, events: list[str]) -> tuple[int, int, dict[
     noball_match = re.search(r",\s*no\s*ball\b(.*)", lower)
     bye_match = re.search(r",\s*(leg\s*bye|bye)s?\b(.*)", lower)
 
-    if "four" in events or re.search(r"<b>four</b>", comm_text, re.IGNORECASE):
-        return 4, 4, extras
-    if "six" in events or re.search(r"<b>six</b>", comm_text, re.IGNORECASE):
-        return 6, 6, extras
+    # "5 wides" / "4 wides" (count BEFORE the word, no comma) is the total
+    # for the delivery. Seen live 2026-09-19: "5 wides" parsed as 0 runs
+    # (the ",\s*wide" pattern never matched it), and "4 wides" was only
+    # right by accident via a stray boundary tag.
+    counted_wides = re.search(r",\s*(\d+)\s+wides?\b", lower)
+    if counted_wides:
+        runs = int(counted_wides.group(1))
+        extras["wides"] = runs
+        return runs, 0, extras
+
+    boundary = 4 if ("four" in events or re.search(r"<b>four</b>", comm_text, re.IGNORECASE)) else (
+        6 if ("six" in events or re.search(r"<b>six</b>", comm_text, re.IGNORECASE)) else 0
+    )
+    if boundary:
+        if noball_match:
+            # "no ball, FOUR": the bat's boundary PLUS the no-ball's own run.
+            extras["noballs"] = 1
+            return boundary + 1, boundary, extras
+        return boundary, boundary, extras
 
     if wide_match:
         # No explicit count means just the wide itself (seen live 2026-09-19:

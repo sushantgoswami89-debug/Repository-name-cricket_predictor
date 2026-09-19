@@ -180,3 +180,16 @@ def test_plain_wide_with_prose_is_one_run():
     text = "Will Jacks to Kamil Mishara, wide, the slider and it's on a length but it's down leg. Wided"
     assert _runs_and_extras(text, []) == (1, 0, {"wides": 1})
 
+
+
+def test_counted_wides_without_comma_before_number():
+    # Real 2026-09-19 Zimbabwe Women text; scored 0 before the fix.
+    text = "Kayla Reyneke to Mugeri, 5 wides, the partnership between Mugeri and Kelis Ndhlovu is now"
+    assert _runs_and_extras(text, []) == (5, 0, {"wides": 5})
+    # Stray boundary tag must not override it.
+    assert _runs_and_extras("Will Jacks to Charith Asalanka, 4 wides, on a length down leg", ["four"]) == (4, 0, {"wides": 4})
+
+
+def test_no_ball_boundary_counts_the_no_ball_run_too():
+    text = "Seshnie Naidu to Mugeri, no ball, FOUR"
+    assert _runs_and_extras(text, ["four"]) == (5, 4, {"noballs": 1})
