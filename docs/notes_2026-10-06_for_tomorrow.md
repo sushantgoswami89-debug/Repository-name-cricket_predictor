@@ -525,9 +525,9 @@ one-shot (re-send when XIs arrive is not built).
 
 ## DONE 2026-10-09 (last): briefing re-sends when the toss and XIs arrive
 `run_live_auto.py`: every attached pre-start match is re-checked every 60 s in a background thread (never blocks polling).
-The briefing is re-sent only when its signature changes -- the "Toss:" line, or both teams reaching >= 9 confirmed players --
+The briefing is re-sent only when its signature changes -- the "Toss:" line, or both teams reaching 11 confirmed players (a full line-up) --
 so a moved percentage or a partial XI never triggers a message (max about 2 updates per match). Header says what changed
-("toss now known", "playing XIs confirmed"); each update has its own Telegram key so de-duplication lets it through.
+("toss now known", "full line-ups confirmed"); each update has its own Telegram key so de-duplication lets it through.
 Stops once the first ball is bowled, once the toss is known and both XIs are confirmed, or after 8 h. Works for the Cricbuzz
 path and the TOI backup path. Known gap: if the first briefing failed to fetch, the first successful one goes out labelled
 "Updated briefing -- details changed". Restart the driver to load it (shadow mode prints the updates).

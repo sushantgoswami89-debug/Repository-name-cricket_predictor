@@ -309,6 +309,7 @@ def test_briefing_signature_tracks_only_toss_and_xi_readiness():
     assert sig(waiting) == ("Toss: not yet available", False)
     assert sig(waiting.replace("60%", "61%")) == sig(waiting)  # a moved percentage is not an update
     assert sig("Toss: A won, chose to bowl\nA: 11/15 confirmed XI\nB: 5/15 confirmed XI") == ("Toss: A won, chose to bowl", False)
+    assert sig("Toss: A won, chose to bowl\nA: 11/15 confirmed XI\nB: 10/15 confirmed XI")[1] is False  # 10 is not a full XI
     assert sig("Toss: A won, chose to bowl\nA: 11/15 confirmed XI\nB: 11/15 confirmed XI")[1] is True
 
 
@@ -317,7 +318,7 @@ def test_briefing_is_resent_when_toss_then_xis_arrive_and_not_otherwise(monkeypa
     texts = iter([
         base.format(toss="Toss: not yet available", a=0, b=0),      # unchanged -> nothing
         base.format(toss="Toss: A won, chose to bowl", a=0, b=0),   # toss -> resend
-        base.format(toss="Toss: A won, chose to bowl", a=7, b=0),   # partial XI -> nothing
+        base.format(toss="Toss: A won, chose to bowl", a=11, b=10), # one side not full -> nothing
         base.format(toss="Toss: A won, chose to bowl", a=11, b=11), # XIs -> resend, then stop
     ])
 
@@ -330,7 +331,7 @@ def test_briefing_is_resent_when_toss_then_xis_arrive_and_not_otherwise(monkeypa
     for _ in range(4):
         _drain(state)
     assert len(pub.sent) == 2
-    assert "toss now known" in pub.sent[0][1] and "playing XIs confirmed" in pub.sent[1][1]
+    assert "toss now known" in pub.sent[0][1] and "full line-ups confirmed" in pub.sent[1][1]
     assert pub.sent[0][0] != pub.sent[1][0]  # distinct keys, so Telegram's de-duplication lets both through
     assert "cricbuzz:1" not in state._briefings  # complete -> no more fetching
 

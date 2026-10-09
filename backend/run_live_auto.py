@@ -80,16 +80,17 @@ def _team_pair(label: str) -> frozenset[str] | None:
 
 
 BRIEFING_REFRESH_SECONDS = 60.0
+FULL_XI = 11  # a line-up counts as full only when all 11 players are confirmed
 BRIEFING_REFRESH_MAX_HOURS = 8.0
 
 
 def briefing_signature(text: str) -> tuple[str, bool]:
-    """What matters in a briefing: the Toss line and whether both XIs are confirmed.
+    """What matters in a briefing: the Toss line and whether BOTH full line-ups (11 confirmed each) are in.
     The briefing is re-sent only when this changes (toss announced, XIs confirmed),
     not on every wording or number change, so it cannot spam."""
     toss = next((line for line in text.splitlines() if line.startswith("Toss:")), "")
     counts = [int(m.group(1)) for m in re.finditer(r"(\d+)/\d+ confirmed XI", text)]
-    return toss, len(counts) == 2 and all(count >= 9 for count in counts)
+    return toss, len(counts) == 2 and all(count >= FULL_XI for count in counts)
 
 
 def _briefing_update_header(old: tuple[str, bool], new: tuple[str, bool]) -> str:
@@ -100,7 +101,7 @@ def _briefing_update_header(old: tuple[str, bool], new: tuple[str, bool]) -> str
     elif toss_known(new) and new[0] != old[0]:
         changes.append("toss updated")
     if new[1] and not old[1]:
-        changes.append("playing XIs confirmed")
+        changes.append("full line-ups confirmed")
     return "🔄 Updated briefing -- " + " and ".join(changes or ["details changed"])
 
 
