@@ -55,7 +55,7 @@ _EDGE_RE = re.compile(
 # not the edge), stronger evidence of a batter forcing the shot than a
 # clean stroke.
 _MISTIMED_RE = re.compile(
-    r"\b(?:inner|outer)\s+half\b|\bmis-?timed?\b|\bmis-?hit\b|\btoe-?end(?:ed|s)?\b"
+    r"\b(?:inner|outer)\s+half\b|\bmis-?time[sd]?\b|\bmis-?hit(?:s|ting)?\b|\btoe-?end(?:ed|s)?\b"
     r"|\bskied\b|\bballooned?\b|\bcloses?\s+the\s+face\b",
     re.IGNORECASE,
 )

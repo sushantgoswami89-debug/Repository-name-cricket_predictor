@@ -103,4 +103,9 @@ class LiveSnapshot:
     weather_humidity_pct: float | None = None
     weather_temperature_c: float | None = None
     weather_wind_speed_ms: float | None = None
+    # The source's own live scoreboard ("miniscore"): authoritative score,
+    # overs, striker/non-striker, current bowler, partnership. Used to
+    # cross-check the state we rebuild from ball-by-ball commentary.
+    board: dict | None = None
+    raw_html: str = field(default="", repr=False, compare=False)
     fetched_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))

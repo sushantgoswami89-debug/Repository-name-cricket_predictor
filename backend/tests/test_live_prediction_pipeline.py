@@ -765,3 +765,15 @@ def test_rebase_rebuilds_deliveries_but_retains_pending_review(
     evaluation = output["previous_over_evaluation"]
     assert isinstance(evaluation, dict)
     assert evaluation["actual_runs"] == 6
+
+
+def test_batting_team_change_inside_an_innings_is_refused() -> None:
+    from app.live.pipeline import MatchStateAnomaly
+
+    pipeline = VerifiedLivePredictionPipeline(engine=FakeEngine(), publisher=FakePublisher())
+    first = _snapshot()
+    pipeline.process(first)
+    flipped = replace(first, batting_team="Somebody Else")
+    with pytest.raises(MatchStateAnomaly, match="Batting team changed"):
+        pipeline.process(flipped)
+    assert pipeline.process(replace(first, batting_team="")) is None  # unnamed is ignored, not a change

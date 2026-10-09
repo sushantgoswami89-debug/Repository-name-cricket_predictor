@@ -110,13 +110,20 @@ class TelegramControl:
         return f"CricketBaba is watching TOI for live matches (process {pid})."
 
     def _prematch_status(self) -> str:
-        self._start_watcher()
+        # Read-only: asking for a status must never launch the live-publishing
+        # watcher (it used to, 2026-10-06 finding). Start it with "match is live".
+        pid = self._running_pid()
+        watcher = (
+            f"running (process {pid})"
+            if pid is not None
+            else 'NOT running -- send "match is live" to start it'
+        )
         matches = ToiMatchDiscovery().matches()
         candidates = [match for match in matches if match.is_live or match.is_upcoming]
         if not candidates:
             return (
                 "No upcoming or live match is currently listed by TOI. "
-                "Telegram and Candidate v3 are ready; automatic watching is armed."
+                f"Telegram and Candidate v3 are ready; automatic watcher: {watcher}."
             )
         lines = ["🏏 Pre-match status"]
         for match in candidates[:5]:
@@ -146,7 +153,7 @@ class TelegramControl:
                 "Feed: ready",
                 "Candidate v3: ready",
                 "Telegram: connected",
-                "Automatic watcher: armed",
+                f"Automatic watcher: {watcher}",
             ]
         )
         return "\n".join(lines)

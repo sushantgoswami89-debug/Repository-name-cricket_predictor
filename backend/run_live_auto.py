@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import threading
 import time
 from pathlib import Path
 
@@ -247,6 +248,8 @@ class LiveAutoState:
                     f"[toi] {'Sent' if self.publisher else 'Recorded'} {match_id} "
                     f"innings {output['innings']} over {output['over']} prediction."
                 )
+                if not self.publisher:
+                    print(VerifiedLivePredictionPipeline._telegram_text(output))
 
     def _check_toi_stuck(self, match_id: str, error: Exception) -> None:
         """Same one-alert, auto-resetting behavior as
@@ -270,6 +273,66 @@ class LiveAutoState:
                 self.publisher.publish(f"stuck_alert:toi:{match_id}:{int(started_at)}", message)
             except Exception:
                 pass
+
+
+class _Prefetched:
+    """Stands in for a discovery object during LiveAutoState.scan: hands back the
+    result (or re-raises the error) a background fetch already produced."""
+
+    def __init__(self, result, error: Exception | None) -> None:
+        self._result = result
+        self._error = error
+
+    def live_matches(self):
+        if self._error is not None:
+            raise self._error
+        return self._result
+
+    live_summaries = live_matches
+
+
+class _ScanWorker:
+    """Runs the slow discovery HTTP requests (12 s timeouts, two sources) off the
+    polling thread. A scan used to run inline, so one stalled request froze every
+    match poll -- the likely cause of the missed over-17 prediction on 2026-10-06
+    ("a stalled poll spanning two overs"). The attach/detach logic itself still
+    runs on the main thread, on the prefetched results."""
+
+    def __init__(self, cricbuzz_discovery, toi_discovery) -> None:
+        self._cricbuzz = cricbuzz_discovery
+        self._toi = toi_discovery
+        self._thread: threading.Thread | None = None
+        self._results: tuple[_Prefetched, _Prefetched] | None = None
+
+    @property
+    def busy(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
+    def start(self) -> None:
+        if self.busy:
+            return
+        self._results = None
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def _run(self) -> None:
+        def _fetch(call):
+            try:
+                return _Prefetched(tuple(call()), None)
+            except requests.exceptions.RequestException as error:
+                return _Prefetched((), error)
+            except Exception as error:  # a discovery bug must not kill the watcher
+                return _Prefetched((), requests.exceptions.RequestException(str(error)))
+
+        cricbuzz = _fetch(self._cricbuzz.live_matches)
+        toi = _fetch(self._toi.live_summaries)
+        self._results = (cricbuzz, toi)
+
+    def take(self) -> tuple[_Prefetched, _Prefetched] | None:
+        if self.busy or self._results is None:
+            return None
+        results, self._results = self._results, None
+        return results
 
 
 def main() -> None:
@@ -303,11 +366,15 @@ def main() -> None:
         f"T20Is -- mode: {mode}. Press Control+C to stop."
     )
 
+    worker = _ScanWorker(cricbuzz_discovery, toi_discovery)
     while True:
         now = time.monotonic()
-        if now - last_scan >= max(10.0, args.scan_seconds):
-            state.scan(cricbuzz_discovery, toi_discovery)
+        if now - last_scan >= max(10.0, args.scan_seconds) and not worker.busy:
+            worker.start()
             last_scan = now
+        fetched = worker.take()
+        if fetched is not None:
+            state.scan(fetched[0], fetched[1])
 
         state.poll()
         time.sleep(max(1.0, args.poll_seconds))

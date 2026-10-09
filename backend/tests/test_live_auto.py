@@ -241,3 +241,40 @@ def test_toi_backup_stuck_alert_fires_once_and_resets(tmp_path, monkeypatch):
     clock[0] += 5.0
     state.poll()  # still erroring -- must not repeat
     assert len(publisher.sent) == 1
+
+
+def test_scan_worker_fetches_off_thread_and_surfaces_errors():
+    import time as _time
+
+    import requests as _requests
+
+    from run_live_auto import _ScanWorker
+
+    class SlowCricbuzz:
+        def live_matches(self):
+            _time.sleep(0.3)
+            return ["cb-match"]
+
+    class BrokenToi:
+        def live_summaries(self):
+            raise _requests.exceptions.ConnectionError("reset")
+
+    worker = _ScanWorker(SlowCricbuzz(), BrokenToi())
+    started = _time.monotonic()
+    worker.start()
+    assert _time.monotonic() - started < 0.2  # start() does not wait for the slow fetch
+    assert worker.take() is None  # not finished yet
+    deadline = _time.monotonic() + 3
+    results = None
+    while results is None and _time.monotonic() < deadline:
+        _time.sleep(0.05)
+        results = worker.take()
+    assert results is not None
+    cricbuzz, toi = results
+    assert cricbuzz.live_matches() == ("cb-match",)
+    try:
+        toi.live_summaries()
+    except _requests.exceptions.ConnectionError:
+        pass
+    else:
+        raise AssertionError("the stored error must be re-raised to scan()")

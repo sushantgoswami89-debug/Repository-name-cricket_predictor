@@ -30,6 +30,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from app.live.delivery_detail import extract_delivery_detail
 from app.live.shot_quality import classify_conditions, classify_near_wicket, classify_shot_quality
 
 
@@ -74,6 +75,7 @@ def append_commentary_log(
                     "shot_quality": classify_shot_quality(delivery.commentary),
                     "near_wicket": classify_near_wicket(delivery.commentary),
                     "conditions": classify_conditions(delivery.commentary),
+                    "detail": extract_delivery_detail(delivery.commentary),
                     "commentary": delivery.commentary,
                 }
             )

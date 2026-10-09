@@ -13,6 +13,7 @@ import requests
 
 from app.live.commentary_log import append_commentary_log
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
+from app.live.prematch_analysis import confirmed_xi, prematch_text
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery, is_t20_international
 from app.live.toi_reader import ToiFeedError, ToiLiveReader
@@ -73,6 +74,15 @@ def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | No
             lines.append(f"{team_name}: {confirmed}/{len(players)} confirmed XI")
     else:
         lines.append("Playing XIs not yet available.")
+    team_names = list(team_players)
+    if len(team_names) == 2:
+        analysis = prematch_text(
+            team_names[0], team_names[1], ToiLiveReader._venue_name(raw), toss_won_by, toss_decision,
+            confirmed_xi(team_players),
+        )
+        if analysis:
+            lines.append("")
+            lines.append(analysis)
     return "\n".join(lines)
 
 
@@ -183,6 +193,7 @@ def main() -> None:
                         f"Recorded {match_id} innings {output['innings']} "
                         f"over {output['over']} shadow prediction."
                     )
+                    print(VerifiedLivePredictionPipeline._telegram_text(output))
                 else:
                     print(
                         f"Sent {match_id} innings {output['innings']} "

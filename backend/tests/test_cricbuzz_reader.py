@@ -147,10 +147,11 @@ def test_real_no_ball_with_no_explicit_run_count():
         "chops it off the inside edge into the on-side. Oh wait, Chameera "
         "has overstepped, free hit coming up"
     )
-    # No explicit run count anywhere in real Cricbuzz text for this ball --
-    # defaults to 1 additional run (best effort, not verifiable from text
-    # alone; unchanged pre-existing limitation, not part of the comma fix).
-    assert _runs_and_extras(text, []) == (2, 1, {"noballs": 1})
+    # No explicit run count in the opening phrase. Cricbuzz states runs
+    # explicitly ("no ball, 1 run", "no ball, FOUR"), so a bare "no ball" is
+    # the penalty run only; the old +1 guess read prose instead. A wrong total
+    # is caught by the over-end checkpoint comparison.
+    assert _runs_and_extras(text, []) == (1, 0, {"noballs": 1})
 
 
 def test_wide_with_explicit_multi_run_count():

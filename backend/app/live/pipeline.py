@@ -181,11 +181,24 @@ class VerifiedLivePredictionPipeline:
             LiveStateStore(resolved_state_file) if resolved_state_file else None
         )
         self._restored_scope: tuple[str, int] | None = None
+        self._batting_team_by_scope: dict[tuple[str, int], str] = {}
         self._published_keys: set[str] = set()
         self._restore_verified_state = restore_verified_state
 
     def process(self, snapshot: LiveSnapshot) -> dict[str, object] | None:
         scope = (snapshot.match_id, snapshot.innings)
+        # The batting side cannot change inside an innings. Every field test
+        # found a team-identity bug somewhere new (09-15 team swap, 10-06 empty
+        # teamName falling back to India mid-innings); refuse such a snapshot
+        # instead of letting it reach the models.
+        if snapshot.batting_team and not self._batting_team_by_scope.get(scope):
+            self._batting_team_by_scope[scope] = snapshot.batting_team
+        seen_team = self._batting_team_by_scope.get(scope, "")
+        if snapshot.batting_team and seen_team and snapshot.batting_team != seen_team:
+            raise MatchStateAnomaly(
+                f"Batting team changed inside innings {snapshot.innings}: "
+                f"{seen_team!r} -> {snapshot.batting_team!r}."
+            )
         if self._restored_scope != scope:
             self._verifier = None
             self._last_resolved_over = None
@@ -343,17 +356,23 @@ class VerifiedLivePredictionPipeline:
         recent_delivery_wickets = sum(
             delivery.wicket_kind is not None for delivery in recent_deliveries
         )
-        legal_balls = len(legal_deliveries)
+        # Each completed over has exactly 6 legal balls; the verifier may have
+        # attached mid-innings and only counted a later subset.
+        legal_balls = max(len(legal_deliveries), completed * 6)
         innings_balls = self._innings_limit_for(snapshot) * 6
         balls_remaining = max(0, innings_balls - legal_balls)
         # Summed from over_runs/over_wickets (bounded to `completed`) rather
         # than verifier.score/verifier.wickets directly, which already
         # include any later-over balls backfilled in the same poll -- see
         # the comment above the removed last_key[1] != completed guard.
-        score_before_over = sum(
+        # + base_*: over_runs/over_wickets only cover balls THIS verifier saw,
+        # so after a mid-innings attach or restart they omit everything
+        # before the attach point (2026-10-06: "Score: 9/2" for a real 53/3,
+        # which also fed the models wrong run rate / wickets / balls left).
+        score_before_over = verifier.base_score + sum(
             verifier.over_runs.get(over, 0) for over in range(1, completed + 1)
         )
-        wkts_before_over = sum(
+        wkts_before_over = verifier.base_wickets + sum(
             verifier.over_wickets.get(over, 0) for over in range(1, completed + 1)
         )
         runs_required = (

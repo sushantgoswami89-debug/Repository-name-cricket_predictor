@@ -287,3 +287,122 @@ def test_stuck_alert_fires_once_after_threshold_and_resets_on_recovery(monkeypat
     reader._queue = [CricbuzzFeedError("boom again")] * 3
     session.poll_once()
     assert len(publisher.sent) == 2
+
+
+def test_run_out_event_names_the_dismissed_non_striker():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _dismissed_batter
+
+    run_out = SimpleNamespace(
+        wicket_kind="run out",
+        striker="Shai Hope",
+        commentary="Axar Patel to Shai Hope, out Shimron Hetmyer Run Out!! Shimron Hetmyer run out (Tilak Varma/Sanju Samson) 5(2)",
+    )
+    assert _dismissed_batter(run_out) == "Shimron Hetmyer"
+    bowled = SimpleNamespace(wicket_kind="bowled", striker="Rovman Powell", commentary="out Bowled!!")
+    assert _dismissed_batter(bowled) == "Rovman Powell"
+
+
+def test_newest_board_ignores_stale_cached_copies():
+    from app.live.cricbuzz_session import _newest_board
+
+    fresh = {"innings": 2, "last_updated_s": 2000, "overs": 12.0, "striker": "Iyer"}
+    stale = {"innings": 2, "last_updated_s": 1000, "overs": 8.1, "striker": "Kishan"}
+    assert _newest_board(fresh, stale) is fresh
+    assert _newest_board(stale, fresh) is fresh
+    assert _newest_board(None, stale) is stale
+    assert _newest_board(fresh, None) is fresh
+
+
+def test_next_over_line_uses_announced_bowler_and_last_ball_parity():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _announced_bowler_name, _next_over_line
+
+    assert _announced_bowler_name("Matthew Forde [1.0-0-15-0] is back into the attack") == "Matthew Forde"
+    assert _announced_bowler_name("Naman Dhir, right-arm off break, comes into the attack") == "Naman Dhir"
+
+    def snap(last_runs, batter_runs, wicket=None):
+        last = SimpleNamespace(
+            timestamp_ms=1000, over=13, striker="Iyer", total_runs=last_runs, batter_runs=batter_runs, wicket_kind=wicket
+        )
+        return SimpleNamespace(
+            overs="13.0", innings_complete=False, deliveries=[last],
+            board={"striker": "Iyer", "non_striker": "Kishan"},
+        )
+
+    # SIX on the last ball (real case at 13.6): no crossing, ends change -> Kishan faces
+    line = _next_over_line(snap(6, 6), (2000, "Akeal Hosein"))
+    assert "Akeal Hosein bowling" in line and "Kishan* expected to face" in line
+    # single on the last ball: batters crossed, then ends changed -> Iyer faces again
+    assert "Iyer* expected to face" in _next_over_line(snap(1, 1), None)
+    assert "not announced yet" in _next_over_line(snap(1, 1), (500, "Old Bowler"))
+    # result is the same whether or not the board already swapped
+    swapped = snap(6, 6); swapped.board = {"striker": "Kishan", "non_striker": "Iyer"}
+    assert "Kishan* expected to face" in _next_over_line(swapped, None)
+    assert "see board" in _next_over_line(snap(0, 0, "bowled"), None)
+    mid = snap(1, 1); mid.overs = "13.2"
+    assert _next_over_line(mid, None) == ""
+
+
+def test_announced_bowler_goes_on_snapshot_only_when_posted_after_last_ball():
+    from dataclasses import replace as _replace
+    from app.live.cricbuzz_session import _with_announced_bowler
+    from app.live.live_snapshot import LiveDelivery, LiveSnapshot
+
+    last = LiveDelivery(
+        match_id="1", innings=2, over=13, ball=6, bowler="A", striker="S", total_runs=1,
+        batter_runs=1, extras={}, wicket_kind=None, feed_total=140, feed_wickets=2,
+        timestamp_ms=1000, commentary="",
+    )
+    snap = LiveSnapshot(
+        match_id="1", match_format="T20I", batting_team="X", bowling_team="Y", innings=2,
+        score=140, wickets=2, overs="13.0", is_live=True, deliveries=(last,),
+    )
+    assert _with_announced_bowler(snap, (999, "B")).announced_bowler == ""
+    assert _with_announced_bowler(snap, None).announced_bowler == ""
+    got = _with_announced_bowler(snap, (1500, "B"))
+    assert (got.announced_bowler, got.announced_bowler_over) == ("B", 14)
+    mid = _replace(snap, overs="13.3")
+    assert _with_announced_bowler(mid, (1500, "B")).announced_bowler == ""
+
+
+def test_prediction_held_only_when_board_disagrees_at_the_same_point():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _prediction_hold
+
+    def snap(board, overs="13.0", complete=False):
+        return SimpleNamespace(
+            innings=2, overs=overs, score=140, wickets=2, innings_complete=complete, board=board
+        )
+
+    same = {"innings": 2, "overs": "13.0", "score": 140, "wickets": 2}
+    assert _prediction_hold(snap(same)) is None
+    assert "board says 140/3" in _prediction_hold(snap({**same, "wickets": 3}))
+    # an older cached copy (fewer overs) or a newer one never holds
+    assert _prediction_hold(snap({**same, "overs": "12.5", "score": 137})) is None
+    assert _prediction_hold(snap({**same, "overs": "13.2", "score": 146})) is None
+    # innings over: record the outcome regardless
+    assert _prediction_hold(snap({**same, "wickets": 3}, complete=True)) is None
+    assert _prediction_hold(snap(None)) is None
+
+
+def test_next_over_expectation_is_checked_against_the_first_real_ball():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _check_next_over
+
+    def ball(over, ball_no, striker, bowler):
+        return SimpleNamespace(over=over, key=(2, over, ball_no), striker=striker, bowler=bowler)
+
+    expected = {"over": 14, "bowler": "Forde", "striker": "Iyer", "other": "Kishan"}
+    waiting = SimpleNamespace(deliveries=(ball(13, 6, "Kishan", "Hosein"),))
+    assert _check_next_over(expected, waiting) is None
+    hit = SimpleNamespace(deliveries=(ball(13, 6, "Kishan", "Hosein"), ball(14, 1, "Iyer", "Forde")))
+    line = _check_next_over(expected, hit)
+    assert "striker expected Iyer, actual Iyer: HIT" in line and "bowler announced Forde, actual Forde: HIT" in line
+    miss = SimpleNamespace(deliveries=(ball(14, 1, "Kishan", "Springer"),))
+    assert _check_next_over(expected, miss).count("MISS") == 2
+    assert _check_next_over(None, hit) is None

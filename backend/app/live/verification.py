@@ -19,6 +19,10 @@ class LiveDeliveryVerifier:
     innings: int
     score: int = 0
     wickets: int = 0
+    # Score/wickets BEFORE the first delivery this verifier accepted (0/0 for
+    # a feed with full history; the bootstrap values when attached mid-innings).
+    base_score: int = 0
+    base_wickets: int = 0
     last_key: tuple[int, int, int] | None = None
     accepted: dict[tuple[int, int, int], LiveDelivery] = field(default_factory=dict)
     over_runs: dict[int, int] = field(default_factory=dict)
@@ -94,6 +98,8 @@ class LiveDeliveryVerifier:
             # still fully cross-checked as before).
             self.score = delivery.feed_total - delivery.total_runs
             self.wickets = delivery.feed_wickets - int(delivery.wicket_kind is not None)
+            self.base_score = self.score
+            self.base_wickets = self.wickets
         expected_score = self.score + delivery.total_runs
         expected_wickets = self.wickets + (delivery.wicket_kind is not None)
         if expected_score != delivery.feed_total:

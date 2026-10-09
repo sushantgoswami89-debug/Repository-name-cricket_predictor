@@ -1,0 +1,1514 @@
+{
+ "mumbai": {
+  "query": "mumbai",
+  "name": "Mumbai",
+  "country": "India",
+  "lat": 19.07283,
+  "lon": 72.88261
+ },
+ "kolkata": {
+  "query": "kolkata",
+  "name": "Kolkata",
+  "country": "India",
+  "lat": 22.56263,
+  "lon": 88.36304
+ },
+ "delhi": {
+  "query": "delhi",
+  "name": "Delhi",
+  "country": "India",
+  "lat": 28.65195,
+  "lon": 77.23149
+ },
+ "chennai": {
+  "query": "chennai",
+  "name": "Chennai",
+  "country": "India",
+  "lat": 13.08784,
+  "lon": 80.27847
+ },
+ "dubai": {
+  "query": "dubai",
+  "name": "Dubai",
+  "country": "United Arab Emirates",
+  "lat": 25.07725,
+  "lon": 55.30927
+ },
+ "hyderabad": {
+  "query": "hyderabad",
+  "name": "Hyderabad",
+  "country": "India",
+  "lat": 17.38405,
+  "lon": 78.45636
+ },
+ "abu dhabi": {
+  "query": "abu dhabi",
+  "name": "Abu Dhabi",
+  "country": "United Arab Emirates",
+  "lat": 24.45118,
+  "lon": 54.39696
+ },
+ "kuala lumpur": {
+  "query": "kuala lumpur",
+  "name": "Kuala Lumpur",
+  "country": "Malaysia",
+  "lat": 3.1412,
+  "lon": 101.68653
+ },
+ "bangalore": {
+  "query": "bangalore",
+  "name": "Bangalore Town",
+  "country": "Pakistan",
+  "lat": 24.8717,
+  "lon": 67.0839
+ },
+ "al amarat": {
+  "query": "al amarat",
+  "name": "Al Amarat",
+  "country": "Oman",
+  "lat": 23.52417,
+  "lon": 58.4975
+ },
+ "jaipur": {
+  "query": "jaipur",
+  "name": "Jaipur",
+  "country": "India",
+  "lat": 26.91962,
+  "lon": 75.78781
+ },
+ "dubai international cricket stadium": {
+  "query": "dubai international cricket stadium",
+  "name": "Dubai",
+  "country": "United Arab Emirates",
+  "lat": 25.07725,
+  "lon": 55.30927
+ },
+ "chandigarh": {
+  "query": "chandigarh",
+  "name": "Chandigarh",
+  "country": "India",
+  "lat": 30.73629,
+  "lon": 76.7884
+ },
+ "ahmedabad": {
+  "query": "ahmedabad",
+  "name": "Ahmedabad",
+  "country": "India",
+  "lat": 23.02579,
+  "lon": 72.58727
+ },
+ "kigali city": {
+  "query": "kigali city",
+  "name": "Kigali",
+  "country": "Rwanda",
+  "lat": -1.94995,
+  "lon": 30.05885
+ },
+ "bali": {
+  "query": "bali",
+  "name": "Bali",
+  "country": "Indonesia",
+  "lat": -8.33333,
+  "lon": 115.0
+ },
+ "colombo": {
+  "query": "colombo",
+  "name": "Colombo",
+  "country": "Sri Lanka",
+  "lat": 6.93548,
+  "lon": 79.84868
+ },
+ "pune": {
+  "query": "pune",
+  "name": "Pune",
+  "country": "India",
+  "lat": 18.51957,
+  "lon": 73.85535
+ },
+ "windhoek": {
+  "query": "windhoek",
+  "name": "Windhoek",
+  "country": "Namibia",
+  "lat": -22.55941,
+  "lon": 17.08323
+ },
+ "bengaluru": {
+  "query": "bengaluru",
+  "name": "Bengaluru",
+  "country": "India",
+  "lat": 12.97194,
+  "lon": 77.59369
+ },
+ "johannesburg": {
+  "query": "johannesburg",
+  "name": "Johannesburg",
+  "country": "South Africa",
+  "lat": -26.20227,
+  "lon": 28.04363
+ },
+ "singapore": {
+  "query": "singapore",
+  "name": "Singapore",
+  "country": "Singapore",
+  "lat": 1.28967,
+  "lon": 103.85007
+ },
+ "doha": {
+  "query": "doha",
+  "name": "Doha",
+  "country": "Qatar",
+  "lat": 25.28545,
+  "lon": 51.53096
+ },
+ "harare": {
+  "query": "harare",
+  "name": "Harare",
+  "country": "Zimbabwe",
+  "lat": -17.82772,
+  "lon": 31.05337
+ },
+ "auckland": {
+  "query": "auckland",
+  "name": "Auckland",
+  "country": "New Zealand",
+  "lat": -36.84853,
+  "lon": 174.76349
+ },
+ "kirtipur": {
+  "query": "kirtipur",
+  "name": "Ki\u0307\u0304rtipur",
+  "country": "Nepal",
+  "lat": 27.67851,
+  "lon": 85.27574
+ },
+ "nairobi": {
+  "query": "nairobi",
+  "name": "Nairobi",
+  "country": "Kenya",
+  "lat": -1.28333,
+  "lon": 36.81667
+ },
+ "lucknow": {
+  "query": "lucknow",
+  "name": "Lucknow",
+  "country": "India",
+  "lat": 26.83928,
+  "lon": 80.92313
+ },
+ "lahore": {
+  "query": "lahore",
+  "name": "Lahore",
+  "country": "Pakistan",
+  "lat": 31.558,
+  "lon": 74.35071
+ },
+ "hamilton": {
+  "query": "hamilton",
+  "name": "Hamilton",
+  "country": "Canada",
+  "lat": 43.25011,
+  "lon": -79.84963
+ },
+ "durban": {
+  "query": "durban",
+  "name": "Durban",
+  "country": "South Africa",
+  "lat": -29.8579,
+  "lon": 31.0292
+ },
+ "mirpur": {
+  "query": "mirpur",
+  "name": "Mirpur Mathelo",
+  "country": "Pakistan",
+  "lat": 28.02136,
+  "lon": 69.54914
+ },
+ "bangkok": {
+  "query": "bangkok",
+  "name": "Bangkok",
+  "country": "Thailand",
+  "lat": 13.75398,
+  "lon": 100.50144
+ },
+ "dhaka": {
+  "query": "dhaka",
+  "name": "Dhaka",
+  "country": "Bangladesh",
+  "lat": 23.7104,
+  "lon": 90.40744
+ },
+ "marsa": {
+  "query": "marsa",
+  "name": "Marsa",
+  "country": "Malta",
+  "lat": 35.87925,
+  "lon": 14.49462
+ },
+ "sharjah": {
+  "query": "sharjah",
+  "name": "Sharjah city",
+  "country": "United Arab Emirates",
+  "lat": 25.3342,
+  "lon": 55.41221
+ },
+ "dharamsala": {
+  "query": "dharamsala",
+  "name": "Dharamsala",
+  "country": "India",
+  "lat": 32.22006,
+  "lon": 76.32013
+ },
+ "centurion": {
+  "query": "centurion",
+  "name": "Centurion",
+  "country": "South Africa",
+  "lat": -25.85891,
+  "lon": 28.18577
+ },
+ "sano": {
+  "query": "sano",
+  "name": "Sano",
+  "country": "Japan",
+  "lat": 36.31667,
+  "lon": 139.58333
+ },
+ "cape town": {
+  "query": "cape town",
+  "name": "Cape Town",
+  "country": "South Africa",
+  "lat": -33.92584,
+  "lon": 18.42322
+ },
+ "ilfov county": {
+  "query": "ilfov county",
+  "name": "Bucharest",
+  "country": "Romania",
+  "lat": 44.43225,
+  "lon": 26.10626
+ },
+ "harare sports club": {
+  "query": "harare sports club",
+  "name": "Harare",
+  "country": "Zimbabwe",
+  "lat": -17.82772,
+  "lon": 31.05337
+ },
+ "visakhapatnam": {
+  "query": "visakhapatnam",
+  "name": "Visakhapatnam",
+  "country": "India",
+  "lat": 17.68009,
+  "lon": 83.20161
+ },
+ "episkopi": {
+  "query": "episkopi",
+  "name": "Episkop\u00ed",
+  "country": "Greece",
+  "lat": 40.68748,
+  "lon": 22.1364
+ },
+ "bangi": {
+  "query": "bangi",
+  "name": "Bangi",
+  "country": "Malaysia",
+  "lat": 2.9,
+  "lon": 101.78333
+ },
+ "london": {
+  "query": "london",
+  "name": "London",
+  "country": "United Kingdom",
+  "lat": 51.50853,
+  "lon": -0.12574
+ },
+ "lauderhill": {
+  "query": "lauderhill",
+  "name": "Lauderhill",
+  "country": "United States",
+  "lat": 26.14036,
+  "lon": -80.21338
+ },
+ "edinburgh": {
+  "query": "edinburgh",
+  "name": "Edinburgh",
+  "country": "United Kingdom",
+  "lat": 55.95206,
+  "lon": -3.19648
+ },
+ "dublin": {
+  "query": "dublin",
+  "name": "Dublin",
+  "country": "Ireland",
+  "lat": 53.33306,
+  "lon": -6.24889
+ },
+ "krefeld": {
+  "query": "krefeld",
+  "name": "Krefeld",
+  "country": "Germany",
+  "lat": 51.33645,
+  "lon": 6.55381
+ },
+ "buenos aires": {
+  "query": "buenos aires",
+  "name": "Buenos Aires",
+  "country": "Argentina",
+  "lat": -34.61315,
+  "lon": -58.37723
+ },
+ "christchurch": {
+  "query": "christchurch",
+  "name": "Christchurch",
+  "country": "New Zealand",
+  "lat": -43.53333,
+  "lon": 172.63333
+ },
+ "sharjah cricket stadium": {
+  "query": "sharjah cricket stadium",
+  "name": "Sharjah city",
+  "country": "United Arab Emirates",
+  "lat": 25.3342,
+  "lon": 55.41221
+ },
+ "chattogram": {
+  "query": "chattogram",
+  "name": "Chittagong",
+  "country": "Bangladesh",
+  "lat": 22.3384,
+  "lon": 91.83168
+ },
+ "mount maunganui": {
+  "query": "mount maunganui",
+  "name": "Mount Maunganui",
+  "country": "New Zealand",
+  "lat": -37.64167,
+  "lon": 176.18611
+ },
+ "kandy": {
+  "query": "kandy",
+  "name": "Kandy",
+  "country": "Sri Lanka",
+  "lat": 7.2906,
+  "lon": 80.6336
+ },
+ "mong kok": {
+  "query": "mong kok",
+  "name": "Mong Kok",
+  "country": null,
+  "lat": 22.31935,
+  "lon": 114.17136
+ },
+ "wellington": {
+  "query": "wellington",
+  "name": "Wellington",
+  "country": "New Zealand",
+  "lat": -41.28664,
+  "lon": 174.77557
+ },
+ "bulawayo": {
+  "query": "bulawayo",
+  "name": "Bulawayo",
+  "country": "Zimbabwe",
+  "lat": -20.15,
+  "lon": 28.58333
+ },
+ "castel": {
+  "query": "castel",
+  "name": "Kastl",
+  "country": "Germany",
+  "lat": 49.3696,
+  "lon": 11.68261
+ },
+ "bridgetown": {
+  "query": "bridgetown",
+  "name": "Portland",
+  "country": "United States",
+  "lat": 45.52345,
+  "lon": -122.67621
+ },
+ "kerava": {
+  "query": "kerava",
+  "name": "Kerava",
+  "country": "Finland",
+  "lat": 60.40338,
+  "lon": 25.105
+ },
+ "lagos": {
+  "query": "lagos",
+  "name": "Lagos",
+  "country": "Nigeria",
+  "lat": 6.45407,
+  "lon": 3.39467
+ },
+ "king city": {
+  "query": "king city",
+  "name": "King City",
+  "country": "United States",
+  "lat": 36.21274,
+  "lon": -121.12603
+ },
+ "sydney": {
+  "query": "sydney",
+  "name": "Sydney",
+  "country": "Australia",
+  "lat": -33.86785,
+  "lon": 151.20732
+ },
+ "the hague": {
+  "query": "the hague",
+  "name": "The Hague",
+  "country": "The Netherlands",
+  "lat": 52.07667,
+  "lon": 4.29861
+ },
+ "rajkot": {
+  "query": "rajkot",
+  "name": "Rajkot",
+  "country": "India",
+  "lat": 22.29161,
+  "lon": 70.79322
+ },
+ "almeria": {
+  "query": "almeria",
+  "name": "Almer\u00eda",
+  "country": "Spain",
+  "lat": 36.83814,
+  "lon": -2.45974
+ },
+ "entebbe": {
+  "query": "entebbe",
+  "name": "Entebbe",
+  "country": "Uganda",
+  "lat": 0.05621,
+  "lon": 32.47949
+ },
+ "pallekele international cricket stadium": {
+  "query": "pallekele international cricket stadium",
+  "name": "Pallekele",
+  "country": "Sri Lanka",
+  "lat": 7.2945,
+  "lon": 80.7225
+ },
+ "gros islet": {
+  "query": "gros islet",
+  "name": "Gros Islet",
+  "country": "Saint Lucia",
+  "lat": 14.06667,
+  "lon": -60.95
+ },
+ "gelephu": {
+  "query": "gelephu",
+  "name": "Gelephu Airport",
+  "country": "Bhutan",
+  "lat": 26.88389,
+  "lon": 90.46836
+ },
+ "southampton": {
+  "query": "southampton",
+  "name": "Southampton",
+  "country": "United Kingdom",
+  "lat": 50.90395,
+  "lon": -1.40428
+ },
+ "manchester": {
+  "query": "manchester",
+  "name": "Manchester",
+  "country": "United Kingdom",
+  "lat": 53.48095,
+  "lon": -2.23743
+ },
+ "nagpur": {
+  "query": "nagpur",
+  "name": "Nagpur",
+  "country": "India",
+  "lat": 21.14631,
+  "lon": 79.08491
+ },
+ "prague": {
+  "query": "prague",
+  "name": "Prague",
+  "country": "Czechia",
+  "lat": 50.08804,
+  "lon": 14.42076
+ },
+ "albergaria": {
+  "query": "albergaria",
+  "name": "Albergaria-a-Velha",
+  "country": "Portugal",
+  "lat": 40.69318,
+  "lon": -8.47994
+ },
+ "rawalpindi": {
+  "query": "rawalpindi",
+  "name": "Rawalpindi",
+  "country": "Pakistan",
+  "lat": 33.59733,
+  "lon": 73.0479
+ },
+ "abuja": {
+  "query": "abuja",
+  "name": "Abuja",
+  "country": "Nigeria",
+  "lat": 9.05785,
+  "lon": 7.49508
+ },
+ "george town": {
+  "query": "george town",
+  "name": "George Town",
+  "country": "Malaysia",
+  "lat": 5.41123,
+  "lon": 100.33543
+ },
+ "melbourne cricket ground": {
+  "query": "melbourne cricket ground",
+  "name": "Melbourne",
+  "country": "Australia",
+  "lat": -37.814,
+  "lon": 144.96332
+ },
+ "barbados": {
+  "query": "barbados",
+  "name": "Barbados",
+  "country": "Barbados",
+  "lat": 13.16453,
+  "lon": -59.55165
+ },
+ "belfast": {
+  "query": "belfast",
+  "name": "Belfast",
+  "country": "United Kingdom",
+  "lat": 54.59682,
+  "lon": -5.92541
+ },
+ "guwahati": {
+  "query": "guwahati",
+  "name": "Guwahati",
+  "country": "India",
+  "lat": 26.1844,
+  "lon": 91.7458
+ },
+ "indore": {
+  "query": "indore",
+  "name": "Indore",
+  "country": "India",
+  "lat": 22.71792,
+  "lon": 75.8333
+ },
+ "sofia": {
+  "query": "sofia",
+  "name": "Sofia",
+  "country": "Bulgaria",
+  "lat": 42.69751,
+  "lon": 23.32415
+ },
+ "north sound": {
+  "query": "north sound",
+  "name": "North Sound Estates",
+  "country": null,
+  "lat": 19.29303,
+  "lon": -81.30242
+ },
+ "vantaa": {
+  "query": "vantaa",
+  "name": "Vantaa",
+  "country": "Finland",
+  "lat": 60.29414,
+  "lon": 25.04099
+ },
+ "gaborone": {
+  "query": "gaborone",
+  "name": "Gaborone",
+  "country": "Botswana",
+  "lat": -24.65451,
+  "lon": 25.90859
+ },
+ "brisbane": {
+  "query": "brisbane",
+  "name": "Brisbane",
+  "country": "Australia",
+  "lat": -27.46794,
+  "lon": 153.02809
+ },
+ "karachi": {
+  "query": "karachi",
+  "name": "Karachi",
+  "country": "Pakistan",
+  "lat": 24.8608,
+  "lon": 67.0104
+ },
+ "hobart": {
+  "query": "hobart",
+  "name": "Hobart",
+  "country": "Australia",
+  "lat": -42.87936,
+  "lon": 147.3294
+ },
+ "cardiff": {
+  "query": "cardiff",
+  "name": "Cardiff",
+  "country": "United Kingdom",
+  "lat": 51.48,
+  "lon": -3.18
+ },
+ "cuttack": {
+  "query": "cuttack",
+  "name": "Cuttack",
+  "country": "India",
+  "lat": 20.46497,
+  "lon": 85.87927
+ },
+ "ranchi": {
+  "query": "ranchi",
+  "name": "Ranchi",
+  "country": "India",
+  "lat": 23.34316,
+  "lon": 85.3094
+ },
+ "providence": {
+  "query": "providence",
+  "name": "Providence",
+  "country": "United States",
+  "lat": 41.82399,
+  "lon": -71.41283
+ },
+ "kingston": {
+  "query": "kingston",
+  "name": "Kingston",
+  "country": "Jamaica",
+  "lat": 17.99702,
+  "lon": -76.79358
+ },
+ "port elizabeth": {
+  "query": "port elizabeth",
+  "name": "Port Elizabeth",
+  "country": "South Africa",
+  "lat": -33.96109,
+  "lon": 25.61494
+ },
+ "nottingham": {
+  "query": "nottingham",
+  "name": "Nottingham",
+  "country": "United Kingdom",
+  "lat": 52.9536,
+  "lon": -1.15047
+ },
+ "chittagong": {
+  "query": "chittagong",
+  "name": "Chittagong",
+  "country": "Bangladesh",
+  "lat": 22.3384,
+  "lon": 91.83168
+ },
+ "murcia": {
+  "query": "murcia",
+  "name": "Murcia",
+  "country": "Spain",
+  "lat": 37.98704,
+  "lon": -1.13004
+ },
+ "brondby": {
+  "query": "brondby",
+  "name": "Copenhagen",
+  "country": "Denmark",
+  "lat": 55.67594,
+  "lon": 12.56553
+ },
+ "tarouba": {
+  "query": "tarouba",
+  "name": "Tarouba",
+  "country": "Portugal",
+  "lat": 41.98712,
+  "lon": -8.6085
+ },
+ "kathmandu": {
+  "query": "kathmandu",
+  "name": "Kathmandu",
+  "country": "Nepal",
+  "lat": 27.70169,
+  "lon": 85.3206
+ },
+ "raipur": {
+  "query": "raipur",
+  "name": "Raipur",
+  "country": "India",
+  "lat": 21.23333,
+  "lon": 81.63333
+ },
+ "blantyre": {
+  "query": "blantyre",
+  "name": "Blantyre",
+  "country": "Malawi",
+  "lat": -15.78499,
+  "lon": 35.00854
+ },
+ "basseterre": {
+  "query": "basseterre",
+  "name": "Basseterre",
+  "country": "Saint Kitts and Nevis",
+  "lat": 17.2955,
+  "lon": -62.72499
+ },
+ "port moresby": {
+  "query": "port moresby",
+  "name": "Port Moresby",
+  "country": "Papua New Guinea",
+  "lat": -9.47723,
+  "lon": 147.1509
+ },
+ "szodliget": {
+  "query": "szodliget",
+  "name": "Sz\u0151dliget",
+  "country": "Hungary",
+  "lat": 47.73259,
+  "lon": 19.14749
+ },
+ "accra": {
+  "query": "accra",
+  "name": "Accra",
+  "country": "Ghana",
+  "lat": 5.55602,
+  "lon": -0.1969
+ },
+ "stockholm": {
+  "query": "stockholm",
+  "name": "Stockholm",
+  "country": "Sweden",
+  "lat": 59.32938,
+  "lon": 18.06871
+ },
+ "new chandigarh": {
+  "query": "new chandigarh",
+  "name": "Chandigarh",
+  "country": "India",
+  "lat": 30.73629,
+  "lon": 76.7884
+ },
+ "navi mumbai": {
+  "query": "navi mumbai",
+  "name": "Navi Mumbai",
+  "country": "India",
+  "lat": 19.03681,
+  "lon": 73.01582
+ },
+ "mohali": {
+  "query": "mohali",
+  "name": "Mohali",
+  "country": "India",
+  "lat": 30.67995,
+  "lon": 76.72211
+ },
+ "perth": {
+  "query": "perth",
+  "name": "Perth",
+  "country": "Australia",
+  "lat": -31.95224,
+  "lon": 115.8614
+ },
+ "st lucia": {
+  "query": "st lucia",
+  "name": "Gros Islet",
+  "country": "Saint Lucia",
+  "lat": 14.06667,
+  "lon": -60.95
+ },
+ "birmingham": {
+  "query": "birmingham",
+  "name": "Birmingham",
+  "country": "United Kingdom",
+  "lat": 52.48142,
+  "lon": -1.89983
+ },
+ "melbourne": {
+  "query": "melbourne",
+  "name": "Melbourne",
+  "country": "Australia",
+  "lat": -37.814,
+  "lon": 144.96332
+ },
+ "st george's": {
+  "query": "st george's",
+  "name": "Saint George's Parish",
+  "country": null,
+  "lat": 32.37249,
+  "lon": -64.69756
+ },
+ "coolidge": {
+  "query": "coolidge",
+  "name": "Coolidge",
+  "country": "United States",
+  "lat": 32.97784,
+  "lon": -111.51762
+ },
+ "benoni": {
+  "query": "benoni",
+  "name": "Benoni",
+  "country": "South Africa",
+  "lat": -26.18848,
+  "lon": 28.32078
+ },
+ "gibraltar": {
+  "query": "gibraltar",
+  "name": "Gibraltar",
+  "country": null,
+  "lat": 36.14474,
+  "lon": -5.35257
+ },
+ "new york": {
+  "query": "new york",
+  "name": "New York",
+  "country": "United States",
+  "lat": 40.71427,
+  "lon": -74.00597
+ },
+ "incheon": {
+  "query": "incheon",
+  "name": "Incheon",
+  "country": "South Korea",
+  "lat": 37.45646,
+  "lon": 126.70515
+ },
+ "dambulla": {
+  "query": "dambulla",
+  "name": "Dambulla",
+  "country": "Sri Lanka",
+  "lat": 7.86,
+  "lon": 80.65167
+ },
+ "malkerns": {
+  "query": "malkerns",
+  "name": "Malkerns",
+  "country": "Eswatini",
+  "lat": -26.52872,
+  "lon": 31.19193
+ },
+ "bristol": {
+  "query": "bristol",
+  "name": "Bristol",
+  "country": "United Kingdom",
+  "lat": 51.45523,
+  "lon": -2.59665
+ },
+ "hambantota": {
+  "query": "hambantota",
+  "name": "Hambantota",
+  "country": "Sri Lanka",
+  "lat": 6.1241,
+  "lon": 81.1185
+ },
+ "sylhet": {
+  "query": "sylhet",
+  "name": "Sylhet",
+  "country": "Bangladesh",
+  "lat": 24.89904,
+  "lon": 91.87198
+ },
+ "houston": {
+  "query": "houston",
+  "name": "Houston",
+  "country": "United States",
+  "lat": 29.76328,
+  "lon": -95.36327
+ },
+ "dallas": {
+  "query": "dallas",
+  "name": "Dallas",
+  "country": "United States",
+  "lat": 32.78306,
+  "lon": -96.80667
+ },
+ "port  soif": {
+  "query": "port  soif",
+  "name": "Guernsey",
+  "country": null,
+  "lat": 49.45853,
+  "lon": -2.5787
+ },
+ "sydney cricket ground": {
+  "query": "sydney cricket ground",
+  "name": "Sydney",
+  "country": "Australia",
+  "lat": -33.86785,
+  "lon": 151.20732
+ },
+ "trinidad": {
+  "query": "trinidad",
+  "name": "Trinidad",
+  "country": "Trinidad and Tobago",
+  "lat": 10.46114,
+  "lon": -61.25702
+ },
+ "chester-le-street": {
+  "query": "chester-le-street",
+  "name": "Chester-le-Street",
+  "country": "United Kingdom",
+  "lat": 54.85862,
+  "lon": -1.57408
+ },
+ "east london": {
+  "query": "east london",
+  "name": "East London",
+  "country": "South Africa",
+  "lat": -33.01529,
+  "lon": 27.91162
+ },
+ "napier": {
+  "query": "napier",
+  "name": "Napier City",
+  "country": "New Zealand",
+  "lat": -39.4926,
+  "lon": 176.91232
+ },
+ "deventer": {
+  "query": "deventer",
+  "name": "Deventer",
+  "country": "The Netherlands",
+  "lat": 52.255,
+  "lon": 6.16389
+ },
+ "adelaide": {
+  "query": "adelaide",
+  "name": "Adelaide",
+  "country": "Australia",
+  "lat": -34.92866,
+  "lon": 138.59863
+ },
+ "canberra": {
+  "query": "canberra",
+  "name": "Canberra",
+  "country": "Australia",
+  "lat": -35.28346,
+  "lon": 149.12807
+ },
+ "spinaceto": {
+  "query": "spinaceto",
+  "name": "Spinaceto",
+  "country": "Italy",
+  "lat": 41.77861,
+  "lon": 12.44236
+ },
+ "rome": {
+  "query": "rome",
+  "name": "Rome",
+  "country": "Italy",
+  "lat": 41.89193,
+  "lon": 12.51133
+ },
+ "kingstown": {
+  "query": "kingstown",
+  "name": "Kingstown",
+  "country": "Saint Vincent and the Grenadines",
+  "lat": 13.15527,
+  "lon": -61.22742
+ },
+ "apia": {
+  "query": "apia",
+  "name": "Apia",
+  "country": "Samoa",
+  "lat": -13.83333,
+  "lon": -171.76666
+ },
+ "latschach": {
+  "query": "latschach",
+  "name": "Latschach ober dem Faakersee",
+  "country": "Austria",
+  "lat": 46.55611,
+  "lon": 13.92889
+ },
+ "glasgow": {
+  "query": "glasgow",
+  "name": "Glasgow",
+  "country": "United Kingdom",
+  "lat": 55.86515,
+  "lon": -4.25763
+ },
+ "rotterdam": {
+  "query": "rotterdam",
+  "name": "Rotterdam",
+  "country": "The Netherlands",
+  "lat": 51.9225,
+  "lon": 4.47917
+ },
+ "kanpur": {
+  "query": "kanpur",
+  "name": "Kanpur",
+  "country": "India",
+  "lat": 26.46523,
+  "lon": 80.34975
+ },
+ "thiruvananthapuram": {
+  "query": "thiruvananthapuram",
+  "name": "Thiruvananthapuram",
+  "country": "India",
+  "lat": 8.4855,
+  "lon": 76.94924
+ },
+ "nelson": {
+  "query": "nelson",
+  "name": "Nelson",
+  "country": "New Zealand",
+  "lat": -41.27078,
+  "lon": 173.28404
+ },
+ "utrecht": {
+  "query": "utrecht",
+  "name": "Utrecht",
+  "country": "The Netherlands",
+  "lat": 52.09083,
+  "lon": 5.12222
+ },
+ "st peter port": {
+  "query": "st peter port",
+  "name": "St Peter Port",
+  "country": null,
+  "lat": 49.45981,
+  "lon": -2.53527
+ },
+ "bready": {
+  "query": "bready",
+  "name": "Bready",
+  "country": "United Kingdom",
+  "lat": 54.9154,
+  "lon": -7.41926
+ },
+ "dunedin": {
+  "query": "dunedin",
+  "name": "Dunedin",
+  "country": "New Zealand",
+  "lat": -45.87416,
+  "lon": 170.50362
+ },
+ "waterloo": {
+  "query": "waterloo",
+  "name": "Austin",
+  "country": "United States",
+  "lat": 30.26715,
+  "lon": -97.74306
+ },
+ "port vila": {
+  "query": "port vila",
+  "name": "Port Vila",
+  "country": "Vanuatu",
+  "lat": -17.73648,
+  "lon": 168.31366
+ },
+ "hangzhou": {
+  "query": "hangzhou",
+  "name": "Hangzhou",
+  "country": "China",
+  "lat": 30.29365,
+  "lon": 120.16142
+ },
+ "zagreb": {
+  "query": "zagreb",
+  "name": "Zagreb",
+  "country": "Croatia",
+  "lat": 45.81444,
+  "lon": 15.97798
+ },
+ "dar-es-salaam": {
+  "query": "dar-es-salaam",
+  "name": "Dar-es-Salaam",
+  "country": "Sierra Leone",
+  "lat": 9.73333,
+  "lon": -11.83333
+ },
+ "kochi": {
+  "query": "kochi",
+  "name": "Kochi",
+  "country": "India",
+  "lat": 9.93988,
+  "lon": 76.26022
+ },
+ "antigua": {
+  "query": "antigua",
+  "name": "Antigua",
+  "country": "Antigua and Barbuda",
+  "lat": 17.07607,
+  "lon": -61.79543
+ },
+ "bloemfontein": {
+  "query": "bloemfontein",
+  "name": "Bloemfontein",
+  "country": "South Africa",
+  "lat": -29.12107,
+  "lon": 26.214
+ },
+ "adelaide oval": {
+  "query": "adelaide oval",
+  "name": "Adelaide Oval",
+  "country": "Australia",
+  "lat": -34.91558,
+  "lon": 138.59619
+ },
+ "amstelveen": {
+  "query": "amstelveen",
+  "name": "Amstelveen",
+  "country": "The Netherlands",
+  "lat": 52.30083,
+  "lon": 4.86389
+ },
+ "khulna": {
+  "query": "khulna",
+  "name": "Khulna",
+  "country": "Bangladesh",
+  "lat": 22.80979,
+  "lon": 89.56439
+ },
+ "kampala": {
+  "query": "kampala",
+  "name": "Kampala",
+  "country": "Uganda",
+  "lat": 0.31628,
+  "lon": 32.58219
+ },
+ "walferdange": {
+  "query": "walferdange",
+  "name": "Walferdange",
+  "country": "Luxembourg",
+  "lat": 49.66321,
+  "lon": 6.13224
+ },
+ "belgrade": {
+  "query": "belgrade",
+  "name": "Belgrade",
+  "country": "Serbia",
+  "lat": 44.80401,
+  "lon": 20.46513
+ },
+ "dreux": {
+  "query": "dreux",
+  "name": "Dreux",
+  "country": "France",
+  "lat": 48.73649,
+  "lon": 1.36566
+ },
+ "panama city": {
+  "query": "panama city",
+  "name": "Panama City",
+  "country": "Panama",
+  "lat": 8.9936,
+  "lon": -79.51973
+ },
+ "tallinn": {
+  "query": "tallinn",
+  "name": "Tallinn",
+  "country": "Estonia",
+  "lat": 59.43696,
+  "lon": 24.75353
+ },
+ "naucalpan": {
+  "query": "naucalpan",
+  "name": "Naucalpan",
+  "country": "Mexico",
+  "lat": 19.47851,
+  "lon": -99.23963
+ },
+ "st kitts": {
+  "query": "st kitts",
+  "name": "St Kitts",
+  "country": "Australia",
+  "lat": -34.35174,
+  "lon": 139.08517
+ },
+ "guyana": {
+  "query": "guyana",
+  "name": "Guyana",
+  "country": "Guyana",
+  "lat": 5.0,
+  "lon": -59.0
+ },
+ "kimberley": {
+  "query": "kimberley",
+  "name": "Kimberley",
+  "country": "South Africa",
+  "lat": -28.73226,
+  "lon": 24.76232
+ },
+ "mombasa sports club ground": {
+  "query": "mombasa sports club ground",
+  "name": "Mombasa",
+  "country": "Kenya",
+  "lat": -4.05466,
+  "lon": 39.66359
+ },
+ "jamaica": {
+  "query": "jamaica",
+  "name": "Jamaica",
+  "country": "Jamaica",
+  "lat": 18.17717,
+  "lon": -77.37122
+ },
+ "sylhet stadium": {
+  "query": "sylhet stadium",
+  "name": "Sylhet",
+  "country": "Bangladesh",
+  "lat": 24.89904,
+  "lon": 91.87198
+ },
+ "moara vlasiei cricket ground": {
+  "query": "moara vlasiei cricket ground",
+  "name": "Moara",
+  "country": "Romania",
+  "lat": 44.83387,
+  "lon": 26.06839
+ },
+ "rawalpindi cricket stadium": {
+  "query": "rawalpindi cricket stadium",
+  "name": "Rawalpindi",
+  "country": "Pakistan",
+  "lat": 33.59733,
+  "lon": 73.0479
+ },
+ "ghent": {
+  "query": "ghent",
+  "name": "Ghent",
+  "country": "Belgium",
+  "lat": 51.05,
+  "lon": 3.71667
+ },
+ "geelong": {
+  "query": "geelong",
+  "name": "Geelong",
+  "country": "Australia",
+  "lat": -38.14711,
+  "lon": 144.36069
+ },
+ "st georges quilmes": {
+  "query": "st georges quilmes",
+  "name": "Buenos Aires",
+  "country": "Argentina",
+  "lat": -34.61315,
+  "lon": -58.37723
+ },
+ "guacima": {
+  "query": "guacima",
+  "name": "Gu\u00e1cima",
+  "country": "Costa Rica",
+  "lat": 9.9622,
+  "lon": -84.25479
+ },
+ "seropedica": {
+  "query": "seropedica",
+  "name": "Serop\u00e9dica",
+  "country": "Brazil",
+  "lat": -22.74389,
+  "lon": -43.7075
+ },
+ "zemst": {
+  "query": "zemst",
+  "name": "Zemst",
+  "country": "Belgium",
+  "lat": 50.98318,
+  "lon": 4.46079
+ },
+ "ishoj": {
+  "query": "ishoj",
+  "name": "Copenhagen",
+  "country": "Denmark",
+  "lat": 55.67594,
+  "lon": 12.56553
+ },
+ "nisshin": {
+  "query": "nisshin",
+  "name": "Nisshin",
+  "country": "Japan",
+  "lat": 35.13676,
+  "lon": 137.05238
+ },
+ "st vincent": {
+  "query": "st vincent",
+  "name": "St Vincent's Hamlet",
+  "country": "United Kingdom",
+  "lat": 51.62597,
+  "lon": 0.24324
+ },
+ "dominica": {
+  "query": "dominica",
+  "name": "Dominica",
+  "country": "Dominica",
+  "lat": 15.5,
+  "lon": -61.33333
+ },
+ "londonderry": {
+  "query": "londonderry",
+  "name": "Londonderry",
+  "country": "United Kingdom",
+  "lat": 54.9981,
+  "lon": -7.30934
+ },
+ "hong kong": {
+  "query": "hong kong",
+  "name": "Hong Kong",
+  "country": null,
+  "lat": 22.27832,
+  "lon": 114.17469
+ },
+ "townsville": {
+  "query": "townsville",
+  "name": "Townsville",
+  "country": "Australia",
+  "lat": -19.26639,
+  "lon": 146.8057
+ },
+ "fatullah": {
+  "query": "fatullah",
+  "name": "Fatullah",
+  "country": "Bangladesh",
+  "lat": 23.65,
+  "lon": 90.49
+ },
+ "potchefstroom": {
+  "query": "potchefstroom",
+  "name": "Potchefstroom",
+  "country": "South Africa",
+  "lat": -26.71667,
+  "lon": 27.1
+ },
+ "paarl": {
+  "query": "paarl",
+  "name": "Paarl",
+  "country": "South Africa",
+  "lat": -33.73378,
+  "lon": 18.97523
+ },
+ "roseau": {
+  "query": "roseau",
+  "name": "Roseau",
+  "country": "Dominica",
+  "lat": 15.30174,
+  "lon": -61.38808
+ },
+ "carrara": {
+  "query": "carrara",
+  "name": "Carrara",
+  "country": "Italy",
+  "lat": 44.07926,
+  "lon": 10.09789
+ },
+ "copenhagen": {
+  "query": "copenhagen",
+  "name": "Copenhagen",
+  "country": "Denmark",
+  "lat": 55.67594,
+  "lon": 12.56553
+ },
+ "gqeberha": {
+  "query": "gqeberha",
+  "name": "Port Elizabeth",
+  "country": "South Africa",
+  "lat": -33.96109,
+  "lon": 25.61494
+ },
+ "jinja": {
+  "query": "jinja",
+  "name": "Jinja",
+  "country": "Uganda",
+  "lat": 0.43902,
+  "lon": 33.20317
+ },
+ "st saviour": {
+  "query": "st saviour",
+  "name": "Saint Helier",
+  "country": null,
+  "lat": 49.18804,
+  "lon": -2.10491
+ },
+ "darwin": {
+  "query": "darwin",
+  "name": "Darwin",
+  "country": "Australia",
+  "lat": -12.46113,
+  "lon": 130.84184
+ },
+ "dharmasala": {
+  "query": "dharmasala",
+  "name": "Dharmas\u0101la",
+  "country": "India",
+  "lat": 11.84168,
+  "lon": 79.41687
+ },
+ "victoria": {
+  "query": "victoria",
+  "name": "Victoria",
+  "country": null,
+  "lat": 22.2875,
+  "lon": 114.14417
+ },
+ "taunton": {
+  "query": "taunton",
+  "name": "Taunton",
+  "country": "United Kingdom",
+  "lat": 51.01494,
+  "lon": -3.10293
+ },
+ "sylhet international cricket stadium": {
+  "query": "sylhet international cricket stadium",
+  "name": "Sylhet",
+  "country": "Bangladesh",
+  "lat": 24.89904,
+  "lon": 91.87198
+ },
+ "carrara oval": {
+  "query": "carrara oval",
+  "name": "Carrara",
+  "country": "Italy",
+  "lat": 44.07926,
+  "lon": 10.09789
+ },
+ "derry": {
+  "query": "derry",
+  "name": "Londonderry",
+  "country": "United Kingdom",
+  "lat": 54.9981,
+  "lon": -7.30934
+ },
+ "leeds": {
+  "query": "leeds",
+  "name": "Leeds",
+  "country": "United Kingdom",
+  "lat": 53.79648,
+  "lon": -1.54785
+ },
+ "queenstown": {
+  "query": "queenstown",
+  "name": "Queenstown",
+  "country": "South Africa",
+  "lat": -31.89756,
+  "lon": 26.87533
+ },
+ "gwalior": {
+  "query": "gwalior",
+  "name": "Gwalior",
+  "country": "India",
+  "lat": 26.22983,
+  "lon": 78.17337
+ },
+ "graz": {
+  "query": "graz",
+  "name": "Graz",
+  "country": "Austria",
+  "lat": 47.06733,
+  "lon": 15.44197
+ },
+ "koge": {
+  "query": "koge",
+  "name": "K\u014dge",
+  "country": "Japan",
+  "lat": 35.40995,
+  "lon": 134.25491
+ },
+ "cairns": {
+  "query": "cairns",
+  "name": "Cairns",
+  "country": "Australia",
+  "lat": -16.92366,
+  "lon": 145.76613
+ },
+ "oslo": {
+  "query": "oslo",
+  "name": "Oslo",
+  "country": "Norway",
+  "lat": 59.91273,
+  "lon": 10.74609
+ }
+}
