@@ -278,3 +278,66 @@ def test_scan_worker_fetches_off_thread_and_surfaces_errors():
         pass
     else:
         raise AssertionError("the stored error must be re-raised to scan()")
+
+
+def _state_with_cricbuzz_match(monkeypatch, texts, publisher=None):
+    """A LiveAutoState tracking one pre-start Cricbuzz match whose briefing text comes from `texts`."""
+    import types
+
+    state = run_live_auto.LiveAutoState(Path("."), publisher)
+    state.briefing_refresh_seconds = 0.0
+    session = types.SimpleNamespace(match_url="http://x", _seen_delivery_keys=set(), finished=False)
+    state.active_cricbuzz["1"] = session
+    monkeypatch.setattr(run_live_auto, "cricbuzz_briefing_text", lambda *a, **k: next(texts))
+    state._track_briefing("cricbuzz:1", "🏏 A vs B -- Match Briefing\nToss: not yet available\nA: 0/15 confirmed XI\nB: 0/15 confirmed XI", "A vs B")
+    return state, session
+
+
+def _drain(state, rounds=40):
+    import time as _t
+
+    for _ in range(rounds):
+        state.refresh_briefings()
+        if not state._briefing_running and state._briefing_results.empty():
+            break
+        _t.sleep(0.02)
+
+
+def test_briefing_signature_tracks_only_toss_and_xi_readiness():
+    sig = run_live_auto.briefing_signature
+    waiting = "Toss: not yet available\nA: 0/15 confirmed XI\nB: 0/15 confirmed XI\nWin %: A 60% | B 40%"
+    assert sig(waiting) == ("Toss: not yet available", False)
+    assert sig(waiting.replace("60%", "61%")) == sig(waiting)  # a moved percentage is not an update
+    assert sig("Toss: A won, chose to bowl\nA: 11/15 confirmed XI\nB: 5/15 confirmed XI") == ("Toss: A won, chose to bowl", False)
+    assert sig("Toss: A won, chose to bowl\nA: 11/15 confirmed XI\nB: 11/15 confirmed XI")[1] is True
+
+
+def test_briefing_is_resent_when_toss_then_xis_arrive_and_not_otherwise(monkeypatch, capsys):
+    base = "🏏 A vs B -- Match Briefing\n{toss}\nA: {a}/15 confirmed XI\nB: {b}/15 confirmed XI"
+    texts = iter([
+        base.format(toss="Toss: not yet available", a=0, b=0),      # unchanged -> nothing
+        base.format(toss="Toss: A won, chose to bowl", a=0, b=0),   # toss -> resend
+        base.format(toss="Toss: A won, chose to bowl", a=7, b=0),   # partial XI -> nothing
+        base.format(toss="Toss: A won, chose to bowl", a=11, b=11), # XIs -> resend, then stop
+    ])
+
+    class Pub:
+        def __init__(self): self.sent = []
+        def publish(self, key, text): self.sent.append((key, text))
+
+    pub = Pub()
+    state, _ = _state_with_cricbuzz_match(monkeypatch, texts, pub)
+    for _ in range(4):
+        _drain(state)
+    assert len(pub.sent) == 2
+    assert "toss now known" in pub.sent[0][1] and "playing XIs confirmed" in pub.sent[1][1]
+    assert pub.sent[0][0] != pub.sent[1][0]  # distinct keys, so Telegram's de-duplication lets both through
+    assert "cricbuzz:1" not in state._briefings  # complete -> no more fetching
+
+
+def test_briefing_refresh_stops_once_the_match_has_started(monkeypatch):
+    texts = iter(["Toss: A won, chose to bowl\nA: 11/15 confirmed XI\nB: 11/15 confirmed XI"] * 5)
+    state, session = _state_with_cricbuzz_match(monkeypatch, texts)
+    session._seen_delivery_keys.add((1, 1, 1))
+    _drain(state)
+    assert "cricbuzz:1" not in state._briefings

@@ -522,3 +522,12 @@ to the dew model, then the base model. Honest label in the text: gain proven acr
 Limits: expected overs per bowler come from past balls-per-appearance (no knowledge of tonight's bowling plan); bowler styles
 only ~80% covered; debutants neutral; the pitch tilt is mild (matchup with/without tilt correlates 0.986); briefing is still
 one-shot (re-send when XIs arrive is not built).
+
+## DONE 2026-10-09 (last): briefing re-sends when the toss and XIs arrive
+`run_live_auto.py`: every attached pre-start match is re-checked every 60 s in a background thread (never blocks polling).
+The briefing is re-sent only when its signature changes -- the "Toss:" line, or both teams reaching >= 9 confirmed players --
+so a moved percentage or a partial XI never triggers a message (max about 2 updates per match). Header says what changed
+("toss now known", "playing XIs confirmed"); each update has its own Telegram key so de-duplication lets it through.
+Stops once the first ball is bowled, once the toss is known and both XIs are confirmed, or after 8 h. Works for the Cricbuzz
+path and the TOI backup path. Known gap: if the first briefing failed to fetch, the first successful one goes out labelled
+"Updated briefing -- details changed". Restart the driver to load it (shadow mode prints the updates).

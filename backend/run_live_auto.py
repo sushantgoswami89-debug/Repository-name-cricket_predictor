@@ -36,7 +36,10 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import queue
+import re
 import threading
 import time
 from pathlib import Path
@@ -76,6 +79,31 @@ def _team_pair(label: str) -> frozenset[str] | None:
     return frozenset(parts)
 
 
+BRIEFING_REFRESH_SECONDS = 60.0
+BRIEFING_REFRESH_MAX_HOURS = 8.0
+
+
+def briefing_signature(text: str) -> tuple[str, bool]:
+    """What matters in a briefing: the Toss line and whether both XIs are confirmed.
+    The briefing is re-sent only when this changes (toss announced, XIs confirmed),
+    not on every wording or number change, so it cannot spam."""
+    toss = next((line for line in text.splitlines() if line.startswith("Toss:")), "")
+    counts = [int(m.group(1)) for m in re.finditer(r"(\d+)/\d+ confirmed XI", text)]
+    return toss, len(counts) == 2 and all(count >= 9 for count in counts)
+
+
+def _briefing_update_header(old: tuple[str, bool], new: tuple[str, bool]) -> str:
+    toss_known = lambda sig: bool(sig[0]) and "not yet available" not in sig[0]
+    changes = []
+    if toss_known(new) and not toss_known(old):
+        changes.append("toss now known")
+    elif toss_known(new) and new[0] != old[0]:
+        changes.append("toss updated")
+    if new[1] and not old[1]:
+        changes.append("playing XIs confirmed")
+    return "🔄 Updated briefing -- " + " and ".join(changes or ["details changed"])
+
+
 class LiveAutoState:
     """Active sessions from both sources, plus which team-pairs are
     already covered -- extracted from main()'s loop body so the scan/
@@ -108,6 +136,13 @@ class LiveAutoState:
         # team-pair -> which source currently owns it, so the backup scan
         # never double-attaches a match the primary already claimed.
         self.covered_pairs: dict[frozenset[str], str] = {}
+        # Briefing refresh (toss / XIs arrive after the first briefing). Keyed
+        # "cricbuzz:<id>" / "toi:<id>" -> [last signature, next check time, give-up time].
+        self._briefings: dict[str, list] = {}
+        self._briefing_results: queue.Queue = queue.Queue()
+        self._briefing_running: set[str] = set()
+        self._toi_started: set[str] = set()
+        self.briefing_refresh_seconds = BRIEFING_REFRESH_SECONDS
 
     def scan(self, cricbuzz_discovery: CricbuzzMatchDiscovery, toi_discovery: ToiMatchDiscovery) -> None:
         # 1. Cricbuzz scan -- primary, always gets first claim.
@@ -150,6 +185,7 @@ class LiveAutoState:
                 print(briefing)
                 if self.publisher is not None:
                     self.publisher.publish(f"briefing:cricbuzz:{match.match_id}", briefing)
+            self._track_briefing(f"cricbuzz:{match.match_id}", briefing, match.label)
         for match_id in set(self.active_cricbuzz) - cricbuzz_live_ids:
             del self.active_cricbuzz[match_id]
             print(f"[cricbuzz] No longer live, detaching: {match_id}")
@@ -202,6 +238,7 @@ class LiveAutoState:
                 print(briefing)
                 if self.publisher is not None:
                     self.publisher.publish(f"briefing:toi:{match.match_id}", briefing)
+            self._track_briefing(f"toi:{match.match_id}", briefing, match.label)
         for match_id in set(self.active_toi) - toi_live_ids:
             del self.active_toi[match_id]
             print(f"[toi] No longer live, detaching: {match_id}")
@@ -216,6 +253,76 @@ class LiveAutoState:
 
         if not cricbuzz_matches and not toi_matches:
             print("No live T20I on either source right now; continuing to watch.")
+
+    # -- briefing refresh -------------------------------------------------
+    def _track_briefing(self, key: str, briefing: str | None, label: str = "") -> None:
+        """Start watching a match's briefing for the toss / XIs, unless it is already complete."""
+        signature = briefing_signature(briefing) if briefing else ("Toss: not yet available", False)
+        done = bool(briefing) and "not yet available" not in signature[0] and signature[1]
+        if done:
+            self._briefings.pop(key, None)
+            return
+        self._briefings[key] = [
+            signature,
+            time.monotonic() + self.briefing_refresh_seconds,
+            time.monotonic() + BRIEFING_REFRESH_MAX_HOURS * 3600,
+            label,
+        ]
+
+    def _match_started(self, key: str) -> bool:
+        source, _, match_id = key.partition(":")
+        if source == "cricbuzz":
+            session = self.active_cricbuzz.get(match_id)
+            return session is None or bool(session._seen_delivery_keys) or session.finished
+        return match_id in self._toi_started or match_id not in self.active_toi
+
+    def _build_briefing(self, key: str) -> None:
+        """Runs in a worker thread: one fetch, result queued for the main thread."""
+        try:
+            source, _, match_id = key.partition(":")
+            label = self._briefings.get(key, [None, 0, 0, match_id])[3]
+            if source == "cricbuzz":
+                session = self.active_cricbuzz.get(match_id)
+                text = cricbuzz_briefing_text(match_id, session.match_url, label) if session else None
+            else:
+                entry = self.active_toi.get(match_id)
+                text = toi_briefing_text(entry[1], match_id, label) if entry else None
+        except Exception:
+            text = None
+        self._briefing_results.put((key, text))
+
+    def refresh_briefings(self) -> None:
+        """Call every loop: start due refreshes in the background, then apply finished ones
+        (print + publish a new briefing when the toss or the XI status changed)."""
+        now = time.monotonic()
+        for key, (signature, next_check, give_up, _label) in list(self._briefings.items()):
+            if now > give_up or self._match_started(key):
+                del self._briefings[key]
+            elif now >= next_check and key not in self._briefing_running:
+                self._briefing_running.add(key)
+                self._briefings[key][1] = now + self.briefing_refresh_seconds
+                threading.Thread(target=self._build_briefing, args=(key,), daemon=True).start()
+        while True:
+            try:
+                key, text = self._briefing_results.get_nowait()
+            except queue.Empty:
+                break
+            self._briefing_running.discard(key)
+            entry = self._briefings.get(key)
+            if not text or entry is None or self._match_started(key):
+                continue
+            new_signature = briefing_signature(text)
+            if new_signature == entry[0]:
+                continue
+            message = f"{_briefing_update_header(entry[0], new_signature)}\n{text}"
+            entry[0] = new_signature
+            print(message)
+            if self.publisher is not None:
+                tag = hashlib.md5(repr(new_signature).encode()).hexdigest()[:8]
+                source, _, match_id = key.partition(":")
+                self.publisher.publish(f"briefing:{source}:{match_id}:{tag}", message)
+            if "not yet available" not in new_signature[0] and new_signature[1]:
+                del self._briefings[key]  # toss known and XIs confirmed: nothing left to wait for
 
     def poll(self) -> None:
         for match_id, session in tuple(self.active_cricbuzz.items()):
@@ -235,6 +342,8 @@ class LiveAutoState:
                 print(f"[toi] Deferred {match_id}: {error}")
                 self._check_toi_stuck(match_id, error)
                 continue
+            if snapshot.deliveries:
+                self._toi_started.add(match_id)
             append_commentary_log(
                 self.project_root / "data" / "live" / f"commentary-{match_id}.jsonl",
                 match_id,
@@ -377,6 +486,7 @@ def main() -> None:
             state.scan(fetched[0], fetched[1])
 
         state.poll()
+        state.refresh_briefings()
         time.sleep(max(1.0, args.poll_seconds))
 
 
