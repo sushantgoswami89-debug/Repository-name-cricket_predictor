@@ -52,7 +52,7 @@ def test_estimate_block_is_win_percent_then_form():
     assert lines[1].startswith("Form (last 5): India ") and "| West Indies " in lines[1]
     import re
 
-    assert re.fullmatch(r"Head to head: India \d-\d in last 5 \([WL]{5}\), \d+-\d+ overall \(\d+ matches\)", lines[2]), lines[2]
+    assert re.fullmatch(r"Head to head: India - \d vs WI - \d in last 5 matches", lines[2]), lines[2]
     assert "(pre-toss)" in prematch_text("India", "West Indies", "Ekana Cricket Stadium, Lucknow")
 
 

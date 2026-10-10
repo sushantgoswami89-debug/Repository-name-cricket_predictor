@@ -60,6 +60,16 @@ def _all_rows() -> tuple[dict, ...]:
     return tuple(rows)
 
 
+_SHORT_TEAMS = {
+    "West Indies": "WI", "South Africa": "SA", "New Zealand": "NZ", "Sri Lanka": "SL",
+    "United Arab Emirates": "UAE", "United States of America": "USA", "Papua New Guinea": "PNG",
+}
+
+
+def _short_team(name: str) -> str:
+    return _SHORT_TEAMS.get(name, name)
+
+
 def _pct(part: int, whole: int) -> str:
     return f"{part / whole * 100:.0f}%" if whole else "n/a"
 
@@ -430,15 +440,12 @@ def prematch_text(
         return None
 
     h2h = [r for r in rows if r["teams"] == {a, b} and r["winner"]]
-    # Head to head, from the first-named team's side, oldest to newest like the Form line:
-    # "Head to head: India 3-2 in last 5 (WLWWL), 20-10 overall (30 matches)".
+    # Head to head over the last 5 decided meetings: "Head to head: India - 3 vs WI - 2 in last 5 matches".
     if h2h:
-        wins_a = sum(r["winner"] == a for r in h2h)
         last5 = h2h[-5:]
         h2h_text = (
-            f"Head to head: {a} {sum(r['winner'] == a for r in last5)}-{sum(r['winner'] == b for r in last5)} "
-            f"in last {len(last5)} ({''.join('W' if r['winner'] == a else 'L' for r in last5)}), "
-            f"{wins_a}-{len(h2h) - wins_a} overall ({len(h2h)} matches)"
+            f"Head to head: {_short_team(a)} - {sum(r['winner'] == a for r in last5)} vs "
+            f"{_short_team(b)} - {sum(r['winner'] == b for r in last5)} in last {len(last5)} matches"
         )
     else:
         h2h_text = "Head to head: no previous men's T20I meetings"
