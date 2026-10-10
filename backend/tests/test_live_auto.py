@@ -347,15 +347,17 @@ def test_briefing_refresh_stops_once_the_match_has_started(monkeypatch):
 def test_full_lineup_status_line_and_signature():
     import types
 
-    from app.live.prematch_analysis import xi_line
+    from app.live.prematch_analysis import xi_line, xi_names
 
     def players(n):
         return [types.SimpleNamespace(confirm_xi=i < n, name=f"P{i}", position=i + 1) for i in range(15)]
 
     full = xi_line({"India": players(11), "West Indies": players(11)})
-    assert full.splitlines()[0] == "XIs: ✅ FULL LINE-UPS CONFIRMED (India 11, West Indies 11)"
-    assert full.splitlines()[1] == "India: " + ", ".join(f"P{i}" for i in range(11))  # names, batting order, bench excluded
-    assert len(full.splitlines()) == 3
+    assert full == "XIs: ✅ FULL LINE-UPS CONFIRMED (India 11, West Indies 11)"  # status only, one line
+    names = xi_names({"India": players(11), "West Indies": players(11)})
+    assert names[0] == "India: " + ", ".join(f"P{i}" for i in range(11))  # batting order, bench excluded
+    assert len(names) == 2
+    assert xi_names({"India": players(11), "West Indies": players(10)}) == []  # names only for full line-ups
     assert xi_line({"India": players(11), "West Indies": players(7)}) == "XIs: partly announced -- India 11 | West Indies 7 confirmed"
     assert xi_line({"India": players(0), "West Indies": players(0)}) == "XIs: not announced yet"
     sig = run_live_auto.briefing_signature

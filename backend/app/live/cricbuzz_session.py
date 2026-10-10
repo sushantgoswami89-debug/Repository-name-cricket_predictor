@@ -31,7 +31,7 @@ from app.live.cricbuzz_reader import (
     CricbuzzLiveReader,
     _extract_flight_chunks,
 )
-from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line
+from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
 from app.live.pipeline import (
     MatchStateAnomaly,
     PredictionPublisher,
@@ -484,6 +484,10 @@ def briefing_text(match_id: str, match_url: str, label: str) -> str | None:
         if analysis:
             lines.append("")
             lines.append(analysis)
+    names = xi_names(team_players)
+    if names:
+        lines.append("")
+        lines.extend(names)
     return "\n".join(lines)
 
 

@@ -13,7 +13,7 @@ import requests
 
 from app.live.commentary_log import append_commentary_log
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
-from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line
+from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery, is_t20_international
 from app.live.toi_reader import ToiFeedError, ToiLiveReader
@@ -72,6 +72,10 @@ def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | No
         if analysis:
             lines.append("")
             lines.append(analysis)
+    names = xi_names(team_players)
+    if names:
+        lines.append("")
+        lines.extend(names)
     return "\n".join(lines)
 
 
