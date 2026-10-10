@@ -66,7 +66,7 @@ def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | No
     if len(team_names) == 2:
         analysis = prematch_text(
             team_names[0], team_names[1], ToiLiveReader._venue_name(raw), toss_won_by, toss_decision,
-            confirmed_xi(team_players),
+            confirmed_xi(team_players), log_context={"match_id": f"toi:{match_id}", "source": "toi"},
         )
         if analysis:
             lines.append("")

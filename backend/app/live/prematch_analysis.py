@@ -386,7 +386,10 @@ def _weather_line(day: dict | None) -> str:
     return "Weather: " + ", ".join(parts)
 
 
-def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dict | None, h2h_text: str, form_text: str) -> list[str]:
+def _compact_block(
+    team_a: str, team_b: str, venue: str, bat_first: str, xi: dict | None, h2h_text: str, form_text: str,
+    log_context: dict | None = None,
+) -> list[str]:
     """The pre-match section, three lines: the win % (with its stage), the last-5 form and the head to head.
     One staged model produces the number (pre-toss -> after toss -> with XIs); each stage adds a block
     on top of the same base, so the figure only moves because new information arrived."""
@@ -428,6 +431,20 @@ def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dic
     if p_nr > 0:
         win_line += f" | No result {pct[2]}%"
     lines = [f"{win_line} ({label})"]
+    if log_context and log_context.get("match_id"):
+        from app.live.prematch_log import log_prediction
+
+        log_prediction(str(log_context["match_id"]), {
+            "source": log_context.get("source"), "team_a": team_a, "team_b": team_b, "city": city,
+            "stage": result["stage"], "dew_known": result["dew_known"], "bat_first": bat_first or None,
+            "p_a": round(shares[0], 4), "p_b": round(shares[1], 4), "p_nr": round(shares[2], 4),
+            "pct_a": pct[0], "pct_b": pct[1], "pct_nr": pct[2],
+            "p_base": round(result["p_base"], 4), "dew_shift": round(result["dew_shift"], 4),
+            "quality_shift": round(result.get("quality_shift", 0.0), 4),
+            "matchup_shift": round(result.get("matchup_shift", 0.0), 4),
+            "rain_interrupted": round(risk["p_interrupted"], 4) if risk else None,
+            "model_through": result.get("model_through"),
+        })
     if form_text:
         lines.append(form_text)
     if h2h_text:
@@ -442,6 +459,7 @@ def prematch_text(
     toss_won_by: str = "",
     toss_decision: str = "",
     xi: dict | None = None,
+    log_context: dict | None = None,
 ) -> str | None:
     """Compact pre-match section (about 6 lines): win %, why, form, dew, ground."""
     try:
@@ -470,7 +488,7 @@ def prematch_text(
     form_text = "Form (last 5): " + " | ".join(forms)
 
     try:
-        lines = _compact_block(a, b, venue, _bat_first_team(a, b, toss_won_by, toss_decision), xi, h2h_text, form_text)
+        lines = _compact_block(a, b, venue, _bat_first_team(a, b, toss_won_by, toss_decision), xi, h2h_text, form_text, log_context)
     except Exception:
         lines = []
     if not lines:

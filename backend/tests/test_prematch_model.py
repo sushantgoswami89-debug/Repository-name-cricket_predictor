@@ -281,3 +281,46 @@ def test_win_percent_gets_a_no_result_share_when_rain_threatens(monkeypatch):
     line = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl").splitlines()[0]
     assert "No result" not in line and sum(int(x) for x in re.findall(r"(\d+)%", line)[:2]) == 100  # dry day: plain two-way split
     assert "rain risk" in prematch_analysis._weather_line(wet)
+
+
+def test_prematch_log_records_changes_only_and_scores_against_results(tmp_path):
+    from app.live import prematch_log as log
+
+    preds, results = tmp_path / "p.jsonl", tmp_path / "r.jsonl"
+    base = {"source": "cricbuzz", "team_a": "India", "team_b": "West Indies", "city": "ranchi",
+            "pct_nr": 0, "p_nr": 0.0}
+    pre = {**base, "stage": "pre-toss", "pct_a": 70, "pct_b": 30, "p_a": 0.70, "p_b": 0.30}
+    toss = {**base, "stage": "after toss", "pct_a": 64, "pct_b": 36, "p_a": 0.64, "p_b": 0.36}
+    assert log.log_prediction("cricbuzz:1", pre, preds) is True
+    assert log.log_prediction("cricbuzz:1", pre, preds) is False      # unchanged -> not logged again
+    assert log.log_prediction("cricbuzz:1", toss, preds) is True      # new stage and numbers
+    assert log.log_prediction("cricbuzz:1", toss, preds) is False
+    assert len(preds.read_text().splitlines()) == 2
+
+    assert log.record_result("cricbuzz:1", "West Indies", "West Indies won", results) is True
+    assert log.record_result("cricbuzz:1", "India", "again", results) is False   # a match is recorded once
+    s = log.score(preds, results)
+    assert s["results"] == 1 and s["matches_logged"] == 1
+    assert s["by_stage"]["pre-toss"]["right"] == 0 and s["by_stage"]["after toss"]["right"] == 0   # India favoured, WI won
+    assert s["by_stage"]["pre-toss"]["brier"] == pytest.approx(0.70**2)         # (0.70 - 0)^2
+    assert s["by_stage"]["after toss"]["brier"] == pytest.approx(0.64**2)
+
+    log.log_prediction("cricbuzz:2", {**pre, "team_a": "A", "team_b": "B", "p_a": 0.6, "p_b": 0.4, "pct_a": 60, "pct_b": 40}, preds)
+    log.record_result("cricbuzz:2", None, "no result", results)                  # washed out: counted apart, not scored
+    assert log.score(preds, results)["no_result"] == 1
+
+
+def test_briefing_logs_the_prediction_when_given_a_match_id(tmp_path, monkeypatch):
+    from app.live import prematch_log
+
+    monkeypatch.setattr(prematch_log, "LOG_PATH", tmp_path / "p.jsonl")
+    prematch_log._LAST.clear()
+    prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl",
+                  log_context={"match_id": "cricbuzz:9", "source": "cricbuzz"})
+    import json
+
+    rec = json.loads((tmp_path / "p.jsonl").read_text().splitlines()[0])
+    assert rec["match_id"] == "cricbuzz:9" and rec["stage"] == "after toss" and rec["team_a"] == "India"
+    assert rec["pct_a"] + rec["pct_b"] + rec["pct_nr"] == 100
+    assert prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl") is not None
+    assert len((tmp_path / "p.jsonl").read_text().splitlines()) == 1  # no match_id -> nothing logged

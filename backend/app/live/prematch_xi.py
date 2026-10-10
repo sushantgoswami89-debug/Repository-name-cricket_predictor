@@ -447,7 +447,8 @@ def predict_stages(team_a, team_b, bat_first, weather_day, xi_a, xi_b, venue_cit
     from app.live.prematch_model import sigmoid
 
     try:
-        saved = json.loads(STAGES_PATH.read_text(encoding="utf-8"))["blocks"]
+        stages_file = json.loads(STAGES_PATH.read_text(encoding="utf-8"))
+        saved = stages_file["blocks"]
     except (OSError, ValueError, KeyError):
         return None
     book, cond, registry, cache = current_xi_state()
@@ -467,7 +468,8 @@ def predict_stages(team_a, team_b, bat_first, weather_day, xi_a, xi_b, venue_cit
 
     z_base = block_logit("base", values)
     z = z_base
-    out = {"stage": "pre-toss", "dew_known": False, "matched": None, "mix": None}
+    out = {"stage": "pre-toss", "dew_known": False, "matched": None, "mix": None,
+           "model_through": stages_file.get("trained_through")}
     z_dew = z_base
     if sign:
         out["stage"] = "after toss"

@@ -648,3 +648,14 @@ matches: -11.6 and -8.6 runs) -- so dew does not inflate totals in this data (co
 250-run game was an outlier.
 Open: show the dew effect in points on the Dew line; log each pre-match win % (by stage) with the result so the pre-match numbers are
 scored on live matches (notes item 7 from 10-06, still not built).
+
+## 2026-10-10: every pre-match win % is now logged and scored (closes notes item 7 from 10-06)
+`app/live/prematch_log.py`: `data/live/prematch-predictions.jsonl` (one line whenever the stage or the printed numbers change:
+stage, p_a/p_b/p_nr, base/dew/quality/matchup components, rain risk, model version) and `data/live/prematch-results.jsonl`
+(winner recorded by the Cricbuzz session when the chase ends; ids are "cricbuzz:<id>" / "toi:<id>"). `python score_prematch_log.py`
+joins them: right/wrong and Brier per stage, using the last prediction at each stage. TOI-only matches are logged but their results
+are not recorded yet (no finish detection on that path). Data lives under data/live/ (git-ignored). Tests are isolated from the real
+log by tests/conftest.py.
+Backfilled with the numbers the driver printed on 10-09 (flagged `backfilled`, earlier model version): India v West Indies "with XIs"
+India 66% -> West Indies won (reported by the user); Pakistan v Sri Lanka "after toss" Pakistan 73% -> Pakistan won.
+Live record so far: 1/2 picks right; far too few to say anything. Backtest to compare against: ~68% all, ~64% full members.

@@ -97,6 +97,17 @@ def _match_result_text(snapshot) -> str | None:
     return None
 
 
+def _match_winner(snapshot) -> str | None:
+    """The winning team once the match is decided, else None (mirrors _match_result_text)."""
+    if snapshot.innings < 2:
+        return None
+    if snapshot.target > 0 and snapshot.score >= snapshot.target:
+        return snapshot.batting_team
+    if snapshot.innings_complete:
+        return snapshot.bowling_team
+    return None
+
+
 _RUN_OUT_NAME = re.compile(r"([A-Z][\w.'-]*(?:\s+[A-Z][\w.'-]*)*)\s+[Rr]un\s+[Oo]ut")
 
 
@@ -479,7 +490,10 @@ def briefing_text(match_id: str, match_url: str, label: str) -> str | None:
             print(f"[briefing] header unavailable: {error!r}")
     lines.append(toss_line(toss_won_by, toss_decision, teams[0] if len(teams) == 2 else "", teams[1] if len(teams) == 2 else ""))
     if len(teams) == 2:
-        analysis = prematch_text(teams[0], teams[1], venue or "", toss_won_by, toss_decision, confirmed_xi(team_players))
+        analysis = prematch_text(
+            teams[0], teams[1], venue or "", toss_won_by, toss_decision, confirmed_xi(team_players),
+            log_context={"match_id": f"cricbuzz:{match_id}", "source": "cricbuzz"},
+        )
         if analysis:
             lines.append("")
             lines.append(analysis)
@@ -713,6 +727,9 @@ class CricbuzzMatchSession:
 
         result = _match_result_text(snapshot)
         if result:
+            from app.live.prematch_log import record_result
+
+            record_result(f"cricbuzz:{self.match_id}", _match_winner(snapshot), result)  # lets the pre-match log be scored
             print(f"[{self.match_id}] MATCH COMPLETE: {result}")
             if self.publisher is not None:
                 self.publisher.publish(f"result:{self.match_id}", f"🏆 {result}")
