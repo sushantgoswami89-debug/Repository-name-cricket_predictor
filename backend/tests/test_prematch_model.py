@@ -173,13 +173,12 @@ def test_dew_line_uses_the_real_start_time_when_known():
     assert "start time assumed" not in known and "mid-chase" in known
 
 
-def test_ground_summary_is_one_t20_stats_line():
+def test_ground_summary_matches_the_requested_format():
+    import re
+
     from app.live.prematch_analysis import venue_summary
 
     text = venue_summary("ranchi")
-    assert "\n" not in text
-    assert text.startswith("T20 Stats - 11 matches (T20I 4 + IPL 7): avg score ")
-    for part in ("1st inns avg ", "avg wkts ", "/inns", "most wkts by one bowler: pace ", " / spin "):
-        assert part in text
-    assert "All T20" not in text
-    assert venue_summary("nowhere-ville") == "T20 Stats - no T20I or IPL history here"
+    assert re.fullmatch(r"T20 - 11 avg score \d+, 1st inns avg \d+, avg wkts - \d+, pace - \d+/spin - \d+", text), text
+    assert venue_summary("nowhere-ville") == "T20 - no history here"
+    assert venue_summary("rawalpindi").endswith("spin - " + venue_summary("rawalpindi").rsplit("- ", 1)[1])  # no small-sample tag at 13 matches

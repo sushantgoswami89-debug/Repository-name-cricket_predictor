@@ -202,7 +202,7 @@ def test_briefing_text_uses_page_teams_as_label(monkeypatch):
     assert "Toss: Zimbabwe won, chose to bowl -> Australia bat first" in text
     assert "-- Harare | " in text.splitlines()[0]
     # the header must really be there: briefing_text swallows header errors, so a bug would be silent
-    assert "Harare | " in text.splitlines()[0] and "T20 Stats - " in text.splitlines()[0]
+    assert "Harare | " in text.splitlines()[0] and "| T20 - " in text.splitlines()[0]
     assert text.splitlines()[1].startswith("Weather:")
     assert any(line.startswith("Pitch:") for line in text.splitlines())
 

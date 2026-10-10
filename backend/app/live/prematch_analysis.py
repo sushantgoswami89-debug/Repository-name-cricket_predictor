@@ -151,25 +151,21 @@ def _ground_record(city: str) -> dict:
 
 
 def venue_summary(city: str) -> str:
-    """The title-line ground record, compiled over every T20I and IPL match at the ground:
-    "T20 Stats - 11 matches (T20I 4 + IPL 7): avg score 148, 1st inns avg 153, avg wkts 7.1/inns,
-    most wkts by one bowler: pace 5 / spin 4".
-    Bowlers without a known style are not counted in the pace/spin maxima."""
+    """The title-line ground record, pooled over every T20I and IPL match at the ground, in the
+    format the user specified: "T20 - 11 avg score 145, 1st inns avg 153, avg wkts - 6, pace - 3/spin - 4"
+    (11 = matches; pace / spin = most wickets by one bowler of that kind in a match; bowlers without
+    a known style are not counted in those two)."""
     record = _ground_record(city)
     total = record.get("all")
     if not total:
-        return "T20 Stats - no T20I or IPL history here"
+        return "T20 - no history here"
 
-    def mean(values, digits=0):
-        return f"{sum(values) / len(values):.{digits}f}" if values else "n/a"
+    def mean(values):
+        return f"{sum(values) / len(values):.0f}" if values else "n/a"
 
-    mix = " + ".join(
-        f"{label} {record[key]['n']}" for key, label in (("t20i", "T20I"), ("ipl", "IPL")) if record.get(key)
-    )
     text = (
-        f"T20 Stats - {total['n']} matches ({mix}): avg score {mean(total['all_totals'])}, "
-        f"1st inns avg {mean(total['totals'])}, avg wkts {mean(total['wkts'], 1)}/inns, "
-        f"most wkts by one bowler: pace {total['best_pace']} / spin {total['best_spin']}"
+        f"T20 - {total['n']} avg score {mean(total['all_totals'])}, 1st inns avg {mean(total['totals'])}, "
+        f"avg wkts - {mean(total['wkts'])}, pace - {total['best_pace']}/spin - {total['best_spin']}"
     )
     if total["n"] < 10:
         text += " [small sample]"
