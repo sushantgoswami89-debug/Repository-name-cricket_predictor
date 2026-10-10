@@ -498,7 +498,10 @@ class CricbuzzLiveReader:
             obj for obj in raw_objects if _int_field(obj, "inningsId", 1) == current_innings
         ]
 
-        deliveries = self._build_deliveries(scope, current_innings_objects)
+        board = self._board_from_chunks(chunks)
+        deliveries = self._build_deliveries(
+            scope, current_innings_objects, board=board, require_baseline=True
+        )
         # Empty is a legitimate outcome here, not a failure: it means this
         # poll landed exactly at an over-checkpoint boundary with nothing
         # newer yet (or, on a first-ever poll, the window's newest item
@@ -588,7 +591,7 @@ class CricbuzzLiveReader:
             venue_name=self._venue_from_chunks(chunks, match_id),
             toss_won_by=toss_won_by,
             toss_decision=toss_decision,
-            board=self._board_from_chunks(chunks),
+            board=board,
             raw_html=html,
         )
 
@@ -768,8 +771,54 @@ class CricbuzzLiveReader:
         match = re.match(r"(\d+)-(\d+)", str(checkpoint_score))
         return (int(match.group(1)), int(match.group(2))) if match else None
 
+    def _baseline_from_board(
+        self, ordered: list[dict[str, Any]], board: dict | None, innings: int
+    ) -> tuple[int, int] | None:
+        """Score/wickets BEFORE the first ball of this window, taken from the page's
+        live board when we attach mid-innings with no over-checkpoint in the window.
+
+        Only used when the board is demonstrably at the same point as the window:
+        same innings and the same over.ball as the newest delivery (Cricbuzz serves
+        cached copies of different ages, so an older board must not be trusted).
+        Field test 2026-10-09: two matches attached mid-innings with no checkpoint
+        started from 0 and ran ~100 runs behind the board for the whole innings."""
+        if not board or board.get("score") is None or board.get("overs") is None:
+            return None
+        if board.get("innings") not in (None, innings):
+            return None
+        balls = [o for o in ordered if isinstance(o.get("ballMetric"), (int, float))]
+        if not balls:
+            return None
+        latest = max(balls, key=lambda o: o.get("timestamp", 0))
+        over_index = int(latest["ballMetric"])
+        in_over = [o for o in balls if int(o["ballMetric"]) == over_index]
+        legal_in_over = 0
+        for o in in_over:
+            total, _bat, extras = _runs_and_extras(o.get("commText", ""), [str(e) for e in o.get("event", [])])
+            if "wides" not in extras and "noballs" not in extras:
+                legal_in_over += 1
+        ours = over_index + 1.0 if legal_in_over >= 6 else over_index + min(legal_in_over, 5) / 10.0
+        try:
+            if abs(float(board["overs"]) - ours) > 0.001:
+                return None
+        except (TypeError, ValueError):
+            return None
+        window_runs = window_wickets = 0
+        for o in balls:
+            events = [str(e) for e in o.get("event", [])]
+            total, _bat, _extras = _runs_and_extras(o.get("commText", ""), events)
+            window_runs += total
+            if "wicket" in events and _classify_wicket(o.get("commText", "")) is not None:
+                window_wickets += 1
+        baseline = (int(board["score"]) - window_runs, int(board.get("wickets") or 0) - window_wickets)
+        return baseline if baseline[0] >= 0 and baseline[1] >= 0 else None
+
     def _build_deliveries(
-        self, scope: tuple[str, int], raw_objects: list[dict[str, Any]]
+        self,
+        scope: tuple[str, int],
+        raw_objects: list[dict[str, Any]],
+        board: dict | None = None,
+        require_baseline: bool = False,
     ) -> list[LiveDelivery]:
         match_id, innings = scope
         # Cricbuzz lists newest-first; process oldest-first so running
@@ -831,11 +880,40 @@ class CricbuzzLiveReader:
                         commentary="(seeded from over-checkpoint, not a live delivery)",
                     )
             else:
-                # No over has completed yet in this window -- genuinely
-                # early in the innings, 0/0 is the correct baseline.
-                self._running_score[scope] = 0
-                self._running_wickets[scope] = 0
-                self._seed_cutoff_ms[scope] = -1
+                # No over-checkpoint in this window. That means "early in the
+                # innings, 0/0" only if the window reaches the innings' first
+                # balls; otherwise we attached mid-innings and 0/0 would be
+                # wrong for the rest of the innings. Take the baseline from the
+                # page's board (when it matches the window), else wait.
+                starts = [
+                    float(o["ballMetric"]) for o in ordered
+                    if isinstance(o.get("ballMetric"), (int, float))
+                ]
+                from_start = (not starts) or min(starts) < 0.25
+                baseline = (0, 0)
+                if require_baseline and not from_start:
+                    baseline = self._baseline_from_board(ordered, board, innings)
+                    if baseline is None:
+                        raise CricbuzzFeedError(
+                            f"Attached to Cricbuzz match {match_id} innings {innings} mid-innings with no "
+                            "over-checkpoint in the window and no board that matches it yet -- "
+                            "waiting for a consistent starting score."
+                        )
+                    self._pending_repairs.append(
+                        f"innings {innings}: starting score {baseline[0]}/{baseline[1]} taken from the page's "
+                        "board (attached mid-innings, no over-checkpoint in the window)"
+                    )
+                self._running_score[scope] = baseline[0]
+                self._running_wickets[scope] = baseline[1]
+                # With a board baseline, anything older than the window's first ball is
+                # already inside that baseline: an older cached copy of the page must
+                # not add those balls again (seen replaying 2026-10-09 pages: +37 runs).
+                first_ts = min(
+                    (_int_field(o, "timestamp", 0) for o in ordered
+                     if isinstance(o.get("ballMetric"), (int, float))),
+                    default=0,
+                )
+                self._seed_cutoff_ms[scope] = (first_ts - 1) if (require_baseline and not from_start) else -1
 
         running_score = self._running_score[scope]
         running_wickets = self._running_wickets[scope]

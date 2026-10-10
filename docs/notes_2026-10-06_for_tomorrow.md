@@ -531,3 +531,15 @@ so a moved percentage or a partial XI never triggers a message (max about 2 upda
 Stops once the first ball is bowled, once the toss is known and both XIs are confirmed, or after 8 h. Works for the Cricbuzz
 path and the TOI backup path. Known gap: if the first briefing failed to fetch, the first successful one goes out labelled
 "Updated briefing -- details changed". Restart the driver to load it (shadow mode prints the updates).
+
+## FIXED 2026-10-10: mid-innings attach started from 0/0 (found in the 10-09 shadow run)
+India v West Indies (151576) and Pakistan v Sri Lanka (170687) were attached mid-innings. The window had no over-separator
+(Cricbuzz does not always send one), so the reader assumed "early in the innings" and counted from 0: our score ran 50-100
+behind the board for the whole innings (e.g. 84/1 vs 141/1 at 13.2 ov). `PREDICTION HELD` caught it and nothing wrong was
+published, but no prediction was made either. Fix in `cricbuzz_reader._build_deliveries`: if the window does not reach the
+innings' first balls and has no checkpoint, take the starting score from the page's board, but ONLY when the board is in the
+same innings and at the same over.ball as the newest delivery; otherwise raise and retry next poll. Entries older than the
+window's first ball are cut off so an older cached copy cannot add them again. Replay of the archived pages now matches the
+board at every continuous point. Also seen: the first archived page of each match is ~56 min after the start -- the driver was
+probably suspended (laptop asleep?) for the first hour; keep the Mac awake during a match (mcp keep-awake) and consider an
+explicit "no polls for N minutes" alert. Telegram `prematch status` fix still needs the launchd service restarted.

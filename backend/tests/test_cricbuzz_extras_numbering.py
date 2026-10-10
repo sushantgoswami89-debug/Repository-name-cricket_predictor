@@ -149,3 +149,43 @@ def test_over_summary_is_captured_once_and_audit_flags_a_missing_ball():
     missing = SimpleNamespace(deliveries=deliveries[:-1])
     assert "MISMATCH" in _audit_over(missing, summaries[0])
     assert "not seen live" in _audit_over(SimpleNamespace(deliveries=[]), summaries[0])
+
+
+def _mid_innings_window():
+    """Ten balls of over 9 and 10 with no over-checkpoint in the window (attached mid-innings)."""
+    return [
+        _obj(1, 8.5, "Arshdeep to Hope, 1 run"),
+        _obj(2, 8.6, "Arshdeep to Hope, FOUR", "four"),
+        _obj(3, 9.1, "Arshdeep to Hope, no run"),
+        _obj(4, 9.2, "Arshdeep to Hope, 2 runs"),
+        _obj(5, 9.3, "Arshdeep to Hope, 1 run"),
+    ]
+
+
+def test_mid_innings_attach_without_checkpoint_takes_baseline_from_matching_board():
+    import pytest as _pytest
+
+    from app.live.cricbuzz_reader import CricbuzzFeedError
+
+    window = _mid_innings_window()  # 1+4+0+2+1 = 8 runs, latest ball 9.3 -> board overs "9.3"
+    reader = CricbuzzLiveReader()
+    board = {"innings": 1, "score": 98, "wickets": 2, "overs": "9.3"}
+    deliveries = reader._build_deliveries(("1", 1), window, board=board, require_baseline=True)
+    assert deliveries[-1].feed_total == 98 and deliveries[-1].feed_wickets == 2
+
+    # an older cached copy of the page must not add already-counted balls again
+    older = [_obj(0, 8.1, "Arshdeep to Hope, 6 runs")] + window
+    again = reader._build_deliveries(("1", 1), older, board=board, require_baseline=True)
+    assert again[-1].feed_total == 98
+
+    # no board, or a board at a different point, means wait -- never guess 0/0
+    for bad_board in (None, {"innings": 1, "score": 90, "wickets": 2, "overs": "9.1"}):
+        with _pytest.raises(CricbuzzFeedError):
+            CricbuzzLiveReader()._build_deliveries(("1", 1), window, board=bad_board, require_baseline=True)
+
+
+def test_window_that_reaches_the_first_ball_still_starts_from_zero():
+    reader = CricbuzzLiveReader()
+    window = [_obj(1, 0.1, "Arshdeep to Hope, 1 run"), _obj(2, 0.2, "Arshdeep to Hope, FOUR", "four")]
+    deliveries = reader._build_deliveries(("1", 1), window, board=None, require_baseline=True)
+    assert deliveries[-1].feed_total == 5
