@@ -86,6 +86,7 @@ def match_day_weather(city: str, day_iso: str | None = None) -> dict | None:
                 "latitude": place["lat"],
                 "longitude": place["lon"],
                 "hourly": HOURLY_VARS,
+                "daily": "sunset",
                 **({"start_date": day_iso, "end_date": day_iso} if day_iso else {"forecast_days": 2}),
                 "timezone": "auto",
             },
@@ -98,6 +99,26 @@ def match_day_weather(city: str, day_iso: str | None = None) -> dict | None:
 
             local_now = datetime.now(timezone.utc) + timedelta(seconds=payload.get("utc_offset_seconds", 0))
             day_iso = local_now.date().isoformat()
-        return summarise(payload["hourly"]).get(day_iso)
+        day = summarise(payload["hourly"]).get(day_iso)
+        if day is None:
+            return None
+        # Hour-by-hour detail for the live dew outlook (not stored in the historical backfill).
+        hours = {}
+        for i, stamp in enumerate(payload["hourly"]["time"]):
+            if stamp[:10] == day_iso and None not in (
+                payload["hourly"]["temperature_2m"][i], payload["hourly"]["dew_point_2m"][i]
+            ):
+                hours[int(stamp[11:13])] = {
+                    "temp": payload["hourly"]["temperature_2m"][i],
+                    "dew_point": payload["hourly"]["dew_point_2m"][i],
+                    "humidity": payload["hourly"]["relative_humidity_2m"][i],
+                }
+        sunset = None
+        try:
+            stamp = payload["daily"]["sunset"][payload["daily"]["time"].index(day_iso)]
+            sunset = int(stamp[11:13]) + int(stamp[14:16]) / 60.0
+        except (KeyError, ValueError, IndexError, TypeError):
+            pass
+        return {**day, "hours": hours, "sunset_h": sunset, "utc_offset_s": payload.get("utc_offset_seconds", 0)}
     except (requests.RequestException, ValueError, KeyError):
         return None

@@ -127,8 +127,47 @@ def test_header_has_weather_pitch_and_advantage_lines(monkeypatch):
 
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: WET_EVENING)
     pre = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", pitch_note="Batting friendly")
-    assert pre[0].startswith("Weather:") and "DEW LIKELY" in pre[0]
-    assert pre[1].startswith("Pitch: flat")
-    assert pre[2] == "Advantage: toss pending -- dew would help whoever chases"
+    assert pre[0].startswith("Weather:")
+    assert pre[1].startswith("Dew:")
+    assert pre[2].startswith("Pitch: flat")
+    assert pre[3] == "Advantage: toss pending -- dew would help whoever chases"
     post = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl", pitch_note="")
-    assert post[2].startswith("Advantage: West Indies on conditions") and "dew helps West Indies" in post[2]
+    assert post[3].startswith("Advantage: West Indies on conditions") and "dew helps West Indies" in post[3]
+
+
+def _day(gaps_by_hour, sunset=17.5):
+    return {"hours": {h: {"temp": 20.0 + g, "dew_point": 20.0, "humidity": 80} for h, g in gaps_by_hour.items()},
+            "sunset_h": sunset, "utc_offset_s": 19800}
+
+
+def test_dew_outlook_weight_chance_and_onset():
+    from app.live.prematch_analysis import _dew_line, dew_outlook
+
+    # the real Ranchi forecast shape: gap shrinks from 7.7C at 15:00 to 0.4C at 23:00
+    ranchi = _day({14: 8.2, 15: 7.7, 16: 6.0, 17: 4.2, 18: 3.4, 19: 2.7, 20: 1.6, 21: 1.0, 22: 0.7, 23: 0.4}
+                  | {h: 9.0 for h in range(0, 14)})
+    out = dew_outlook(ranchi)  # no start time given -> assumes 19:00
+    assert out["weight"] == "HEAVY" and out["chance"] >= 85
+    assert 18.0 <= out["onset_h"] <= 19.0  # gap crosses 3.0C between 18:00 (3.4) and 19:00 (2.7)
+    assert out["onset_h"] < out["chase_h"]
+    line = _dew_line(out)
+    assert line.startswith("Dew: HEAVY") and "before the chase" in line and "start time assumed" in line
+
+    dry = _day({h: 12.0 for h in range(0, 24)})
+    out = dew_outlook(dry, 19.0)
+    assert out["weight"] == "LITTLE" and out["chance"] <= 5
+    assert _dew_line(out).startswith("Dew: LITTLE")
+
+    medium = _day({h: 2.2 for h in range(0, 24)})
+    assert dew_outlook(medium, 19.0)["weight"] == "MEDIUM"
+    small = _day({h: 3.5 for h in range(0, 24)})
+    assert dew_outlook(small, 19.0)["weight"] == "SMALL"
+    assert dew_outlook(None) is None and dew_outlook({"hours": {19: {}}}) is None
+
+
+def test_dew_line_uses_the_real_start_time_when_known():
+    from app.live.prematch_analysis import _dew_line, dew_outlook
+
+    day = _day({h: 1.0 if h >= 20 else 8.0 for h in range(0, 24)})
+    known = _dew_line(dew_outlook(day, 17.0))   # 17:00 start -> chase from ~18:50, dew arrives ~19:40
+    assert "start time assumed" not in known and "mid-chase" in known

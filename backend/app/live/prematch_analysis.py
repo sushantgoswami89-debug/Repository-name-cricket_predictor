@@ -136,18 +136,6 @@ def _venue_line(city: str) -> str:
     return f"Ground: {city.title()} -- bat first won " + ", ".join(pieces) + (" (small sample)" if small else "")
 
 
-def _dew_line(day: dict) -> str:
-    gap = None
-    if day.get("eve_temp") is not None and day.get("eve_dew_point") is not None:
-        gap = day["eve_temp"] - day["eve_dew_point"]
-    if gap is None:
-        return ""
-    detail = f"humidity {day['eve_humidity']:.0f}%, gap {gap:.1f}C" if day.get("eve_humidity") is not None else f"gap {gap:.1f}C"
-    if gap <= 2.5:
-        return f"Dew: LIKELY tonight ({detail}) -- helps the chasing side"
-    return f"Dew: not expected ({detail})"
-
-
 _TTL: dict = {}
 
 
@@ -246,6 +234,84 @@ def _ground_totals() -> dict:
     return out
 
 
+DEW_GAP_C = 2.5          # temperature minus dew point at/below which dew is likely (backtested threshold)
+DEW_ONSET_GAP_C = 3.0    # dew starts to form a little above that
+DEW_SIGMA_C = 1.5        # ASSUMED forecast error of the temperature - dew point gap, used for the "chance"
+FIRST_INNINGS_HOURS = 1.8  # a T20 chase begins roughly 1h50 after the first ball
+
+
+def _clock(hours: float) -> str:
+    total = int(round(hours * 60 / 5) * 5)
+    return f"{(total // 60) % 24:02d}:{total % 60:02d}"
+
+
+def dew_outlook(day: dict | None, start_local_h: float | None = None) -> dict | None:
+    """Dew weight, chance and onset from the hour-by-hour forecast.
+
+    weight: heavy (gap <= 1.5C in the second half of the chase), medium (<= 2.5C), small (<= 4C), little (more).
+            Thresholds follow the backtest: the chasing side only gained above the 2.5C line.
+    chance: probability the gap is at or below 2.5C during the chase if the forecast gap has a
+            +-1.5C standard error -- that error size is an assumption, not measured.
+    onset:  first time after sunset the gap falls to 3C or less (linear between forecast hours).
+    """
+    import math
+
+    hours = (day or {}).get("hours") or {}
+    if len(hours) < 12:
+        return None
+    gap = {h: v["temp"] - v["dew_point"] for h, v in hours.items()}
+
+    def gap_at(t: float) -> float | None:
+        lo, hi = int(math.floor(t)), int(math.floor(t)) + 1
+        if lo not in gap:
+            return None
+        if hi not in gap:
+            return gap[lo]
+        return gap[lo] + (gap[hi] - gap[lo]) * (t - lo)
+
+    start = start_local_h if start_local_h is not None else 19.0
+    chase_from, chase_to = start + FIRST_INNINGS_HOURS, start + 3.5
+    window = [g for g in (gap_at(chase_from + 0.5 * i) for i in range(int((chase_to - chase_from) / 0.5) + 1)) if g is not None]
+    if not window:
+        return None
+    late = window[len(window) // 2:]  # dew bites in the second half of the chase
+    mean_gap = sum(late) / len(late)
+    weight = "HEAVY" if mean_gap <= 1.5 else "MEDIUM" if mean_gap <= DEW_GAP_C else "SMALL" if mean_gap <= 4.0 else "LITTLE"
+    chance = 0.5 * (1.0 + math.erf((DEW_GAP_C - mean_gap) / (DEW_SIGMA_C * math.sqrt(2))))
+    sunset = day.get("sunset_h")
+    begin = max(sunset if sunset is not None else 17.5, 12.0)
+    onset = None
+    t = begin
+    while t <= 23.5:
+        g = gap_at(t)
+        if g is not None and g <= DEW_ONSET_GAP_C:
+            onset = t
+            break
+        t += 0.25
+    return {
+        "weight": weight,
+        "chance": round(chance * 20) * 5,  # nearest 5%
+        "mean_gap": mean_gap,
+        "onset_h": onset,
+        "chase_h": chase_from,
+        "start_assumed": start_local_h is None,
+    }
+
+
+def _dew_line(outlook: dict | None) -> str:
+    if outlook is None:
+        return "Dew: no hourly forecast available"
+    if outlook["weight"] == "LITTLE":
+        return f"Dew: LITTLE -- {outlook['chance']:.0f}% chance, little effect expected on the chase"
+    onset, chase = outlook["onset_h"], outlook["chase_h"]
+    when = "no onset in the forecast"
+    if onset is not None:
+        timing = "before the chase" if onset <= chase - 0.25 else "around the start of the chase" if onset <= chase + 0.25 else "mid-chase"
+        when = f"sets in ~{_clock(onset)}, {timing} (~{_clock(chase)}{', start time assumed 19:00' if outlook['start_assumed'] else ''})"
+    helps = " -- helps the chasing side" if outlook["weight"] in ("MEDIUM", "HEAVY") else ""
+    return f"Dew: {outlook['weight']} -- {outlook['chance']:.0f}% chance, {when}{helps}"
+
+
 def _weather_line(day: dict | None) -> str:
     if not day:
         return "Weather: forecast unavailable"
@@ -257,11 +323,7 @@ def _weather_line(day: dict | None) -> str:
     if day.get("aft_cloud") is not None:
         parts.append(f"cloud {day['aft_cloud']:.0f}%")
     parts.append(f"rain {day['rain_mm']:.1f} mm" if day.get("rain_mm") else "no rain")
-    gap = None
-    if day.get("eve_temp") is not None and day.get("eve_dew_point") is not None:
-        gap = day["eve_temp"] - day["eve_dew_point"]
-    dew = "" if gap is None else " | DEW LIKELY (helps the chasing side)" if gap <= 2.5 else " | no dew expected"
-    return "Weather: " + ", ".join(parts) + dew
+    return "Weather: " + ", ".join(parts)
 
 
 def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dict | None, h2h_text: str, form_text: str) -> list[str]:
@@ -363,8 +425,9 @@ def prematch_header(
     toss_decision: str = "",
     xi: dict | None = None,
     pitch_note: str | None = None,
+    start_utc_ms: int | None = None,
 ) -> list[str]:
-    """Three lines for the top of the briefing: Weather, Pitch (flat / green / turning with its
+    """Four lines for the top of the briefing: Weather, Pitch (flat / green / turning with its
     evidence) and Advantage (the team the conditions favour, in points of win probability).
 
     Advantage = dew effect + spin/pace XI matchup effect for each side -- the parts of the win %
@@ -383,7 +446,11 @@ def prematch_header(
         weather = None
     note = pitch_note if pitch_note is not None else toi_pitch_note(team_a, team_b)
     cloud = weather.get("aft_cloud") if weather else None
-    lines = [_weather_line(weather), _track_call(note, city, cloud)]
+    start_local_h = None
+    if start_utc_ms and weather and weather.get("utc_offset_s") is not None:
+        local_s = start_utc_ms / 1000.0 + weather["utc_offset_s"]
+        start_local_h = (local_s % 86400) / 3600.0
+    lines = [_weather_line(weather), _dew_line(dew_outlook(weather, start_local_h)), _track_call(note, city, cloud)]
 
     a, b = team_a.strip(), team_b.strip()
     bat_first = _bat_first_team(a, b, toss_won_by, toss_decision)

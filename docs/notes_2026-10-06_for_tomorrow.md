@@ -561,3 +561,13 @@ Evidence rules, from out-of-sample checks run today: ground scoring level predic
 "likely track ... grip for slower balls/spin" sentence is boilerplate printed for every dry surface (same text on four
 grounds), so it is ignored; with no TOI note the line says "green / turning: no reliable source for this ground".
 Cricbuzz path fetches TOI's pitch note by team names (10-min cache); TOI path passes its own.
+
+## 2026-10-10: dew weight, chance and onset time in the briefing
+`Dew: HEAVY -- 90% chance, sets in ~18:25, before the chase (~20:50) -- helps the chasing side` from the hour-by-hour
+Open-Meteo forecast (+ sunset). Weight uses the temperature-minus-dew-point gap in the SECOND HALF of the chase: heavy <= 1.5C,
+medium <= 2.5C, small <= 4C, little above (the backtest only showed a chasing advantage at <= 2.5C, so small/little are
+described as little effect). Onset = first time after sunset the gap falls to <= 3.0C, interpolated between forecast hours.
+Chase start = match start + 1h48 (start time read from the Cricbuzz page; 19:00 assumed on the TOI path, and said so).
+CAVEATS: the "chance" uses an ASSUMED forecast error of +-1.5C on the gap (not measured against observed dew -- no
+ground-truth dew record exists locally); weights/thresholds are on forecast air temperature and dew point, not the grass
+surface temperature, which is what really decides dew.

@@ -469,7 +469,12 @@ def briefing_text(match_id: str, match_url: str, label: str) -> str | None:
     lines = [f"🏏 {label}" + (f" -- {city}" if city else "")]
     if len(teams) == 2:
         try:
-            lines.extend(prematch_header(teams[0], teams[1], venue or "", toss_won_by, toss_decision, confirmed_xi(team_players)))
+            lines.extend(
+                prematch_header(
+                    teams[0], teams[1], venue or "", toss_won_by, toss_decision, confirmed_xi(team_players),
+                    start_utc_ms=CricbuzzLiveReader._start_ms_from_html(response.text),
+                )
+            )
         except Exception:
             pass
     lines.append(toss_line(toss_won_by, toss_decision, teams[0] if len(teams) == 2 else "", teams[1] if len(teams) == 2 else ""))
