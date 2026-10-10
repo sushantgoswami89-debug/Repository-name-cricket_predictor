@@ -176,3 +176,23 @@ batting position, handedness matchup — commits `9c708b5`, `f1a34b7`,
 `v11`/`v16`/`v21`/`v19` state, but always re-confirm the "currently live"
 model names via `app/ml/prediction_engine.py`'s `RUN_RANGE_V3_ARTIFACTS`/
 `WICKET_CONTRACT22_ARTIFACTS` before assuming.
+
+## Added 2026-10-10: what to check on the next live match (everything below was built after 10-09 and has only run on saved pages and tests)
+Run: `cd backend && ../.venv/bin/python run_live_auto.py --shadow` in a Terminal tab (keep-awake is on; it prints "Keep-awake: on").
+Before the first ball
+- Briefing printed at attach; it is re-sent when the toss is known and again when BOTH full XIs are confirmed ("Updated briefing -- ...").
+- Win % line shows its stage in brackets; "dew unknown" if the forecast failed; "No result N%" only on a wet forecast.
+- Over-1 prediction appears before ball 1 and its "Win Probability" equals the briefing's number, labelled "(pre-match model)".
+During the match
+- Scorecard line mid-over: `[NOW: bowler* 3-0-36-3 bowling, striker* 38(19) on strike, other 19(7) ...]`.
+- At each over break: `over complete (last ball: ...)` + `[JUST BOWLED ... | AT THE CREASE ... | NEXT BOWLER ...]` + `[NEXT OVER, expected ...]` -- no stale bowler/batter names.
+- `[check] over N: striker expected X, actual Y: HIT/MISS` (data/live/next-over-checks-<id>.jsonl): count HITs; a MISS means read why.
+- `[card] N.0 ov: OK` each over (card-checks-<id>.jsonl); any MISMATCH names the batter/total that differs.
+- `[repair] ...` lines (repairs-<id>.jsonl): an over rebuilt from Cricbuzz's own summary, a re-posted legal ball replaced, or a starting score taken from the board.
+- `PREDICTION HELD ...` should be rare; if it persists, the state is wrong -- check the board log.
+- `[audit] over N: OK/MISMATCH` against Cricbuzz's own over summary.
+After the match
+- "capturing all Cricbuzz pages + win curve" printed; data/live/cb-win-curve-<id>.json and data/raw/cricbuzz-pages/<id>/final/ exist.
+- `python score_prematch_log.py` (pre-match win % vs result) and `python compare_inplay_winprob.py` (our in-play % vs Cricbuzz's).
+- Re-measure the delivery-detail coverage (was ~40% with prose before the $-pointer fix).
+Open decision: announced-bowler timing (wait ~60 s for Cricbuzz's note, or predict at once).
