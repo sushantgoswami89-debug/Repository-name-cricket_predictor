@@ -73,9 +73,23 @@ def _place(city: str) -> dict | None:
     return None
 
 
-def match_day_weather(city: str, day_iso: str | None = None) -> dict | None:
+def match_day_weather(city: str, day_iso: str | None = None, attempts: int = 3) -> dict | None:
     """Forecast summary for `city` on `day_iso` (YYYY-MM-DD, the match's local date);
-    with no date, the venue's local "today" (match day when run on match day)."""
+    with no date, the venue's local "today" (match day when run on match day).
+    Retries a transient failure (seen once on 2026-10-10: the briefing silently lost its
+    weather and dew), then gives up with None."""
+    import time as _time
+
+    for attempt in range(attempts):
+        result = _match_day_weather_once(city, day_iso)
+        if result is not None:
+            return result
+        if attempt + 1 < attempts:
+            _time.sleep(1.0 * (attempt + 1))
+    return None
+
+
+def _match_day_weather_once(city: str, day_iso: str | None) -> dict | None:
     place = _place(city.strip().lower())
     if not place:
         return None

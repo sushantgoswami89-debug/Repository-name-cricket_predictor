@@ -191,7 +191,8 @@ def _cached(key, seconds, fn):
     if hit and _time.monotonic() - hit[0] < seconds:
         return hit[1]
     value = fn()
-    _TTL[key] = (_time.monotonic(), value)
+    if value:  # never cache a failure (None / empty): the next call should try again
+        _TTL[key] = (_time.monotonic(), value)
     return value
 
 
@@ -371,7 +372,7 @@ def _weather_line(day: dict | None) -> str:
 
 
 def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dict | None, h2h_text: str, form_text: str) -> list[str]:
-    """The pre-match section, two lines: the win % (with its stage) and the last-5 form.
+    """The pre-match section, three lines: the win % (with its stage), the last-5 form and the head to head.
     The build-up of the number and the model's measured accuracy are documented in the notes, not sent."""
     from app.live.match_weather import match_day_weather
     from app.live.prematch_conditions import predict_with_dew
@@ -400,9 +401,13 @@ def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dic
     elif base["post_toss"]:
         label = "after toss"
 
+    if bat_first and weather is None:
+        label += ", dew unknown"  # the forecast could not be fetched: the number has no dew term
     lines = [f"Win %: {team_a} {chosen['p_a'] * 100:.0f}% | {team_b} {chosen['p_b'] * 100:.0f}% ({label})"]
     if form_text:
         lines.append(form_text)
+    if h2h_text:
+        lines.append(h2h_text)
     return lines
 
 
@@ -425,14 +430,18 @@ def prematch_text(
         return None
 
     h2h = [r for r in rows if r["teams"] == {a, b} and r["winner"]]
-    h2h_text = ""
+    # Head to head, from the first-named team's side, oldest to newest like the Form line:
+    # "Head to head: India 3-2 in last 5 (WLWWL), 20-10 overall (30 matches)".
     if h2h:
         wins_a = sum(r["winner"] == a for r in h2h)
         last5 = h2h[-5:]
         h2h_text = (
-            f"H2H {a} {wins_a}-{len(h2h) - wins_a} (last 5: {sum(r['winner'] == a for r in last5)}-"
-            f"{sum(r['winner'] == b for r in last5)})"
+            f"Head to head: {a} {sum(r['winner'] == a for r in last5)}-{sum(r['winner'] == b for r in last5)} "
+            f"in last {len(last5)} ({''.join('W' if r['winner'] == a else 'L' for r in last5)}), "
+            f"{wins_a}-{len(h2h) - wins_a} overall ({len(h2h)} matches)"
         )
+    else:
+        h2h_text = "Head to head: no previous men's T20I meetings"
     forms = []
     for team in (a, b):
         games = [r for r in rows if team in r["teams"] and r["winner"]][-5:]

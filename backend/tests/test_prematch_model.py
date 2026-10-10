@@ -4,6 +4,7 @@ import pytest
 
 from app.live.prematch_analysis import _bat_first_team, prematch_text
 from app.live.prematch_model import MODEL_PATH, build_dataset, predict
+from app.live.match_weather import match_day_weather as REAL_MATCH_DAY_WEATHER  # before any test patches it
 
 pytestmark = pytest.mark.skipif(not MODEL_PATH.exists(), reason="saved pre-match model not present")
 
@@ -46,9 +47,12 @@ def _no_network(monkeypatch):
 def test_estimate_block_is_win_percent_then_form():
     text = prematch_text("India", "West Indies", "Ekana Cricket Stadium, Lucknow", "India", "bowl")
     lines = text.splitlines()
-    assert len(lines) == 2
+    assert len(lines) == 3
     assert lines[0].startswith("Win %: India ") and "| West Indies " in lines[0]
     assert lines[1].startswith("Form (last 5): India ") and "| West Indies " in lines[1]
+    import re
+
+    assert re.fullmatch(r"Head to head: India \d-\d in last 5 \([WL]{5}\), \d+-\d+ overall \(\d+ matches\)", lines[2]), lines[2]
     assert "(pre-toss)" in prematch_text("India", "West Indies", "Ekana Cricket Stadium, Lucknow")
 
 
@@ -82,7 +86,7 @@ def test_body_stays_short_with_a_forecast(monkeypatch):
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: WET_EVENING)
     text = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "India", "bowl")
     assert "Win %: India" in text
-    assert len(text.splitlines()) == 2
+    assert len(text.splitlines()) == 3
 
 
 def test_live_names_resolve_to_cricsheet_players_and_unknowns_stay_unmatched():
@@ -179,3 +183,23 @@ def test_ground_summary_matches_the_requested_format():
     assert re.fullmatch(r"T20 - 11 1st inns avg \d+, avg wkts - \d+, pace - \d+/spin - \d+", text), text
     assert venue_summary("nowhere-ville") == "T20 - no history here"
     assert venue_summary("rawalpindi").endswith("spin - " + venue_summary("rawalpindi").rsplit("- ", 1)[1])  # no small-sample tag at 13 matches
+
+
+def test_weather_failure_is_retried_not_cached_and_flagged(monkeypatch):
+    from app.live import match_weather, prematch_analysis
+
+    calls = {"n": 0}
+
+    def flaky(city, day_iso):
+        calls["n"] += 1
+        return None if calls["n"] < 3 else WET_EVENING
+
+    monkeypatch.setattr(match_weather, "_match_day_weather_once", flaky)
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    assert REAL_MATCH_DAY_WEATHER("ranchi") == WET_EVENING and calls["n"] == 3  # two failures, then success
+
+    prematch_analysis._TTL.clear()
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: None)
+    text = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl")
+    assert "dew unknown" in text.splitlines()[0]
+    assert ("weather", "ranchi") not in prematch_analysis._TTL  # the failure was not cached
