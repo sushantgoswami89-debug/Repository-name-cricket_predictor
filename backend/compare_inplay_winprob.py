@@ -1,10 +1,12 @@
-"""Compare our in-play win probability with Cricbuzz's own, over by over.
+"""Compare our in-play win probability with Cricbuzz's own, over by over, on finished matches.
 
-Ours: data/live/match_winner_ensemble_shadow_log.jsonl (GBM+NN ensemble, probability that the BATTING
-team wins, logged each over). Cricbuzz's: the `cb_win` percentages in data/live/board-<match>.jsonl
-(logged since 2026-10-06; since 2026-10-10 each line also names the batting team). The outcome of a
-finished match is read from the Cricbuzz match header via data/live/prematch-results.jsonl or, for the
-older matches, the shadow outcomes file. Only matches where all three exist are scored.
+Cricbuzz: the win-probability curve from its graphs page (cb-win-curve-<match>.json, made by
+capture_cricbuzz_match.py -- one fetch gives the whole match, no live logging needed).
+Ours: the GBM+NN ensemble in data/live/match_winner_ensemble_shadow_log.jsonl (probability that the BATTING team
+wins, logged for the coming over). Our over k forecast is made after k-1 overs, so it is paired with Cricbuzz's
+point after k-1 overs. Outcome: the match winner from Cricbuzz's scorecard header.
+Caveat: some of our logged forecasts came from runs with a wrongly restarted state (see notes 2026-10-06); the
+over-by-over list shows them so they can be spotted.
 
 Usage: python compare_inplay_winprob.py
 """
@@ -29,40 +31,39 @@ def _lines(path: Path) -> list[dict]:
 def main() -> None:
     ours: dict[tuple[str, int, int], float] = {}
     for r in _lines(LIVE / "match_winner_ensemble_shadow_log.jsonl"):
-        ours[(str(r["match_id"]), int(r["innings"]), int(r["over"]))] = r["ensemble_probability"]  # last write per over wins
-    outcomes = {str(r["match_id"]): r["batting_team_won"] for r in _lines(LIVE / "match_winner_ensemble_shadow_outcomes.jsonl")}
-    results = {r["match_id"].split(":")[-1]: r for r in _lines(LIVE / "prematch-results.jsonl")}
-    rows = []
-    for board_file in sorted(LIVE.glob("board-*.jsonl")):
-        match_id = board_file.stem.split("-", 1)[1]
-        seen = {}
-        for line in _lines(board_file):
-            win = (line.get("board") or {}).get("cb_win")
-            batting = (line.get("ours") or {}).get("batting_team")
-            if not win or not batting or line.get("innings") != 2:
-                continue
-            over = int(float(win["as_of_over"] or 0)) + 1  # Cricbuzz "as of 14.3" = state during over 15 => our over-15 forecast
-            seen[over] = (win.get(batting), line)
-        winner = (results.get(match_id) or {}).get("winner")
-        for over, (cb_pct, line) in seen.items():
-            p_ours = ours.get((match_id, 2, over))
-            if p_ours is None or cb_pct is None or winner is None:
-                continue
-            batting = line["ours"]["batting_team"]
-            rows.append((match_id, over, p_ours, cb_pct / 100.0, float(winner == batting)))
-    for match_id, batting_won in outcomes.items():
-        pass  # older matches have no named batting team in the board log, so they cannot be paired by name
-    print(f"paired overs (ours vs Cricbuzz, chase innings, outcome known): {len(rows)}")
-    if not rows:
-        print("nothing to compare yet: the board log now records the batting team, so pairs accumulate from the next match.")
+        ours[(str(r["match_id"]), int(r["innings"]), int(r["over"]))] = r["ensemble_probability"]  # last write per over
+    pairs = []
+    for curve_file in sorted(LIVE.glob("cb-win-curve-*.json")):
+        curve = json.loads(curve_file.read_text(encoding="utf-8"))
+        match_id, winner = curve["match_id"], curve.get("winner")
+        if not winner:
+            continue
+        for innings_id, series in curve["points"].items():
+            batting = curve["innings"].get(innings_id)
+            by_over = {p["over"]: p for p in series}
+            for (m, inn, over), p_ours in ours.items():
+                if m != match_id or str(inn) != innings_id or (over - 1) not in by_over:
+                    continue
+                cb = by_over[over - 1].get(batting)
+                if cb is None:
+                    continue
+                pairs.append((match_id, inn, over, batting, p_ours, cb / 100.0, float(winner == batting)))
+    print(f"paired over-forecasts: {len(pairs)} from {len({p[0] for p in pairs})} match(es)")
+    if not pairs:
+        print("nothing to compare yet")
         return
     by_match = defaultdict(list)
-    for r in rows:
-        by_match[r[0]].append(r)
-    for match_id, rs in by_match.items():
-        print(f"match {match_id}: " + ", ".join(f"over {o}: ours {p:.0%} vs Cricbuzz {c:.0%}" for _, o, p, c, _ in rs))
-    brier = lambda idx: sum((r[idx] - r[4]) ** 2 for r in rows) / len(rows)
-    print(f"Brier ours {brier(2):.4f} | Cricbuzz {brier(3):.4f} (lower is better; n={len(rows)} over-forecasts from {len(by_match)} match(es))")
+    for p in pairs:
+        by_match[(p[0], p[1])].append(p)
+    for (match_id, inn), rows in sorted(by_match.items()):
+        print(f"match {match_id} innings {inn} ({rows[0][3]} batting, {'won' if rows[0][6] else 'lost'}):")
+        print("   " + " ".join(f"o{r[2]}:{r[4]:.0%}/{r[5]:.0%}" for r in sorted(rows, key=lambda r: r[2])) + "   (ours/Cricbuzz)")
+    brier = lambda i: sum((r[i] - r[6]) ** 2 for r in pairs) / len(pairs)
+    print(f"\nBrier over all pairs: ours {brier(4):.4f} | Cricbuzz {brier(5):.4f} (lower is better; n={len(pairs)}).")
+    late = [r for r in pairs if r[2] >= 8]
+    if late:
+        b = lambda i: sum((r[i] - r[6]) ** 2 for r in late) / len(late)
+        print(f"overs 8+ only: ours {b(4):.4f} | Cricbuzz {b(5):.4f} (n={len(late)})")
 
 
 if __name__ == "__main__":

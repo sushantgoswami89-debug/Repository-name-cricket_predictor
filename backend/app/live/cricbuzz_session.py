@@ -584,6 +584,7 @@ class CricbuzzMatchSession:
     _last_hold: str | None = None
     _expected_next: dict | None = None
     _carded: set = field(default_factory=set)
+    _captured: bool = False
     _crease: list[str] | None = None
     _archive_state: dict = field(default_factory=dict)
     _stuck_alert_sent: bool = False
@@ -766,10 +767,27 @@ class CricbuzzMatchSession:
             from app.live.prematch_log import record_result
 
             record_result(f"cricbuzz:{self.match_id}", _match_winner(snapshot), result)  # lets the pre-match log be scored
+            self._capture_all_pages()
             print(f"[{self.match_id}] MATCH COMPLETE: {result}")
             if self.publisher is not None:
                 self.publisher.publish(f"result:{self.match_id}", f"🏆 {result}")
             self._finished = True
+
+    def _capture_all_pages(self) -> None:
+        """Once, at the end of the match: save every Cricbuzz page for it and Cricbuzz's own win-probability
+        curve (see cricbuzz_capture.py). Background thread, failures ignored."""
+        if getattr(self, "_captured", False):
+            return
+        self._captured = True
+        try:
+            import threading
+
+            from app.live.cricbuzz_capture import capture_match
+
+            threading.Thread(target=capture_match, args=(self.match_id,), daemon=True).start()
+            print(f"[{self.match_id}] capturing all Cricbuzz pages + win curve in the background")
+        except Exception:
+            pass
 
     def _card_check(self, snapshot) -> None:
         """At each over end (and at the finish) compare our rebuilt innings with Cricbuzz's own scorecard

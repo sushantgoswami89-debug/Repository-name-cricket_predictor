@@ -12,3 +12,11 @@ def _isolate_prematch_log(monkeypatch, tmp_path_factory):
     monkeypatch.setattr(prematch_log, "LOG_PATH", folder / "predictions.jsonl")
     monkeypatch.setattr(prematch_log, "RESULTS_PATH", folder / "results.jsonl")
     prematch_log._LAST.clear()
+
+
+@pytest.fixture(autouse=True)
+def _no_cricbuzz_capture(monkeypatch):
+    """A finished fake match must not go and fetch eight real Cricbuzz pages."""
+    from app.live import cricbuzz_capture
+
+    monkeypatch.setattr(cricbuzz_capture, "capture_match", lambda match_id, root=None: {"saved": [], "winner": None, "curve_points": 0})

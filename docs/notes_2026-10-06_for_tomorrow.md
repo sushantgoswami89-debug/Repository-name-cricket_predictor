@@ -706,3 +706,14 @@ and toss included), labelled "(pre-match model)", with the in-play value kept in
 model. (2) The new batting-team guard recorded the side from the pre-first-ball snapshot, which is only a guess from the toss; a wrong guess would
 have blocked the whole innings. It now records the side only from a snapshot that has real deliveries. Not changed: the over-1 run range and wicket
 risk (v3 engine, pre-innings context) and the bowler (none announced on Cricbuzz before ball 1).
+
+## 2026-10-10: reading Cricbuzz's pages fully (user: "that's why we need to learn to read their page fully")
+Mistake corrected: the page inventory said the main page carried the scorecard; it only links to it (found by accident). Wrote
+`inspect_cricbuzz_pages.py` and read all eleven pages of a finished match; `docs/cricbuzz_page_data_inventory.md` is rewritten page by page.
+Biggest finds: (1) the graphs page has Cricbuzz's own win probability after EVERY over of both innings -- the benchmark in one fetch, no live
+logging needed; (2) the scorecard page has full cards, fall of wickets, partnerships and the result header; (3) the over-by-over page lists the
+last 8 overs with scores (a possible mid-innings catch-up); (4) highlights/full-commentary/squads pages are saved but unused; facts/forecast are shells.
+Built: `cricbuzz_capture.py` (+ `capture_cricbuzz_match.py`): at the end of every match the driver saves all eight data pages and the win curve; ran it for
+the nine matches we had watched (win curves exist for the three most recent). `compare_inplay_winprob.py` now uses the curve: one match so far (151565,
+29 over-forecasts): Brier ours 0.147 vs Cricbuzz 0.110 (overs 8+: 0.121 vs 0.091) -- one match, so an anecdote; ours was more jumpy early (13% vs 24% at over 7,
+a restart-affected over) and they agree closely from over 9. Collect more matches before concluding anything.
