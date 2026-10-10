@@ -91,7 +91,8 @@ def briefing_signature(text: str) -> tuple[str, bool]:
     toss = next((line for line in text.splitlines() if line.startswith("Toss:")), "")
     xi = next((line for line in text.splitlines() if line.startswith("XIs:")), "")
     counts = [int(m.group(1)) for m in re.finditer(r"(\d+) confirmed", xi)]
-    return toss, len(counts) == 2 and all(count >= FULL_XI for count in counts)
+    full = "FULL LINE-UPS CONFIRMED" in xi or (len(counts) == 2 and all(count >= FULL_XI for count in counts))
+    return toss, full
 
 
 def _briefing_update_header(old: tuple[str, bool], new: tuple[str, bool]) -> str:

@@ -342,3 +342,20 @@ def test_briefing_refresh_stops_once_the_match_has_started(monkeypatch):
     session._seen_delivery_keys.add((1, 1, 1))
     _drain(state)
     assert "cricbuzz:1" not in state._briefings
+
+
+def test_full_lineup_status_line_and_signature():
+    import types
+
+    from app.live.prematch_analysis import xi_line
+
+    def players(n):
+        return [types.SimpleNamespace(confirm_xi=i < n) for i in range(15)]
+
+    full = xi_line({"India": players(11), "West Indies": players(11)})
+    assert full == "XIs: ✅ FULL LINE-UPS CONFIRMED (India 11, West Indies 11)"
+    assert xi_line({"India": players(11), "West Indies": players(7)}) == "XIs: partly announced -- India 11 | West Indies 7 confirmed"
+    assert xi_line({"India": players(0), "West Indies": players(0)}) == "XIs: not announced yet"
+    sig = run_live_auto.briefing_signature
+    assert sig("Toss: A won, chose to bowl\n" + full)[1] is True
+    assert sig("Toss: A won, chose to bowl\nXIs: partly announced -- India 11 | West Indies 10 confirmed")[1] is False
