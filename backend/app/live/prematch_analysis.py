@@ -383,37 +383,32 @@ def _weather_line(day: dict | None) -> str:
 
 def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dict | None, h2h_text: str, form_text: str) -> list[str]:
     """The pre-match section, three lines: the win % (with its stage), the last-5 form and the head to head.
-    The build-up of the number and the model's measured accuracy are documented in the notes, not sent."""
+    One staged model produces the number (pre-toss -> after toss -> with XIs); each stage adds a block
+    on top of the same base, so the figure only moves because new information arrived."""
     from app.live.match_weather import match_day_weather
-    from app.live.prematch_conditions import predict_with_dew
-    from app.live.prematch_model import predict, venue_city
-    from app.live.prematch_xi import predict_with_xi
+    from app.live.prematch_model import venue_city
+    from app.live.prematch_xi import predict_stages
 
-    base = predict(team_a, team_b, venue, bat_first)
-    if base is None:
-        return []
     city = venue_city(venue)
+    weather = None
+    if bat_first and city:  # dew only matters once we know who chases
+        try:
+            weather = _cached(("weather", city), 600, lambda: match_day_weather(city))
+        except Exception:
+            weather = None
+    result = None
     try:
-        weather = _cached(("weather", city), 600, lambda: match_day_weather(city)) if city else None
+        names_a = (xi or {}).get(team_a, [])
+        names_b = (xi or {}).get(team_b, [])
+        result = predict_stages(team_a, team_b, bat_first, weather, names_a, names_b, city)
     except Exception:
-        weather = None
-    chosen, label, holdout, xi_result = base, "pre-toss", base["holdout"].get("full_member") or {}, None
-    try:
-        if xi and team_a in xi and team_b in xi:
-            xi_result = predict_with_xi(team_a, team_b, bat_first, weather, xi[team_a], xi[team_b], city)
-    except Exception:
-        xi_result = None
-    dew = predict_with_dew(team_a, team_b, bat_first, weather)
-    if xi_result is not None:
-        chosen, label, holdout = xi_result, "with XIs", xi_result["holdout"].get("full_member") or {}
-    elif dew is not None:
-        chosen, label, holdout = dew, "after toss", dew["holdout"].get("full_member") or {}
-    elif base["post_toss"]:
-        label = "after toss"
-
-    if bat_first and weather is None:
+        result = None
+    if result is None:
+        return []
+    label = result["stage"]
+    if bat_first and not result["dew_known"]:
         label += ", dew unknown"  # the forecast could not be fetched: the number has no dew term
-    lines = [f"Win %: {team_a} {chosen['p_a'] * 100:.0f}% | {team_b} {chosen['p_b'] * 100:.0f}% ({label})"]
+    lines = [f"Win %: {team_a} {result['p_a'] * 100:.0f}% | {team_b} {result['p_b'] * 100:.0f}% ({label})"]
     if form_text:
         lines.append(form_text)
     if h2h_text:

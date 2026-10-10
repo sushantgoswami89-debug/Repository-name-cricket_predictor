@@ -580,3 +580,21 @@ appear in the message. They are kept here: full-member holdout accuracy 66% pre-
 (n=141); build-up for India v West Indies was 62% base, dew -5, XI quality +5, matchup +3 = 65%. The decomposition code
 (`p_base`, `dew_shift`, `quality_shift`, `matchup_shift` in `predict_with_xi` / `predict_with_dew`) is still in place if it
 is wanted back.
+
+## 2026-10-10: winning calculation -- one staged model replaces the three separate ones
+Audit first: calibration is underconfident (said 85% -> favourite won 95%; said 74% -> 79%), but a calibration scale fitted
+on prior data gains only +0.0013 Brier [-0.0004,+0.0030] and the best scale swings 0.95-1.55 between years, so no standing
+fix. Full-member Brier is 0.225 vs 0.25 for a coin: T20 is mostly luck, so expect small gains.
+Problem found: three separately fitted models gave India a base of 67% / 68% / 62% as stages changed. A single model with
+the later features zeroed was significantly WORSE early (-0.0077 Brier: the XI weight is big and dropping it distorts the
+Elo/H2H weights). Fix = sequential offset fit (`train_prematch_stages.py`, `models/prematch_t20i_stages.json`): base
+(Elo + H2H) fitted first, dew fitted on top of the base logit, XI quality + matchup on top of that. Rolling-origin 2021-25
+(fit on earlier years only): identical Brier to the separate models pre-toss and after toss; with XIs +0.0013 (all, n=2146,
+CI [-0.0003,+0.0028]) / -0.0007 (full members, n=443, CI [-0.0044,+0.0030]) -- equal within noise. Live: `predict_stages`
+in `prematch_xi.py`; the briefing uses only this. The base is constant across stages and the steps add exactly.
+Fitted on ALL local matches (not just <2025) for live use, so numbers moved when it was refit: India v West Indies went
+65% -> 69% (base 70.4%, dew -6.5, XI quality +2.6, matchup +2.9). Old models (`prematch_t20i_logit/dew/xi.json`) and their
+evaluation scripts remain for comparison but are no longer used live.
+Next levers, in order of expected value: (1) more player history -- CPL/PSL/BBL/SA20 from Cricsheet (needs a download; 1 of
+11 West Indies XI players had no usable record); (2) margin-of-victory Elo and recency decay tuning; (3) separate bat/bowl
+team ratings; (4) compare the in-play win % with the Cricbuzz win % recorded in data/live/board-*.jsonl.

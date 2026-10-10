@@ -1,0 +1,64 @@
+{
+  "blocks": {
+    "base": {
+      "features": [
+        "elo",
+        "h2h",
+        "h2h5"
+      ],
+      "scale": [
+        0.4901545245057239,
+        0.2823559642973844,
+        0.34278909965282994
+      ],
+      "weights": [
+        0.6039031160419146,
+        0.37638932248916984,
+        -0.061437352267739026
+      ]
+    },
+    "dew": {
+      "features": [
+        "dew_chase"
+      ],
+      "scale": [
+        0.38037809284798024
+      ],
+      "weights": [
+        0.12544974864070246
+      ]
+    },
+    "xi": {
+      "features": [
+        "xi_quality",
+        "xi_matchup_pitch"
+      ],
+      "scale": [
+        5.218817645377737,
+        0.623290534638822
+      ],
+      "weights": [
+        0.18245050896286966,
+        0.17731416101952396
+      ]
+    }
+  },
+  "C": 0.3,
+  "trained_on": 3329,
+  "trained_through": "2026-07-01",
+  "backtest": {
+    "protocol": "rolling origin 2021-25, fit on earlier years only",
+    "all_games": {
+      "n": 2146,
+      "brier_pre_toss": 0.213,
+      "brier_after_toss": 0.2122,
+      "brier_with_xis": 0.2064
+    },
+    "full_members": {
+      "n": 443,
+      "brier_pre_toss": 0.2289,
+      "brier_after_toss": 0.2279,
+      "brier_with_xis": 0.2258
+    }
+  }
+}

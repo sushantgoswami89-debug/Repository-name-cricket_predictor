@@ -203,3 +203,46 @@ def test_weather_failure_is_retried_not_cached_and_flagged(monkeypatch):
     text = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl")
     assert "dew unknown" in text.splitlines()[0]
     assert ("weather", "ranchi") not in prematch_analysis._TTL  # the failure was not cached
+
+
+STAGES_OK = None
+
+
+def _stages_available():
+    from app.live.prematch_xi import STAGES_PATH
+
+    return STAGES_PATH.exists()
+
+
+def test_stages_keep_the_base_fixed_and_steps_add_up():
+    import pytest as _pytest
+
+    from app.live.prematch_xi import predict_stages
+
+    if not _stages_available():
+        _pytest.skip("staged model not trained")
+    india = ["Abhishek Sharma", "Sanju Samson", "Ishan Kishan", "Shreyas Iyer", "Tilak Varma", "Shivam Dube",
+             "Naman Dhir", "Axar Patel", "Arshdeep Singh", "Kuldeep Yadav", "Mayank Yadav"]
+    windies = ["Shai Hope", "Shimron Hetmyer", "Rovman Powell", "Sherfane Rutherford", "Romario Shepherd",
+               "Matthew Forde", "Roston Chase", "Akeal Hosein", "Shamar Joseph", "Gudakesh Motie", "Keemo Paul"]
+    pre = predict_stages("India", "West Indies", "", None, [], [], "ranchi")
+    toss = predict_stages("India", "West Indies", "India", WET_EVENING, [], [], "ranchi")
+    full = predict_stages("India", "West Indies", "India", WET_EVENING, india, windies, "ranchi")
+    assert (pre["stage"], toss["stage"], full["stage"]) == ("pre-toss", "after toss", "with XIs")
+    assert pre["p_base"] == _pytest.approx(toss["p_base"]) == _pytest.approx(full["p_base"])  # base never moves
+    assert pre["p_a"] == _pytest.approx(pre["p_base"])
+    assert toss["p_a"] == _pytest.approx(toss["p_base"] + toss["dew_shift"])
+    assert full["p_a"] == _pytest.approx(full["p_base"] + full["dew_shift"] + full["quality_shift"] + full["matchup_shift"])
+    assert toss["dew_shift"] < 0  # India bat first, West Indies chase into dew
+    flipped = predict_stages("West Indies", "India", "India", WET_EVENING, windies, india, "ranchi")
+    assert flipped["p_a"] == _pytest.approx(full["p_b"])  # the order the teams are named in does not matter
+    assert predict_stages("Afghanistan", "India", "", None, [], [], "dubai") is None
+
+
+def test_missing_forecast_is_flagged_in_the_win_percent_line(monkeypatch):
+    import pytest as _pytest
+
+    if not _stages_available():
+        _pytest.skip("staged model not trained")
+    text = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl")
+    assert "dew unknown" in text.splitlines()[0]  # the autouse fixture returns no forecast

@@ -407,3 +407,73 @@ def predict_with_xi(team_a, team_b, bat_first, weather_day, xi_a, xi_b, venue_ci
         "spin_lean": cond.pitch_spin(venue_city_name),
         "mix": {t: view[t]["mix"] for t in view},
     }
+
+
+STAGES_PATH = ROOT / "models" / "prematch_t20i_stages.json"
+
+
+def predict_stages(team_a, team_b, bat_first, weather_day, xi_a, xi_b, venue_city_name):
+    """The single live win-probability model (see train_prematch_stages.py).
+
+    Built in blocks on one scale: base (Elo + head-to-head) is always applied; dew needs the toss
+    (who chases) and a forecast; the XI block needs both XIs (>= 9 resolvable players each) and the
+    toss. Because each block adds to the previous logit, the base never changes between stages.
+    Returns None without a saved model or for a team with no history.
+    """
+    from app.live.prematch_model import sigmoid
+
+    try:
+        saved = json.loads(STAGES_PATH.read_text(encoding="utf-8"))["blocks"]
+    except (OSError, ValueError, KeyError):
+        return None
+    book, cond, registry, cache = current_xi_state()
+    if team_a not in cond.base.ratings or team_b not in cond.base.ratings:
+        return None
+    a, b = sorted((team_a, team_b))
+    sign = 0 if bat_first not in (a, b) else (1 if bat_first == a else -1)
+    base_row = cond.base.features(a, b, venue_city_name, 0)
+    values = {"elo": base_row[0], "h2h": base_row[2], "h2h5": base_row[3]}
+
+    def block_logit(name, vals):
+        block = saved[name]
+        return sum(w * vals[f] / sc for f, w, sc in zip(block["features"], block["weights"], block["scale"]))
+
+    def to_team_a(p_a):
+        return p_a if team_a == a else 1.0 - p_a
+
+    z_base = block_logit("base", values)
+    z = z_base
+    out = {"stage": "pre-toss", "dew_known": False, "matched": None, "mix": None}
+    z_dew = z_base
+    if sign:
+        out["stage"] = "after toss"
+        if weather_day is not None:
+            out["dew_known"] = True
+            z_dew = z_base + block_logit("dew", {"dew_chase": dew_index(weather_day) * -sign})
+        z = z_dew
+    z_xi = z_dew
+    if sign and xi_a and xi_b:
+        resolved = {t: [resolve_player(n, t) for n in names] for t, names in ((team_a, xi_a), (team_b, xi_b))}
+        if all(sum(p is not None for p in names) >= 9 for names in resolved.values()):
+            xi = {t: [p for p in names if p] for t, names in resolved.items()}
+            view = {t: team_view(book, xi[t], registry, cache) for t in (a, b)}
+            tilt = pitch_tilt(cond.pitch_spin(venue_city_name))
+            quality = (view[a]["bat_overall"] + view[a]["bowl_quality"]) - (view[b]["bat_overall"] + view[b]["bowl_quality"])
+            mu_p = matchup(view[a], view[b], tilt) - matchup(view[b], view[a], tilt)
+            z_quality = z_dew + block_logit("xi", {"xi_quality": quality * 20.0, "xi_matchup_pitch": 0.0})
+            z_xi = z_dew + block_logit("xi", {"xi_quality": quality * 20.0, "xi_matchup_pitch": mu_p * 20.0})
+            z = z_xi
+            out.update(
+                stage="with XIs",
+                matched={t: len(xi[t]) for t in xi},
+                mix={t: view[t]["mix"] for t in view},
+                quality_shift=to_team_a(sigmoid(z_quality)) - to_team_a(sigmoid(z_dew)),
+                matchup_shift=to_team_a(sigmoid(z_xi)) - to_team_a(sigmoid(z_quality)),
+            )
+    p_final = to_team_a(sigmoid(z))
+    out.update(
+        p_a=p_final, p_b=1.0 - p_final,
+        p_base=to_team_a(sigmoid(z_base)),
+        dew_shift=to_team_a(sigmoid(z_dew)) - to_team_a(sigmoid(z_base)),
+    )
+    return out
