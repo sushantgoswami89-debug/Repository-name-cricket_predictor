@@ -382,10 +382,10 @@ def predict_with_xi(team_a, team_b, bat_first, weather_day, xi_a, xi_b, venue_ci
     tilt = pitch_tilt(cond.pitch_spin(venue_city_name))
     base = cond.base.features(a, b, venue_city_name, 0)
 
-    def features(use_quality: bool, use_matchup: bool):
+    def features(use_quality: bool, use_matchup: bool, use_dew: bool = True):
         quality = (view[a]["bat_overall"] + view[a]["bowl_quality"]) - (view[b]["bat_overall"] + view[b]["bowl_quality"])
         mu_p = matchup(view[a], view[b], tilt) - matchup(view[b], view[a], tilt)
-        x = {"elo": base[0], "h2h": base[2], "h2h5": base[3], "dew_chase": dew_index(weather_day) * -sign,
+        x = {"elo": base[0], "h2h": base[2], "h2h5": base[3], "dew_chase": dew_index(weather_day) * -sign if use_dew else 0.0,
              "xi_quality": quality * 20.0 if use_quality else 0.0,
              "xi_matchup_pitch": mu_p * 20.0 if use_matchup else 0.0}
         return x
@@ -398,8 +398,10 @@ def predict_with_xi(team_a, team_b, bat_first, weather_day, xi_a, xi_b, venue_ci
     p = prob(features(True, True))
     p_none = prob(features(False, False))
     p_quality = prob(features(True, False))
+    p_base = prob(features(False, False, use_dew=False))  # strength + H2H only, this model's weights
     return {
         "p_a": p, "p_b": 1.0 - p, "xi_shift": p - p_none,
+        "p_base": p_base, "dew_shift": p_none - p_base,
         "quality_shift": p_quality - p_none, "matchup_shift": p - p_quality,
         "matched": {t: len(xi[t]) for t in xi}, "holdout": saved.get("holdout", {}),
         "spin_lean": cond.pitch_spin(venue_city_name),

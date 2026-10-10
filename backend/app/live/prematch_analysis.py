@@ -392,15 +392,29 @@ def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dic
         label = "after toss"
 
     lines = [f"Win %: {team_a} {chosen['p_a'] * 100:.0f}% | {team_b} {chosen['p_b'] * 100:.0f}% ({label})"]
+    # One compiled estimate: the base rating, then each condition step, adding up to the number above.
+    chaser = team_b if bat_first == team_a else team_a
+    if xi_result is not None or dew is not None:
+        source = xi_result if xi_result is not None else dew
+        steps = [f"{team_a} {source['p_base'] * 100:.0f}% on strength + {h2h_text or 'H2H n/a'}"]
+        if xi_result is not None:
+            for name, key in (("dew", "dew_shift"), ("XI quality", "quality_shift"), ("spin/pace matchup", "matchup_shift")):
+                if abs(xi_result[key]) >= 0.005:
+                    extra = f" ({chaser} chase)" if name == "dew" else ""
+                    steps.append(f"{name} {xi_result[key] * 100:+.0f}{extra}")
+        elif abs(dew["dew_shift"]) >= 0.005:
+            steps.append(f"dew {dew['dew_shift'] * 100:+.0f} ({chaser} chase)")
+        lines.append("How: " + " | ".join(steps) + f" = {chosen['p_a'] * 100:.0f}%  (points are for {team_a})")
+    else:
+        dew_note = ""
+        if weather and weather.get("eve_temp") is not None and weather.get("eve_dew_point") is not None:
+            if weather["eve_temp"] - weather["eve_dew_point"] <= 2.5:
+                dew_note = "; toss pending -- dew would help whoever chases"
+        lines.append(f"How: {team_a} {base['p_a'] * 100:.0f}% on strength + {h2h_text or 'H2H n/a'}{dew_note}")
     if holdout:
         lines.append(
             f"A lean, not a forecast: the model was right {holdout['acc'] * 100:.0f}% on {holdout['n']} unseen full-member games."
         )
-    reasons = [h2h_text] if h2h_text else []
-    if xi_result is not None:
-        reasons.append(f"XIs {xi_result['xi_shift'] * 100:+.0f} pts for {team_a}")
-    if reasons:
-        lines.append("Why: " + "; ".join(reasons))
     if form_text:
         lines.append(form_text)
     return lines
@@ -459,17 +473,12 @@ def prematch_header(
     pitch_note: str | None = None,
     start_utc_ms: int | None = None,
 ) -> list[str]:
-    """The lines under the title: Weather, Pitch (flat / green / turning with its
-    evidence) and Advantage (the team the conditions favour, in points of win probability).
-
-    Advantage = dew effect + spin/pace XI matchup effect for each side -- the parts of the win %
-    that come from conditions, not from team strength or history. Before the toss dew cannot be
-    assigned to a team (it helps whoever chases), so that is said instead.
-    """
+    """The facts under the title: Weather, Dew (weight, chance, onset) and Pitch (flat / green /
+    turning with its evidence). The estimate itself -- win % and how it builds up from the base
+    rating through dew and the XI effects -- is ONE compiled block at the bottom (prematch_text),
+    so the briefing never gives two estimates that point different ways."""
     from app.live.match_weather import match_day_weather
-    from app.live.prematch_conditions import predict_with_dew
     from app.live.prematch_model import venue_city
-    from app.live.prematch_xi import predict_with_xi
 
     city = venue_city(venue)
     try:
@@ -482,37 +491,4 @@ def prematch_header(
     if start_utc_ms and weather and weather.get("utc_offset_s") is not None:
         local_s = start_utc_ms / 1000.0 + weather["utc_offset_s"]
         start_local_h = (local_s % 86400) / 3600.0
-    lines = [_weather_line(weather), _dew_line(dew_outlook(weather, start_local_h)), _track_call(note, city, cloud)]
-
-    a, b = team_a.strip(), team_b.strip()
-    bat_first = _bat_first_team(a, b, toss_won_by, toss_decision)
-    dew_likely = bool(
-        weather and weather.get("eve_temp") is not None and weather.get("eve_dew_point") is not None
-        and weather["eve_temp"] - weather["eve_dew_point"] <= 2.5
-    )
-    if not bat_first:
-        lines.append(
-            "Advantage: toss pending -- dew would help whoever chases" if dew_likely else "Advantage: toss pending -- no clear conditions edge yet"
-        )
-        return lines
-    edge_a = 0.0
-    notes = []
-    try:
-        dew = predict_with_dew(a, b, bat_first, weather)
-        if dew is not None and abs(dew["dew_shift"]) >= 0.005:
-            edge_a += dew["dew_shift"]
-            chaser = b if bat_first == a else a
-            notes.append(f"dew helps {chaser} ({abs(dew['dew_shift']) * 100:.0f} pts)")
-        if xi and a in xi and b in xi:
-            result = predict_with_xi(a, b, bat_first, weather, xi[a], xi[b], city)
-            if result is not None and abs(result["matchup_shift"]) >= 0.005:
-                edge_a += result["matchup_shift"]
-                side = a if result["matchup_shift"] > 0 else b
-                notes.append(f"spin/pace matchup favours {side} ({abs(result['matchup_shift']) * 100:.0f} pts)")
-    except Exception:
-        pass
-    if abs(edge_a) < 0.01:
-        lines.append("Advantage: even on conditions" + (f" ({'; '.join(notes)})" if notes else ""))
-    else:
-        lines.append(f"Advantage: {a if edge_a > 0 else b} on conditions ({'; '.join(notes)})")
-    return lines
+    return [_weather_line(weather), _dew_line(dew_outlook(weather, start_local_h)), _track_call(note, city, cloud)]

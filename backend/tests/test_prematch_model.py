@@ -122,17 +122,36 @@ def test_track_call_uses_toi_pitch_field_not_its_boilerplate_and_admits_gaps():
     assert "overcast" in _track_call("", "ranchi", 85)
 
 
-def test_header_has_weather_pitch_and_advantage_lines(monkeypatch):
+def test_header_has_weather_dew_and_pitch_only_the_estimate_is_one_block(monkeypatch):
     from app.live.prematch_analysis import prematch_header
 
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: WET_EVENING)
-    pre = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", pitch_note="Batting friendly")
-    heads = [line.split(":")[0] for line in pre if not line.startswith("  ")]
-    assert heads == ["Weather", "Dew", "Pitch", "Advantage"]  # the ground record lives on the title line
-    assert next(l for l in pre if l.startswith("Pitch")).startswith("Pitch: flat")
-    assert pre[-1] == "Advantage: toss pending -- dew would help whoever chases"
-    post = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl", pitch_note="")
-    assert post[-1].startswith("Advantage: West Indies on conditions") and "dew helps West Indies" in post[-1]
+    lines = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl",
+                            pitch_note="Batting friendly")
+    assert [l.split(":")[0] for l in lines] == ["Weather", "Dew", "Pitch"]
+    assert not any(l.startswith("Advantage") for l in lines)  # the estimate is not repeated up here
+
+
+def test_compiled_estimate_steps_add_up_to_the_win_percent():
+    import re
+
+    from app.live.prematch_analysis import prematch_text
+
+    xi = {
+        "India": ["Abhishek Sharma", "Sanju Samson", "Ishan Kishan", "Shreyas Iyer", "Tilak Varma", "Shivam Dube",
+                  "Naman Dhir", "Axar Patel", "Arshdeep Singh", "Kuldeep Yadav", "Ravi Bishnoi"],
+        "West Indies": ["Shai Hope", "Shimron Hetmyer", "Rovman Powell", "Sherfane Rutherford", "Romario Shepherd",
+                        "Matthew Forde", "Roston Chase", "Akeal Hosein", "Shamar Joseph", "Gudakesh Motie", "Keemo Paul"],
+    }
+    text = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl", xi)
+    lines = text.splitlines()
+    assert lines[0].startswith("Win %: India") and lines[1].startswith("How: India ")
+    assert not any(l.startswith(("Why:", "Advantage")) for l in lines)
+    base = int(re.search(r"How: India (\d+)%", lines[1]).group(1))
+    steps = [int(x) for x in re.findall(r"(?:dew|XI quality|spin/pace matchup) ([+-]\d+)", lines[1])]
+    final = int(re.search(r"= (\d+)%", lines[1]).group(1))
+    assert abs(base + sum(steps) - final) <= 1  # rounding only
+    assert f"India {final}%" in lines[0]
 
 
 def _day(gaps_by_hour, sunset=17.5):

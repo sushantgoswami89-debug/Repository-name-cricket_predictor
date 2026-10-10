@@ -247,6 +247,7 @@ def predict_with_dew(team_a: str, team_b: str, bat_first: str, weather_day: dict
     return {
         "p_a": p_first,
         "p_b": 1.0 - p_first,
+        "p_base": p0_first,
         "dew": dew,
         "dew_shift": p_first - p0_first,
         "holdout": saved.get("holdout", {}),
