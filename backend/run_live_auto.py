@@ -38,8 +38,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import queue
 import re
+import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
@@ -77,6 +80,40 @@ def _team_pair(label: str) -> frozenset[str] | None:
     if len(parts) != 2 or not all(parts):
         return None
     return frozenset(parts)
+
+
+POLL_GAP_ALERT_SECONDS = 120.0
+
+
+class PollWatchdog:
+    """Notices when the driver itself stopped running for a while -- the Mac went to sleep or the process
+    was suspended. On 2026-10-09 the first archived page of two matches was ~56 min after the start:
+    nothing was polled for the first hour and nobody was told. The loop sleeps 10 s, so a wall-clock
+    jump of two minutes or more between two iterations means the machine (or process) was not running."""
+
+    def __init__(self, threshold_seconds: float = POLL_GAP_ALERT_SECONDS, clock=time.time) -> None:
+        self.threshold = threshold_seconds
+        self._clock = clock
+        self._last = clock()
+
+    def tick(self) -> float | None:
+        """Call once per loop iteration; returns the gap in seconds when it exceeds the threshold."""
+        now = self._clock()
+        gap = now - self._last
+        self._last = now
+        return gap if gap >= self.threshold else None
+
+
+def keep_awake() -> subprocess.Popen | None:
+    """Stop macOS idle-sleeping while this driver runs (`caffeinate -i -s -w <pid>` exits with us).
+    Closing the lid on battery still sleeps the Mac. Returns the helper process, or None elsewhere."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        return subprocess.Popen(["caffeinate", "-i", "-s", "-w", str(os.getpid())],
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except OSError:
+        return None
 
 
 BRIEFING_REFRESH_SECONDS = 60.0
@@ -464,6 +501,9 @@ def main() -> None:
     parser.add_argument(
         "--shadow", action="store_true", help="Do not publish to Telegram."
     )
+    parser.add_argument(
+        "--no-keep-awake", action="store_true", help="Do not stop the Mac from idle-sleeping while running."
+    )
     args = parser.parse_args()
     project_root = Path(__file__).resolve().parents[1]
     cricbuzz_discovery = CricbuzzMatchDiscovery()
@@ -478,8 +518,24 @@ def main() -> None:
         f"T20Is -- mode: {mode}. Press Control+C to stop."
     )
 
+    awake = None if args.no_keep_awake else keep_awake()
+    print("Keep-awake: " + ("on (caffeinate, Mac will not idle-sleep while this runs)" if awake else "off"))
+    watchdog = PollWatchdog()
     worker = _ScanWorker(cricbuzz_discovery, toi_discovery)
     while True:
+        gap = watchdog.tick()
+        if gap is not None:
+            message = (
+                f"⚠️ CricketBaba: nothing was polled for {gap / 60:.1f} min (the Mac slept or the process was "
+                "suspended). Balls bowled in that gap may be missing from the log; the live state is rebuilt "
+                "from the page on the next poll."
+            )
+            print(message)
+            if publisher is not None:
+                try:
+                    publisher.publish(f"pollgap:{int(time.time())}", message)
+                except Exception:
+                    pass
         now = time.monotonic()
         if now - last_scan >= max(10.0, args.scan_seconds) and not worker.busy:
             worker.start()

@@ -659,3 +659,28 @@ log by tests/conftest.py.
 Backfilled with the numbers the driver printed on 10-09 (flagged `backfilled`, earlier model version): India v West Indies "with XIs"
 India 66% -> West Indies won (reported by the user); Pakistan v Sri Lanka "after toss" Pakistan 73% -> Pakistan won.
 Live record so far: 1/2 picks right; far too few to say anything. Backtest to compare against: ~68% all, ~64% full members.
+
+## 2026-10-10: the seven open items, done
+1. **Dew points on the Dew line**: `Dew: HEAVY -- 90%, sets in ~18:40 (WI +5 pts), Pitch: ...` -- the chaser's gain from the staged model,
+   shown once the toss is known.
+2. **Batting v bowling in both directions** (with full XIs): `India bat v WI bowl: +55 runs vs avg | WI attack pace 49% / spin 51%` and the
+   mirror line, plus `| WI weak v wrist spin (22% of overs)` when a batting side is >= 10 net runs below its own average against a type
+   the opposition bowls >= 15% of overs. Numbers are net runs per 20 overs vs an average T20 innings (a wicket costs 12), a rating scale
+   not a predicted score.
+3. **Commentary/scoreboard**: (a) `matchHeader` is now the match-end signal (`complete`/`state`) and decides the result text and winner,
+   verified on 151576: "West Indies won by 6 wkts", India 249/5, WI 252/4. (b) `LiveDelivery.dismissed` (who went out; run-outs of the
+   non-striker handled; defaults to "" for old saved states). (c) The scorecard is NOT in the match page (only a link): it is a separate page,
+   `/live-cricket-scorecard/<id>/x`, now parsed (`cricbuzz_scorecard.py`: batting/bowling cards, extras, fall of wickets, header) and used as
+   an independent cross-check once per over and at the finish: `[card] 14.0 ov: OK` or the mismatches, saved to card-checks-<match>.jsonl.
+   Totals are always compared; per-batter runs and fall of wickets only when we saw the innings from ball 1.
+4. **Poll-gap watchdog and keep-awake**: the driver prints (and sends to Telegram when live) "nothing was polled for X min" if the wall clock
+   jumps >= 2 min between loops, and starts `caffeinate -i -s -w <pid>` so the Mac does not idle-sleep while it runs (opt out with
+   --no-keep-awake). Closing the lid on battery still sleeps the Mac.
+5. **Telegram control service restarted** (launchctl kickstart): `prematch status` is now read-only.
+6. **In-play win % vs Cricbuzz's**: `compare_inplay_winprob.py` joins our GBM+NN shadow log with the `cb_win` percentages in the board logs;
+   board log lines now name the batting team, so pairs accumulate from the next match. Existing data has almost no overlap (one chase,
+   151565 India: ours 94% at over 10, 92% at 12, 97% at 14 vs Cricbuzz 91%, 98%, 99%; ours was ~40% at over 5 only because that over was
+   computed on a wrongly restarted state). No scored comparison is possible yet.
+7. **Afghanistan**: confirmed upstream -- Cricsheet has ZERO Afghanistan matches in any archive (0 of 5,775 international T20s, men's and women's,
+   and none in the leagues). A re-download cannot fix it. The briefing now says "Win %: not available -- no match history for Afghanistan in our
+   data" instead of silently dropping the line. Real fix needs another source (ESPNcricinfo/Cricbuzz history) for their results.

@@ -449,6 +449,32 @@ def _compact_block(
         lines.append(form_text)
     if h2h_text:
         lines.append(h2h_text)
+    lines.extend(_matchup_lines(result))
+    return lines
+
+
+_GROUP_WORDS = {"pace": "pace", "finger": "finger spin", "wrist": "wrist spin"}
+
+
+def _matchup_lines(result: dict) -> list[str]:
+    """Two lines, one per direction, once both XIs are known:
+    "India bat v WI bowl: +55 | WI attack: pace 49% / spin 51%". The number is net runs per 20 overs
+    against an average T20 innings (a wicket costs 12), after the opposing attack's mix is applied."""
+    directions = result.get("directions")
+    if not directions:
+        return []
+    lines = []
+    for bat, d in directions.items():
+        bowl = d["bowling_team"]
+        mix = d["attack_mix"]
+        spin = mix["finger"] + mix["wrist"]
+        line = (
+            f"{_short_team(bat)} bat v {_short_team(bowl)} bowl: {d['net_runs']:+.0f} runs vs avg | "
+            f"{_short_team(bowl)} attack pace {mix['pace'] * 100:.0f}% / spin {spin * 100:.0f}%"
+        )
+        if d["weak_vs"]:
+            line += f" | {_short_team(bat)} weak v {_GROUP_WORDS[d['weak_vs']]} ({d['weak_share'] * 100:.0f}% of overs)"
+        lines.append(line)
     return lines
 
 
@@ -468,8 +494,11 @@ def prematch_text(
         return None
     a, b = team_a.strip(), team_b.strip()
     known = {team for row in rows for team in row["teams"]}
-    if a not in known or b not in known:
-        return None
+    missing = [t for t in (a, b) if t not in known]
+    if missing:
+        # Cricsheet has no Afghanistan matches at all (0 of 5,775 international T20s), so say so
+        # instead of silently dropping the win % (checked 2026-10-10: not fixable by a download).
+        return f"Win %: not available -- no match history for {' / '.join(missing)} in our data"
 
     h2h = [r for r in rows if r["teams"] == {a, b} and r["winner"]]
     # Head to head over the last 5 decided meetings: "Head to head: India - 3 vs WI - 2 in last 5 matches".
@@ -551,7 +580,21 @@ def prematch_header(
     if start_utc_ms and weather and weather.get("utc_offset_s") is not None:
         local_s = start_utc_ms / 1000.0 + weather["utc_offset_s"]
         start_local_h = (local_s % 86400) / 3600.0
+    dew_text = _dew_short(dew_outlook(weather, start_local_h))
+    a, b = team_a.strip(), team_b.strip()
+    bat_first = _bat_first_team(a, b, toss_won_by, toss_decision)
+    if bat_first and weather:
+        try:
+            from app.live.prematch_model import venue_city as _vc
+            from app.live.prematch_xi import predict_stages
+
+            staged = predict_stages(a, b, bat_first, weather, [], [], _vc(venue))
+        except Exception:
+            staged = None
+        if staged and abs(staged["dew_shift"]) >= 0.005:
+            chaser = b if bat_first == a else a
+            dew_text += f" ({_short_team(chaser)} +{abs(staged['dew_shift']) * 100:.0f} pts)"
     return [
         _weather_line(weather),
-        _dew_short(dew_outlook(weather, start_local_h)) + ", " + _pitch_short(note),
+        dew_text + ", " + _pitch_short(note),
     ]

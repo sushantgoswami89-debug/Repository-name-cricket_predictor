@@ -220,6 +220,21 @@ def _classify_wicket(comm_text: str) -> str | None:
     return "unknown" if re.search(r"\bOUT\b", comm_text, re.IGNORECASE) else None
 
 
+_RUN_OUT_NAME = re.compile(r"([A-Z][\w.'-]*(?:\s+[A-Z][\w.'-]*)*)\s+[Rr]un\s+[Oo]ut")
+
+
+def dismissed_batter(wicket_kind: str | None, commentary: str, striker: str) -> str:
+    """Who went out. For a run-out it can be the non-striker (seen live 2026-10-06: Shimron Hetmyer
+    run out while Shai Hope faced the ball); every other dismissal is the striker. "" without a wicket."""
+    if not wicket_kind:
+        return ""
+    if wicket_kind == "run out":
+        match = _RUN_OUT_NAME.search(commentary)
+        if match:
+            return match.group(1)
+    return striker
+
+
 _HEAD_SEGMENT = re.compile(
     r"^(?:no\s*runs?|\d+\s*runs?|four|six|wides?|\d+\s+wides?|no\s*ball|(?:leg\s*)?byes?|out\b.*)$",
     re.IGNORECASE,
@@ -568,6 +583,11 @@ class CricbuzzLiveReader:
             innings_complete = True
 
         toss_won_by, toss_decision = self._toss_from_chunks(chunks)
+        # The page's own match header says when the match is over ("Complete" + a result), which is more
+        # reliable than inferring it from the score and the target.
+        match_complete = bool(board and (board.get("complete") is True or str(board.get("state") or "").lower() == "complete"))
+        if match_complete:
+            innings_complete = True
 
         return LiveSnapshot(
             match_id=match_id,
@@ -585,6 +605,7 @@ class CricbuzzLiveReader:
             is_live=True,
             target=self._target_from_chunks(chunks),
             innings_complete=innings_complete,
+            match_complete=match_complete,
             scheduled_overs=scheduled_overs,
             deliveries=tuple(deliveries),
             team_players=self._squads_from_chunks(chunks),
@@ -1033,6 +1054,11 @@ class CricbuzzLiveReader:
                     feed_wickets=prior.feed_wickets + delta_wkts,
                     timestamp_ms=_int_field(obj, "timestamp", 0),
                     commentary=re.sub(r"<[^>]+>", "", comm_text),
+                    dismissed=dismissed_batter(
+                        wicket_kind,
+                        re.sub(r"<[^>]+>", "", comm_text),
+                        obj.get("batsmanDetails", {}).get("playerName", "") or prior.striker,
+                    ),
                 )
                 self._pending_repairs.append(
                     f"innings {innings} ball {prior.over - 1}.{prior.ball}: entry revised by Cricbuzz "
@@ -1089,6 +1115,11 @@ class CricbuzzLiveReader:
                 feed_wickets=running_wickets,
                 timestamp_ms=_int_field(obj, "timestamp", 0),
                 commentary=re.sub(r"<[^>]+>", "", comm_text),
+                dismissed=dismissed_batter(
+                    wicket_kind,
+                    re.sub(r"<[^>]+>", "", comm_text),
+                    obj.get("batsmanDetails", {}).get("playerName", ""),
+                ),
             )
 
         if known:

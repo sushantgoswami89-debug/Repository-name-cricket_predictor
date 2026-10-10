@@ -363,3 +363,24 @@ def test_full_lineup_status_line_and_signature():
     sig = run_live_auto.briefing_signature
     assert sig("Toss: A won, chose to bowl\n" + full)[1] is True
     assert sig("Toss: A won, chose to bowl\nXIs: partly announced -- India 11 | West Indies 10 confirmed")[1] is False
+
+
+def test_poll_watchdog_flags_a_suspended_driver_but_not_a_normal_loop():
+    now = [1000.0]
+    dog = run_live_auto.PollWatchdog(threshold_seconds=120.0, clock=lambda: now[0])
+    now[0] += 10.0
+    assert dog.tick() is None            # ordinary 10 s loop
+    now[0] += 3400.0
+    assert dog.tick() == 3400.0          # the Mac slept for ~57 minutes
+    now[0] += 10.0
+    assert dog.tick() is None            # back to normal, no repeated alert
+
+
+def test_keep_awake_launches_caffeinate_tied_to_this_process(monkeypatch):
+    calls = []
+    monkeypatch.setattr(run_live_auto.sys, "platform", "darwin")
+    monkeypatch.setattr(run_live_auto.subprocess, "Popen", lambda args, **k: calls.append(args) or "proc")
+    assert run_live_auto.keep_awake() == "proc"
+    assert calls[0][0] == "caffeinate" and "-w" in calls[0] and str(run_live_auto.os.getpid()) in calls[0]
+    monkeypatch.setattr(run_live_auto.sys, "platform", "linux")
+    assert run_live_auto.keep_awake() is None

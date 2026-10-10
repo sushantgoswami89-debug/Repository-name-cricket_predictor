@@ -489,8 +489,21 @@ def predict_stages(team_a, team_b, bat_first, weather_day, xi_a, xi_b, venue_cit
             z_quality = z_dew + block_logit("xi", {"xi_quality": quality * 20.0, "xi_matchup_pitch": 0.0})
             z_xi = z_dew + block_logit("xi", {"xi_quality": quality * 20.0, "xi_matchup_pitch": mu_p * 20.0})
             z = z_xi
+            directions = {}
+            for bat, bowl in ((a, b), (b, a)):
+                value = sum(view[bowl]["mix"][g] * view[bat]["bat_group"][g] for g in GROUPS) - view[bowl]["bowl_quality"]
+                weakest = min(GROUPS, key=lambda g: view[bat]["bat_group"][g] - view[bat]["bat_overall"])
+                gap_runs = (view[bat]["bat_group"][weakest] - view[bat]["bat_overall"]) * 120.0
+                directions[bat] = {
+                    "bowling_team": bowl,
+                    "net_runs": value * 120.0,  # net runs (wicket = 12) per 20 overs vs an average T20 innings
+                    "attack_mix": view[bowl]["mix"],
+                    "weak_vs": weakest if gap_runs <= -10.0 and view[bowl]["mix"][weakest] >= 0.15 else None,
+                    "weak_share": view[bowl]["mix"][weakest],
+                }
             out.update(
                 stage="with XIs",
+                directions=directions,
                 matched={t: len(xi[t]) for t in xi},
                 mix={t: view[t]["mix"] for t in view},
                 quality_shift=to_team_a(sigmoid(z_quality)) - to_team_a(sigmoid(z_dew)),

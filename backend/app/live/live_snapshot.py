@@ -41,6 +41,9 @@ class LiveDelivery:
     feed_wickets: int
     timestamp_ms: int
     commentary: str
+    # Who actually went out on a wicket ball: the striker for most dismissals, but a run-out can
+    # take the non-striker. "" when no wicket (or unknown); older saved states lack it.
+    dismissed: str = ""
 
     @property
     def key(self) -> tuple[int, int, int]:

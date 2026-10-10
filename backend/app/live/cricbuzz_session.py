@@ -26,11 +26,13 @@ import requests
 
 from app.live.commentary_log import append_commentary_log
 from app.live.cricbuzz_reader import (
+    dismissed_batter,
     CricbuzzFeedError,
     CricbuzzInningsNotStarted,
     CricbuzzLiveReader,
     _extract_flight_chunks,
 )
+from app.live.cricbuzz_scorecard import compare_with_deliveries, fetch_scorecard
 from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
 from app.live.pipeline import (
     MatchStateAnomaly,
@@ -76,7 +78,10 @@ def _fetch_freshest(reader: CricbuzzLiveReader, match_url: str, attempts: int = 
 
 
 def _match_result_text(snapshot) -> str | None:
-    """None while the match is still live."""
+    """None while the match is still live. The page's match header wins over our own inference."""
+    header = _header_result(snapshot)
+    if header is not None:
+        return header[0]
     if snapshot.innings < 2:
         return None
     target_reached = snapshot.target > 0 and snapshot.score >= snapshot.target
@@ -97,8 +102,22 @@ def _match_result_text(snapshot) -> str | None:
     return None
 
 
+def _header_result(snapshot) -> tuple[str | None, str | None] | None:
+    """(status text, winning team or None) when the page's own match header says the match is over, else None.
+    A win names the winner; a tie / no result / abandonment has no winner."""
+    board = getattr(snapshot, "board", None) or {}
+    if not (board.get("complete") is True or str(board.get("state") or "").lower() == "complete"):
+        return None
+    result = board.get("result") if isinstance(board.get("result"), dict) else {}
+    winner = result.get("winningTeam") if result.get("resultType") == "win" else None
+    return (board.get("status") or "Match complete"), winner
+
+
 def _match_winner(snapshot) -> str | None:
     """The winning team once the match is decided, else None (mirrors _match_result_text)."""
+    header = _header_result(snapshot)
+    if header is not None:
+        return header[1]
     if snapshot.innings < 2:
         return None
     if snapshot.target > 0 and snapshot.score >= snapshot.target:
@@ -112,14 +131,8 @@ _RUN_OUT_NAME = re.compile(r"([A-Z][\w.'-]*(?:\s+[A-Z][\w.'-]*)*)\s+[Rr]un\s+[Oo
 
 
 def _dismissed_batter(delivery) -> str:
-    """Who actually went out. For a run-out it can be the non-striker (seen
-    live 2026-10-06: Shimron Hetmyer run out while Shai Hope faced the ball,
-    and the event line named Hope). Every other dismissal is the striker."""
-    if delivery.wicket_kind == "run out":
-        match = _RUN_OUT_NAME.search(delivery.commentary)
-        if match:
-            return match.group(1)
-    return delivery.striker
+    """Who actually went out (see cricbuzz_reader.dismissed_batter); uses the stored field when present."""
+    return getattr(delivery, "dismissed", "") or dismissed_batter(delivery.wicket_kind, delivery.commentary, delivery.striker)
 
 
 def _ball_label(snapshot, delivery) -> str:
@@ -373,7 +386,8 @@ def _archive_page(snapshot, log_path, state: dict) -> None:
                 {
                     "fetched_at": now,
                     "innings": snapshot.innings,
-                    "ours": {"score": snapshot.score, "wickets": snapshot.wickets, "overs": snapshot.overs},
+                    "ours": {"score": snapshot.score, "wickets": snapshot.wickets, "overs": snapshot.overs,
+                         "batting_team": snapshot.batting_team, "bowling_team": snapshot.bowling_team},
                     "board": board,
                 },
                 default=str,
@@ -551,6 +565,7 @@ class CricbuzzMatchSession:
     _announced_bowler: tuple[int, str] | None = None
     _last_hold: str | None = None
     _expected_next: dict | None = None
+    _carded: set = field(default_factory=set)
     _archive_state: dict = field(default_factory=dict)
     _stuck_alert_sent: bool = False
     # User-requested 2026-09-18: a persistent per-delivery commentary log
@@ -686,6 +701,7 @@ class CricbuzzMatchSession:
                 self._logged_delivery_keys,
             )
 
+        self._card_check(snapshot)
         snapshot = _with_announced_bowler(snapshot, self._announced_bowler)
         hold = _prediction_hold(snapshot)
         if hold:
@@ -734,6 +750,34 @@ class CricbuzzMatchSession:
             if self.publisher is not None:
                 self.publisher.publish(f"result:{self.match_id}", f"🏆 {result}")
             self._finished = True
+
+    def _card_check(self, snapshot) -> None:
+        """At each over end (and at the finish) compare our rebuilt innings with Cricbuzz's own scorecard
+        page: totals always, per-batter runs and fall of wickets when we saw the innings from ball 1.
+        One extra request per over; any failure is silent (it is a cross-check, never required)."""
+        if not snapshot.deliveries:
+            return
+        at_over_end = str(snapshot.overs).endswith(".0")
+        finished = bool(getattr(snapshot, "match_complete", False))
+        key = (snapshot.innings, str(snapshot.overs), finished)
+        if not (at_over_end or finished) or key in self._carded:
+            return
+        self._carded.add(key)
+        card = fetch_scorecard(self.match_id)
+        if card is None:
+            return
+        problems = []
+        for innings in sorted({d.innings for d in snapshot.deliveries}):
+            problems += compare_with_deliveries(card, snapshot.deliveries, innings)
+        verdict = "OK" if not problems else "MISMATCH: " + "; ".join(problems[:4])
+        print(f"[{self.match_id}] [card] {snapshot.overs} ov: {verdict}")
+        if self.commentary_log_path is not None:
+            try:
+                with self.commentary_log_path.with_name(f"card-checks-{self.match_id}.jsonl").open("a", encoding="utf-8") as handle:
+                    handle.write(json.dumps({"innings": snapshot.innings, "overs": str(snapshot.overs), "problems": problems,
+                                             "header": card.get("header")}) + "\n")
+            except OSError:
+                pass
 
     def _check_stuck(self, error: Exception | None) -> None:
         """One Telegram alert (deduplicated, auto-resets on recovery) if

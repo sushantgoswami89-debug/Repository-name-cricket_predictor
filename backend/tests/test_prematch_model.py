@@ -1,5 +1,7 @@
 """Pre-match win model: point-in-time features, orientation-free output, briefing text."""
 
+import re
+
 import pytest
 
 from app.live.prematch_analysis import _bat_first_team, prematch_text
@@ -324,3 +326,42 @@ def test_briefing_logs_the_prediction_when_given_a_match_id(tmp_path, monkeypatc
     assert rec["pct_a"] + rec["pct_b"] + rec["pct_nr"] == 100
     assert prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl") is not None
     assert len((tmp_path / "p.jsonl").read_text().splitlines()) == 1  # no match_id -> nothing logged
+
+
+def test_team_without_history_gets_an_explicit_no_win_percent_line():
+    text = prematch_text("Afghanistan", "Zimbabwe", "Sharjah Cricket Stadium, Sharjah")
+    assert text == "Win %: not available -- no match history for Afghanistan in our data"
+
+
+def test_both_directions_of_the_batting_bowling_matchup_are_shown_with_full_xis():
+    import re
+
+    india = ["Abhishek Sharma", "Sanju Samson", "Ishan Kishan", "Shreyas Iyer", "Tilak Varma", "Shivam Dube",
+             "Naman Dhir", "Axar Patel", "Arshdeep Singh", "Kuldeep Yadav", "Mayank Yadav"]
+    windies = ["Shai Hope", "Shimron Hetmyer", "Rovman Powell", "Sherfane Rutherford", "Romario Shepherd",
+               "Matthew Forde", "Roston Chase", "Akeal Hosein", "Shamar Joseph", "Gudakesh Motie", "Keemo Paul"]
+    text = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl",
+                         {"India": india, "West Indies": windies})
+    lines = text.splitlines()
+    pattern = r"(India|WI) bat v (India|WI) bowl: [+-]\d+ runs vs avg \| (India|WI) attack pace \d+% / spin \d+%.*"
+    matchup = [l for l in lines if " bat v " in l]
+    assert len(matchup) == 2 and all(re.fullmatch(pattern, l) for l in matchup), matchup
+    assert {l.split(" bat v ")[0] for l in matchup} == {"India", "WI"}  # one line per direction
+    no_xi = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl")
+    assert " bat v " not in no_xi  # nothing to show before the line-ups are known
+
+
+def test_dew_line_states_the_win_percent_points_for_the_chasing_side(monkeypatch):
+    from app.live import prematch_analysis
+
+    gaps = {str(h): 1.0 for h in range(12, 24)}
+    hours = {h: {"temp": 21.0, "dew_point": 20.0, "humidity": 95} for h in range(0, 24)}
+    wet = {**WET_EVENING, "eve_temp": 21.0, "eve_dew_point": 20.0, "hours": hours, "sunset_h": 17.5, "utc_offset_s": 19800,
+           "gap_h": gaps, "eve_rain_mm": 0.0, "eve_rain_hours": 0}
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: wet)
+    prematch_analysis._TTL.clear()
+    lines = prematch_analysis.prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi",
+                                              "West Indies", "bowl", pitch_note="Batting friendly")
+    assert re.search(r"Dew: HEAVY -- \d+%, sets in ~\d\d:\d\d \(WI \+\d+ pts\), Pitch: flat", lines[1]), lines[1]
+    pre = prematch_analysis.prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", pitch_note="")
+    assert "pts" not in pre[1]  # before the toss nobody is the chaser yet
