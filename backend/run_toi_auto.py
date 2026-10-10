@@ -63,7 +63,6 @@ def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | No
     lines.append(
         toss_line(toss_won_by, toss_decision, team_names[0] if len(team_names) == 2 else "", team_names[1] if len(team_names) == 2 else "")
     )
-    lines.append(xi_line(team_players))
     if len(team_names) == 2:
         analysis = prematch_text(
             team_names[0], team_names[1], ToiLiveReader._venue_name(raw), toss_won_by, toss_decision,
@@ -72,10 +71,10 @@ def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | No
         if analysis:
             lines.append("")
             lines.append(analysis)
-    names = xi_names(team_players)
-    if names:
-        lines.append("")
-        lines.extend(names)
+    # The whole line-up block (status line, then the names once both XIs are full) goes last.
+    lines.append("")
+    lines.append(xi_line(team_players))
+    lines.extend(xi_names(team_players))
     return "\n".join(lines)
 
 

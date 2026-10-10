@@ -478,16 +478,15 @@ def briefing_text(match_id: str, match_url: str, label: str) -> str | None:
         except Exception as error:  # never block the briefing, but do not hide the bug
             print(f"[briefing] header unavailable: {error!r}")
     lines.append(toss_line(toss_won_by, toss_decision, teams[0] if len(teams) == 2 else "", teams[1] if len(teams) == 2 else ""))
-    lines.append(xi_line(team_players))
     if len(teams) == 2:
         analysis = prematch_text(teams[0], teams[1], venue or "", toss_won_by, toss_decision, confirmed_xi(team_players))
         if analysis:
             lines.append("")
             lines.append(analysis)
-    names = xi_names(team_players)
-    if names:
-        lines.append("")
-        lines.extend(names)
+    # The whole line-up block (status line, then the names once both XIs are full) goes last.
+    lines.append("")
+    lines.append(xi_line(team_players))
+    lines.extend(xi_names(team_players))
     return "\n".join(lines)
 
 
