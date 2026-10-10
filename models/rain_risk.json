@@ -1,0 +1,22 @@
+{
+  "features": [
+    "eve_rain_mm",
+    "eve_rain_hours"
+  ],
+  "trained_on": 4687,
+  "trained_through": "2026-07-02",
+  "no_result": {
+    "coef": [
+      0.4699068218223626,
+      1.2082337513160506
+    ],
+    "intercept": -4.990464762296838
+  },
+  "interrupted": {
+    "coef": [
+      0.17086771464702355,
+      1.274808866707162
+    ],
+    "intercept": -3.7529477721504354
+  }
+}

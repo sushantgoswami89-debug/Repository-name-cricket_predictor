@@ -40,7 +40,10 @@ def summarise(hourly: dict) -> dict[str, dict]:
     for day, hours in by_day.items():
         evening = [hours[h] for h in range(19, 23) if h in hours]
         afternoon = [hours[h] for h in range(12, 19) if h in hours]
+        match_hours = [hours[h] for h in range(17, 24) if h in hours]  # a T20 runs roughly 18:00-23:00
         out[day] = {
+            "eve_rain_mm": round(sum(x[4] or 0 for x in match_hours), 2),
+            "eve_rain_hours": sum(1 for x in match_hours if (x[4] or 0) >= 0.1),
             "eve_temp": _mean(x[0] for x in evening),
             "eve_humidity": _mean(x[1] for x in evening),
             "eve_dew_point": _mean(x[2] for x in evening),

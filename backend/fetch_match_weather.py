@@ -106,7 +106,7 @@ def _clusters(dates: list[str], gap_days: int = 20) -> list[tuple[str, str]]:
     return out
 
 
-def main() -> int:
+def main(refresh: bool = False) -> int:
     from concurrent.futures import ThreadPoolExecutor, as_completed
     import threading
 
@@ -131,7 +131,7 @@ def main() -> int:
         if not geo.get(city):
             continue
         have = daily.setdefault(city, {})
-        for first, last in _clusters(sorted(d for d in needed[city] if d not in have)):
+        for first, last in _clusters(sorted(d for d in needed[city] if refresh or d not in have or "eve_rain_mm" not in have[d])):
             tasks.append((city, first, last))
     print(f"{len(tasks)} date windows to fetch", flush=True)
 

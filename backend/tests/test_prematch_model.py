@@ -246,3 +246,38 @@ def test_missing_forecast_is_flagged_in_the_win_percent_line(monkeypatch):
         _pytest.skip("staged model not trained")
     text = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl")
     assert "dew unknown" in text.splitlines()[0]  # the autouse fixture returns no forecast
+
+
+def test_rain_risk_rises_with_rain_and_is_capped():
+    from app.live.rain_risk import CAP_INTERRUPTED, CAP_NO_RESULT, rain_risk
+
+    if not (rain_risk({"eve_rain_mm": 0.0, "eve_rain_hours": 0}) or None):
+        import pytest as _pytest
+
+        _pytest.skip("rain model not trained")
+    dry = rain_risk({"eve_rain_mm": 0.0, "eve_rain_hours": 0})
+    drizzle = rain_risk({"eve_rain_mm": 1.0, "eve_rain_hours": 2})
+    storm = rain_risk({"eve_rain_mm": 40.0, "eve_rain_hours": 7})
+    assert dry["p_interrupted"] < drizzle["p_interrupted"] < storm["p_interrupted"] <= CAP_INTERRUPTED
+    assert dry["p_no_result"] < drizzle["p_no_result"] < storm["p_no_result"] <= CAP_NO_RESULT
+    assert all(r["p_no_result"] <= r["p_interrupted"] for r in (dry, drizzle, storm))
+    assert rain_risk(None) is None and rain_risk({"rain_mm": 1.0}) is None  # no match-window field -> no guess
+
+
+def test_win_percent_gets_a_no_result_share_when_rain_threatens(monkeypatch):
+    from app.live import prematch_analysis
+
+    wet = {**WET_EVENING, "eve_rain_mm": 6.0, "eve_rain_hours": 4, "rain_mm": 9.0, "hours": {}}
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: wet)
+    prematch_analysis._TTL.clear()
+    line = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl").splitlines()[0]
+    import re
+
+    parts = [int(x) for x in re.findall(r"(\d+)%", line)]
+    assert "No result " in line and sum(parts[:3]) == 100  # India + West Indies + No result add to 100
+    dry = {**WET_EVENING, "eve_rain_mm": 0.0, "eve_rain_hours": 0, "hours": {}}
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: dry)
+    prematch_analysis._TTL.clear()
+    line = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl").splitlines()[0]
+    assert "No result" not in line and sum(int(x) for x in re.findall(r"(\d+)%", line)[:2]) == 100  # dry day: plain two-way split
+    assert "rain risk" in prematch_analysis._weather_line(wet)

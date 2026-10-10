@@ -617,3 +617,17 @@ Headline moves for India v West Indies as the model improved/refit today: 65% ->
 (new Elo). Old saved models (prematch_t20i_logit/dew/xi.json) are legacy; they load the new Elo so their numbers are not
 meaningful any more -- the live path uses only prematch_t20i_stages.json.
 Still open: separate bat/bowl team ratings; compare the in-play win % with Cricbuzz's (data/live/board-*.jsonl).
+
+## 2026-10-10: rain risk brought into the win %
+Ground truth from Cricsheet's own outcomes (4,687 men's T20I + IPL matches): 143 decided by D/L or awarded, 86 "no result".
+Recorded rain is a strong signal: daily rain < 0.1 mm -> 1.1% of matches interrupted, 0.4% washed out; 3-8 mm -> 16% / 5.8%;
+8-20 mm -> 19% / 9.7%. Weather backfill re-pulled with match-window rain (17:00-midnight local: `eve_rain_mm`,
+`eve_rain_hours`). `train_rain_risk.py` -> `models/rain_risk.json`; `app/live/rain_risk.py`.
+Skill is modest: chronological test (fit <2024, score 2024+, n=1,694) interruption Brier 0.0440 vs 0.0466 for the constant
+base rate; washout 0.0212 vs 0.0220. Calibrated except the top band (said 32% -> 17% actually, n=42), so risk is capped at 25%
+interrupted / 15% washout. Applied to a FORECAST although trained on recorded rain, so real uncertainty is larger.
+How it enters the win %: washout probability becomes a third share ("Win %: India 64% | West Indies 26% | No result 10%"), each
+side's chance scaled by (1 - P(no result)); shown only when >= 2%. The Weather line shows "rain risk X% (washout Y%)".
+What I tested and did NOT build: a rain effect on who wins. Among 85 completed D/L matches (rolling 2017-25) the chasing side won
+51.8% vs 51.2% in normal matches, and the favourite's confidence scale was 0.99 [0.48,1.70] vs 1.19 [1.07,1.31] normal -- no
+reliable shift toward the chaser, and only a hint (not significant) of more randomness. No day-night / reduced-overs modelling.

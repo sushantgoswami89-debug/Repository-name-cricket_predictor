@@ -377,7 +377,12 @@ def _weather_line(day: dict | None) -> str:
         parts.append(f"humidity {day['eve_humidity']:.0f}%")
     if day.get("aft_cloud") is not None:
         parts.append(f"cloud {day['aft_cloud']:.0f}%")
+    from app.live.rain_risk import rain_risk
+
+    risk = rain_risk(day)
     parts.append(f"rain {day['rain_mm']:.1f} mm" if day.get("rain_mm") else "no rain")
+    if risk:
+        parts.append(f"rain risk {risk['p_interrupted'] * 100:.0f}% (washout {risk['p_no_result'] * 100:.0f}%)")
     return "Weather: " + ", ".join(parts)
 
 
@@ -391,7 +396,7 @@ def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dic
 
     city = venue_city(venue)
     weather = None
-    if bat_first and city:  # dew only matters once we know who chases
+    if city:  # the forecast gives rain risk before the toss and dew once we know who chases
         try:
             weather = _cached(("weather", city), 600, lambda: match_day_weather(city))
         except Exception:
@@ -408,7 +413,21 @@ def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dic
     label = result["stage"]
     if bat_first and not result["dew_known"]:
         label += ", dew unknown"  # the forecast could not be fetched: the number has no dew term
-    lines = [f"Win %: {team_a} {result['p_a'] * 100:.0f}% | {team_b} {result['p_b'] * 100:.0f}% ({label})"]
+    from app.live.rain_risk import rain_risk
+
+    risk = rain_risk(weather)
+    p_nr = risk["p_no_result"] if risk else 0.0
+    if p_nr < 0.02:  # a washout below 2% is noise: show the plain two-way split
+        p_nr = 0.0
+    # Rain enters the number as a washout share: each side can only win if the match is completed.
+    shares = [result["p_a"] * (1 - p_nr), result["p_b"] * (1 - p_nr), p_nr]
+    pct = [int(round(v * 100)) for v in shares]
+    favourite = 0 if shares[0] >= shares[1] else 1
+    pct[favourite] += 100 - sum(pct)  # keep the printed numbers summing to exactly 100
+    win_line = f"Win %: {team_a} {pct[0]}% | {team_b} {pct[1]}%"
+    if p_nr > 0:
+        win_line += f" | No result {pct[2]}%"
+    lines = [f"{win_line} ({label})"]
     if form_text:
         lines.append(form_text)
     if h2h_text:
