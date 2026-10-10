@@ -95,13 +95,19 @@ def toss_line(toss_won_by: str, toss_decision: str, team_a: str = "", team_b: st
 
 
 def xi_line(team_players: dict) -> str:
-    """Line-up status: "XIs: ✅ FULL LINE-UPS CONFIRMED (India 11, West Indies 11)", a partial
+    """Line-up status: "XIs: ✅ FULL LINE-UPS CONFIRMED (India 11, West Indies 11)" followed by one
+    line of names per team in batting order, a partial
     "XIs: partly announced -- India 11 | West Indies 7 confirmed", or "XIs: not announced yet"."""
     counts = {team: sum(1 for p in players if p.confirm_xi) for team, players in (team_players or {}).items()}
     if not counts or not any(counts.values()):
         return "XIs: not announced yet"
     if len(counts) == 2 and all(n >= 11 for n in counts.values()):
-        return "XIs: ✅ FULL LINE-UPS CONFIRMED (" + ", ".join(f"{team} {n}" for team, n in counts.items()) + ")"
+        header = "XIs: ✅ FULL LINE-UPS CONFIRMED (" + ", ".join(f"{team} {n}" for team, n in counts.items()) + ")"
+        names = [
+            f"{team}: " + ", ".join(p.name for p in sorted(players, key=lambda p: p.position) if p.confirm_xi)
+            for team, players in team_players.items()
+        ]
+        return "\n".join([header, *names])
     return "XIs: partly announced -- " + " | ".join(f"{team} {n}" for team, n in counts.items()) + " confirmed"
 
 

@@ -350,10 +350,12 @@ def test_full_lineup_status_line_and_signature():
     from app.live.prematch_analysis import xi_line
 
     def players(n):
-        return [types.SimpleNamespace(confirm_xi=i < n) for i in range(15)]
+        return [types.SimpleNamespace(confirm_xi=i < n, name=f"P{i}", position=i + 1) for i in range(15)]
 
     full = xi_line({"India": players(11), "West Indies": players(11)})
-    assert full == "XIs: ✅ FULL LINE-UPS CONFIRMED (India 11, West Indies 11)"
+    assert full.splitlines()[0] == "XIs: ✅ FULL LINE-UPS CONFIRMED (India 11, West Indies 11)"
+    assert full.splitlines()[1] == "India: " + ", ".join(f"P{i}" for i in range(11))  # names, batting order, bench excluded
+    assert len(full.splitlines()) == 3
     assert xi_line({"India": players(11), "West Indies": players(7)}) == "XIs: partly announced -- India 11 | West Indies 7 confirmed"
     assert xi_line({"India": players(0), "West Indies": players(0)}) == "XIs: not announced yet"
     sig = run_live_auto.briefing_signature
