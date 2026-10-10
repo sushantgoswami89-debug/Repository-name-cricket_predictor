@@ -695,3 +695,14 @@ scorecard page (the two "not out" batters), used only when the card's total matc
 is removed; with fewer than two left it says "see board after the first ball" instead of guessing. The not-out pair is fetched once per
 over end together with the card cross-check. Still to confirm on a real match: the `[check] over N: ... HIT/MISS` lines
 (next-over-checks-<match>.jsonl) -- 1 check so far, 1 MISS (the case above).
+
+## 2026-10-10: 1st-over prediction
+Path (unchanged, verified in tests): Cricbuzz page with no ball-by-ball and the scheduled start passed -> `_pre_first_ball_snapshot` (batting side from the toss)
+-> pipeline `_pre_innings_prediction` fires the over-1 run range / wicket risk / win % before the first ball. Re-checked against everything added since:
+the prediction hold, scorecard check and announced-bowler code all skip an empty snapshot.
+Two fixes: (1) the over-1 message's "Win Probability" came from the IN-PLAY match-winner model while the briefing showed the staged pre-match
+model, so the two disagreed (10-06: over-1 message 33.5/66.5). Over 1 now uses the staged model (same number as the briefing; weather, XIs
+and toss included), labelled "(pre-match model)", with the in-play value kept in metadata. The in-play shadow logs still record the in-play
+model. (2) The new batting-team guard recorded the side from the pre-first-ball snapshot, which is only a guess from the toss; a wrong guess would
+have blocked the whole innings. It now records the side only from a snapshot that has real deliveries. Not changed: the over-1 run range and wicket
+risk (v3 engine, pre-innings context) and the bowler (none announced on Cricbuzz before ball 1).

@@ -191,7 +191,9 @@ class VerifiedLivePredictionPipeline:
         # found a team-identity bug somewhere new (09-15 team swap, 10-06 empty
         # teamName falling back to India mid-innings); refuse such a snapshot
         # instead of letting it reach the models.
-        if snapshot.batting_team and not self._batting_team_by_scope.get(scope):
+        if snapshot.batting_team and snapshot.deliveries and not self._batting_team_by_scope.get(scope):
+            # Only a snapshot with real deliveries fixes the side: before the first ball it is a guess from
+            # the toss, and a wrong guess must not block the whole innings.
             self._batting_team_by_scope[scope] = snapshot.batting_team
         seen_team = self._batting_team_by_scope.get(scope, "")
         if snapshot.batting_team and seen_team and snapshot.batting_team != seen_team:
@@ -531,6 +533,7 @@ class VerifiedLivePredictionPipeline:
         win_probability = self._predict_win_probability(context)
         self._log_win_probability_shadow(snapshot, 1, win_probability)
         self._log_match_winner_ensemble_shadow(snapshot, 1, win_probability)
+        win_probability = self._pre_innings_win_probability(snapshot, win_probability)
         output: dict[str, object] = {
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
@@ -550,6 +553,45 @@ class VerifiedLivePredictionPipeline:
         self._publish_output(snapshot, 1, output)
         self._persist(snapshot)
         return output
+
+    def _pre_innings_win_probability(
+        self, snapshot: LiveSnapshot, in_play: dict[str, object]
+    ) -> dict[str, object]:
+        """Before a ball is bowled the in-play model has nothing in-play to go on, and the briefing already
+        shows the staged pre-match model's number; on 2026-10-06 the two differed (over-1 message 33.5/66.5 vs
+        a different briefing figure). Use the staged model here too (team strength, head-to-head, dew, XIs),
+        keep the in-play model's number in the metadata. Fault-isolated: any failure keeps the in-play value."""
+        try:
+            from app.live.match_weather import match_day_weather
+            from app.live.prematch_analysis import _cached, confirmed_xi
+            from app.live.prematch_model import venue_city
+            from app.live.prematch_xi import predict_stages
+
+            city = venue_city(snapshot.venue_name or "")
+            weather = _cached(("weather", city), 600, lambda: match_day_weather(city)) if city else None
+            xi = confirmed_xi(snapshot.team_players) or {}
+            staged = predict_stages(
+                snapshot.batting_team, snapshot.bowling_team, snapshot.batting_team, weather,
+                xi.get(snapshot.batting_team, []), xi.get(snapshot.bowling_team, []), city,
+            )
+            if staged is None:
+                return in_play
+            metadata = dict(in_play.get("metadata") or {}) if isinstance(in_play, dict) else {}
+            metadata.update(
+                basis="pre_match_staged_model",
+                stage=staged["stage"],
+                in_play_model_probability=in_play.get("win_probability") if isinstance(in_play, dict) else None,
+            )
+            return {
+                **(in_play if isinstance(in_play, dict) else {}),
+                "status": "applied",
+                "win_probability": staged["p_a"],
+                "batting_team": snapshot.batting_team,
+                "bowling_team": snapshot.bowling_team,
+                "metadata": metadata,
+            }
+        except Exception:
+            return in_play
 
     def _predict_win_probability(self, context: MatchContext) -> dict[str, object]:
         """Fault-isolated: a problem here (missing snapshot, artifact
@@ -1109,6 +1151,8 @@ class VerifiedLivePredictionPipeline:
             # both are visible on real live matches -- not routed on yet,
             # just observed. Omitted (not a fake 0%) if the shadow call
             # itself failed -- see monte_carlo_shadow_error handling there.
+            if win.get("metadata", {}).get("basis") == "pre_match_staged_model":
+                win_line += " (pre-match model)"
             shadow = win.get("metadata", {}).get("monte_carlo_shadow_win_probability")
             if shadow is not None:
                 win_line += f" (Monte Carlo shadow: {float(shadow) * 100:.1f}%)"

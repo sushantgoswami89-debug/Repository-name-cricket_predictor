@@ -777,3 +777,33 @@ def test_batting_team_change_inside_an_innings_is_refused() -> None:
     with pytest.raises(MatchStateAnomaly, match="Batting team changed"):
         pipeline.process(flipped)
     assert pipeline.process(replace(first, batting_team="")) is None  # unnamed is ignored, not a change
+
+
+def _pre_innings_snapshot() -> LiveSnapshot:
+    return replace(_snapshot(), deliveries=(), score=0, wickets=0, overs="0.0", innings=1,
+                   batting_team="West Indies", bowling_team="India", venue_name="JSCA International Stadium Complex, Ranchi",
+                   toss_won_by="India", toss_decision="bowl")
+
+
+def test_over_one_win_probability_is_the_pre_match_staged_model_not_the_in_play_one(monkeypatch) -> None:
+    from app.live.prematch_xi import STAGES_PATH, predict_stages
+
+    if not STAGES_PATH.exists():
+        pytest.skip("staged model not trained")
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: None)
+    pipeline = VerifiedLivePredictionPipeline(engine=FakeEngine(), publisher=FakePublisher())
+    out = pipeline.process(_pre_innings_snapshot())
+    assert out is not None and out["over"] == 1 and out["prediction_basis"] == "pre_innings_context"
+    win = out["win_probability"]
+    expected = predict_stages("West Indies", "India", "West Indies", None, [], [], "ranchi")["p_a"]
+    assert win["win_probability"] == pytest.approx(expected)
+    assert win["batting_team"] == "West Indies" and win["metadata"]["basis"] == "pre_match_staged_model"
+    assert "(pre-match model)" in VerifiedLivePredictionPipeline._telegram_text(out)
+
+
+def test_a_wrong_toss_guess_before_the_first_ball_does_not_block_the_innings(monkeypatch) -> None:
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: None)
+    pipeline = VerifiedLivePredictionPipeline(engine=FakeEngine(), publisher=FakePublisher())
+    pipeline.process(replace(_pre_innings_snapshot(), batting_team="India", bowling_team="West Indies"))  # toss guess: wrong side
+    real = replace(_snapshot(), innings=1, batting_team="West Indies", bowling_team="India")
+    pipeline.process(real)  # must not raise MatchStateAnomaly (it may legitimately return no prediction yet)
