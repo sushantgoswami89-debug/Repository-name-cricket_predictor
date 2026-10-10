@@ -345,7 +345,7 @@ def test_next_over_line_uses_announced_bowler_and_last_ball_parity():
 
     def snap(last_runs, batter_runs, wicket=None):
         last = SimpleNamespace(
-            timestamp_ms=1000, over=13, striker="Iyer", total_runs=last_runs, batter_runs=batter_runs, wicket_kind=wicket
+            timestamp_ms=1000, over=13, innings=2, dismissed="", striker="Iyer", total_runs=last_runs, batter_runs=batter_runs, wicket_kind=wicket
         )
         return SimpleNamespace(
             overs="13.0", innings_complete=False, deliveries=[last],
@@ -426,3 +426,47 @@ def test_next_over_expectation_is_checked_against_the_first_real_ball():
     miss = SimpleNamespace(deliveries=(ball(14, 1, "Kishan", "Springer"),))
     assert _check_next_over(expected, miss).count("MISS") == 2
     assert _check_next_over(None, hit) is None
+
+
+def _over_break_snapshot(striker="Kishan", last_runs=1, wicket=None, dismissed="", board_pair=("Kishan", "Iyer")):
+    from types import SimpleNamespace
+
+    last = SimpleNamespace(
+        timestamp_ms=1000, over=13, innings=2, striker=striker, bowler="Hosein", total_runs=last_runs,
+        batter_runs=last_runs, wicket_kind=wicket, dismissed=dismissed, commentary="",
+    )
+    return SimpleNamespace(
+        overs="13.0", innings_complete=False, deliveries=[last], batting_team="India", score=140, wickets=2,
+        board={"striker": board_pair[0], "non_striker": board_pair[1], "bowler": "Hosein"},
+    )
+
+
+def test_over_break_line_shows_no_stale_bowler_or_batter_names():
+    from app.live.cricbuzz_session import _scorecard_line
+
+    line = _scorecard_line(_over_break_snapshot())
+    assert "over complete (last ball: Hosein to Kishan)" in line
+    assert "NOW" not in line and "on strike" not in line   # the board's names are the finished over's
+    mid = _over_break_snapshot()
+    mid.overs = "13.2"
+    assert "[NOW: Hosein* bowling, Kishan* on strike" in _scorecard_line(mid)  # mid-over the board is current
+
+
+def test_next_striker_uses_the_card_pair_and_drops_dismissed_batters():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _expected_next_over
+
+    # last ball a single by Kishan: batters crossed, then the ends change for the new over -> Kishan faces again
+    snap = _over_break_snapshot(striker="Kishan", last_runs=1)
+    got = _expected_next_over(snap, None, crease=["Kishan", "Iyer"])
+    assert (got["striker"], got["other"], got["over"]) == ("Kishan", "Iyer", 14)
+    # even run: the other batter faces
+    assert _expected_next_over(_over_break_snapshot(striker="Kishan", last_runs=2), None, crease=["Kishan", "Iyer"])["striker"] == "Iyer"
+    # a stale board still listing a batter who is out must not be trusted (the 10-09 miss: expected Kishan, Dube faced)
+    stale = _over_break_snapshot(striker="Dube", last_runs=0, board_pair=("Kishan", "Dube"))
+    stale.deliveries.insert(0, SimpleNamespace(timestamp_ms=900, over=11, innings=2, striker="Kishan", bowler="Chase",
+                                               total_runs=0, batter_runs=0, wicket_kind="bowled", dismissed="Kishan", commentary=""))
+    assert _expected_next_over(stale, None)["striker"] == ""   # only one batter left in the pair -> says so instead of guessing
+    # a wicket on the last ball: nothing derived
+    assert _expected_next_over(_over_break_snapshot(wicket="caught", dismissed="Kishan"), None, crease=["Iyer", "New"])["striker"] == ""

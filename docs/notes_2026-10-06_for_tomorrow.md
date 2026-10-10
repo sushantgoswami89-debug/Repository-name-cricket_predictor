@@ -684,3 +684,14 @@ Live record so far: 1/2 picks right; far too few to say anything. Backtest to co
 7. **Afghanistan**: confirmed upstream -- Cricsheet has ZERO Afghanistan matches in any archive (0 of 5,775 international T20s, men's and women's,
    and none in the leagues). A re-download cannot fix it. The briefing now says "Win %: not available -- no match history for Afghanistan in our
    data" instead of silently dropping the line. Real fix needs another source (ESPNcricinfo/Cricbuzz history) for their results.
+
+## 2026-10-10: stale bowler/batter at the over break -- fixed properly (user raised it again)
+Cause #1: the scorecard line still printed "last ball: X to Y [NOW: bowler* ..., striker* ...]" at an over break, but the page's board
+keeps the finished over's names until the next ball. Now, between the last ball of an over and the first of the next, the line reads
+"over complete (last ball: Hosein to Kishan)" with no board names, followed by the "[NEXT OVER, expected: ...]" part.
+Cause #2 (found in the first real next-over self-check, 151576 over 12: expected Ishan Kishan, actual Shivam Dube = MISS): the derived
+striker came from the board's pair, and the stale board still listed Kishan after he was out. Now the pair at the crease comes from the
+scorecard page (the two "not out" batters), used only when the card's total matches ours, and anyone our own deliveries show as dismissed
+is removed; with fewer than two left it says "see board after the first ball" instead of guessing. The not-out pair is fetched once per
+over end together with the card cross-check. Still to confirm on a real match: the `[check] over N: ... HIT/MISS` lines
+(next-over-checks-<match>.jsonl) -- 1 check so far, 1 MISS (the case above).
