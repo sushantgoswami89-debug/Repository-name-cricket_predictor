@@ -550,3 +550,14 @@ XIs); one-line honesty note (model right X% on N unseen full-member games); "Why
 dew call; ground record. Dropped from the message (documented here instead): methodology/disclaimer paragraphs, "tested and
 left out" (cloud, team-level spin/pace), attack-mix percentages, input list, separate pitch/venue/weather lines (TOI keeps one
 "TOI: pitch ...; weather ..." line). The re-send signature now reads the "Toss:" and "XIs:" lines.
+
+## 2026-10-10: briefing header -- weather, pitch call, conditions advantage
+Three lines directly under the title: Weather (evening temp, humidity, cloud, rain, DEW LIKELY flag from Open-Meteo),
+Pitch (flat / green / turning with its evidence) and Advantage (team the conditions favour = dew effect + XI spin/pace
+matchup effect, in win-probability points; before the toss: "dew would help whoever chases").
+Evidence rules, from out-of-sample checks run today: ground scoring level predicts the next match's first-innings total
+(corr 0.37), so "ground scoring high/average/low" is reported; the ground's spin-vs-pace wicket history does NOT
+(corr 0.05), so it is not used to call a pitch turning. Green / turning come only from TOI's pitch descriptor; TOI's
+"likely track ... grip for slower balls/spin" sentence is boilerplate printed for every dry surface (same text on four
+grounds), so it is ignored; with no TOI note the line says "green / turning: no reliable source for this ground".
+Cricbuzz path fetches TOI's pitch note by team names (10-min cache); TOI path passes its own.

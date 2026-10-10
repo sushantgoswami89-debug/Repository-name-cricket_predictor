@@ -13,7 +13,7 @@ import requests
 
 from app.live.commentary_log import append_commentary_log
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
-from app.live.prematch_analysis import confirmed_xi, prematch_text, toss_line, xi_line
+from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, xi_line
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery, is_t20_international
 from app.live.toi_reader import ToiFeedError, ToiLiveReader
@@ -49,22 +49,21 @@ def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | No
     team_names = list(team_players)
     city = ToiLiveReader._venue_name(raw).rsplit(",", 1)[-1].strip()
     lines = [f"🏏 {label}" + (f" -- {city}" if city else "")]
+    if len(team_names) == 2:
+        toi_note = " | ".join(x for x in (pitch_type, pitch_surface) if x and "unknown" not in x.lower())
+        try:
+            lines.extend(
+                prematch_header(
+                    team_names[0], team_names[1], ToiLiveReader._venue_name(raw), toss_won_by, toss_decision,
+                    confirmed_xi(team_players), pitch_note=toi_note,
+                )
+            )
+        except Exception:
+            pass
     lines.append(
         toss_line(toss_won_by, toss_decision, team_names[0] if len(team_names) == 2 else "", team_names[1] if len(team_names) == 2 else "")
     )
     lines.append(xi_line(team_players))
-    extras = []
-    if pitch_type or pitch_surface:
-        extras.append(f"pitch {pitch_type or 'unknown'}/{pitch_surface or 'unknown'}")
-    if weather_condition or humidity is not None:
-        weather = [weather_condition or "unknown"]
-        if temperature is not None:
-            weather.append(f"{temperature:.0f}C")
-        if humidity is not None:
-            weather.append(f"{humidity:.0f}% humidity")
-        extras.append("weather " + ", ".join(weather))
-    if extras:
-        lines.append("TOI: " + "; ".join(extras))
     if len(team_names) == 2:
         analysis = prematch_text(
             team_names[0], team_names[1], ToiLiveReader._venue_name(raw), toss_won_by, toss_decision,

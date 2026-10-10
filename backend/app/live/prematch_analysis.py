@@ -148,6 +148,122 @@ def _dew_line(day: dict) -> str:
     return f"Dew: not expected ({detail})"
 
 
+_TTL: dict = {}
+
+
+def _cached(key, seconds, fn):
+    """Tiny time-limited cache so the header and the body share one weather / TOI call."""
+    import time as _time
+
+    hit = _TTL.get(key)
+    if hit and _time.monotonic() - hit[0] < seconds:
+        return hit[1]
+    value = fn()
+    _TTL[key] = (_time.monotonic(), value)
+    return value
+
+
+def toi_pitch_note(team_a: str, team_b: str) -> str:
+    """TOI's pitch note for this fixture ("Batting friendly; Dry surface | Likely ...") or "".
+    Best effort: any failure returns "" so a briefing never depends on it."""
+
+    def fetch():
+        try:
+            from app.live.toi_discovery import ToiMatchDiscovery
+
+            wanted = {team_a.lower(), team_b.lower()}
+            for match in ToiMatchDiscovery().matches():
+                if {t.strip().lower() for t in match.label.split(" vs ")} == wanted:
+                    pitch = "" if "unknown; unknown" in match.pitch.lower() else match.pitch
+                    track = "" if "no reliable" in match.likely_track.lower() else match.likely_track
+                    return " | ".join(x for x in (pitch, track) if x)
+        except Exception:
+            pass
+        return ""
+
+    return _cached(("toi-pitch", team_a, team_b), 600, fetch)
+
+
+def _track_call(note: str, city: str, cloud: float | None) -> str:
+    """Flat / green / turning, only from evidence that holds up.
+
+    * ground scoring level (prior T20I + IPL first-innings totals at the ground vs all
+      grounds) -- validated out of sample: correlation 0.37 with the next match's total;
+    * TOI's pitch note, the only direct source for "green" or "turning";
+    * the ground's spin-vs-pace wicket history is NOT used: its correlation with the next
+      match's spin share was 0.05.
+    """
+    import re
+
+    from app.live.prematch_conditions import load_facts
+
+    totals = _cached(("ground-totals",), 3600, lambda: _ground_totals())
+    ground = totals.get(city, [])
+    league = totals.get("__all__", [150.0])
+    league_avg = sum(league) / len(league)
+    scoring = ""
+    if len(ground) >= 5:
+        avg = sum(ground) / len(ground)
+        shrunk = (sum(ground) + 10 * league_avg) / (len(ground) + 10)
+        label = "high" if shrunk >= league_avg + 8 else "low" if shrunk <= league_avg - 10 else "average"
+        scoring = f"ground scoring {label}, avg {avg:.0f} in {len(ground)} games vs {league_avg:.0f} overall"
+    # Only TOI's own pitch descriptor decides the call. Its "likely track" sentence ("good grip
+    # for slower balls/spin as the surface wears") is boilerplate it prints for every dry
+    # surface (seen on four different grounds in one day), so it is not evidence.
+    pitch_field = note.split("|")[0].strip()
+    text = pitch_field.lower()
+    kind = ""
+    if re.search(r"\b(green|grass|seam|pace[- ]friendly|bowling[- ]friendly|bounce)\b", text):
+        kind = "green / seam-friendly"
+    elif re.search(r"\b(spin|turn|turning|dusty)\b", text):
+        kind = "turning"
+    elif re.search(r"batting[- ]friendly|true batting|\bflat\b", text):
+        kind = "flat"
+    parts = []
+    if kind:
+        parts.append(f"{kind} (TOI: {pitch_field})")
+    elif pitch_field:
+        parts.append(f"TOI: {pitch_field}")
+    if "dry" in text and kind != "turning":
+        parts.append("may take turn as it wears")
+    if scoring:
+        parts.append(scoring)
+    if cloud is not None and cloud >= 70:
+        parts.append(f"overcast ({cloud:.0f}% cloud) -- some help for seamers")
+    if not kind:
+        parts.append("green / turning: no reliable source for this ground")
+    return "Pitch: " + "; ".join(parts)
+
+
+def _ground_totals() -> dict:
+    from app.live.prematch_conditions import load_facts
+
+    out: dict = {"__all__": []}
+    for fact in load_facts():
+        if fact["totals"]:
+            out.setdefault(fact["city"], []).append(fact["totals"][0])
+            out["__all__"].append(fact["totals"][0])
+    return out
+
+
+def _weather_line(day: dict | None) -> str:
+    if not day:
+        return "Weather: forecast unavailable"
+    parts = []
+    if day.get("eve_temp") is not None:
+        parts.append(f"{day['eve_temp']:.0f}C in the evening")
+    if day.get("eve_humidity") is not None:
+        parts.append(f"humidity {day['eve_humidity']:.0f}%")
+    if day.get("aft_cloud") is not None:
+        parts.append(f"cloud {day['aft_cloud']:.0f}%")
+    parts.append(f"rain {day['rain_mm']:.1f} mm" if day.get("rain_mm") else "no rain")
+    gap = None
+    if day.get("eve_temp") is not None and day.get("eve_dew_point") is not None:
+        gap = day["eve_temp"] - day["eve_dew_point"]
+    dew = "" if gap is None else " | DEW LIKELY (helps the chasing side)" if gap <= 2.5 else " | no dew expected"
+    return "Weather: " + ", ".join(parts) + dew
+
+
 def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dict | None, h2h_text: str, form_text: str) -> list[str]:
     """The pre-match section: win %, the reason in one line, form, dew, ground."""
     from app.live.match_weather import match_day_weather
@@ -160,7 +276,7 @@ def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dic
         return []
     city = venue_city(venue)
     try:
-        weather = match_day_weather(city) if city else None
+        weather = _cached(("weather", city), 600, lambda: match_day_weather(city)) if city else None
     except Exception:
         weather = None
     chosen, label, holdout, xi_result = base, "pre-toss", base["holdout"].get("full_member") or {}, None
@@ -185,17 +301,10 @@ def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dic
     reasons = [h2h_text] if h2h_text else []
     if xi_result is not None:
         reasons.append(f"XIs {xi_result['xi_shift'] * 100:+.0f} pts for {team_a}")
-    if dew is not None and abs(dew["dew_shift"]) >= 0.005:
-        chaser = team_b if bat_first == team_a else team_a
-        reasons.append(f"dew favours {chaser} ({abs(dew['dew_shift']) * 100:.0f} pts)")
     if reasons:
         lines.append("Why: " + "; ".join(reasons))
     if form_text:
         lines.append(form_text)
-    if weather:
-        dew_line = _dew_line(weather)
-        if dew_line:
-            lines.append(dew_line)
     if city:
         ground = _venue_line(city)
         if ground:
@@ -244,3 +353,67 @@ def prematch_text(
         # No saved model or a team without history: facts only.
         lines = [x for x in (h2h_text, form_text) if x] + ["(no win % for this fixture: not enough history)"]
     return "\n".join(lines)
+
+
+def prematch_header(
+    team_a: str,
+    team_b: str,
+    venue: str = "",
+    toss_won_by: str = "",
+    toss_decision: str = "",
+    xi: dict | None = None,
+    pitch_note: str | None = None,
+) -> list[str]:
+    """Three lines for the top of the briefing: Weather, Pitch (flat / green / turning with its
+    evidence) and Advantage (the team the conditions favour, in points of win probability).
+
+    Advantage = dew effect + spin/pace XI matchup effect for each side -- the parts of the win %
+    that come from conditions, not from team strength or history. Before the toss dew cannot be
+    assigned to a team (it helps whoever chases), so that is said instead.
+    """
+    from app.live.match_weather import match_day_weather
+    from app.live.prematch_conditions import predict_with_dew
+    from app.live.prematch_model import venue_city
+    from app.live.prematch_xi import predict_with_xi
+
+    city = venue_city(venue)
+    try:
+        weather = _cached(("weather", city), 600, lambda: match_day_weather(city)) if city else None
+    except Exception:
+        weather = None
+    note = pitch_note if pitch_note is not None else toi_pitch_note(team_a, team_b)
+    cloud = weather.get("aft_cloud") if weather else None
+    lines = [_weather_line(weather), _track_call(note, city, cloud)]
+
+    a, b = team_a.strip(), team_b.strip()
+    bat_first = _bat_first_team(a, b, toss_won_by, toss_decision)
+    dew_likely = bool(
+        weather and weather.get("eve_temp") is not None and weather.get("eve_dew_point") is not None
+        and weather["eve_temp"] - weather["eve_dew_point"] <= 2.5
+    )
+    if not bat_first:
+        lines.append(
+            "Advantage: toss pending -- dew would help whoever chases" if dew_likely else "Advantage: toss pending -- no clear conditions edge yet"
+        )
+        return lines
+    edge_a = 0.0
+    notes = []
+    try:
+        dew = predict_with_dew(a, b, bat_first, weather)
+        if dew is not None and abs(dew["dew_shift"]) >= 0.005:
+            edge_a += dew["dew_shift"]
+            chaser = b if bat_first == a else a
+            notes.append(f"dew helps {chaser} ({abs(dew['dew_shift']) * 100:.0f} pts)")
+        if xi and a in xi and b in xi:
+            result = predict_with_xi(a, b, bat_first, weather, xi[a], xi[b], city)
+            if result is not None and abs(result["matchup_shift"]) >= 0.005:
+                edge_a += result["matchup_shift"]
+                side = a if result["matchup_shift"] > 0 else b
+                notes.append(f"spin/pace matchup favours {side} ({abs(result['matchup_shift']) * 100:.0f} pts)")
+    except Exception:
+        pass
+    if abs(edge_a) < 0.01:
+        lines.append("Advantage: even on conditions" + (f" ({'; '.join(notes)})" if notes else ""))
+    else:
+        lines.append(f"Advantage: {a if edge_a > 0 else b} on conditions ({'; '.join(notes)})")
+    return lines

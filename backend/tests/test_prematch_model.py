@@ -37,6 +37,10 @@ def test_bat_first_from_toss():
 def _no_network(monkeypatch):
     """Briefing tests must not call Open-Meteo; individual tests patch a forecast in."""
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: None)
+    monkeypatch.setattr("app.live.prematch_analysis.toi_pitch_note", lambda a, b: "")
+    from app.live import prematch_analysis
+
+    prematch_analysis._TTL.clear()
 
 
 def test_briefing_is_compact_and_shows_win_percent_with_its_measured_accuracy():
@@ -74,10 +78,10 @@ def test_dew_helps_the_chasing_side_and_needs_the_toss():
     assert predict_with_dew("India", "West Indies", "India", None) is None
 
 
-def test_briefing_shows_conditions_line_when_a_forecast_exists(monkeypatch):
+def test_body_stays_short_with_a_forecast(monkeypatch):
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: WET_EVENING)
     text = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "India", "bowl")
-    assert "Dew: LIKELY" in text and "helps the chasing side" in text
+    assert "Win %: India" in text
     assert len(text.splitlines()) <= 7
 
 
@@ -104,3 +108,27 @@ def test_xi_model_needs_toss_and_nine_matched_players():
     assert swapped["p_a"] == pytest.approx(ok["p_b"])
     assert predict_with_xi("India", "West Indies", "", None, india, windies, "ranchi") is None
     assert predict_with_xi("India", "West Indies", "India", None, india[:5], windies, "ranchi") is None
+
+
+def test_track_call_uses_toi_pitch_field_not_its_boilerplate_and_admits_gaps():
+    from app.live.prematch_analysis import _track_call
+
+    flat = _track_call("Batting friendly; Dry surface | Likely good grip for slower balls/spin as the surface wears", "ranchi", 16)
+    assert flat.startswith("Pitch: flat") and "turning" not in flat  # boilerplate 'grip for slower balls' is ignored
+    assert "green / seam-friendly" in _track_call("Seam friendly; Grassy surface", "ranchi", 20)
+    assert "turning" in _track_call("Spin friendly; Dusty surface", "ranchi", 20)
+    unknown = _track_call("", "ranchi", 20)
+    assert "no reliable source" in unknown  # never invents green/turning
+    assert "overcast" in _track_call("", "ranchi", 85)
+
+
+def test_header_has_weather_pitch_and_advantage_lines(monkeypatch):
+    from app.live.prematch_analysis import prematch_header
+
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: WET_EVENING)
+    pre = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", pitch_note="Batting friendly")
+    assert pre[0].startswith("Weather:") and "DEW LIKELY" in pre[0]
+    assert pre[1].startswith("Pitch: flat")
+    assert pre[2] == "Advantage: toss pending -- dew would help whoever chases"
+    post = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl", pitch_note="")
+    assert post[2].startswith("Advantage: West Indies on conditions") and "dew helps West Indies" in post[2]

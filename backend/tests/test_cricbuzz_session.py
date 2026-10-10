@@ -206,6 +206,10 @@ def test_briefing_text_uses_page_teams_as_label(monkeypatch):
 @pytest.fixture(autouse=True)
 def _no_weather_network(monkeypatch):
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: None)
+    monkeypatch.setattr("app.live.prematch_analysis.toi_pitch_note", lambda a, b: "")
+    from app.live import prematch_analysis
+
+    prematch_analysis._TTL.clear()
 
 
 def test_briefing_text_falls_back_to_given_label_without_ldjson(monkeypatch):
