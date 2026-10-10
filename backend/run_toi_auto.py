@@ -13,7 +13,7 @@ import requests
 
 from app.live.commentary_log import append_commentary_log
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
-from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, xi_line
+from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery, is_t20_international
 from app.live.toi_reader import ToiFeedError, ToiLiveReader
@@ -48,7 +48,7 @@ def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | No
 
     team_names = list(team_players)
     city = ToiLiveReader._venue_name(raw).rsplit(",", 1)[-1].strip()
-    lines = [f"🏏 {label}" + (f" -- {city}" if city else "")]
+    lines = [f"🏏 {label}" + (f" -- {city} | {venue_summary(city.lower())}" if city else "")]
     if len(team_names) == 2:
         toi_note = " | ".join(x for x in (pitch_type, pitch_surface) if x and "unknown" not in x.lower())
         try:

@@ -31,7 +31,7 @@ from app.live.cricbuzz_reader import (
     CricbuzzLiveReader,
     _extract_flight_chunks,
 )
-from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, xi_line
+from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line
 from app.live.pipeline import (
     MatchStateAnomaly,
     PredictionPublisher,
@@ -466,7 +466,7 @@ def briefing_text(match_id: str, match_url: str, label: str) -> str | None:
     from app.live.prematch_model import venue_city
 
     city = venue_city(venue or "").title()
-    lines = [f"🏏 {label}" + (f" -- {city}" if city else "")]
+    lines = [f"🏏 {label}" + (f" -- {city} | {venue_summary(venue_city(venue or ''))}" if city else "")]
     if len(teams) == 2:
         try:
             lines.extend(

@@ -200,9 +200,10 @@ def test_briefing_text_uses_page_teams_as_label(monkeypatch):
     assert text is not None
     assert text.startswith("🏏 Zimbabwe vs Australia")
     assert "Toss: Zimbabwe won, chose to bowl -> Australia bat first" in text
-    assert text.splitlines()[0].endswith("-- Harare")
+    assert "-- Harare | " in text.splitlines()[0]
     # the header must really be there: briefing_text swallows header errors, so a bug would be silent
-    assert text.splitlines()[1].startswith("Ground: Harare")
+    assert "Harare | " in text.splitlines()[0] and "T20s: avg 1st inns" in text.splitlines()[0]
+    assert text.splitlines()[1].startswith("Weather:")
     assert any(line.startswith("Pitch:") for line in text.splitlines())
 
 

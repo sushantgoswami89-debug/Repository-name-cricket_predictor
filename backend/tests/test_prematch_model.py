@@ -128,7 +128,7 @@ def test_header_has_weather_pitch_and_advantage_lines(monkeypatch):
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: WET_EVENING)
     pre = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", pitch_note="Batting friendly")
     heads = [line.split(":")[0] for line in pre if not line.startswith("  ")]
-    assert heads == ["Ground", "Weather", "Dew", "Pitch", "Advantage"]  # ground analysis comes first
+    assert heads == ["Weather", "Dew", "Pitch", "Advantage"]  # the ground record lives on the title line
     assert next(l for l in pre if l.startswith("Pitch")).startswith("Pitch: flat")
     assert pre[-1] == "Advantage: toss pending -- dew would help whoever chases"
     post = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl", pitch_note="")
@@ -173,11 +173,10 @@ def test_dew_line_uses_the_real_start_time_when_known():
     assert "start time assumed" not in known and "mid-chase" in known
 
 
-def test_ground_analysis_combines_t20i_and_ipl():
-    from app.live.prematch_analysis import venue_lines
+def test_ground_summary_combines_t20i_and_ipl_on_one_line():
+    from app.live.prematch_analysis import venue_summary
 
-    lines = venue_lines("ranchi")
-    assert lines[0].startswith("Ground: Ranchi -- ") and "T20 matches (T20I " in lines[0] and "+ IPL " in lines[0]
-    assert "avg 1st inns" in lines[0] and "bat first won" in lines[0]
-    assert lines[1].lstrip().startswith("T20I:") and "| IPL:" in lines[1]
-    assert venue_lines("nowhere-ville") == ["Ground: Nowhere-Ville -- no T20I or IPL history"]
+    text = venue_summary("ranchi")
+    assert "\n" not in text and text.startswith("11 T20s: avg 1st inns ")
+    assert "bat first won" in text and "T20I 4:" in text and "IPL 7:" in text
+    assert venue_summary("nowhere-ville") == "no T20I or IPL history here"

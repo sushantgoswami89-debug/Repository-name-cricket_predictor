@@ -141,28 +141,34 @@ def _ground_record(city: str) -> dict:
     return _cached(("ground-record",), 3600, build).get(city, {})
 
 
-def venue_lines(city: str) -> list[str]:
-    """Ground analysis from BOTH T20Is and IPL at the ground: a combined T20 line (the main figure)
-    and one row per source with its sample size."""
+def venue_summary(city: str) -> str:
+    """One-line ground record for the title: pooled T20I + IPL (the main figure) with each
+    source's own numbers in brackets, e.g.
+    "11 T20s: avg 1st inns 153, bat first won 36% (T20I 4: 161, 50% | IPL 7: 149, 29%)"."""
     record = _ground_record(city)
-    if not record.get("all"):
-        return [f"Ground: {city.title()} -- no T20I or IPL history"]
+    total = record.get("all")
+    if not total:
+        return "no T20I or IPL history here"
 
-    def describe(cell: dict) -> str:
-        avg = f"avg 1st inns {sum(cell['totals']) / len(cell['totals']):.0f}" if cell["totals"] else "avg n/a"
-        win = f"bat first won {cell['bat_first_wins'] / cell['decided'] * 100:.0f}%" if cell["decided"] else "no result data"
-        return f"{avg}, {win}"
+    def avg(cell):
+        return f"{sum(cell['totals']) / len(cell['totals']):.0f}" if cell["totals"] else "n/a"
 
-    total = record["all"]
-    parts = [f"{label} {record[key]['n']}" for key, label in (("t20i", "T20I"), ("ipl", "IPL")) if record.get(key)]
-    lines = [
-        f"Ground: {city.title()} -- {total['n']} T20 matches ({' + '.join(parts)}): {describe(total)}"
-        + (" (small sample)" if total["n"] < 10 else "")
+    def win(cell):
+        return f"{cell['bat_first_wins'] / cell['decided'] * 100:.0f}%" if cell["decided"] else "n/a"
+
+    text = f"{total['n']} T20s: avg 1st inns {avg(total)}, bat first won {win(total)}"
+    parts = [
+        f"{label} {record[key]['n']}: {avg(record[key])}, {win(record[key])}"
+        for key, label in (("t20i", "T20I"), ("ipl", "IPL"))
+        if record.get(key)
     ]
-    rows = [f"{label}: {describe(record[key])}" for key, label in (("t20i", "T20I"), ("ipl", "IPL")) if record.get(key)]
-    if len(rows) > 1:
-        lines.append("  " + " | ".join(rows))
-    return lines
+    if len(parts) > 1:
+        text += " (" + " | ".join(parts) + ")"
+    elif parts:
+        text += f" ({parts[0].split()[0]} only)"
+    if total["n"] < 10:
+        text += " [small sample]"
+    return text
 
 
 _TTL: dict = {}
@@ -223,7 +229,7 @@ def _track_call(note: str, city: str, cloud: float | None) -> str:
         avg = sum(ground) / len(ground)
         shrunk = (sum(ground) + 10 * league_avg) / (len(ground) + 10)
         label = "high" if shrunk >= league_avg + 8 else "low" if shrunk <= league_avg - 10 else "average"
-        scoring = f"ground scoring {label} ({avg:.0f} avg vs {league_avg:.0f} overall)"
+        scoring = f"ground scoring {label}"
     # Only TOI's own pitch descriptor decides the call. Its "likely track" sentence ("good grip
     # for slower balls/spin as the surface wears") is boilerplate it prints for every dry
     # surface (seen on four different grounds in one day), so it is not evidence.
@@ -452,7 +458,7 @@ def prematch_header(
     pitch_note: str | None = None,
     start_utc_ms: int | None = None,
 ) -> list[str]:
-    """The top of the briefing: Ground (T20I + IPL combined), Weather, Pitch (flat / green / turning with its
+    """The lines under the title: Weather, Pitch (flat / green / turning with its
     evidence) and Advantage (the team the conditions favour, in points of win probability).
 
     Advantage = dew effect + spin/pace XI matchup effect for each side -- the parts of the win %
@@ -475,8 +481,7 @@ def prematch_header(
     if start_utc_ms and weather and weather.get("utc_offset_s") is not None:
         local_s = start_utc_ms / 1000.0 + weather["utc_offset_s"]
         start_local_h = (local_s % 86400) / 3600.0
-    lines = venue_lines(city) if city else []
-    lines += [_weather_line(weather), _dew_line(dew_outlook(weather, start_local_h)), _track_call(note, city, cloud)]
+    lines = [_weather_line(weather), _dew_line(dew_outlook(weather, start_local_h)), _track_call(note, city, cloud)]
 
     a, b = team_a.strip(), team_b.strip()
     bat_first = _bat_first_team(a, b, toss_won_by, toss_decision)
