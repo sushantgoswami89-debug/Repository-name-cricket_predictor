@@ -39,12 +39,13 @@ def _no_network(monkeypatch):
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: None)
 
 
-def test_briefing_shows_win_percent_with_its_measured_accuracy():
+def test_briefing_is_compact_and_shows_win_percent_with_its_measured_accuracy():
     text = prematch_text("India", "West Indies", "Ekana Cricket Stadium, Lucknow", "India", "bowl")
     assert "Win %: India" in text and "West Indies" in text
-    assert "unseen 2025+ games" in text
-    assert "Bats first: West Indies" in text
-    assert "toss not known" in prematch_text("India", "West Indies", "Ekana Cricket Stadium, Lucknow")
+    assert "unseen full-member games" in text and "not a forecast" in text
+    assert "Form (last 5)" in text and "H2H India" in text
+    assert len(text.splitlines()) <= 7  # the user asked for a short briefing
+    assert "(pre-toss)" in prematch_text("India", "West Indies", "Ekana Cricket Stadium, Lucknow")
 
 
 WET_EVENING = {"eve_temp": 21.0, "eve_dew_point": 18.8, "eve_humidity": 87.0, "aft_cloud": 23.0, "rain_mm": 0.0}
@@ -76,7 +77,8 @@ def test_dew_helps_the_chasing_side_and_needs_the_toss():
 def test_briefing_shows_conditions_line_when_a_forecast_exists(monkeypatch):
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: WET_EVENING)
     text = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "India", "bowl")
-    assert "Conditions (forecast, Ranchi)" in text and "DEW LIKELY" in text
+    assert "Dew: LIKELY" in text and "helps the chasing side" in text
+    assert len(text.splitlines()) <= 7
 
 
 def test_live_names_resolve_to_cricsheet_players_and_unknowns_stay_unmatched():

@@ -13,7 +13,7 @@ import requests
 
 from app.live.commentary_log import append_commentary_log
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
-from app.live.prematch_analysis import confirmed_xi, prematch_text
+from app.live.prematch_analysis import confirmed_xi, prematch_text, toss_line, xi_line
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery, is_t20_international
 from app.live.toi_reader import ToiFeedError, ToiLiveReader
@@ -46,35 +46,25 @@ def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | No
     pitch_type, pitch_surface = ToiLiveReader._pitch(raw)
     weather_condition, humidity, temperature, wind = ToiLiveReader._weather(raw)
 
-    lines = [f"🏏 {label} -- Match Briefing"]
-    lines.append(
-        f"Toss: {toss_won_by} won, chose to {toss_decision or 'unknown'}"
-        if toss_won_by
-        else "Toss: not yet available"
-    )
-    lines.append(
-        f"Pitch: {pitch_type or 'unknown'} / {pitch_surface or 'unknown'} surface"
-        if pitch_type or pitch_surface
-        else "Pitch: not yet available"
-    )
-    if weather_condition or humidity is not None:
-        parts = [weather_condition or "unknown"]
-        if temperature is not None:
-            parts.append(f"{temperature:.0f}C")
-        if humidity is not None:
-            parts.append(f"{humidity:.0f}% humidity")
-        if wind is not None:
-            parts.append(f"wind {wind:.1f} m/s")
-        lines.append("Weather: " + ", ".join(parts))
-    else:
-        lines.append("Weather: not yet available")
-    if team_players:
-        for team_name, players in team_players.items():
-            confirmed = sum(1 for player in players if player.confirm_xi)
-            lines.append(f"{team_name}: {confirmed}/{len(players)} confirmed XI")
-    else:
-        lines.append("Playing XIs not yet available.")
     team_names = list(team_players)
+    city = ToiLiveReader._venue_name(raw).rsplit(",", 1)[-1].strip()
+    lines = [f"🏏 {label}" + (f" -- {city}" if city else "")]
+    lines.append(
+        toss_line(toss_won_by, toss_decision, team_names[0] if len(team_names) == 2 else "", team_names[1] if len(team_names) == 2 else "")
+    )
+    lines.append(xi_line(team_players))
+    extras = []
+    if pitch_type or pitch_surface:
+        extras.append(f"pitch {pitch_type or 'unknown'}/{pitch_surface or 'unknown'}")
+    if weather_condition or humidity is not None:
+        weather = [weather_condition or "unknown"]
+        if temperature is not None:
+            weather.append(f"{temperature:.0f}C")
+        if humidity is not None:
+            weather.append(f"{humidity:.0f}% humidity")
+        extras.append("weather " + ", ".join(weather))
+    if extras:
+        lines.append("TOI: " + "; ".join(extras))
     if len(team_names) == 2:
         analysis = prematch_text(
             team_names[0], team_names[1], ToiLiveReader._venue_name(raw), toss_won_by, toss_decision,

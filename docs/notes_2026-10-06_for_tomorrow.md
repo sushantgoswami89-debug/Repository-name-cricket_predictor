@@ -543,3 +543,10 @@ window's first ball are cut off so an older cached copy cannot add them again. R
 board at every continuous point. Also seen: the first archived page of each match is ~56 min after the start -- the driver was
 probably suspended (laptop asleep?) for the first hour; keep the Mac awake during a match (mcp keep-awake) and consider an
 explicit "no polls for N minutes" alert. Telegram `prematch status` fix still needs the launchd service restarted.
+
+## 2026-10-10: briefing shortened (about 25 lines -> 10)
+Format now: title + city; toss line with who bats first; XIs line; blank; Win % with its stage (pre-toss / after toss / with
+XIs); one-line honesty note (model right X% on N unseen full-member games); "Why" (H2H, XI points, dew points); last-5 form;
+dew call; ground record. Dropped from the message (documented here instead): methodology/disclaimer paragraphs, "tested and
+left out" (cloud, team-level spin/pace), attack-mix percentages, input list, separate pitch/venue/weather lines (TOI keeps one
+"TOI: pitch ...; weather ..." line). The re-send signature now reads the "Toss:" and "XIs:" lines.

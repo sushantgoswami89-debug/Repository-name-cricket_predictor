@@ -289,7 +289,7 @@ def _state_with_cricbuzz_match(monkeypatch, texts, publisher=None):
     session = types.SimpleNamespace(match_url="http://x", _seen_delivery_keys=set(), finished=False)
     state.active_cricbuzz["1"] = session
     monkeypatch.setattr(run_live_auto, "cricbuzz_briefing_text", lambda *a, **k: next(texts))
-    state._track_briefing("cricbuzz:1", "🏏 A vs B -- Match Briefing\nToss: not yet available\nA: 0/15 confirmed XI\nB: 0/15 confirmed XI", "A vs B")
+    state._track_briefing("cricbuzz:1", "🏏 A vs B -- Match Briefing\nToss: not yet available\nXIs: A 0 confirmed | B 0 confirmed", "A vs B")
     return state, session
 
 
@@ -305,16 +305,16 @@ def _drain(state, rounds=40):
 
 def test_briefing_signature_tracks_only_toss_and_xi_readiness():
     sig = run_live_auto.briefing_signature
-    waiting = "Toss: not yet available\nA: 0/15 confirmed XI\nB: 0/15 confirmed XI\nWin %: A 60% | B 40%"
+    waiting = "Toss: not yet available\nXIs: A 0 confirmed | B 0 confirmed\nWin %: A 60% | B 40%"
     assert sig(waiting) == ("Toss: not yet available", False)
     assert sig(waiting.replace("60%", "61%")) == sig(waiting)  # a moved percentage is not an update
-    assert sig("Toss: A won, chose to bowl\nA: 11/15 confirmed XI\nB: 5/15 confirmed XI") == ("Toss: A won, chose to bowl", False)
-    assert sig("Toss: A won, chose to bowl\nA: 11/15 confirmed XI\nB: 10/15 confirmed XI")[1] is False  # 10 is not a full XI
-    assert sig("Toss: A won, chose to bowl\nA: 11/15 confirmed XI\nB: 11/15 confirmed XI")[1] is True
+    assert sig("Toss: A won, chose to bowl\nXIs: A 11 confirmed | B 5 confirmed") == ("Toss: A won, chose to bowl", False)
+    assert sig("Toss: A won, chose to bowl\nXIs: A 11 confirmed | B 10 confirmed")[1] is False  # 10 is not a full XI
+    assert sig("Toss: A won, chose to bowl\nXIs: A 11 confirmed | B 11 confirmed")[1] is True
 
 
 def test_briefing_is_resent_when_toss_then_xis_arrive_and_not_otherwise(monkeypatch, capsys):
-    base = "🏏 A vs B -- Match Briefing\n{toss}\nA: {a}/15 confirmed XI\nB: {b}/15 confirmed XI"
+    base = "🏏 A vs B -- Match Briefing\n{toss}\nXIs: A {a} confirmed | B {b} confirmed"
     texts = iter([
         base.format(toss="Toss: not yet available", a=0, b=0),      # unchanged -> nothing
         base.format(toss="Toss: A won, chose to bowl", a=0, b=0),   # toss -> resend
@@ -337,7 +337,7 @@ def test_briefing_is_resent_when_toss_then_xis_arrive_and_not_otherwise(monkeypa
 
 
 def test_briefing_refresh_stops_once_the_match_has_started(monkeypatch):
-    texts = iter(["Toss: A won, chose to bowl\nA: 11/15 confirmed XI\nB: 11/15 confirmed XI"] * 5)
+    texts = iter(["Toss: A won, chose to bowl\nXIs: A 11 confirmed | B 11 confirmed"] * 5)
     state, session = _state_with_cricbuzz_match(monkeypatch, texts)
     session._seen_delivery_keys.add((1, 1, 1))
     _drain(state)

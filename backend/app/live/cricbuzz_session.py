@@ -31,7 +31,7 @@ from app.live.cricbuzz_reader import (
     CricbuzzLiveReader,
     _extract_flight_chunks,
 )
-from app.live.prematch_analysis import confirmed_xi, prematch_text
+from app.live.prematch_analysis import confirmed_xi, prematch_text, toss_line, xi_line
 from app.live.pipeline import (
     MatchStateAnomaly,
     PredictionPublisher,
@@ -463,19 +463,12 @@ def briefing_text(match_id: str, match_url: str, label: str) -> str | None:
     teams = CricbuzzLiveReader._teams_from_ldjson(response.text)
     label = " vs ".join(teams) if teams else label
 
-    lines = [f"🏏 {label} -- Match Briefing"]
-    lines.append(
-        f"Toss: {toss_won_by} won, chose to {toss_decision.lower() or 'unknown'}"
-        if toss_won_by
-        else "Toss: not yet available"
-    )
-    lines.append(f"Venue: {venue}" if venue else "Venue: not yet available")
-    if team_players:
-        for team_name, players in team_players.items():
-            confirmed = sum(1 for player in players if player.confirm_xi)
-            lines.append(f"{team_name}: {confirmed}/{len(players)} confirmed XI")
-    else:
-        lines.append("Playing XIs not yet available.")
+    from app.live.prematch_model import venue_city
+
+    city = venue_city(venue or "").title()
+    lines = [f"🏏 {label}" + (f" -- {city}" if city else "")]
+    lines.append(toss_line(toss_won_by, toss_decision, teams[0] if len(teams) == 2 else "", teams[1] if len(teams) == 2 else ""))
+    lines.append(xi_line(team_players))
     if len(teams) == 2:
         analysis = prematch_text(teams[0], teams[1], venue or "", toss_won_by, toss_decision, confirmed_xi(team_players))
         if analysis:

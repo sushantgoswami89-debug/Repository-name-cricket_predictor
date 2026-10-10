@@ -89,7 +89,8 @@ def briefing_signature(text: str) -> tuple[str, bool]:
     The briefing is re-sent only when this changes (toss announced, XIs confirmed),
     not on every wording or number change, so it cannot spam."""
     toss = next((line for line in text.splitlines() if line.startswith("Toss:")), "")
-    counts = [int(m.group(1)) for m in re.finditer(r"(\d+)/\d+ confirmed XI", text)]
+    xi = next((line for line in text.splitlines() if line.startswith("XIs:")), "")
+    counts = [int(m.group(1)) for m in re.finditer(r"(\d+) confirmed", xi)]
     return toss, len(counts) == 2 and all(count >= FULL_XI for count in counts)
 
 

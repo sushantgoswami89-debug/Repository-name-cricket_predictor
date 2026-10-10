@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from app.live.cricbuzz_reader import CricbuzzFeedError
 from app.live.cricbuzz_session import (
     RESEED_AFTER_CONSECUTIVE_ERRORS,
@@ -196,9 +198,14 @@ def test_briefing_text_uses_page_teams_as_label(monkeypatch):
     text = briefing_text("152742", "https://www.cricbuzz.com/live-cricket-scores/152742/x", "152742")
 
     assert text is not None
-    assert "Zimbabwe vs Australia -- Match Briefing" in text
-    assert "Toss: Zimbabwe won, chose to bowling" in text
-    assert "Venue: Harare Sports Club, Harare" in text
+    assert text.startswith("🏏 Zimbabwe vs Australia")
+    assert "Toss: Zimbabwe won, chose to bowl -> Australia bat first" in text
+    assert text.splitlines()[0].endswith("-- Harare")
+
+
+@pytest.fixture(autouse=True)
+def _no_weather_network(monkeypatch):
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: None)
 
 
 def test_briefing_text_falls_back_to_given_label_without_ldjson(monkeypatch):
@@ -210,7 +217,7 @@ def test_briefing_text_falls_back_to_given_label_without_ldjson(monkeypatch):
     text = briefing_text("152742", "https://www.cricbuzz.com/live-cricket-scores/152742/x", "my-label")
 
     assert text is not None
-    assert "my-label -- Match Briefing" in text
+    assert text.startswith("🏏 my-label")
 
 
 def test_briefing_text_returns_none_on_fetch_failure(monkeypatch):

@@ -83,6 +83,25 @@ def _bat_first_team(team_a: str, team_b: str, toss_won_by: str, toss_decision: s
     return ""
 
 
+def toss_line(toss_won_by: str, toss_decision: str, team_a: str = "", team_b: str = "") -> str:
+    """"Toss: West Indies won, chose to bowl -> India bat first" (or "not yet available")."""
+    if not toss_won_by:
+        return "Toss: not yet available"
+    decision = toss_decision.strip().lower()
+    verb = "bat" if decision.startswith("bat") else "bowl" if decision.startswith(("bowl", "field")) else decision or "unknown"
+    text = f"Toss: {toss_won_by} won, chose to {verb}"
+    first = _bat_first_team(team_a, team_b, toss_won_by, toss_decision) if team_a and team_b else ""
+    return text + (f" -> {first} bat first" if first else "")
+
+
+def xi_line(team_players: dict) -> str:
+    """"XIs: India 11 confirmed | West Indies 11 confirmed" or "XIs: not announced yet"."""
+    counts = {team: sum(1 for p in players if p.confirm_xi) for team, players in (team_players or {}).items()}
+    if not counts or not any(counts.values()):
+        return "XIs: not announced yet"
+    return "XIs: " + " | ".join(f"{team} {n} confirmed" for team, n in counts.items())
+
+
 def confirmed_xi(team_players: dict) -> dict[str, list[str]] | None:
     """{team: [names]} of confirmed players when both sides have at least 9; else None."""
     out = {
@@ -92,120 +111,86 @@ def confirmed_xi(team_players: dict) -> dict[str, list[str]] | None:
     return out if len(out) == 2 and all(len(v) >= 9 for v in out.values()) else None
 
 
-def _xi_lines(team_a, team_b, venue, bat_first, weather, xi):
-    """(win % line, extra lines) from the XI-aware model, or None."""
-    from app.live.prematch_model import venue_city
-    from app.live.prematch_xi import predict_with_xi
+def _venue_line(city: str) -> str:
+    """One line on the ground: bat-first win rate in T20Is and IPL, with sample sizes."""
+    from app.live.prematch_model import current_state
 
-    if not xi or team_a not in xi or team_b not in xi:
-        return None
-    result = predict_with_xi(team_a, team_b, bat_first, weather, xi[team_a], xi[team_b], venue_city(venue))
-    if result is None:
-        return None
-    mix = result["mix"]
-    describe = lambda t: "/".join(f"{g} {mix[t][g] * 100:.0f}%" for g in ("pace", "finger", "wrist"))
-    shift = result["xi_shift"] * 100
-    lines = [
-        f"XI check: {team_a} attack {describe(team_a)}; {team_b} attack {describe(team_b)} (share of overs by pace/finger-spin/wrist-spin)."
-        f" Players matched to history: {team_a} {result['matched'][team_a]}, {team_b} {result['matched'][team_b]}."
-        f" For {team_a}: XI quality {result['quality_shift'] * 100:+.0f} pts, spin/pace matchup {result['matchup_shift'] * 100:+.0f} pts."
-    ]
-    return result, lines
+    state = current_state()
+    pieces = []
+    for label, table in (("T20Is", state.venue_t20i), ("IPL", state.venue_ipl)):
+        record = table.get(city)
+        if record and record.matches:
+            pieces.append(f"{record.bat_first_wins / record.matches * 100:.0f}% in {record.matches} {label}")
+    if not pieces:
+        return ""
+    small = all((table.get(city).matches if table.get(city) else 0) < 10 for table in (state.venue_t20i,))
+    return f"Ground: {city.title()} -- bat first won " + ", ".join(pieces) + (" (small sample)" if small else "")
 
 
-def _conditions_line(city: str, day: dict) -> str:
+def _dew_line(day: dict) -> str:
     gap = None
     if day.get("eve_temp") is not None and day.get("eve_dew_point") is not None:
         gap = day["eve_temp"] - day["eve_dew_point"]
-    parts = []
-    if day.get("eve_temp") is not None:
-        parts.append(f"evening {day['eve_temp']:.0f}C")
-    if gap is not None:
-        parts.append(f"dew point {day['eve_dew_point']:.0f}C (gap {gap:.1f}C)")
-    if day.get("eve_humidity") is not None:
-        parts.append(f"humidity {day['eve_humidity']:.0f}%")
-    if day.get("aft_cloud") is not None:
-        parts.append(f"afternoon cloud {day['aft_cloud']:.0f}%")
-    if day.get("rain_mm"):
-        parts.append(f"rain {day['rain_mm']:.1f} mm")
-    verdict = ""
-    if gap is not None:
-        verdict = " -- DEW LIKELY (helps the chasing side)" if gap <= 2.5 else " -- dew not expected"
-    return f"Conditions (forecast, {city.title()}): " + ", ".join(parts) + verdict
+    if gap is None:
+        return ""
+    detail = f"humidity {day['eve_humidity']:.0f}%, gap {gap:.1f}C" if day.get("eve_humidity") is not None else f"gap {gap:.1f}C"
+    if gap <= 2.5:
+        return f"Dew: LIKELY tonight ({detail}) -- helps the chasing side"
+    return f"Dew: not expected ({detail})"
 
 
-def _win_percent_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dict | None = None) -> list[str]:
-    """Model win % plus the evidence next to it. Empty when no saved model or a
-    team has no history in the local data."""
+def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dict | None, h2h_text: str, form_text: str) -> list[str]:
+    """The pre-match section: win %, the reason in one line, form, dew, ground."""
     from app.live.match_weather import match_day_weather
     from app.live.prematch_conditions import predict_with_dew
-    from app.live.prematch_model import current_state, predict, venue_city
+    from app.live.prematch_model import predict, venue_city
+    from app.live.prematch_xi import predict_with_xi
 
-    result = predict(team_a, team_b, venue, bat_first)
-    if result is None:
+    base = predict(team_a, team_b, venue, bat_first)
+    if base is None:
         return []
     city = venue_city(venue)
-    weather = None
     try:
         weather = match_day_weather(city) if city else None
     except Exception:
         weather = None
-    dew = predict_with_dew(team_a, team_b, bat_first, weather)
-    xi_result = None
+    chosen, label, holdout, xi_result = base, "pre-toss", base["holdout"].get("full_member") or {}, None
     try:
-        xi_result = _xi_lines(team_a, team_b, venue, bat_first, weather, xi)
+        if xi and team_a in xi and team_b in xi:
+            xi_result = predict_with_xi(team_a, team_b, bat_first, weather, xi[team_a], xi[team_b], city)
     except Exception:
         xi_result = None
+    dew = predict_with_dew(team_a, team_b, bat_first, weather)
     if xi_result is not None:
-        model, xi_lines = xi_result
-        holdout = model["holdout"].get("full_member") or {}
-        lines = [f"Win %: {team_a} {model['p_a'] * 100:.0f}% | {team_b} {model['p_b'] * 100:.0f}% (with XIs)"]
-        lines.append(
-            "XI effect is small and not yet proven for full-member games alone "
-            "(2021-25: clear gain across all T20Is, +0.3 pts Brier on full members, within noise)."
-        )
+        chosen, label, holdout = xi_result, "with XIs", xi_result["holdout"].get("full_member") or {}
     elif dew is not None:
-        holdout = dew["holdout"].get("full_member") or {}
-        shift = dew["dew_shift"] * 100
-        lines = [
-            f"Win %: {team_a} {dew['p_a'] * 100:.0f}% | {team_b} {dew['p_b'] * 100:.0f}%"
-            + (f" (dew moves {abs(shift):.0f} pts)" if abs(shift) >= 0.5 else "")
-        ]
-    else:
-        holdout = result["holdout"].get("full_member") or {}
-        lines = [
-            f"Win %: {team_a} {result['p_a'] * 100:.0f}% | {team_b} {result['p_b'] * 100:.0f}%"
-            + ("" if result["post_toss"] else " (toss not known: venue and dew effects off)")
-        ]
-    if xi_result is not None:
-        lines.extend(xi_lines)
+        chosen, label, holdout = dew, "after toss", dew["holdout"].get("full_member") or {}
+    elif base["post_toss"]:
+        label = "after toss"
+
+    lines = [f"Win %: {team_a} {chosen['p_a'] * 100:.0f}% | {team_b} {chosen['p_b'] * 100:.0f}% ({label})"]
     if holdout:
         lines.append(
-            f"Model check: on {holdout['n']} unseen 2025+ games between two full members it picked the "
-            f"winner {holdout['acc'] * 100:.0f}% of the time (a coin flip is 50%). Treat as a lean, not a forecast."
+            f"A lean, not a forecast: the model was right {holdout['acc'] * 100:.0f}% on {holdout['n']} unseen full-member games."
         )
+    reasons = [h2h_text] if h2h_text else []
+    if xi_result is not None:
+        reasons.append(f"XIs {xi_result['xi_shift'] * 100:+.0f} pts for {team_a}")
+    if dew is not None and abs(dew["dew_shift"]) >= 0.005:
+        chaser = team_b if bat_first == team_a else team_a
+        reasons.append(f"dew favours {chaser} ({abs(dew['dew_shift']) * 100:.0f} pts)")
+    if reasons:
+        lines.append("Why: " + "; ".join(reasons))
+    if form_text:
+        lines.append(form_text)
     if weather:
-        lines.append(_conditions_line(city, weather))
-        lines.append(
-            "Tested and left out: cloud cover, and team-level spin/pace matchups (no gain)."
-            if xi_result is not None
-            else "Tested and left out: cloud cover and team-level spin/pace matchups (no gain); XIs not yet announced."
-        )
-    state = current_state()
+        dew_line = _dew_line(weather)
+        if dew_line:
+            lines.append(dew_line)
     if city:
-        pieces = []
-        for label, table in (("T20Is", state.venue_t20i), ("IPL", state.venue_ipl)):
-            record = table.get(city)
-            if record and record.matches:
-                pieces.append(
-                    f"{label}: {record.matches} matches, bat first won "
-                    f"{record.bat_first_wins / record.matches * 100:.0f}%"
-                )
-        if pieces:
-            lines.append(f"At {city.title()} -- " + "; ".join(pieces) + " (shown separately, not blended)")
-    if bat_first:
-        lines.append(f"Bats first: {bat_first}")
-    lines.append("Inputs: team strength (Elo), head-to-head, and (after the toss) dew and the announced XIs.")
+        ground = _venue_line(city)
+        if ground:
+            lines.append(ground)
     return lines
 
 
@@ -217,6 +202,7 @@ def prematch_text(
     toss_decision: str = "",
     xi: dict | None = None,
 ) -> str | None:
+    """Compact pre-match section (about 6 lines): win %, why, form, dew, ground."""
     try:
         rows = _all_rows()
     except Exception:
@@ -226,49 +212,26 @@ def prematch_text(
     if a not in known or b not in known:
         return None
 
-    lines = [f"📊 Pre-match history ({a} vs {b}, men's T20Is)"]
     h2h = [r for r in rows if r["teams"] == {a, b} and r["winner"]]
+    h2h_text = ""
     if h2h:
         wins_a = sum(r["winner"] == a for r in h2h)
         last5 = h2h[-5:]
-        lines.append(
-            f"H2H: {a} {wins_a}-{len(h2h) - wins_a} {b} ({len(h2h)} matches, "
-            f"{a} {_pct(wins_a, len(h2h))}); last {len(last5)}: "
-            f"{a} {sum(r['winner'] == a for r in last5)}-"
-            f"{sum(r['winner'] == b for r in last5)}"
+        h2h_text = (
+            f"H2H {a} {wins_a}-{len(h2h) - wins_a} (last 5: {sum(r['winner'] == a for r in last5)}-"
+            f"{sum(r['winner'] == b for r in last5)})"
         )
-    else:
-        lines.append("H2H: no previous men's T20I meetings")
-
     forms = []
     for team in (a, b):
         games = [r for r in rows if team in r["teams"] and r["winner"]][-5:]
-        forms.append(f"{team} {' '.join('W' if r['winner'] == team else 'L' for r in games)}")
-    lines.append("Form (last 5): " + " | ".join(forms))
+        forms.append(f"{team} {''.join('W' if r['winner'] == team else 'L' for r in games)}")
+    form_text = "Form (last 5): " + " | ".join(forms)
 
-    needles = _venue_needles(venue)
-    if needles:
-        at_venue = [r for r in rows if any(n in r["venue"] for n in needles)]
-        scored = [r for r in at_venue if r["first_total"] is not None and r["winner"]]
-        if scored:
-            avg = sum(r["first_total"] for r in scored) / len(scored)
-            bat_first = sum(r["winner"] == r["first_team"] for r in scored)
-            line = (
-                f"Venue ({venue.rsplit(',', 1)[-1].strip()}): {len(scored)} T20Is, "
-                f"avg 1st inns {avg:.0f}, bat-first won {_pct(bat_first, len(scored))}"
-            )
-            if len(scored) < 10:
-                line += " (small sample)"
-            lines.append(line)
-        else:
-            lines.append(f"Venue ({venue.rsplit(',', 1)[-1].strip()}): no men's T20I history")
     try:
-        block = _win_percent_block(a, b, venue, _bat_first_team(a, b, toss_won_by, toss_decision), xi)
+        lines = _compact_block(a, b, venue, _bat_first_team(a, b, toss_won_by, toss_decision), xi, h2h_text, form_text)
     except Exception:
-        block = []
-    if block:
-        lines.append("")
-        lines.extend(block)
-    else:
-        lines.append("History only, not a model forecast.")
+        lines = []
+    if not lines:
+        # No saved model or a team without history: facts only.
+        lines = [x for x in (h2h_text, form_text) if x] + ["(no win % for this fixture: not enough history)"]
     return "\n".join(lines)
