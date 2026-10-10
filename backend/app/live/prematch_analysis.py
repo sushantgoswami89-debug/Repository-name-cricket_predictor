@@ -152,7 +152,7 @@ def _ground_record(city: str) -> dict:
 
 def venue_summary(city: str) -> str:
     """The title-line ground record, pooled over every T20I and IPL match at the ground, in the
-    format the user specified: "T20 - 11 avg score 145, 1st inns avg 153, avg wkts - 6, pace - 3/spin - 4"
+    format the user specified: "T20 - 11 1st inns avg 153, avg wkts - 6, pace - 3/spin - 4"
     (11 = matches; pace / spin = most wickets by one bowler of that kind in a match; bowlers without
     a known style are not counted in those two)."""
     record = _ground_record(city)
@@ -164,7 +164,7 @@ def venue_summary(city: str) -> str:
         return f"{sum(values) / len(values):.0f}" if values else "n/a"
 
     text = (
-        f"T20 - {total['n']} avg score {mean(total['all_totals'])}, 1st inns avg {mean(total['totals'])}, "
+        f"T20 - {total['n']} 1st inns avg {mean(total['totals'])}, "
         f"avg wkts - {mean(total['wkts'])}, pace - {total['best_pace']}/spin - {total['best_spin']}"
     )
     if total["n"] < 10:

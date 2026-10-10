@@ -179,6 +179,6 @@ def test_ground_summary_matches_the_requested_format():
     from app.live.prematch_analysis import venue_summary
 
     text = venue_summary("ranchi")
-    assert re.fullmatch(r"T20 - 11 avg score \d+, 1st inns avg \d+, avg wkts - \d+, pace - \d+/spin - \d+", text), text
+    assert re.fullmatch(r"T20 - 11 1st inns avg \d+, avg wkts - \d+, pace - \d+/spin - \d+", text), text
     assert venue_summary("nowhere-ville") == "T20 - no history here"
     assert venue_summary("rawalpindi").endswith("spin - " + venue_summary("rawalpindi").rsplit("- ", 1)[1])  # no small-sample tag at 13 matches
