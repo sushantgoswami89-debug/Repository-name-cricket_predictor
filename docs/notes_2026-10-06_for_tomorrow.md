@@ -571,3 +571,12 @@ Chase start = match start + 1h48 (start time read from the Cricbuzz page; 19:00 
 CAVEATS: the "chance" uses an ASSUMED forecast error of +-1.5C on the gap (not measured against observed dew -- no
 ground-truth dew record exists locally); weights/thresholds are on forecast air temperature and dew point, not the grass
 surface temperature, which is what really decides dew.
+
+## 2026-10-10: briefing trimmed to the final layout (user-specified)
+Sent message = title with ground stats; Weather; "Dew ..., Pitch ..."; Toss; Win % + Form; then the XIs block last.
+REMOVED from the message at the user's request: the "How:" build-up line (base % -> dew -> XI quality -> matchup = final)
+and the "A lean, not a forecast: right X% on N unseen games" line, so H2H and the model's measured accuracy no longer
+appear in the message. They are kept here: full-member holdout accuracy 66% pre-toss / 67% after toss (dew) / 70% with XIs
+(n=141); build-up for India v West Indies was 62% base, dew -5, XI quality +5, matchup +3 = 65%. The decomposition code
+(`p_base`, `dew_shift`, `quality_shift`, `matchup_shift` in `predict_with_xi` / `predict_with_dew`) is still in place if it
+is wanted back.

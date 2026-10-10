@@ -371,7 +371,8 @@ def _weather_line(day: dict | None) -> str:
 
 
 def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dict | None, h2h_text: str, form_text: str) -> list[str]:
-    """The pre-match section: win %, the reason in one line, form, dew, ground."""
+    """The pre-match section, two lines: the win % (with its stage) and the last-5 form.
+    The build-up of the number and the model's measured accuracy are documented in the notes, not sent."""
     from app.live.match_weather import match_day_weather
     from app.live.prematch_conditions import predict_with_dew
     from app.live.prematch_model import predict, venue_city
@@ -400,29 +401,6 @@ def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dic
         label = "after toss"
 
     lines = [f"Win %: {team_a} {chosen['p_a'] * 100:.0f}% | {team_b} {chosen['p_b'] * 100:.0f}% ({label})"]
-    # One compiled estimate: the base rating, then each condition step, adding up to the number above.
-    chaser = team_b if bat_first == team_a else team_a
-    if xi_result is not None or dew is not None:
-        source = xi_result if xi_result is not None else dew
-        steps = [f"{team_a} {source['p_base'] * 100:.0f}% on strength + {h2h_text or 'H2H n/a'}"]
-        if xi_result is not None:
-            for name, key in (("dew", "dew_shift"), ("XI quality", "quality_shift"), ("spin/pace matchup", "matchup_shift")):
-                if abs(xi_result[key]) >= 0.005:
-                    extra = f" ({chaser} chase)" if name == "dew" else ""
-                    steps.append(f"{name} {xi_result[key] * 100:+.0f}{extra}")
-        elif abs(dew["dew_shift"]) >= 0.005:
-            steps.append(f"dew {dew['dew_shift'] * 100:+.0f} ({chaser} chase)")
-        lines.append("How: " + " | ".join(steps) + f" = {chosen['p_a'] * 100:.0f}%  (points are for {team_a})")
-    else:
-        dew_note = ""
-        if weather and weather.get("eve_temp") is not None and weather.get("eve_dew_point") is not None:
-            if weather["eve_temp"] - weather["eve_dew_point"] <= 2.5:
-                dew_note = "; toss pending -- dew would help whoever chases"
-        lines.append(f"How: {team_a} {base['p_a'] * 100:.0f}% on strength + {h2h_text or 'H2H n/a'}{dew_note}")
-    if holdout:
-        lines.append(
-            f"A lean, not a forecast: the model was right {holdout['acc'] * 100:.0f}% on {holdout['n']} unseen full-member games."
-        )
     if form_text:
         lines.append(form_text)
     return lines

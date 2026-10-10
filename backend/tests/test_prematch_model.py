@@ -43,12 +43,12 @@ def _no_network(monkeypatch):
     prematch_analysis._TTL.clear()
 
 
-def test_briefing_is_compact_and_shows_win_percent_with_its_measured_accuracy():
+def test_estimate_block_is_win_percent_then_form():
     text = prematch_text("India", "West Indies", "Ekana Cricket Stadium, Lucknow", "India", "bowl")
-    assert "Win %: India" in text and "West Indies" in text
-    assert "unseen full-member games" in text and "not a forecast" in text
-    assert "Form (last 5)" in text and "H2H India" in text
-    assert len(text.splitlines()) <= 7  # the user asked for a short briefing
+    lines = text.splitlines()
+    assert len(lines) == 2
+    assert lines[0].startswith("Win %: India ") and "| West Indies " in lines[0]
+    assert lines[1].startswith("Form (last 5): India ") and "| West Indies " in lines[1]
     assert "(pre-toss)" in prematch_text("India", "West Indies", "Ekana Cricket Stadium, Lucknow")
 
 
@@ -82,7 +82,7 @@ def test_body_stays_short_with_a_forecast(monkeypatch):
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: WET_EVENING)
     text = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "India", "bowl")
     assert "Win %: India" in text
-    assert len(text.splitlines()) <= 7
+    assert len(text.splitlines()) == 2
 
 
 def test_live_names_resolve_to_cricsheet_players_and_unknowns_stay_unmatched():
@@ -130,28 +130,6 @@ def test_header_has_weather_dew_and_pitch_only_the_estimate_is_one_block(monkeyp
     assert [l.split(":")[0] for l in lines] == ["Weather", "Dew"]  # Dew and Pitch share one line
     assert lines[1].endswith("Pitch: flat (Batting friendly)")
     assert not any(l.startswith("Advantage") for l in lines)  # the estimate is not repeated up here
-
-
-def test_compiled_estimate_steps_add_up_to_the_win_percent():
-    import re
-
-    from app.live.prematch_analysis import prematch_text
-
-    xi = {
-        "India": ["Abhishek Sharma", "Sanju Samson", "Ishan Kishan", "Shreyas Iyer", "Tilak Varma", "Shivam Dube",
-                  "Naman Dhir", "Axar Patel", "Arshdeep Singh", "Kuldeep Yadav", "Ravi Bishnoi"],
-        "West Indies": ["Shai Hope", "Shimron Hetmyer", "Rovman Powell", "Sherfane Rutherford", "Romario Shepherd",
-                        "Matthew Forde", "Roston Chase", "Akeal Hosein", "Shamar Joseph", "Gudakesh Motie", "Keemo Paul"],
-    }
-    text = prematch_text("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl", xi)
-    lines = text.splitlines()
-    assert lines[0].startswith("Win %: India") and lines[1].startswith("How: India ")
-    assert not any(l.startswith(("Why:", "Advantage")) for l in lines)
-    base = int(re.search(r"How: India (\d+)%", lines[1]).group(1))
-    steps = [int(x) for x in re.findall(r"(?:dew|XI quality|spin/pace matchup) ([+-]\d+)", lines[1])]
-    final = int(re.search(r"= (\d+)%", lines[1]).group(1))
-    assert abs(base + sum(steps) - final) <= 1  # rounding only
-    assert f"India {final}%" in lines[0]
 
 
 def _day(gaps_by_hour, sunset=17.5):
