@@ -127,12 +127,12 @@ def test_header_has_weather_pitch_and_advantage_lines(monkeypatch):
 
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: WET_EVENING)
     pre = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", pitch_note="Batting friendly")
-    assert pre[0].startswith("Weather:")
-    assert pre[1].startswith("Dew:")
-    assert pre[2].startswith("Pitch: flat")
-    assert pre[3] == "Advantage: toss pending -- dew would help whoever chases"
+    heads = [line.split(":")[0] for line in pre if not line.startswith("  ")]
+    assert heads == ["Ground", "Weather", "Dew", "Pitch", "Advantage"]  # ground analysis comes first
+    assert next(l for l in pre if l.startswith("Pitch")).startswith("Pitch: flat")
+    assert pre[-1] == "Advantage: toss pending -- dew would help whoever chases"
     post = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl", pitch_note="")
-    assert post[3].startswith("Advantage: West Indies on conditions") and "dew helps West Indies" in post[3]
+    assert post[-1].startswith("Advantage: West Indies on conditions") and "dew helps West Indies" in post[-1]
 
 
 def _day(gaps_by_hour, sunset=17.5):
@@ -171,3 +171,13 @@ def test_dew_line_uses_the_real_start_time_when_known():
     day = _day({h: 1.0 if h >= 20 else 8.0 for h in range(0, 24)})
     known = _dew_line(dew_outlook(day, 17.0))   # 17:00 start -> chase from ~18:50, dew arrives ~19:40
     assert "start time assumed" not in known and "mid-chase" in known
+
+
+def test_ground_analysis_combines_t20i_and_ipl():
+    from app.live.prematch_analysis import venue_lines
+
+    lines = venue_lines("ranchi")
+    assert lines[0].startswith("Ground: Ranchi -- ") and "T20 matches (T20I " in lines[0] and "+ IPL " in lines[0]
+    assert "avg 1st inns" in lines[0] and "bat first won" in lines[0]
+    assert lines[1].lstrip().startswith("T20I:") and "| IPL:" in lines[1]
+    assert venue_lines("nowhere-ville") == ["Ground: Nowhere-Ville -- no T20I or IPL history"]

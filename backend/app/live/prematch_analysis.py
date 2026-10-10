@@ -120,20 +120,49 @@ def confirmed_xi(team_players: dict) -> dict[str, list[str]] | None:
     return out if len(out) == 2 and all(len(v) >= 9 for v in out.values()) else None
 
 
-def _venue_line(city: str) -> str:
-    """One line on the ground: bat-first win rate in T20Is and IPL, with sample sizes."""
-    from app.live.prematch_model import current_state
+def _ground_record(city: str) -> dict:
+    """Per source and combined: matches, mean first-innings total, bat-first wins (decided matches)."""
+    from app.live.prematch_conditions import load_facts
 
-    state = current_state()
-    pieces = []
-    for label, table in (("T20Is", state.venue_t20i), ("IPL", state.venue_ipl)):
-        record = table.get(city)
-        if record and record.matches:
-            pieces.append(f"{record.bat_first_wins / record.matches * 100:.0f}% in {record.matches} {label}")
-    if not pieces:
-        return ""
-    small = all((table.get(city).matches if table.get(city) else 0) < 10 for table in (state.venue_t20i,))
-    return f"Ground: {city.title()} -- bat first won " + ", ".join(pieces) + (" (small sample)" if small else "")
+    def build():
+        table: dict = {}
+        for fact in load_facts():
+            row = table.setdefault(fact["city"], {})
+            for key in (fact["src"], "all"):
+                cell = row.setdefault(key, {"n": 0, "totals": [], "decided": 0, "bat_first_wins": 0})
+                cell["n"] += 1
+                if fact["totals"]:
+                    cell["totals"].append(fact["totals"][0])
+                if fact["winner"] and fact["first_team"] in fact["teams"]:
+                    cell["decided"] += 1
+                    cell["bat_first_wins"] += int(fact["winner"] == fact["first_team"])
+        return table
+
+    return _cached(("ground-record",), 3600, build).get(city, {})
+
+
+def venue_lines(city: str) -> list[str]:
+    """Ground analysis from BOTH T20Is and IPL at the ground: a combined T20 line (the main figure)
+    and one row per source with its sample size."""
+    record = _ground_record(city)
+    if not record.get("all"):
+        return [f"Ground: {city.title()} -- no T20I or IPL history"]
+
+    def describe(cell: dict) -> str:
+        avg = f"avg 1st inns {sum(cell['totals']) / len(cell['totals']):.0f}" if cell["totals"] else "avg n/a"
+        win = f"bat first won {cell['bat_first_wins'] / cell['decided'] * 100:.0f}%" if cell["decided"] else "no result data"
+        return f"{avg}, {win}"
+
+    total = record["all"]
+    parts = [f"{label} {record[key]['n']}" for key, label in (("t20i", "T20I"), ("ipl", "IPL")) if record.get(key)]
+    lines = [
+        f"Ground: {city.title()} -- {total['n']} T20 matches ({' + '.join(parts)}): {describe(total)}"
+        + (" (small sample)" if total["n"] < 10 else "")
+    ]
+    rows = [f"{label}: {describe(record[key])}" for key, label in (("t20i", "T20I"), ("ipl", "IPL")) if record.get(key)]
+    if len(rows) > 1:
+        lines.append("  " + " | ".join(rows))
+    return lines
 
 
 _TTL: dict = {}
@@ -194,7 +223,7 @@ def _track_call(note: str, city: str, cloud: float | None) -> str:
         avg = sum(ground) / len(ground)
         shrunk = (sum(ground) + 10 * league_avg) / (len(ground) + 10)
         label = "high" if shrunk >= league_avg + 8 else "low" if shrunk <= league_avg - 10 else "average"
-        scoring = f"ground scoring {label}, avg {avg:.0f} in {len(ground)} games vs {league_avg:.0f} overall"
+        scoring = f"ground scoring {label} ({avg:.0f} avg vs {league_avg:.0f} overall)"
     # Only TOI's own pitch descriptor decides the call. Its "likely track" sentence ("good grip
     # for slower balls/spin as the surface wears") is boilerplate it prints for every dry
     # surface (seen on four different grounds in one day), so it is not evidence.
@@ -367,10 +396,6 @@ def _compact_block(team_a: str, team_b: str, venue: str, bat_first: str, xi: dic
         lines.append("Why: " + "; ".join(reasons))
     if form_text:
         lines.append(form_text)
-    if city:
-        ground = _venue_line(city)
-        if ground:
-            lines.append(ground)
     return lines
 
 
@@ -427,7 +452,7 @@ def prematch_header(
     pitch_note: str | None = None,
     start_utc_ms: int | None = None,
 ) -> list[str]:
-    """Four lines for the top of the briefing: Weather, Pitch (flat / green / turning with its
+    """The top of the briefing: Ground (T20I + IPL combined), Weather, Pitch (flat / green / turning with its
     evidence) and Advantage (the team the conditions favour, in points of win probability).
 
     Advantage = dew effect + spin/pace XI matchup effect for each side -- the parts of the win %
@@ -450,7 +475,8 @@ def prematch_header(
     if start_utc_ms and weather and weather.get("utc_offset_s") is not None:
         local_s = start_utc_ms / 1000.0 + weather["utc_offset_s"]
         start_local_h = (local_s % 86400) / 3600.0
-    lines = [_weather_line(weather), _dew_line(dew_outlook(weather, start_local_h)), _track_call(note, city, cloud)]
+    lines = venue_lines(city) if city else []
+    lines += [_weather_line(weather), _dew_line(dew_outlook(weather, start_local_h)), _track_call(note, city, cloud)]
 
     a, b = team_a.strip(), team_b.strip()
     bat_first = _bat_first_team(a, b, toss_won_by, toss_decision)

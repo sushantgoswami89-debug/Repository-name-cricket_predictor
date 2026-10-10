@@ -58,8 +58,8 @@ def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | No
                     confirmed_xi(team_players), pitch_note=toi_note,
                 )
             )
-        except Exception:
-            pass
+        except Exception as error:  # never block the briefing, but do not hide the bug
+            print(f"[briefing] header unavailable: {error!r}")
     lines.append(
         toss_line(toss_won_by, toss_decision, team_names[0] if len(team_names) == 2 else "", team_names[1] if len(team_names) == 2 else "")
     )

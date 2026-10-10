@@ -201,6 +201,9 @@ def test_briefing_text_uses_page_teams_as_label(monkeypatch):
     assert text.startswith("🏏 Zimbabwe vs Australia")
     assert "Toss: Zimbabwe won, chose to bowl -> Australia bat first" in text
     assert text.splitlines()[0].endswith("-- Harare")
+    # the header must really be there: briefing_text swallows header errors, so a bug would be silent
+    assert text.splitlines()[1].startswith("Ground: Harare")
+    assert any(line.startswith("Pitch:") for line in text.splitlines())
 
 
 @pytest.fixture(autouse=True)
