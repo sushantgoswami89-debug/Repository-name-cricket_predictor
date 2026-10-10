@@ -196,18 +196,48 @@ def _extract_balanced(text: str, start: int) -> str | None:
     return None
 
 
+_TEXT_ROW_HEADER = re.compile(r"^([0-9a-f]+):T([0-9a-f]+),$")
+_TEXT_REF = re.compile(r"^\$([0-9a-f]+)$")
+
+
+def _text_rows(chunks: list[str]) -> dict[str, str]:
+    """React Server Component "text rows": a long string is not embedded where it is used; the entry holds
+    a pointer ("$26") and the page sends the text separately as a header chunk "26:T501," (hex length) followed
+    by the text itself. Found 2026-10-10: a real ball entry (151565, 10.5) arrived as the bare pointer "$26", so
+    its runs/wicket words were invisible to the parser and the over came out wrong."""
+    rows: dict[str, str] = {}
+    for index, chunk in enumerate(chunks):
+        header = _TEXT_ROW_HEADER.match(chunk)
+        if not header:
+            continue
+        wanted = int(header.group(2), 16)  # length in bytes
+        text, at = "", index + 1
+        while at < len(chunks) and len(text.encode("utf-8")) < wanted:
+            text += chunks[at]
+            at += 1
+        rows[header.group(1)] = text
+    return rows
+
+
 def _delivery_objects(chunks: list[str], match_id: str) -> list[dict[str, Any]]:
     marker = f'{{"matchId":{match_id},"commType":"commentary"'
     objects: list[dict[str, Any]] = []
+    rows: dict[str, str] | None = None
     for chunk in chunks:
         for match in re.finditer(re.escape(marker), chunk):
             raw = _extract_balanced(chunk, match.start())
             if raw is None:
                 continue
             try:
-                objects.append(json.loads(raw))
+                obj = json.loads(raw)
             except json.JSONDecodeError:
                 continue
+            reference = _TEXT_REF.match(str(obj.get("commText", "")).strip())
+            if reference:
+                rows = _text_rows(chunks) if rows is None else rows
+                if reference.group(1) in rows:
+                    obj["commText"] = rows[reference.group(1)]
+            objects.append(obj)
     return objects
 
 

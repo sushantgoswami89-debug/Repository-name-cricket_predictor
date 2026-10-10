@@ -717,3 +717,14 @@ Built: `cricbuzz_capture.py` (+ `capture_cricbuzz_match.py`): at the end of ever
 the nine matches we had watched (win curves exist for the three most recent). `compare_inplay_winprob.py` now uses the curve: one match so far (151565,
 29 over-forecasts): Brier ours 0.147 vs Cricbuzz 0.110 (overs 8+: 0.121 vs 0.091) -- one match, so an anecdote; ours was more jumpy early (13% vs 24% at over 7,
 a restart-affected over) and they agree closely from over 9. Collect more matches before concluding anything.
+
+## 2026-10-10: ROOT CAUSE #3 of the wrong 10-06 chase overs -- long commentary arrives as a pointer ("$26")
+Found while showing the main page the driver reads. The page is a React Server Component stream: a long text is NOT embedded in the
+entry; the entry holds a pointer ("commText":"$26") and the text comes separately as a header chunk "26:T501," (hex byte length) followed by
+the text. Our reader kept the literal "$26", so such an entry had no runs, no wicket words, no prose. Real case: 151565 ball 10.5 (the
+reviewed catch: "Springer to Kishan, 1 run, they are checking for a clean catch ... third ump feels there's a gap between the fingers ...
+not out"). It was parsed as a dot/unknown ball -- this, not only the review mechanics, is why that over came out at 6 runs vs Cricbuzz's
+12 and left the phantom wicket. Scan of every archived page: 6 ball entries affected (all 10.5, 151565), 0 elsewhere; post-match
+chat/interview entries are pointers too. Fix: `_text_rows()` resolves pointers before parsing (byte-length aware, an unmatched pointer is
+left as is). Likely also part of why only ~40% of deliveries carried prose in the delivery-detail audit -- re-measure on the next archive.
+Lesson for the inventory: any field can be a pointer; the raw page archive is what let us find it after the fact.

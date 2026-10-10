@@ -189,3 +189,25 @@ def test_window_that_reaches_the_first_ball_still_starts_from_zero():
     window = [_obj(1, 0.1, "Arshdeep to Hope, 1 run"), _obj(2, 0.2, "Arshdeep to Hope, FOUR", "four")]
     deliveries = reader._build_deliveries(("1", 1), window, board=None, require_baseline=True)
     assert deliveries[-1].feed_total == 5
+
+
+def test_long_commentary_sent_as_a_text_row_pointer_is_resolved():
+    """Cricbuzz sends long texts as a pointer ("$26") plus a separate text row ("26:T<hexlen>," then the text).
+    151565 ball 10.5 arrived as the bare pointer, so its runs/wicket words were invisible and the over came out wrong."""
+    from app.live.cricbuzz_reader import _delivery_objects, _runs_and_extras
+
+    body = "Springer to Kishan, 1 run, they are checking for a clean catch but the third umpire says not out."
+    entry = ('{"matchId":1,"commType":"commentary","commText":"$26","inningsId":2,"event":["none","all"],'
+             '"ballMetric":10.5,"teamName":"IND","timestamp":7,"overSeparator":null,'
+             '"batsmanDetails":{"playerName":"Kishan"},"bowlerDetails":{"playerName":"Springer"}}')
+    chunks = [entry, f"26:T{len(body.encode()):x},", body, "27:T3,", "abc"]
+    [obj] = _delivery_objects(chunks, "1")
+    assert obj["commText"] == body
+    assert _runs_and_extras(obj["commText"], []) == (1, 1, {})
+    # a pointer with no matching row is left alone rather than invented
+    [orphan] = _delivery_objects([entry.replace("$26", "$99")], "1")
+    assert orphan["commText"] == "$99"
+    # multi-byte text: the length counts bytes
+    smart = "Hope ’s six, 6 runs"
+    chunks = [entry.replace("$26", "$30"), f"30:T{len(smart.encode()):x},", smart]
+    assert _delivery_objects(chunks, "1")[0]["commText"] == smart
