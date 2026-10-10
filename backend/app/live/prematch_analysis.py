@@ -141,10 +141,10 @@ def _ground_record(city: str) -> dict:
     return _cached(("ground-record",), 3600, build).get(city, {})
 
 
-def venue_summary(city: str) -> str:
-    """One-line ground record for the title: pooled T20I + IPL (the main figure) with each
-    source's own numbers in brackets, e.g.
-    "11 T20s: avg 1st inns 153, bat first won 36% (T20I 4: 161, 50% | IPL 7: 149, 29%)"."""
+def venue_summary(city: str, split: bool = False) -> str:
+    """One-line ground record compiled over ALL T20 data at the ground (T20Is and IPL pooled):
+    "All T20 data (T20I 4 + IPL 7 = 11 matches): avg 1st inns 153, bat first won 36%".
+    split=True appends each source's own numbers in brackets."""
     record = _ground_record(city)
     total = record.get("all")
     if not total:
@@ -156,16 +156,11 @@ def venue_summary(city: str) -> str:
     def win(cell):
         return f"{cell['bat_first_wins'] / cell['decided'] * 100:.0f}%" if cell["decided"] else "n/a"
 
-    text = f"{total['n']} T20s: avg 1st inns {avg(total)}, bat first won {win(total)}"
-    parts = [
-        f"{label} {record[key]['n']}: {avg(record[key])}, {win(record[key])}"
-        for key, label in (("t20i", "T20I"), ("ipl", "IPL"))
-        if record.get(key)
-    ]
-    if len(parts) > 1:
-        text += " (" + " | ".join(parts) + ")"
-    elif parts:
-        text += f" ({parts[0].split()[0]} only)"
+    sources = [(label, record[key]) for key, label in (("t20i", "T20I"), ("ipl", "IPL")) if record.get(key)]
+    mix = " + ".join(f"{label} {cell['n']}" for label, cell in sources)
+    text = f"All T20 data ({mix} = {total['n']} matches): avg 1st inns {avg(total)}, bat first won {win(total)}"
+    if split and len(sources) > 1:
+        text += " (" + " | ".join(f"{label}: {avg(cell)}, {win(cell)}" for label, cell in sources) + ")"
     if total["n"] < 10:
         text += " [small sample]"
     return text
