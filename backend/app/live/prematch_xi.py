@@ -24,6 +24,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from app.live.prematch_conditions import ConditionsState, GROUPS, dew_index, load_weather
+from app.live.prematch_model import margin_runs
 from app.ml.player_style_registry import PlayerStyleRegistry
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -209,7 +210,7 @@ def _parse(path: Path, source: str, registry, cache):
     first = (match.get("innings") or [{}])[0].get("team")
     return {
         "src": source, "date": info["dates"][0], "city": city, "teams": teams,
-        "winner": outcome.get("winner"), "first_team": first,
+        "winner": outcome.get("winner"), "first_team": first, "margin": margin_runs(outcome),
         "xi": {t: list(players[t]) for t in teams},
         "bat_updates": {p: c for p, c in bat_updates.items()},
         "faced": dict(faced), "bowl_updates": dict(bowl_updates),
@@ -244,27 +245,48 @@ def _match_row(book, cond, registry, cache, fact, day) -> dict:
     }
 
 
-def _parsed_matches(registry, cache) -> list[dict]:
+# Men's T20 competitions available as Cricsheet downloads (data/raw/cricsheet/<code>/).
+#   t20i/ipl      the original two sources
+#   franchise     BBL, PSL, CPL, SA20 (sat), ILT20 (ilt), MLC, LPL, BPL, MSL
+#   domestic      T20 Blast (ntb), Super Smash (ssm), Syed Mushtaq Ali (sma)
+FRANCHISE = ("bbl", "psl", "cpl", "sat", "ilt", "mlc", "lpl", "bpl", "msl")
+DOMESTIC = ("ntb", "ssm", "sma")
+# Which sources feed the player records, and with what weight (1 = counts fully). Chosen by
+# evaluate_prematch_leagues.py; the default is the original two sources.
+DEFAULT_SOURCES = ("t20i", "ipl")
+DEFAULT_WEIGHTS: dict[str, float] = {}
+
+_PARSED_CACHE: dict = {}
+
+
+def _parsed_matches(registry, cache, sources=DEFAULT_SOURCES) -> list[dict]:
     parsed = []
-    for source in ("t20i", "ipl"):
-        for path in sorted((ROOT / "data" / "raw" / "cricsheet" / source).glob("*.json")):
-            fact = _parse(path, source, registry, cache)
-            if fact:
-                parsed.append(fact)
+    for source in sources:
+        if source not in _PARSED_CACHE:
+            matches = []
+            for path in sorted((ROOT / "data" / "raw" / "cricsheet" / source).glob("*.json")):
+                fact = _parse(path, source, registry, cache)
+                if fact:
+                    matches.append(fact)
+            _PARSED_CACHE[source] = matches
+        parsed.extend(_PARSED_CACHE[source])
     parsed.sort(key=lambda f: f["date"])
     return parsed
 
 
-def build_dataset_xi(collect: bool = True):
+def build_dataset_xi(collect: bool = True, sources=None, weights=None):
     """One row per decided men's T20I, XI matchup features from earlier matches only.
-    Returns the rows; `current_xi_state()` returns the end state for live use."""
-    return _replay(collect)[0]
+    Returns the rows; `current_xi_state()` returns the end state for live use.
+    `sources` / `weights` choose which competitions feed the player records (see DEFAULT_*)."""
+    return _replay(collect, sources, weights)[0]
 
 
-def _replay(collect: bool):
+def _replay(collect: bool, sources=None, weights=None):
     registry = PlayerStyleRegistry()
     cache: dict = {}
-    parsed = _parsed_matches(registry, cache)
+    sources = tuple(sources or DEFAULT_SOURCES)
+    weights = DEFAULT_WEIGHTS if weights is None else weights
+    parsed = _parsed_matches(registry, cache, sources)
 
     weather = load_weather()
     cond = ConditionsState()  # Elo / H2H and the city pitch profile
@@ -275,30 +297,32 @@ def _replay(collect: bool):
         decided = fact["winner"] and fact["winner"] in teams
         if collect and fact["src"] == "t20i" and decided:
             out.append(_match_row(book, cond, registry, cache, fact, weather.get(fact["city"], {}).get(fact["date"])))
-        # fold the match in
-        cond.apply({
-            "src": fact["src"], "teams": teams, "city": fact["city"], "winner": fact["winner"],
-            "first_team": fact["first_team"],
-            "bat": {t: fact["team_cells"][t]["bat"] for t in teams},
-            "bowl": {t: fact["team_cells"][t]["bowl"] for t in teams},
-        })
+        # fold the match in: team-level state (Elo, H2H, pitch profile) from internationals + IPL only
+        if fact["src"] in ("t20i", "ipl"):
+            cond.apply({
+                "src": fact["src"], "teams": teams, "city": fact["city"], "winner": fact["winner"],
+                "first_team": fact["first_team"], "margin": fact.get("margin", 10.0),
+                "bat": {t: fact["team_cells"][t]["bat"] for t in teams},
+                "bowl": {t: fact["team_cells"][t]["bowl"] for t in teams},
+            })
+        w = weights.get(fact["src"], 1.0)  # player evidence from weaker leagues counts for less
         for team in teams:
             for p in fact["xi"][team]:
-                book.bat[p]["apps"] += 1
-                book.bowl[p]["apps"] += 1
+                book.bat[p]["apps"] += w
+                book.bowl[p]["apps"] += w
         for p, cells in fact["bat_updates"].items():
             rec = book.bat[p]
             for g in GROUPS:
                 for i in range(3):
-                    rec["cells"][g][i] += cells[g][i]
-                    book.g_bat[g][i] += cells[g][i]
+                    rec["cells"][g][i] += w * cells[g][i]
+                    book.g_bat[g][i] += w * cells[g][i]
         for p, n in fact["faced"].items():
-            book.bat[p]["balls"] += n
+            book.bat[p]["balls"] += w * n
         for p, cells in fact["bowl_updates"].items():
             rec = book.bowl[p]
             for i in range(3):
-                rec["cells"][i] += cells[i]
-                book.g_bowl[i] += cells[i]
+                rec["cells"][i] += w * cells[i]
+                book.g_bowl[i] += w * cells[i]
     return out, book, cond, registry, cache
 
 

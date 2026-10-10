@@ -174,7 +174,8 @@ class ConditionsState:
         a, b = sorted(teams)
         if fact["winner"] and fact["winner"] in teams:
             self.base.apply_t20i(
-                {"teams": (a, b), "winner": fact["winner"], "first_team": fact["first_team"], "city": fact["city"]}
+                {"teams": (a, b), "winner": fact["winner"], "first_team": fact["first_team"], "city": fact["city"],
+                 "margin": fact.get("margin", 10.0)}
             )
         for team in teams:
             self.bat_window[team].append(fact["bat"][team])

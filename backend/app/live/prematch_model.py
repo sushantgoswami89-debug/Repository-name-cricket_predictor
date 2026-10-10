@@ -33,8 +33,26 @@ ROOT = Path(__file__).resolve().parents[3]
 T20I_DIR = ROOT / "data" / "raw" / "cricsheet" / "t20i"
 IPL_DIR = ROOT / "data" / "raw" / "cricsheet" / "ipl"
 
-ELO_K = 96.0  # chosen on 2023-24 only by evaluate_prematch_elo.py
+# Elo: K shrinks with a team's experience (high while a rating is still settling, low once it is
+# established) and each result is scaled by the margin of victory. Chosen 2026-10-10 from rolling-origin
+# tests on 2021-25 (fit on earlier years only): Brier +0.0030 over the old fixed K=96 on all games
+# (CI [+0.0012,+0.0048]; positive in both 2021-23 and 2024-25), +0.0018 on full-member games (n.s.).
+ELO_K_MIN = 16.0
+ELO_K_MAX = 96.0
+ELO_K_GAMES = 30.0
+ELO_K = ELO_K_MAX  # legacy name used by older scripts
 ELO_INITIAL = 1500.0
+WICKET_MARGIN_RUNS = 8.0  # a win "by N wickets" counts as about 8N runs
+
+
+def margin_runs(outcome: dict) -> float:
+    """Winning margin in runs-equivalent (10 when unknown: ties, super overs, no margin recorded)."""
+    by = outcome.get("by", {}) or {}
+    return float(by.get("runs") or (by.get("wickets", 0) * WICKET_MARGIN_RUNS) or 10.0)
+
+
+def margin_multiplier(margin: float) -> float:
+    return math.log(1.0 + margin / 10.0) + 0.5
 VENUE_PRIOR = 12.0  # pseudo-matches pulling a venue's bat-first rate to the global rate
 FEATURES = ("elo", "form", "h2h", "h2h5", "venue_t20i", "venue_ipl")
 
@@ -77,6 +95,7 @@ def _load(directory: Path) -> tuple[dict, ...]:
                 "teams": tuple(info.get("teams", [])),
                 "city": city_key(info),
                 "winner": info.get("outcome", {}).get("winner"),
+                "margin": margin_runs(info.get("outcome", {})),
                 "first_team": first_team,
                 "first_total": first_total,
             }
@@ -115,6 +134,7 @@ class State:
     h2h: dict[frozenset, list[str]] = field(default_factory=lambda: defaultdict(list))
     venue_t20i: dict[str, VenueRecord] = field(default_factory=lambda: defaultdict(VenueRecord))
     venue_ipl: dict[str, VenueRecord] = field(default_factory=lambda: defaultdict(VenueRecord))
+    games: dict[str, int] = field(default_factory=lambda: defaultdict(int))
     global_t20i: VenueRecord = field(default_factory=VenueRecord)
     global_ipl: VenueRecord = field(default_factory=VenueRecord)
 
@@ -158,8 +178,13 @@ class State:
         outcome_a = 1.0 if winner == a else 0.0
         self.residuals[a].append(outcome_a - expected_a)
         self.residuals[b].append((1 - outcome_a) - (1 - expected_a))
-        self.ratings[a] = self.rating(a) + ELO_K * (outcome_a - expected_a)
-        self.ratings[b] = self.rating(b) + ELO_K * ((1 - outcome_a) - (1 - expected_a))
+        mult = margin_multiplier(row.get("margin", 10.0))
+        k_a = ELO_K_MIN + (ELO_K_MAX - ELO_K_MIN) * math.exp(-self.games[a] / ELO_K_GAMES)
+        k_b = ELO_K_MIN + (ELO_K_MAX - ELO_K_MIN) * math.exp(-self.games[b] / ELO_K_GAMES)
+        self.ratings[a] = self.rating(a) + k_a * mult * (outcome_a - expected_a)
+        self.ratings[b] = self.rating(b) + k_b * mult * ((1 - outcome_a) - (1 - expected_a))
+        self.games[a] += 1
+        self.games[b] += 1
         self.h2h[frozenset((a, b))].append(winner)
         if row["first_team"] in (a, b):
             won_bat_first = int(winner == row["first_team"])

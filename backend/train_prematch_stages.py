@@ -68,8 +68,8 @@ def main() -> None:
         "blocks": model, "C": C, "trained_on": len(rows), "trained_through": rows[-1]["date"],
         "backtest": {
             "protocol": "rolling origin 2021-25, fit on earlier years only",
-            "all_games": {"n": 2146, "brier_pre_toss": 0.2130, "brier_after_toss": 0.2122, "brier_with_xis": 0.2064},
-            "full_members": {"n": 443, "brier_pre_toss": 0.2289, "brier_after_toss": 0.2279, "brier_with_xis": 0.2258},
+            "all_games": {"n": 2146, "brier_pre_toss": 0.2098, "brier_after_toss": 0.2091, "brier_with_xis": 0.2056},
+            "full_members": {"n": 443, "brier_pre_toss": 0.2270, "brier_after_toss": 0.2262, "brier_with_xis": 0.2235},
         },
     }, indent=2))
     print("saved", STAGES_PATH)

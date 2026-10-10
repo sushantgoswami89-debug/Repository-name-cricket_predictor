@@ -598,3 +598,22 @@ evaluation scripts remain for comparison but are no longer used live.
 Next levers, in order of expected value: (1) more player history -- CPL/PSL/BBL/SA20 from Cricsheet (needs a download; 1 of
 11 West Indies XI players had no usable record); (2) margin-of-victory Elo and recency decay tuning; (3) separate bat/bowl
 team ratings; (4) compare the in-play win % with the Cricbuzz win % recorded in data/live/board-*.jsonl.
+
+## 2026-10-10: extra league data, and a better Elo (the part that actually helped)
+**Downloaded** (Cricsheet, public, men's T20, ~21 MB zips; ignored by git under data/raw/cricsheet/): bbl 662, psl 357, cpl 445,
+sat (SA20) 130, ilt (ILT20) 134, mlc 109, lpl 143, bpl 469, msl 56, ntb (T20 Blast) 1570, ssm (Super Smash) 467, sma (Syed
+Mushtaq Ali) 695 matches. Player records grew from 4,965 to 7,535 players; e.g. Shamar Springer 126 -> 1,024 balls of evidence.
+**Result: no gain** (`evaluate_prematch_leagues.py`, rolling origin 2021-25): franchise leagues at weight 1.0 -0.0005 Brier,
+at 0.5 -0.0003, + domestic -0.0000, everything at 1.0 +0.0000 (CIs all include 0; full members the same). XI quality correlates
+0.97 with the old one. So the live player records stay T20I + IPL (`DEFAULT_SOURCES`); the data and script stay for later.
+**Elo upgrade (adopted)**: K now shrinks with a team's experience (96 -> 16, scale 30 games) and each result is scaled by margin
+of victory (ln(1+margin/10)+0.5; wickets counted as 8 runs each). Tested ~30 variants on the same rolling window (so some
+selection optimism). Chosen variant vs old fixed K=96: +0.0030 Brier [+0.0012,+0.0048] on all games (positive in 2021-23 AND
+2024-25), +0.0018 on full members (CI includes 0, same direction in both halves). Staged model backtest after the change
+(Brier, all / full members): pre-toss 0.2098 / 0.2270, after toss 0.2091 / 0.2262, with XIs 0.2056 / 0.2235 (were 0.2130 /
+0.2289, 0.2122 / 0.2279, 0.2064 / 0.2258). Calibration of the new staged model is good: full members said 70-75% -> won 72.0%,
+65-70% -> 69.8%. XI-quality weight fell 0.18 -> 0.10 because the better Elo already captures part of it.
+Headline moves for India v West Indies as the model improved/refit today: 65% -> 69% (staged, refit on all data) -> 74%
+(new Elo). Old saved models (prematch_t20i_logit/dew/xi.json) are legacy; they load the new Elo so their numbers are not
+meaningful any more -- the live path uses only prematch_t20i_stages.json.
+Still open: separate bat/bowl team ratings; compare the in-play win % with Cricbuzz's (data/live/board-*.jsonl).
