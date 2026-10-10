@@ -173,12 +173,13 @@ def test_dew_line_uses_the_real_start_time_when_known():
     assert "start time assumed" not in known and "mid-chase" in known
 
 
-def test_ground_summary_compiles_t20i_and_ipl_on_one_line():
+def test_ground_summary_is_one_t20_stats_line():
     from app.live.prematch_analysis import venue_summary
 
     text = venue_summary("ranchi")
     assert "\n" not in text
-    assert text.startswith("All T20 data (T20I 4 + IPL 7 = 11 matches): avg 1st inns ") and "bat first won" in text
-    assert "(" not in text.split("matches)")[1]  # compiled only: no per-source bracket on the title line
-    assert "T20I: " in venue_summary("ranchi", split=True)
-    assert venue_summary("nowhere-ville") == "no T20I or IPL history here"
+    assert text.startswith("T20 Stats - 11 matches (T20I 4 + IPL 7): avg score ")
+    for part in ("1st inns avg ", "avg wkts ", "/inns", "most wkts by one bowler: pace ", " / spin "):
+        assert part in text
+    assert "All T20" not in text
+    assert venue_summary("nowhere-ville") == "T20 Stats - no T20I or IPL history here"

@@ -129,10 +129,19 @@ def _ground_record(city: str) -> dict:
         for fact in load_facts():
             row = table.setdefault(fact["city"], {})
             for key in (fact["src"], "all"):
-                cell = row.setdefault(key, {"n": 0, "totals": [], "decided": 0, "bat_first_wins": 0})
+                cell = row.setdefault(
+                    key,
+                    {"n": 0, "totals": [], "all_totals": [], "wkts": [], "best_pace": 0, "best_spin": 0,
+                     "decided": 0, "bat_first_wins": 0},
+                )
                 cell["n"] += 1
                 if fact["totals"]:
                     cell["totals"].append(fact["totals"][0])
+                cell["all_totals"].extend(fact["totals"])
+                cell["wkts"].extend(fact.get("innings_wkts", []))
+                best = fact.get("best_by_group") or {}
+                cell["best_pace"] = max(cell["best_pace"], best.get("pace", 0))
+                cell["best_spin"] = max(cell["best_spin"], best.get("spin", 0))
                 if fact["winner"] and fact["first_team"] in fact["teams"]:
                     cell["decided"] += 1
                     cell["bat_first_wins"] += int(fact["winner"] == fact["first_team"])
@@ -141,26 +150,27 @@ def _ground_record(city: str) -> dict:
     return _cached(("ground-record",), 3600, build).get(city, {})
 
 
-def venue_summary(city: str, split: bool = False) -> str:
-    """One-line ground record compiled over ALL T20 data at the ground (T20Is and IPL pooled):
-    "All T20 data (T20I 4 + IPL 7 = 11 matches): avg 1st inns 153, bat first won 36%".
-    split=True appends each source's own numbers in brackets."""
+def venue_summary(city: str) -> str:
+    """The title-line ground record, compiled over every T20I and IPL match at the ground:
+    "T20 Stats - 11 matches (T20I 4 + IPL 7): avg score 148, 1st inns avg 153, avg wkts 7.1/inns,
+    most wkts by one bowler: pace 5 / spin 4".
+    Bowlers without a known style are not counted in the pace/spin maxima."""
     record = _ground_record(city)
     total = record.get("all")
     if not total:
-        return "no T20I or IPL history here"
+        return "T20 Stats - no T20I or IPL history here"
 
-    def avg(cell):
-        return f"{sum(cell['totals']) / len(cell['totals']):.0f}" if cell["totals"] else "n/a"
+    def mean(values, digits=0):
+        return f"{sum(values) / len(values):.{digits}f}" if values else "n/a"
 
-    def win(cell):
-        return f"{cell['bat_first_wins'] / cell['decided'] * 100:.0f}%" if cell["decided"] else "n/a"
-
-    sources = [(label, record[key]) for key, label in (("t20i", "T20I"), ("ipl", "IPL")) if record.get(key)]
-    mix = " + ".join(f"{label} {cell['n']}" for label, cell in sources)
-    text = f"All T20 data ({mix} = {total['n']} matches): avg 1st inns {avg(total)}, bat first won {win(total)}"
-    if split and len(sources) > 1:
-        text += " (" + " | ".join(f"{label}: {avg(cell)}, {win(cell)}" for label, cell in sources) + ")"
+    mix = " + ".join(
+        f"{label} {record[key]['n']}" for key, label in (("t20i", "T20I"), ("ipl", "IPL")) if record.get(key)
+    )
+    text = (
+        f"T20 Stats - {total['n']} matches ({mix}): avg score {mean(total['all_totals'])}, "
+        f"1st inns avg {mean(total['totals'])}, avg wkts {mean(total['wkts'], 1)}/inns, "
+        f"most wkts by one bowler: pace {total['best_pace']} / spin {total['best_spin']}"
+    )
     if total["n"] < 10:
         text += " [small sample]"
     return text

@@ -30,6 +30,18 @@ GROUPS = {
 NOT_BOWLER_WICKETS = {"run out", "retired hurt", "retired out", "obstructing the field", "timed out"}
 
 
+def _best_by_group(bowler_wkts: dict, group) -> dict:
+    """Most wickets by a single pace bowler and by a single spinner in the match
+    (finger + wrist spin = "spin"). Bowlers with no known style are skipped."""
+    best = {"pace": 0, "spin": 0}
+    for name, wickets in bowler_wkts.items():
+        g = group(name)
+        key = "pace" if g == "pace" else "spin" if g in ("finger", "wrist") else None
+        if key:
+            best[key] = max(best[key], wickets)
+    return best
+
+
 def main() -> None:
     registry = PlayerStyleRegistry()
     style_cache: dict[str, str | None] = {}
@@ -49,16 +61,23 @@ def main() -> None:
             bat = {t: {g: [0, 0, 0] for g in ("pace", "finger", "wrist")} for t in info["teams"]}
             bowl = {t: {g: [0, 0, 0] for g in ("pace", "finger", "wrist")} for t in info["teams"]}
             totals = []
+            innings_wkts = []
+            bowler_wkts: dict[str, int] = {}
             for innings in match.get("innings", []):
                 team = innings.get("team")
                 if team not in bat:
                     continue
                 other = next(t for t in info["teams"] if t != team)
                 total = 0
+                fallen = 0
                 for over in innings.get("overs", []):
                     for d in over.get("deliveries", []):
                         runs = d["runs"]
                         total += runs["total"]
+                        fallen += len(d.get("wickets", []))
+                        for w in d.get("wickets", []):
+                            if w.get("kind") not in NOT_BOWLER_WICKETS:
+                                bowler_wkts[d["bowler"]] = bowler_wkts.get(d["bowler"], 0) + 1
                         g = group(d["bowler"])
                         if g is None or "wides" in d.get("extras", {}):
                             continue
@@ -72,6 +91,7 @@ def main() -> None:
                             cell[1] += runs["batter"]
                             cell[2] += int(wicket)
                 totals.append(total)
+                innings_wkts.append(fallen)
             outcome = info.get("outcome", {})
             facts.append(
                 {
@@ -83,6 +103,8 @@ def main() -> None:
                     "winner": outcome.get("winner"),
                     "first_team": (match.get("innings") or [{}])[0].get("team"),
                     "totals": totals,
+                    "innings_wkts": innings_wkts,
+                    "best_by_group": _best_by_group(bowler_wkts, group),
                     "bat": bat,
                     "bowl": bowl,
                     "toss_winner": info.get("toss", {}).get("winner"),
