@@ -131,7 +131,7 @@ def main(refresh: bool = False) -> int:
         if not geo.get(city):
             continue
         have = daily.setdefault(city, {})
-        for first, last in _clusters(sorted(d for d in needed[city] if refresh or d not in have or "eve_rain_mm" not in have[d])):
+        for first, last in _clusters(sorted(d for d in needed[city] if refresh or d not in have or "gap_h" not in have[d])):
             tasks.append((city, first, last))
     print(f"{len(tasks)} date windows to fetch", flush=True)
 

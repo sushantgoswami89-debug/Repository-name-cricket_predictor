@@ -42,6 +42,9 @@ def summarise(hourly: dict) -> dict[str, dict]:
         afternoon = [hours[h] for h in range(12, 19) if h in hours]
         match_hours = [hours[h] for h in range(17, 24) if h in hours]  # a T20 runs roughly 18:00-23:00
         out[day] = {
+            # temperature minus dew point for each local hour 12:00-23:00 (dew timing; added 2026-10-10)
+            "gap_h": {str(h): round(hours[h][0] - hours[h][2], 1) for h in range(12, 24)
+                      if h in hours and hours[h][0] is not None and hours[h][2] is not None},
             "eve_rain_mm": round(sum(x[4] or 0 for x in match_hours), 2),
             "eve_rain_hours": sum(1 for x in match_hours if (x[4] or 0) >= 0.1),
             "eve_temp": _mean(x[0] for x in evening),

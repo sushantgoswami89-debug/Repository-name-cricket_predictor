@@ -631,3 +631,20 @@ side's chance scaled by (1 - P(no result)); shown only when >= 2%. The Weather l
 What I tested and did NOT build: a rain effect on who wins. Among 85 completed D/L matches (rolling 2017-25) the chasing side won
 51.8% vs 51.2% in normal matches, and the favourite's confidence scale was 0.99 [0.48,1.70] vs 1.19 [1.07,1.31] normal -- no
 reliable shift toward the chaser, and only a hint (not significant) of more randomness. No day-night / reduced-overs modelling.
+
+## 2026-10-10: India v West Indies (10-09) and the dew factor -- what the data says
+Result: West Indies chased India's ~250 and won; pre-match we had India 65-74% depending on stage (a ~30% event; one match is
+not evidence either way). Commentary notes show the dew was "beginning to set in" during INDIA's innings (~9th over, ~19:40) and
+the forecast had dew from ~18:40, i.e. dew was present from before the match, not only in the chase.
+Tested with hourly dew gaps (gap_h now stored per city-date; weather re-pulled): chasing side's win rate, D/L matches removed,
+gap threshold 2.5C, assumed 19:00 start (Cricsheet has no start times, so day games add noise):
+  no dew in the chase            T20I 49.5% (n=2398)   IPL 54.8% (n=1042)   both 51.1%
+  dew only arrives by the chase  T20I 52.0% (n=352)    IPL 49.5% (n=107)    both 51.4% (n=459)
+  dew from the start             T20I 56.0% (n=461)    IPL 56.5% (n=46)     both 56.0% (n=507, +/-4.3); pre-2025 only 54.1% vs 51.4%
+=> the "dew arrives during the match" idea is NOT supported; if anything the chase edge sits where dew is there from the start,
+about +3 to +5 points, uncertain. The model's dew term (about 5.4 points at heavy dew) is at the top of that range.
+Scoring: dew-from-start matches score LOWER, not higher (T20I 1st innings 139 vs 151, 2nd 117 vs 129; within 5 cities with enough
+matches: -11.6 and -8.6 runs) -- so dew does not inflate totals in this data (confounded by which grounds are humid). Yesterday's
+250-run game was an outlier.
+Open: show the dew effect in points on the Dew line; log each pre-match win % (by stage) with the result so the pre-match numbers are
+scored on live matches (notes item 7 from 10-06, still not built).
