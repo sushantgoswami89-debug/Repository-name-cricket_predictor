@@ -13,6 +13,8 @@ returns None so a failure here can never block the live prediction flow.
 
 from __future__ import annotations
 
+import re
+
 import json
 from datetime import date, timedelta
 from functools import lru_cache
@@ -469,6 +471,32 @@ def prematch_text(
     return "\n".join(lines)
 
 
+def _dew_short(outlook: dict | None) -> str:
+    """"Dew: HEAVY -- 90%, sets in ~18:40" (weight, chance, onset)."""
+    if outlook is None:
+        return "Dew: n/a"
+    text = f"Dew: {outlook['weight']} -- {outlook['chance']:.0f}%"
+    if outlook["weight"] != "LITTLE" and outlook["onset_h"] is not None:
+        text += f", sets in ~{_clock(outlook['onset_h'])}"
+    return text
+
+
+def _pitch_short(note: str) -> str:
+    """"Pitch: flat (Batting friendly; Dry surface)" -- the call, with TOI's own words in brackets.
+    green / turning only when TOI's pitch field says so; otherwise "unknown"."""
+    pitch_field = note.split("|")[0].strip()
+    text = pitch_field.lower()
+    if re.search(r"\b(green|grass|seam|pace[- ]friendly|bowling[- ]friendly|bounce)\b", text):
+        kind = "green"
+    elif re.search(r"\b(spin|turn|turning|dusty)\b", text):
+        kind = "turning"
+    elif re.search(r"batting[- ]friendly|true batting|\bflat\b", text):
+        kind = "flat"
+    else:
+        kind = "unknown"
+    return f"Pitch: {kind}" + (f" ({pitch_field})" if pitch_field else "")
+
+
 def prematch_header(
     team_a: str,
     team_b: str,
@@ -479,8 +507,8 @@ def prematch_header(
     pitch_note: str | None = None,
     start_utc_ms: int | None = None,
 ) -> list[str]:
-    """The facts under the title: Weather, Dew (weight, chance, onset) and Pitch (flat / green /
-    turning with its evidence). The estimate itself -- win % and how it builds up from the base
+    """The facts under the title: Weather, then one line "Dew: HEAVY -- 90%, sets in ~18:40, Pitch: flat
+    (Batting friendly; Dry surface)". The estimate itself -- win % and how it builds up from the base
     rating through dew and the XI effects -- is ONE compiled block at the bottom (prematch_text),
     so the briefing never gives two estimates that point different ways."""
     from app.live.match_weather import match_day_weather
@@ -497,4 +525,7 @@ def prematch_header(
     if start_utc_ms and weather and weather.get("utc_offset_s") is not None:
         local_s = start_utc_ms / 1000.0 + weather["utc_offset_s"]
         start_local_h = (local_s % 86400) / 3600.0
-    return [_weather_line(weather), _dew_line(dew_outlook(weather, start_local_h)), _track_call(note, city, cloud)]
+    return [
+        _weather_line(weather),
+        _dew_short(dew_outlook(weather, start_local_h)) + ", " + _pitch_short(note),
+    ]

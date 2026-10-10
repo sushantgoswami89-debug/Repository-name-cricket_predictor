@@ -204,7 +204,7 @@ def test_briefing_text_uses_page_teams_as_label(monkeypatch):
     # the header must really be there: briefing_text swallows header errors, so a bug would be silent
     assert "Harare | " in text.splitlines()[0] and "| T20 - " in text.splitlines()[0]
     assert text.splitlines()[1].startswith("Weather:")
-    assert any(line.startswith("Pitch:") for line in text.splitlines())
+    assert any(", Pitch: " in line and line.startswith("Dew:") for line in text.splitlines())
 
 
 @pytest.fixture(autouse=True)

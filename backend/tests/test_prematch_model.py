@@ -110,16 +110,15 @@ def test_xi_model_needs_toss_and_nine_matched_players():
     assert predict_with_xi("India", "West Indies", "India", None, india[:5], windies, "ranchi") is None
 
 
-def test_track_call_uses_toi_pitch_field_not_its_boilerplate_and_admits_gaps():
-    from app.live.prematch_analysis import _track_call
+def test_short_pitch_and_dew_wording():
+    from app.live.prematch_analysis import _dew_short, _pitch_short
 
-    flat = _track_call("Batting friendly; Dry surface | Likely good grip for slower balls/spin as the surface wears", "ranchi", 16)
-    assert flat.startswith("Pitch: flat") and "turning" not in flat  # boilerplate 'grip for slower balls' is ignored
-    assert "green / seam-friendly" in _track_call("Seam friendly; Grassy surface", "ranchi", 20)
-    assert "turning" in _track_call("Spin friendly; Dusty surface", "ranchi", 20)
-    unknown = _track_call("", "ranchi", 20)
-    assert "no reliable source" in unknown  # never invents green/turning
-    assert "overcast" in _track_call("", "ranchi", 85)
+    assert _pitch_short("Batting friendly; Dry surface | Likely good grip for slower balls/spin as the surface wears") == "Pitch: flat (Batting friendly; Dry surface)"
+    assert _pitch_short("Seam friendly; Grassy surface").startswith("Pitch: green")
+    assert _pitch_short("Spin friendly; Dusty surface").startswith("Pitch: turning")
+    assert _pitch_short("") == "Pitch: unknown"  # never invents green / turning
+    assert _dew_short({"weight": "HEAVY", "chance": 90, "onset_h": 18.67}) == "Dew: HEAVY -- 90%, sets in ~18:40"
+    assert _dew_short({"weight": "LITTLE", "chance": 5, "onset_h": None}) == "Dew: LITTLE -- 5%"
 
 
 def test_header_has_weather_dew_and_pitch_only_the_estimate_is_one_block(monkeypatch):
@@ -128,7 +127,8 @@ def test_header_has_weather_dew_and_pitch_only_the_estimate_is_one_block(monkeyp
     monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: WET_EVENING)
     lines = prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", "West Indies", "bowl",
                             pitch_note="Batting friendly")
-    assert [l.split(":")[0] for l in lines] == ["Weather", "Dew", "Pitch"]
+    assert [l.split(":")[0] for l in lines] == ["Weather", "Dew"]  # Dew and Pitch share one line
+    assert lines[1].endswith("Pitch: flat (Batting friendly)")
     assert not any(l.startswith("Advantage") for l in lines)  # the estimate is not repeated up here
 
 
