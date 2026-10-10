@@ -737,6 +737,12 @@ class CricbuzzLiveReader:
                 value = mini.get(key)
                 return str(value.get("name", "")) if isinstance(value, dict) else ""
 
+            def _stats(value: Any) -> dict | None:
+                if not isinstance(value, dict):
+                    return None
+                keep = ("runs", "balls", "fours", "sixes", "strikeRate", "overs", "maidens", "wickets", "economy")
+                return {k: value[k] for k in keep if k in value}
+
             bat_team = mini.get("batTeam") if isinstance(mini.get("batTeam"), dict) else {}
             board.update(
                 {
@@ -748,6 +754,11 @@ class CricbuzzLiveReader:
                     "non_striker": _name("batsmanNonStriker"),
                     "bowler": _name("bowlerStriker"),
                     "other_bowler": _name("bowlerNonStriker"),
+                    # exact figures, not just names: runs/balls/4s/6s for batters, overs/maidens/runs/wickets for bowlers
+                    "striker_stats": _stats(mini.get("batsmanStriker")),
+                    "non_striker_stats": _stats(mini.get("batsmanNonStriker")),
+                    "bowler_stats": _stats(mini.get("bowlerStriker")),
+                    "other_bowler_stats": _stats(mini.get("bowlerNonStriker")),
                     "partnership": mini.get("partnerShip"),
                     "last_wicket": mini.get("lastWicket"),
                     "last_updated_s": mini.get("responseLastUpdated"),

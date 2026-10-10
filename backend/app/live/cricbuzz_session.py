@@ -272,15 +272,41 @@ def _check_next_over(expected: dict | None, snapshot) -> str | None:
     return f"[check] over {expected['over']}: " + ("; ".join(parts) or "nothing was derived")
 
 
+def _bat_figures(stats: dict | None) -> str:
+    """"102(45)" -- runs (balls)."""
+    return f" {stats['runs']}({stats['balls']})" if stats and "runs" in stats and "balls" in stats else ""
+
+
+def _bowl_figures(stats: dict | None) -> str:
+    """"3-0-36-3" -- overs-maidens-runs-wickets."""
+    if stats and all(k in stats for k in ("overs", "maidens", "runs", "wickets")):
+        return f" {stats['overs']}-{stats['maidens']}-{stats['runs']}-{stats['wickets']}"
+    return ""
+
+
 def _board_players(snapshot) -> str:
-    """Starred players from the page's live board: striker* / current bowler*."""
+    """Starred players from the page's live board with their exact figures:
+    bowler* 3-0-36-3 bowling, striker* 38(19) on strike, other 19(7) at the other end."""
     board = getattr(snapshot, "board", None)
     if not board or not board.get("striker"):
         return ""
     return (
-        f"   [NOW: {board.get('bowler', '?')}* bowling, {board['striker']}* on strike, "
-        f"{board.get('non_striker') or '?'} at the other end]"
+        f"   [NOW: {board.get('bowler', '?')}*{_bowl_figures(board.get('bowler_stats'))} bowling, "
+        f"{board['striker']}*{_bat_figures(board.get('striker_stats'))} on strike, "
+        f"{board.get('non_striker') or '?'}{_bat_figures(board.get('non_striker_stats'))} at the other end]"
     )
+
+
+def _over_break_figures(snapshot, crease: list[str] | None, card_batters: dict, card_bowlers: dict, announced: str = "") -> str:
+    """Exact figures for the over break, from the fresh scorecard page (not the board's stale names):
+    who just bowled and his figures, the two batters at the crease with their scores, the announced next bowler."""
+    last = snapshot.deliveries[-1]
+    parts = [f"JUST BOWLED: {last.bowler}{card_bowlers.get(last.bowler, '')}"]
+    if crease:
+        parts.append("AT THE CREASE: " + ", ".join(f"{name}{card_batters.get(name, '')}" for name in crease))
+    if announced:
+        parts.append(f"NEXT BOWLER: {announced}{card_bowlers.get(announced, ' (not bowled yet)')}")
+    return "   [" + " | ".join(parts) + "]"
 
 
 def _board_check(snapshot) -> str | None:
@@ -586,6 +612,8 @@ class CricbuzzMatchSession:
     _carded: set = field(default_factory=set)
     _captured: bool = False
     _crease: list[str] | None = None
+    _card_batters: dict = field(default_factory=dict)
+    _card_bowlers: dict = field(default_factory=dict)
     _archive_state: dict = field(default_factory=dict)
     _stuck_alert_sent: bool = False
     # User-requested 2026-09-18: a persistent per-delivery commentary log
@@ -701,8 +729,12 @@ class CricbuzzMatchSession:
         expected_now = _expected_next_over(snapshot, self._announced_bowler, crease)
         if expected_now is not None:
             self._expected_next = expected_now
+        figures = ""
+        if _at_over_break(snapshot):
+            announced = self._announced_bowler[1] if self._announced_bowler and self._announced_bowler[0] > snapshot.deliveries[-1].timestamp_ms else ""
+            figures = _over_break_figures(snapshot, crease, self._card_batters, self._card_bowlers, announced)
         print(
-            f"[{self.match_id}] {_scorecard_line(snapshot)}"
+            f"[{self.match_id}] {_scorecard_line(snapshot)}{figures}"
             f"{_next_over_line(snapshot, self._announced_bowler, crease)}"
         )
         for line in _delivery_event_lines(snapshot, self._seen_delivery_keys):
@@ -810,9 +842,15 @@ class CricbuzzMatchSession:
             problems += compare_with_deliveries(card, snapshot.deliveries, innings)
         # Who is at the crease right now, from the card, but only if the card is as current as we are.
         current = next((i for i in card["innings"] if i.get("innings") == snapshot.innings), None)
+        self._card_batters, self._card_bowlers = {}, {}
         if current and (current.get("runs"), current.get("wickets")) == (snapshot.score, snapshot.wickets):
             pair = [b["name"] for b in current["batting"] if str(b.get("out", "")).lower() == "not out"]
             self._crease = pair if len(pair) == 2 else None
+            self._card_batters = {b["name"]: f" {b['runs']}*({b['balls']})" for b in current["batting"] if b.get("balls") is not None}
+            bowlers = next((i for i in card["innings"] if i.get("innings") == snapshot.innings), current)["bowling"]
+            self._card_bowlers = {
+                b["name"]: f" {b['overs']}-{b['maidens']}-{b['runs']}-{b['wickets']}" for b in bowlers if b.get("overs") is not None
+            }
         verdict = "OK" if not problems else "MISMATCH: " + "; ".join(problems[:4])
         print(f"[{self.match_id}] [card] {snapshot.overs} ov: {verdict}")
         if self.commentary_log_path is not None:

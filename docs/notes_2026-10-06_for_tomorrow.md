@@ -728,3 +728,11 @@ not out"). It was parsed as a dot/unknown ball -- this, not only the review mech
 chat/interview entries are pointers too. Fix: `_text_rows()` resolves pointers before parsing (byte-length aware, an unmatched pointer is
 left as is). Likely also part of why only ~40% of deliveries carried prose in the delivery-detail audit -- re-measure on the next archive.
 Lesson for the inventory: any field can be a pointer; the raw page archive is what let us find it after the fact.
+
+## 2026-10-10: other pointer fields, and exact batter/bowler figures (user: "check other pointer fields ... the scorecard has bowler and batsman data")
+Pointer scan of every saved page (main page at each poll, plus the eight pages captured per match): the only DATA field that is a "$<hex>" pointer is
+`commText` (37 page-copies; 6 on the live page, 25 on full-commentary). The rest (`__html`, `error`, `globalErrorComponent`) are page plumbing. Resolved since 0643a51.
+Batter/bowler data: the board (miniscore) and the scorecard page carry exact figures -- batters runs/balls/4s/6s/strike rate, bowlers overs-maidens-runs-wickets-
+economy -- but we displayed names only. Now: mid-over `[NOW: Mayank Yadav* 3-0-36-3 bowling, Shai Hope* 38(19) on strike, Sherfane Rutherford 19(7) at the other end]`
+(from the board; stats kept in the board dict), and at the over break `[JUST BOWLED: Hosein 4-0-37-1 | AT THE CREASE: Hope 102*(45), Shepherd 34*(13) | NEXT BOWLER: Forde 2-0-39-0]`
+from the fresh scorecard page (used only when its total matches ours; otherwise just the bowler's name, nothing invented), followed by the expected next striker.

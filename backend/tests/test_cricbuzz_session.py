@@ -470,3 +470,50 @@ def test_next_striker_uses_the_card_pair_and_drops_dismissed_batters():
     assert _expected_next_over(stale, None)["striker"] == ""   # only one batter left in the pair -> says so instead of guessing
     # a wicket on the last ball: nothing derived
     assert _expected_next_over(_over_break_snapshot(wicket="caught", dismissed="Kishan"), None, crease=["Iyer", "New"])["striker"] == ""
+
+
+def test_live_line_shows_exact_batter_and_bowler_figures_from_the_board():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _board_players
+
+    board = {
+        "striker": "Shai Hope", "non_striker": "Sherfane Rutherford", "bowler": "Mayank Yadav",
+        "striker_stats": {"runs": 38, "balls": 19, "fours": 4, "sixes": 2},
+        "non_striker_stats": {"runs": 19, "balls": 7},
+        "bowler_stats": {"overs": 3, "maidens": 0, "runs": 36, "wickets": 3},
+    }
+    line = _board_players(SimpleNamespace(board=board))
+    assert "[NOW: Mayank Yadav* 3-0-36-3 bowling, Shai Hope* 38(19) on strike, Sherfane Rutherford 19(7) at the other end]" in line
+    board.pop("striker_stats")
+    assert "Shai Hope* on strike" in _board_players(SimpleNamespace(board=board))  # no figures -> names only, as before
+
+
+def test_over_break_figures_come_from_the_fresh_card():
+    from app.live.cricbuzz_session import _over_break_figures
+
+    snap = _over_break_snapshot(striker="Hope")
+    text = _over_break_figures(
+        snap, ["Hope", "Shepherd"], {"Hope": " 102*(45)", "Shepherd": " 34*(13)"},
+        {"Hosein": " 4-0-37-1", "Forde": " 2-0-39-0"}, announced="Forde",
+    )
+    assert text == "   [JUST BOWLED: Hosein 4-0-37-1 | AT THE CREASE: Hope 102*(45), Shepherd 34*(13) | NEXT BOWLER: Forde 2-0-39-0]"
+    no_card = _over_break_figures(snap, None, {}, {})
+    assert no_card == "   [JUST BOWLED: Hosein]"   # without a fresh card nothing is invented
+    assert "(not bowled yet)" in _over_break_figures(snap, None, {}, {}, announced="Springer")
+
+
+def test_board_parsing_keeps_the_exact_figures():
+    import json as _json
+
+    from app.live.cricbuzz_reader import CricbuzzLiveReader
+
+    mini = {"inningsId": 2, "batTeam": {"teamScore": 86, "teamWkts": 3}, "overs": 7,
+            "batsmanStriker": {"name": "Shai Hope", "runs": 38, "balls": 19, "fours": 4, "sixes": 2, "strikeRate": "200.00", "id": 1},
+            "batsmanNonStriker": {"name": "S Rutherford", "runs": 19, "balls": 7},
+            "bowlerStriker": {"name": "Mayank Yadav", "overs": 3, "maidens": 0, "runs": 36, "wickets": 3, "economy": 12, "id": 2},
+            "bowlerNonStriker": {"name": "Shivam Dube", "overs": 1, "maidens": 0, "runs": 14, "wickets": 0}}
+    board = CricbuzzLiveReader._board_from_chunks(['{"miniscore":' + _json.dumps(mini) + "}"])
+    assert board["striker_stats"] == {"runs": 38, "balls": 19, "fours": 4, "sixes": 2, "strikeRate": "200.00"}
+    assert board["bowler_stats"] == {"overs": 3, "maidens": 0, "runs": 36, "wickets": 3, "economy": 12}
+    assert board["other_bowler_stats"]["wickets"] == 0 and board["non_striker_stats"]["balls"] == 7
