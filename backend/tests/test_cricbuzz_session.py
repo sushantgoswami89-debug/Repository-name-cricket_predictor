@@ -669,3 +669,27 @@ def test_chase_over_1_prediction_uses_the_side_that_batted_first_in_the_staged_m
     first = SimpleNamespace(batting_team="India", bowling_team="West Indies", innings=1, venue_name="", team_players={})
     pipeline._pre_innings_win_probability(first, {"win_probability": 0.5})
     assert seen["args"] == ("India", "West Indies", "India")
+
+
+def test_mini_scorecard_names_the_next_bowler_only_when_it_is_unambiguous():
+    """2026-10-11: at an over break the board lists (bowler, other bowler); only a bowler who is neither the one who just bowled nor
+    the one before him can be the next bowler -- the previous over's bowler is what the board shows until the page moves on."""
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _board_announced_bowler
+
+    def snap(board, bowler_of_13="Hosein", bowler_of_12="Holder"):
+        d12 = SimpleNamespace(timestamp_ms=900, over=12, innings=2, bowler=bowler_of_12, striker="A", total_runs=0, batter_runs=0,
+                              wicket_kind=None, dismissed="", commentary="")
+        d13 = SimpleNamespace(timestamp_ms=1000, over=13, innings=2, bowler=bowler_of_13, striker="A", total_runs=0, batter_runs=0,
+                              wicket_kind=None, dismissed="", commentary="")
+        return SimpleNamespace(overs="13.0", innings=2, innings_complete=False, deliveries=[d12, d13], batting_team="India",
+                               score=140, wickets=2, board=board)
+
+    base = {"innings": 2, "score": 140, "wickets": 2, "overs": "13.0"}
+    assert _board_announced_bowler(snap({**base, "bowler": "Joseph", "other_bowler": "Hosein"})) == "Joseph"      # a new name: the next bowler
+    assert _board_announced_bowler(snap({**base, "bowler": "Holder", "other_bowler": "Hosein"})) == ""           # the over before: ambiguous
+    assert _board_announced_bowler(snap({**base, "bowler": "Hosein", "other_bowler": ""})) == ""                  # the bowler who just bowled
+    assert _board_announced_bowler(snap({**base, "bowler": "Joseph", "other_bowler": "Paul"})) == ""              # other bowler is not him
+    assert _board_announced_bowler(snap({**base, "overs": "12.5", "bowler": "Joseph", "other_bowler": "Hosein"})) == ""   # board behind us
+    assert _board_announced_bowler(snap(None)) == ""

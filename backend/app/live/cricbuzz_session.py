@@ -198,6 +198,23 @@ def _with_announced_bowler(snapshot, announced: tuple[int, str] | None):
     return replace(snapshot, announced_bowler=name, announced_bowler_over=next_over)
 
 
+def _board_announced_bowler(snapshot) -> str:
+    """The next over's bowler as the page's mini scorecard shows it at an over break ("" when it does not say).
+    At the break the board lists (bowler, other bowler) = (next, just bowled) once the page has moved on, but while it has not it
+    simply lists the PREVIOUS over's bowler as `bowler`. So only a name that is neither the bowler who just bowled nor the one
+    before him can be taken as the next bowler; a name equal to the previous over's bowler is ambiguous (two bowlers swapping
+    overs look the same) and is left to the commentary note."""
+    board = getattr(snapshot, "board", None)
+    if not board or not snapshot.deliveries or not _at_over_break(snapshot) or not _board_is_current(snapshot, board):
+        return ""
+    last = snapshot.deliveries[-1]
+    previous = next((d.bowler for d in reversed(snapshot.deliveries) if d.innings == last.innings and d.over == last.over - 1), "")
+    candidate, other = str(board.get("bowler") or ""), str(board.get("other_bowler") or "")
+    if candidate and candidate not in (last.bowler, previous) and other == last.bowler:
+        return candidate
+    return ""
+
+
 _NEW_BATTER_NAME = re.compile(r"^\s*(.+?),\s*(?:right|left)[- ]?handed bat", re.IGNORECASE)
 
 
@@ -787,6 +804,18 @@ class CricbuzzMatchSession:
             self._confirm.pop((key[0], key[1]), None)
         return True
 
+    def _log_announcement(self, snapshot, source: str, name: str) -> None:
+        """Append when each source first named the next bowler (data/live/announce-sources-<id>.jsonl) for a later comparison."""
+        if self.commentary_log_path is None or not snapshot.deliveries:
+            return
+        try:
+            path = self.commentary_log_path.with_name(f"announce-sources-{self.match_id}.jsonl")
+            with path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps({"t": time.time(), "innings": snapshot.innings, "after_over": snapshot.deliveries[-1].over,
+                                         "source": source, "bowler": name}) + "\n")
+        except OSError:
+            pass
+
     def _derived_crease(self, snapshot) -> list[str] | None:
         """The two batters at the crease when the scorecard page lags: the page's last not-out names (stale or not), the
         board's pair and every batter the commentary said "comes to the crease", minus everyone our own deliveries show
@@ -900,6 +929,7 @@ class CricbuzzMatchSession:
                 announced_name = _announced_bowler_name(note_text)
                 if announced_name:
                     self._announced_bowler = (note_ts, announced_name)
+                    self._log_announcement(snapshot, "commentary note", announced_name)
             if self.commentary_log_path is not None:
                 notes_path = self.commentary_log_path.with_name(
                     f"commentary-notes-{self.match_id}.jsonl"
@@ -911,6 +941,13 @@ class CricbuzzMatchSession:
                         )
                         + "\n"
                     )
+        # The mini scorecard can name the next bowler too (user 2026-10-11: go back to it for the bowler change): take it when the
+        # commentary note has not said so yet, and log which source spoke first so the two can be compared after the match.
+        from_board = _board_announced_bowler(snapshot)
+        if from_board and not (self._announced_bowler and self._announced_bowler[0] > snapshot.deliveries[-1].timestamp_ms):
+            self._announced_bowler = (snapshot.deliveries[-1].timestamp_ms + 1, from_board)
+            print(f"[{self.match_id}] [note] BOWLING CHANGE (from the mini scorecard): {from_board} is next")
+            self._log_announcement(snapshot, "mini scorecard", from_board)
         check = _check_next_over(self._expected_next, snapshot)
         if check:
             print(f"[{self.match_id}] {check}")
