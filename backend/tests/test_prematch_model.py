@@ -191,7 +191,7 @@ def test_ground_summary_matches_the_requested_format():
     wk = float(re.search(r"avg wkts - (\d+)", t20).group(1))
     assert pace + spin <= wk + 0.5  # bowler-credited wickets cannot exceed all wickets (rounding slack)
     assert re.fullmatch(
-        r"bat 1st wins \d+% / chase wins \d+% / toss winner wins \d+%, toss winner chooses (bat|bowl) \d+%( \[small sample\])?",
+        r"bat 1st wins \d+% / chase wins \d+% / toss winner wins \d+%, toss winner chooses (bat|bowl) \d+%",
         results), results
     bat, chase = map(int, re.search(r"wins (\d+)% / chase wins (\d+)%", results).groups())
     assert abs(bat + chase - 100) <= 1
@@ -709,3 +709,18 @@ def test_fact_o_meter_is_its_own_message_never_inside_the_briefing():
     while not watcher._results.empty():
         kinds.append(watcher._results.get())
     assert [k[0] for k in kinds] == ["briefing", "facts"] and "🎯" not in kinds[0][2] and kinds[1][2].startswith("🎯 FACT-O-METER")
+
+
+def test_ground_line_win_rates_are_format_specific_and_never_pooled():
+    from app.live.prematch_analysis import _ground_record, venue_summary
+
+    t20 = _ground_record("rawalpindi", "t20")["all"]
+    odi = _ground_record("rawalpindi", "odi")["all"]
+    t20_first = round(100 * t20["bat_first_wins"] / t20["decided"])
+    odi_first = round(100 * odi["bat_first_wins"] / odi["decided"])
+    assert abs(t20_first - 51) <= 1 and abs(odi_first - 15) <= 1                          # the two formats really differ here
+    t20_line, odi_line = venue_summary("rawalpindi"), venue_summary("rawalpindi", "odi")
+    assert f"| bat 1st wins {t20_first}% / chase wins {100 - t20_first}%" in t20_line and "only:" not in t20_line
+    assert f"| bat 1st wins {odi_first}% / chase wins {100 - odi_first}%" in odi_line and odi_line.startswith("ODI - 13 ")
+    assert "43%" not in t20_line and "43%" not in odi_line                                # the old pooled figure is gone
+    assert "|" not in venue_summary("nowhere-ville")

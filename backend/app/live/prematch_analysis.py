@@ -232,18 +232,15 @@ def venue_record(city: str, fmt: str = "t20") -> str:
 
 
 def venue_summary(city: str, fmt: str = "t20") -> str:
-    """The title-line ground record.
-
-    Scoring numbers come from the match's OWN format only, never mixed: a T20 match uses every men's T20
-    competition at the ground (internationals + IPL, BBL, PSL, CPL, ...), an ODI match uses men's ODIs:
-      "T20 - 11 1st inns avg 153, avg wkts - 6, pace - 3.2/spin - 2.1"  /  "ODI - 8 1st inns avg 332, ..."
-    (avg wkts = wickets falling per innings, run-outs included; pace / spin = average wickets per innings
-    credited to pace / spin bowlers, so they add up to a bit less than avg wkts: run-outs and bowlers
-    without a known style are in neither). The results record pools T20 and ODI matches at the ground into one figure:
-      "bat 1st wins 38% / chase wins 62% / toss winner wins 56%, toss winner chooses bowl 70%"
-    (toss choice shows the more common one only; "[small sample]" is added when under 10 matches pooled.)
-    `fmt` chooses the format of the scoring numbers. (The 100% venue record is a Fact-o-Meter and lives in its own
-    card, fact_o_meter_message -- never in the briefing.)
+    """The title-line ground record. EVERYTHING in it comes from the match's own format, never pooled across formats:
+    a T20 match uses every men's T20 competition at the ground together (internationals + IPL, BBL, PSL, CPL, ...), an
+    ODI match uses men's ODIs:
+      "T20 - 11 1st inns avg 153, avg wkts - 6, pace - 3.2/spin - 2.1 | bat 1st wins 38% / chase wins 62% / toss winner
+       wins 56%, toss winner chooses bowl 70%"
+    (avg wkts = wickets falling per innings, run-outs included; pace / spin = average wickets per innings credited to
+    pace / spin bowlers, so they add up to a bit less than avg wkts: run-outs and bowlers without a known style are in
+    neither; toss choice shows the more common one only; "[small sample]" is added under 10 matches.)
+    The 100% venue record is a Fact-o-Meter and lives in its own card, fact_o_meter_message -- never in the briefing.
     """
     t20 = _ground_record(city, "t20").get("all")
     odi = _ground_record(city, "odi").get("all")
@@ -264,20 +261,18 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
             text += " [small sample]"
     else:
         text = f"{own_label} - no history here"
-    cells = [c for c in (t20, odi) if c]
-    decided = sum(c["decided"] for c in cells)
-    if decided:
-        first = sum(c["bat_first_wins"] for c in cells) / decided
+    # Win rates are format specific and follow the format being played (user 2026-10-11): a T20 match uses every men's T20
+    # competition together (internationals + IPL + the other leagues), an ODI match uses ODIs. Never pooled across formats:
+    # at Rawalpindi T20 is 51% / 49% but ODI is 15% / 85%.
+    if own and own["decided"]:
+        first = own["bat_first_wins"] / own["decided"]
         text += f" | bat 1st wins {first:.0%} / chase wins {1 - first:.0%}"
-        toss = sum(c["toss_decided"] for c in cells)
-        if toss:
-            text += f" / toss winner wins {sum(c['toss_wins'] for c in cells) / toss:.0%}"
-        choices = sum(c["toss_bat"] + c["toss_field"] for c in cells)
+        if own["toss_decided"]:
+            text += f" / toss winner wins {own['toss_wins'] / own['toss_decided']:.0%}"
+        choices = own["toss_bat"] + own["toss_field"]
         if choices:
-            bat = sum(c["toss_bat"] for c in cells) / choices
+            bat = own["toss_bat"] / choices
             text += ", toss winner chooses " + (f"bat {bat:.0%}" if bat > 0.5 else f"bowl {1 - bat:.0%}" if bat < 0.5 else "bat 50% / bowl 50%")
-        if decided < 10:
-            text += " [small sample]"
     return text
 
 
