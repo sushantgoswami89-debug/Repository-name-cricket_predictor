@@ -184,7 +184,8 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
       "T20 - 11 1st inns avg 153, 2nd inns avg 136, avg wkts - 6, pace - 3/spin - 4"
     (pace / spin = most wickets by one bowler of that kind in a match; bowlers without a known style are
     not counted in those two). The results record pools T20 and ODI matches at the ground into one figure:
-      "bat 1st wins 38% / chase wins 62% / toss winner wins 56%, toss winner chooses bat 30% / bowl 70% (T20+ODI, 18 matches)"
+      "bat 1st wins 38% / chase wins 62% / toss winner wins 56%, toss winner chooses bowl 70%"
+    (toss choice shows the more common one only; "[small sample]" is added when under 10 matches pooled.)
     ("2nd inns avg" runs low because a successful chase stops at the target.) `fmt` is kept for callers
     but no longer changes the output.
     """
@@ -213,8 +214,10 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
             text += f" / toss winner wins {sum(c['toss_wins'] for c in cells) / toss:.0%}"
         choices = sum(c["toss_bat"] + c["toss_field"] for c in cells)
         if choices:
-            text += f", toss winner chooses bat {sum(c['toss_bat'] for c in cells) / choices:.0%} / bowl {sum(c['toss_field'] for c in cells) / choices:.0%}"
-        text += f" (T20+ODI, {decided} matches)" + (" [small sample]" if decided < 10 else "")
+            bat = sum(c["toss_bat"] for c in cells) / choices
+            text += ", toss winner chooses " + (f"bat {bat:.0%}" if bat > 0.5 else f"bowl {1 - bat:.0%}" if bat < 0.5 else "bat 50% / bowl 50%")
+        if decided < 10:
+            text += " [small sample]"
     return text
 
 
