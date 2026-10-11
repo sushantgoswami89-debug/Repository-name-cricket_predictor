@@ -745,7 +745,10 @@ def _over_break_block(snapshot, crease, card_batters: dict, card_bowlers: dict, 
         if bowler:
             lines.append(f"Next: {bowler}*{card_bowlers.get(bowler, ' (not bowled yet)')}")   # * marks the bowler bowling
         else:
-            lines.append("Next: bowler not announced yet")
+            # The mini scorecard was checked and still lists the previous over's bowler (or nobody new): say so rather than guess.
+            board = getattr(snapshot, "board", None) or {}
+            shown = board.get("bowler") if board and _board_is_current(snapshot, board) else ""
+            lines.append("Next: not announced yet" + (f" (mini scorecard still shows {shown})" if shown and shown != last.bowler else ""))
     return "\n".join(lines)
 
 
