@@ -427,7 +427,7 @@ def _board_verdict(snapshot) -> bool | None:
     return (board["score"], board.get("wickets")) == (snapshot.score, snapshot.wickets)
 
 
-SYNC_TIMEOUT_SECONDS = 120.0
+RESYNC_MAX_PER_OVER = 2  # re-reads of the commentary per over before a contradiction is allowed to hold a prediction
 
 
 def _audit_over(snapshot, summary: dict) -> str:
@@ -707,8 +707,8 @@ class CricbuzzMatchSession:
     # per (innings, completed over) which independent sources have confirmed / contradicted our record.
     _confirm: dict = field(default_factory=dict)
     _sync_wait_since: dict = field(default_factory=dict)
-    _sync_card_tries: dict = field(default_factory=dict)
-    _sync_released: set = field(default_factory=set)
+    _resyncs: dict = field(default_factory=dict)
+    _previous_reader: object = None  # the reader replaced by a re-read, kept until the fresh one has produced a snapshot
     _last_gate: str | None = None
     _card_not_out: list[str] = field(default_factory=list)  # the latest scorecard page's not-out names (it may lag)
     _incoming: dict = field(default_factory=dict)  # innings -> batters the commentary said "comes to the crease"
@@ -731,16 +731,17 @@ class CricbuzzMatchSession:
     def finished(self) -> bool:
         return self._finished
 
-    def _sync_gate(self, snapshot) -> str | None:
-        """Reason to wait before predicting, or None. A prediction for the over after completed over C is only released when at
-        least one independent source AT THE SAME POINT confirms our record (the page's board, Cricbuzz's own over summary, or the
-        scorecard page's total) and none contradicts it. After SYNC_TIMEOUT_SECONDS without any confirmation it is released
-        and says so (the page can lag for minutes; the gate must not silence a whole match)."""
+    def _sync_status(self, snapshot) -> tuple[str, str]:
+        """("ok" | "unconfirmed" | "contradiction", reason) for the prediction pending after completed over C.
+        ok: an independent source AT THE SAME POINT confirms our record (the page's mini scorecard / board, Cricbuzz's own
+        over summary, or the scorecard page's total) and none contradicts it; contradiction: one of them disagrees;
+        unconfirmed: none is at this point yet. Nothing waits here: poll_once answers either of the last two by RE-READING
+        the commentary (a second), see _resync."""
         if not snapshot.deliveries or snapshot.innings_complete:
-            return None
+            return "ok", ""
         completed = int(float(snapshot.overs))
         if completed < 1 or self._last_over_sent.get(snapshot.innings, 0) >= completed + 1:
-            return None  # nothing pending: the next over's prediction was already made
+            return "ok", ""  # nothing pending: the next over's prediction was already made
         key = (snapshot.innings, completed)
         info = self._confirm.setdefault(key, {})
         board = _board_verdict(snapshot)
@@ -748,30 +749,43 @@ class CricbuzzMatchSession:
             info["board"] = board
         contradicted = [name for name, ok in info.items() if ok is False]
         if contradicted:
-            return f"over {completed}: {', '.join(contradicted)} disagree with our record at {snapshot.overs} ov ({snapshot.score}/{snapshot.wickets})"
+            return "contradiction", (
+                f"over {completed}: {', '.join(contradicted)} disagree with our record at {snapshot.overs} ov "
+                f"({snapshot.score}/{snapshot.wickets})"
+            )
         if any(ok is True for ok in info.values()):
-            return None
+            return "ok", ""
         now = time.monotonic()
-        started = self._sync_wait_since.setdefault(key, now)
-        if now - started >= SYNC_TIMEOUT_SECONDS:
-            if key not in self._sync_released:
-                self._sync_released.add(key)
-                print(f"[{self.match_id}] [sync] no confirmation for {SYNC_TIMEOUT_SECONDS:.0f}s after over {completed}: predicting UNCONFIRMED")
-            return None
-        # the scorecard page is the slowest source: look again now and then while we wait
-        tries = self._sync_card_tries.get(key, 0)
-        if tries < 8 and now - self._sync_wait_since.get((key, "card"), 0.0) >= 12.0:
-            self._sync_card_tries[key] = tries + 1
+        if now - self._sync_wait_since.get((key, "card"), 0.0) >= 12.0:  # the scorecard page is a slow source: one look now and then
             self._sync_wait_since[(key, "card")] = now
             try:
                 card = fetch_scorecard(self.match_id)
                 current = next((i for i in (card or {}).get("innings", []) if i.get("innings") == snapshot.innings), None)
                 if current and (current.get("runs"), current.get("wickets")) == (snapshot.score, snapshot.wickets):
                     info["card"] = True
-                    return None
+                    return "ok", ""
             except Exception:
                 pass
-        return f"over {completed}: waiting for the page (board / over summary / scorecard) to confirm {snapshot.score}/{snapshot.wickets} at {snapshot.overs} ov"
+        return "unconfirmed", f"over {completed}: no source at this point yet to confirm {snapshot.score}/{snapshot.wickets} at {snapshot.overs} ov"
+
+    def _resync(self, snapshot, reason: str, rebuild: bool = True) -> bool:
+        """Re-read the commentary instead of blocking (user 2026-10-11: "dont block, read commentary ... it will hardly take 1
+        second to reread previous commentary from cricbuzz"): a fresh reader rebuilds the innings from everything the page still
+        shows, with the page's board as the baseline, and poll_once runs again at once. At most RESYNC_MAX_PER_OVER times per
+        over; False when that is used up."""
+        key = (snapshot.innings, int(float(snapshot.overs)), rebuild)
+        used = self._resyncs.get(key, 0)
+        if used >= RESYNC_MAX_PER_OVER:
+            return False
+        self._resyncs[key] = used + 1
+        what = "re-reading the commentary" if rebuild else "looking at a fresher copy of the page"
+        print(f"[{self.match_id}] [sync] {what} ({used + 1}/{RESYNC_MAX_PER_OVER}): {reason}")
+        if rebuild:  # a fresh reader rebuilds the innings from what the page shows now, the board as the baseline
+            self._previous_reader = self.reader
+            self.reader = CricbuzzLiveReader()
+            self._best_progress = None
+            self._confirm.pop((key[0], key[1]), None)
+        return True
 
     def _derived_crease(self, snapshot) -> list[str] | None:
         """The two batters at the crease when the scorecard page lags: the page's last not-out names (stale or not), the
@@ -802,6 +816,12 @@ class CricbuzzMatchSession:
         cycle. All output is printed; nothing is returned -- state (match
         completion, Telegram publication) lives on self/self.pipeline."""
         snapshot, error = _fetch_freshest(self.reader, self.match_url)
+        if self._previous_reader is not None:
+            if snapshot is None:  # the fresh reader could not rebuild (e.g. no baseline yet): go back to the record we had
+                print(f"[{self.match_id}] [sync] re-read produced no snapshot ({error}); keeping the previous record")
+                self.reader, self._previous_reader = self._previous_reader, None
+                return
+            self._previous_reader = None
         if snapshot is None and isinstance(error, CricbuzzInningsNotStarted):
             if not self._waiting_notice_printed:
                 print(f"[{self.match_id}] Waiting: {error}")
@@ -1013,19 +1033,25 @@ class CricbuzzMatchSession:
             )
 
         snapshot = _with_announced_bowler(snapshot, self._announced_bowler)
-        gate = self._sync_gate(snapshot)
-        if gate:
-            if gate != self._last_gate:
-                print(f"[{self.match_id}] ⏳ SYNC GATE (no prediction until the page confirms our record): {gate}")
-            self._last_gate = gate
-            return
-        self._last_gate = None
-        hold = _prediction_hold(snapshot)
-        if hold:
-            if hold != self._last_hold:
-                print(f"[{self.match_id}] ⚠️  PREDICTION HELD (state disagrees with the page's board): {hold}")
-            self._last_hold = hold
-            return
+        status, why = self._sync_status(snapshot)
+        hold = _prediction_hold(snapshot)  # the page's board disagreeing at the same over.ball
+        if hold and status == "ok":
+            status, why = "contradiction", hold
+        if status != "ok":
+            # Do not block: re-read the commentary (about a second) and look again straight away.
+            if self._resync(snapshot, why, rebuild=(status == "contradiction")):
+                self.poll_once()
+                return
+            if status == "contradiction":
+                if why != self._last_hold:
+                    print(f"[{self.match_id}] ⚠️  PREDICTION HELD (still disagrees after re-reading the commentary): {why}")
+                self._last_hold = why
+                return
+            if why != self._last_gate:  # unconfirmed after the re-reads: go on, say so
+                print(f"[{self.match_id}] [sync] predicting UNCONFIRMED (the page has no source at this point yet): {why}")
+            self._last_gate = why
+        else:
+            self._last_gate = None
         self._last_hold = None
         try:
             output = self.pipeline.process(snapshot)

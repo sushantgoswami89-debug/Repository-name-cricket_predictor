@@ -575,14 +575,15 @@ def test_last_ball_wicket_names_the_survivor_to_face_and_the_new_batter():
     assert session._derived_crease(snap) is None or len(session._derived_crease(snap)) == 2
 
 
-def test_sync_gate_waits_for_the_page_to_confirm_our_record_before_predicting(monkeypatch):
-    """User 2026-10-11: commentary and our recording must be in perfect sync before any prediction. A prediction for the
-    over after completed over C is released only when the board / the over summary / the scorecard total at the SAME point
-    confirms our record and nothing contradicts it; after the timeout it is released and says so."""
+def test_sync_status_and_resync_reread_the_commentary_instead_of_blocking(monkeypatch):
+    """User 2026-10-11: sync our record with the page before predicting, but do not block -- re-read the commentary (about a
+    second). _sync_status says ok / unconfirmed / contradiction from the mini scorecard (board), Cricbuzz's over summary and
+    the scorecard page; _resync swaps in a fresh reader (or just looks at a fresher page copy) a limited number of times."""
     from types import SimpleNamespace
 
     import app.live.cricbuzz_session as cs
-    from app.live.cricbuzz_session import SYNC_TIMEOUT_SECONDS, CricbuzzMatchSession
+    from app.live.cricbuzz_reader import CricbuzzLiveReader
+    from app.live.cricbuzz_session import RESYNC_MAX_PER_OVER, CricbuzzMatchSession
 
     def snap(board=None, overs="13.0", score=140, wickets=2):
         last = SimpleNamespace(timestamp_ms=1000, over=13, innings=2, striker="A", bowler="B", total_runs=1, batter_runs=1,
@@ -590,44 +591,58 @@ def test_sync_gate_waits_for_the_page_to_confirm_our_record_before_predicting(mo
         return SimpleNamespace(overs=overs, innings=2, innings_complete=False, deliveries=[last], batting_team="India",
                                score=score, wickets=wickets, board=board)
 
-    clock = {"t": 100.0}
-    monkeypatch.setattr(cs.time, "monotonic", lambda: clock["t"])
     monkeypatch.setattr(cs, "fetch_scorecard", lambda match_id: None)
     new = lambda: CricbuzzMatchSession(match_id="9", match_url="u", pipeline=SimpleNamespace())
-
-    # nothing confirms yet -> wait (the page's board is an older copy: it says nothing about this point)
     old_board = {"innings": 2, "score": 120, "wickets": 2, "overs": "11.2"}
-    session = new()
-    assert "waiting for the page" in session._sync_gate(snap(old_board))
-    # the board arrives at the same point and agrees -> released
-    assert session._sync_gate(snap({"innings": 2, "score": 140, "wickets": 2, "overs": "13.0"})) is None
-    # ... but if it disagrees at the same point, blocked and says so
-    session = new()
-    gate = session._sync_gate(snap({"innings": 2, "score": 141, "wickets": 2, "overs": "13.0"}))
-    assert "board disagree" in gate
-    # Cricbuzz's own over summary confirms (True) or contradicts (False)
+
+    status, why = new()._sync_status(snap(old_board))                       # the board is an older copy: nothing confirms yet
+    assert status == "unconfirmed" and "no source at this point" in why
+    assert new()._sync_status(snap({"innings": 2, "score": 140, "wickets": 2, "overs": "13.0"}))[0] == "ok"
+    status, why = new()._sync_status(snap({"innings": 2, "score": 141, "wickets": 2, "overs": "13.0"}))
+    assert status == "contradiction" and "board disagree" in why
     session = new()
     session._confirm[(2, 13)] = {"summary": True}
-    assert session._sync_gate(snap(old_board)) is None
+    assert session._sync_status(snap(old_board))[0] == "ok"
     session = new()
     session._confirm[(2, 13)] = {"summary": False}
-    assert "summary disagree" in session._sync_gate(snap(old_board))
-    # the scorecard page's total, fetched again while waiting, can confirm
+    assert session._sync_status(snap(old_board))[0] == "contradiction"
     session = new()
     monkeypatch.setattr(cs, "fetch_scorecard", lambda match_id: {"innings": [{"innings": 2, "runs": 140, "wickets": 2}]})
-    assert session._sync_gate(snap(old_board)) is None and session._confirm[(2, 13)]["card"] is True
+    assert session._sync_status(snap(old_board))[0] == "ok" and session._confirm[(2, 13)]["card"] is True   # the scorecard total
     monkeypatch.setattr(cs, "fetch_scorecard", lambda match_id: None)
-    # nothing ever confirms: released after the timeout, once, with a visible note
-    session = new()
-    assert "waiting" in session._sync_gate(snap(old_board))
-    clock["t"] += SYNC_TIMEOUT_SECONDS + 1
-    assert session._sync_gate(snap(old_board)) is None
-    # a prediction that was already made for the next over is not gated
-    session = new()
-    session._last_over_sent[2] = 14
-    assert session._sync_gate(snap(old_board)) is None
-    # the first over (nothing completed yet) and a finished innings are never gated
-    assert new()._sync_gate(snap(old_board, overs="0.3")) is None
-    done = snap(old_board)
+    done, first = snap(old_board), snap(old_board, overs="0.3")
     done.innings_complete = True
-    assert new()._sync_gate(done) is None
+    assert new()._sync_status(done)[0] == "ok" and new()._sync_status(first)[0] == "ok"
+    session = new()
+    session._last_over_sent[2] = 14                                          # the next over was already predicted
+    assert session._sync_status(snap(old_board))[0] == "ok"
+
+    # a contradiction re-reads the commentary with a FRESH reader, at most RESYNC_MAX_PER_OVER times per over
+    session = new()
+    stale_reader = session.reader
+    session._confirm[(2, 13)] = {"board": False}
+    assert session._resync(snap(old_board), "board disagrees") is True
+    assert session.reader is not stale_reader and isinstance(session.reader, CricbuzzLiveReader) and (2, 13) not in session._confirm
+    assert session._resync(snap(old_board), "again") is True and session._resync(snap(old_board), "third") is False
+    assert RESYNC_MAX_PER_OVER == 2
+    # "unconfirmed" only looks at a fresher copy of the page: the reader and our record are left alone
+    session = new()
+    reader = session.reader
+    assert session._resync(snap(old_board), "no source yet", rebuild=False) is True and session.reader is reader
+
+
+def test_a_failed_reread_goes_back_to_the_previous_record(monkeypatch):
+    """The re-read must never leave us worse off: if the fresh reader cannot rebuild the innings (no baseline yet), the previous
+    reader and its record are restored."""
+    from types import SimpleNamespace
+
+    import app.live.cricbuzz_session as cs
+    from app.live.cricbuzz_session import CricbuzzMatchSession
+
+    session = CricbuzzMatchSession(match_id="9", match_url="u", pipeline=SimpleNamespace())
+    original = session.reader
+    monkeypatch.setattr(cs, "_fetch_freshest", lambda reader, url: (None, cs.CricbuzzInningsNotStarted("no baseline yet")))
+    snapshot = SimpleNamespace(overs="13.0", innings=2)
+    assert session._resync(snapshot, "board disagrees") is True and session.reader is not original
+    session.poll_once()
+    assert session.reader is original and session._previous_reader is None
