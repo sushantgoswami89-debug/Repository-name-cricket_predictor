@@ -152,7 +152,7 @@ def _ground_record(city: str, fmt: str = "t20") -> dict:
                 cell = row.setdefault(
                     key,
                     {"n": 0, "totals": [], "second_totals": [], "all_totals": [], "wkts": [], "best_pace": 0,
-                     "best_spin": 0, "decided": 0, "bat_first_wins": 0, "toss_decided": 0, "toss_wins": 0},
+                     "best_spin": 0, "decided": 0, "bat_first_wins": 0, "toss_decided": 0, "toss_wins": 0, "toss_bat": 0, "toss_field": 0},
                 )
                 cell["n"] += 1
                 if fact["totals"]:
@@ -170,6 +170,8 @@ def _ground_record(city: str, fmt: str = "t20") -> dict:
                 if fact["winner"] and fact.get("toss_winner") in fact["teams"]:
                     cell["toss_decided"] += 1
                     cell["toss_wins"] += int(fact["winner"] == fact["toss_winner"])
+                if fact.get("toss_decision") in ("bat", "field"):
+                    cell["toss_bat" if fact["toss_decision"] == "bat" else "toss_field"] += 1
         return table
 
     return _cached(("ground-record", fmt), 3600, build).get(city, {})
@@ -182,7 +184,7 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
       "T20 - 11 1st inns avg 153, 2nd inns avg 136, avg wkts - 6, pace - 3/spin - 4"
     (pace / spin = most wickets by one bowler of that kind in a match; bowlers without a known style are
     not counted in those two). The results record pools T20 and ODI matches at the ground into one figure:
-      "bat 1st wins 38% / chase wins 62% / toss winner wins 56% (T20+ODI, 18 matches)"
+      "bat 1st wins 38% / chase wins 62% / toss winner wins 56%, toss winner chooses bat 30% / bowl 70% (T20+ODI, 18 matches)"
     ("2nd inns avg" runs low because a successful chase stops at the target.) `fmt` is kept for callers
     but no longer changes the output.
     """
@@ -209,6 +211,9 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
         toss = sum(c["toss_decided"] for c in cells)
         if toss:
             text += f" / toss winner wins {sum(c['toss_wins'] for c in cells) / toss:.0%}"
+        choices = sum(c["toss_bat"] + c["toss_field"] for c in cells)
+        if choices:
+            text += f", toss winner chooses bat {sum(c['toss_bat'] for c in cells) / choices:.0%} / bowl {sum(c['toss_field'] for c in cells) / choices:.0%}"
         text += f" (T20+ODI, {decided} matches)" + (" [small sample]" if decided < 10 else "")
     return text
 

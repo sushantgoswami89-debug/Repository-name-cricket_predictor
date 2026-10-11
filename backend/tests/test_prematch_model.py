@@ -187,7 +187,7 @@ def test_ground_summary_matches_the_requested_format():
         r"T20 - 11 1st inns avg \d+, 2nd inns avg \d+, avg wkts - \d+, pace - \d+/spin - \d+", t20), t20
     assert "ODI" not in t20 and "avg" not in results
     assert re.fullmatch(
-        r"bat 1st wins \d+% / chase wins \d+% / toss winner wins \d+% \(T20\+ODI, \d+ matches\)( \[small sample\])?",
+        r"bat 1st wins \d+% / chase wins \d+% / toss winner wins \d+%, toss winner chooses bat \d+% / bowl \d+% \(T20\+ODI, \d+ matches\)( \[small sample\])?",
         results), results
     bat, chase = map(int, re.search(r"wins (\d+)% / chase wins (\d+)%", results).groups())
     assert abs(bat + chase - 100) <= 1
