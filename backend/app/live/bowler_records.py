@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 
-from app.live.fact_o_meter import card
+from app.live.fact_o_meter import MAX_BASELINE, card
 from app.live.prematch_model import ROOT
 
 PATHS = {"t20": ROOT / "data" / "features" / "bowler_innings.json",           # men's T20I + IPL
@@ -25,8 +25,8 @@ MAX_FLUKE = 0.01
 
 
 @lru_cache(maxsize=2)
-def _records(fmt: str = "t20") -> dict[str, tuple[int, int, int]]:
-    """bowler -> (wickets k, balls N, innings n) for the claim with the smallest fluke chance."""
+def _records(fmt: str = "t20") -> dict[str, tuple[int, int, int, float]]:
+    """bowler -> (wickets k, balls N, innings n, league rate) for the claim with the smallest fluke chance."""
     try:
         rows = json.loads(PATHS[fmt].read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -42,23 +42,23 @@ def _records(fmt: str = "t20") -> dict[str, tuple[int, int, int]]:
                     league[(n, k)][0] += 1
                     league[(n, k)][1] += int(wickets >= k)
     rate = {key: (hit / seen if seen else 0.0) for key, (seen, hit) in league.items()}
-    out: dict[str, tuple[int, int, int]] = {}
+    out: dict[str, tuple[int, int, int, float]] = {}
     for name, innings in per.items():
         best = None
         for k in (1, 2):
             for n in thresholds:
                 picked = [w for balls, w in innings if balls >= n]
-                if len(picked) < MIN_INNINGS or min(picked) < k:
+                if len(picked) < MIN_INNINGS or min(picked) < k or rate[(n, k)] > MAX_BASELINE:
                     continue
                 fluke = rate[(n, k)] ** len(picked)
                 if fluke <= MAX_FLUKE and (best is None or fluke < best[0]):
-                    best = (fluke, k, n, len(picked))
+                    best = (fluke, k, n, len(picked), rate[(n, k)])
         if best:
             out[name] = best[1:]
     return out
 
 
-def all_records(fmt: str = "t20") -> dict[str, tuple[int, int, int]]:
+def all_records(fmt: str = "t20") -> dict[str, tuple[int, int, int, float]]:
     return dict(_records(fmt))
 
 
@@ -80,10 +80,10 @@ def bowler_line(full_name: str, team: str, balls: int, wickets: int, fmt: str = 
     record = _records(fmt).get(name) if name else None
     if not record:
         return ""
-    k, n, innings = record
+    k, n, innings, baseline = record
     if balls < n or wickets >= k:
         return ""
     what = "a wicket" if k == 1 else f"{k}+ wickets"
     spell = f"{n // 6}+ overs" if n % 6 == 0 else f"{n}+ balls"
     return card(fmt, f"{full_name} {balls // 6}.{balls % 6} ov, {wickets} wkt{'' if wickets == 1 else 's'}",
-                f"Has taken {what} in every one of his innings of {spell}", innings)
+                f"Has taken {what} in every one of his innings of {spell}", innings, baseline, "bowler")
