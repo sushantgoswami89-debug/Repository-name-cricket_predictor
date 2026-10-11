@@ -152,7 +152,7 @@ def _ground_record(city: str, fmt: str = "t20") -> dict:
                 cell = row.setdefault(
                     key,
                     {"n": 0, "totals": [], "second_totals": [], "all_totals": [], "wkts": [], "best_pace": 0,
-                     "best_spin": 0, "decided": 0, "bat_first_wins": 0, "toss_decided": 0, "toss_wins": 0, "toss_bat": 0, "toss_field": 0},
+                     "best_spin": 0, "pace_wkts": [], "spin_wkts": [], "decided": 0, "bat_first_wins": 0, "toss_decided": 0, "toss_wins": 0, "toss_bat": 0, "toss_field": 0},
                 )
                 cell["n"] += 1
                 if fact["totals"]:
@@ -161,6 +161,8 @@ def _ground_record(city: str, fmt: str = "t20") -> dict:
                     cell["second_totals"].append(fact["totals"][1])
                 cell["all_totals"].extend(fact["totals"])
                 cell["wkts"].extend(fact.get("innings_wkts", []))
+                cell["pace_wkts"].extend(fact.get("innings_pace_wkts", []))
+                cell["spin_wkts"].extend(fact.get("innings_spin_wkts", []))
                 best = fact.get("best_by_group") or {}
                 cell["best_pace"] = max(cell["best_pace"], best.get("pace", 0))
                 cell["best_spin"] = max(cell["best_spin"], best.get("spin", 0))
@@ -181,12 +183,13 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
     """The title-line ground record.
 
     Scoring numbers are T20 only (T20I + IPL at the ground, never ODI):
-      "T20 - 11 1st inns avg 153, 2nd inns avg 136, avg wkts - 6, pace - 3/spin - 4"
-    (pace / spin = most wickets by one bowler of that kind in a match; bowlers without a known style are
-    not counted in those two). The results record pools T20 and ODI matches at the ground into one figure:
+      "T20 - 11 1st inns avg 153, avg wkts - 6, pace - 3.2/spin - 2.1"
+    (avg wkts = wickets falling per innings, run-outs included; pace / spin = average wickets per innings
+    credited to pace / spin bowlers, so they add up to a bit less than avg wkts: run-outs and bowlers
+    without a known style are in neither). The results record pools T20 and ODI matches at the ground into one figure:
       "bat 1st wins 38% / chase wins 62% / toss winner wins 56%, toss winner chooses bowl 70%"
     (toss choice shows the more common one only; "[small sample]" is added when under 10 matches pooled.)
-    ("2nd inns avg" runs low because a successful chase stops at the target.) `fmt` is kept for callers
+    `fmt` is kept for callers
     but no longer changes the output.
     """
     t20 = _ground_record(city, "t20").get("all")
@@ -197,9 +200,12 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
     def mean(values):
         return f"{sum(values) / len(values):.0f}" if values else "n/a"
 
+    def mean1(values):
+        return f"{sum(values) / len(values):.1f}" if values else "n/a"
+
     if t20:
-        text = (f"T20 - {t20['n']} 1st inns avg {mean(t20['totals'])}, 2nd inns avg {mean(t20['second_totals'])}, "
-                f"avg wkts - {mean(t20['wkts'])}, pace - {t20['best_pace']}/spin - {t20['best_spin']}")
+        text = (f"T20 - {t20['n']} 1st inns avg {mean(t20['totals'])}, avg wkts - {mean(t20['wkts'])}, "
+                f"pace - {mean1(t20['pace_wkts'])}/spin - {mean1(t20['spin_wkts'])}")
         if t20["n"] < 10:
             text += " [small sample]"
     else:

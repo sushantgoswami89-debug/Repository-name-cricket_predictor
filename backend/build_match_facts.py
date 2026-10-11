@@ -66,6 +66,7 @@ def main() -> None:
             bowl = {t: {g: [0, 0, 0] for g in ("pace", "finger", "wrist")} for t in info["teams"]}
             totals = []
             innings_wkts = []
+            innings_by_group = []  # per innings: wickets credited to pace / spin bowlers (known styles only)
             bowler_wkts: dict[str, int] = {}
             for innings in match.get("innings", []):
                 team = innings.get("team")
@@ -74,6 +75,7 @@ def main() -> None:
                 other = next(t for t in info["teams"] if t != team)
                 total = 0
                 fallen = 0
+                taken = {"pace": 0, "spin": 0}
                 for over in innings.get("overs", []):
                     for d in over.get("deliveries", []):
                         runs = d["runs"]
@@ -82,6 +84,11 @@ def main() -> None:
                         for w in d.get("wickets", []):
                             if w.get("kind") not in NOT_BOWLER_WICKETS:
                                 bowler_wkts[d["bowler"]] = bowler_wkts.get(d["bowler"], 0) + 1
+                                kind = group(d["bowler"])
+                                if kind in ("finger", "wrist"):
+                                    taken["spin"] += 1
+                                elif kind == "pace":
+                                    taken["pace"] += 1
                         g = group(d["bowler"])
                         if g is None or "wides" in d.get("extras", {}):
                             continue
@@ -96,6 +103,7 @@ def main() -> None:
                             cell[2] += int(wicket)
                 totals.append(total)
                 innings_wkts.append(fallen)
+                innings_by_group.append(taken)
             outcome = info.get("outcome", {})
             facts.append(
                 {
@@ -108,6 +116,8 @@ def main() -> None:
                     "first_team": (match.get("innings") or [{}])[0].get("team"),
                     "totals": totals,
                     "innings_wkts": innings_wkts,
+                    "innings_pace_wkts": [t["pace"] for t in innings_by_group],
+                    "innings_spin_wkts": [t["spin"] for t in innings_by_group],
                     "best_by_group": _best_by_group(bowler_wkts, group),
                     "bat": bat,
                     "bowl": bowl,

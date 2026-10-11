@@ -184,8 +184,11 @@ def test_ground_summary_matches_the_requested_format():
     text = venue_summary("ranchi")
     t20, results = text.split(" | ")
     assert re.fullmatch(
-        r"T20 - 11 1st inns avg \d+, 2nd inns avg \d+, avg wkts - \d+, pace - \d+/spin - \d+", t20), t20
-    assert "ODI" not in t20 and "avg" not in results
+        r"T20 - 11 1st inns avg \d+, avg wkts - \d+, pace - \d\.\d/spin - \d\.\d", t20), t20
+    assert "ODI" not in t20 and "avg" not in results and "2nd" not in text
+    pace, spin = (float(x) for x in re.search(r"pace - ([\d.]+)/spin - ([\d.]+)", t20).groups())
+    wk = float(re.search(r"avg wkts - (\d+)", t20).group(1))
+    assert pace + spin <= wk + 0.5  # bowler-credited wickets cannot exceed all wickets (rounding slack)
     assert re.fullmatch(
         r"bat 1st wins \d+% / chase wins \d+% / toss winner wins \d+%, toss winner chooses (bat|bowl) \d+%( \[small sample\])?",
         results), results
