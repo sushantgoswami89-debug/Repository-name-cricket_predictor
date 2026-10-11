@@ -49,7 +49,9 @@ def _digest(paths: Iterable[Path]) -> str:
     return digest.hexdigest()
 
 
-def build_verified_dataset(project_root: Path, recent_window: int = 12) -> DatasetBuildResult:
+def build_verified_dataset(
+    project_root: Path, recent_window: int = 12, scopes: tuple[str, ...] = ("ipl", "t20i")
+) -> DatasetBuildResult:
     """Derive one pre-over row from every eligible T20 innings.
 
     All impact features use deliveries completed before the predicted over. The
@@ -67,7 +69,7 @@ def build_verified_dataset(project_root: Path, recent_window: int = 12) -> Datas
 
     source_files = sorted(
         path
-        for scope in ("ipl", "t20i")
+        for scope in scopes
         for path in (project_root / "data/raw/cricsheet" / scope).glob("*.json")
     )
     excluded_ids = set(KNOWN_RULE_ANOMALY_EXCLUSIONS)
