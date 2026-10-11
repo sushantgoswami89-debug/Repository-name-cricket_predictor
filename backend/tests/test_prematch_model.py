@@ -724,3 +724,54 @@ def test_ground_line_win_rates_are_format_specific_and_never_pooled():
     assert f"| bat 1st wins {odi_first}% / chase wins {100 - odi_first}%" in odi_line and odi_line.startswith("ODI - 13 ")
     assert "43%" not in t20_line and "43%" not in odi_line                                # the old pooled figure is gone
     assert "|" not in venue_summary("nowhere-ville")
+
+
+def test_fact_o_meter_cards_can_go_to_telegram_while_everything_else_stays_in_shadow(tmp_path):
+    import json
+    from types import SimpleNamespace
+
+    import run_live_auto
+    from app.live.cricbuzz_session import CricbuzzMatchSession
+    from app.live.odi_watch import OdiBriefingWatcher
+
+    class Fake:
+        def __init__(self):
+            self.sent = []
+
+        def publish(self, key, text):
+            self.sent.append((key, text))
+
+    facts = Fake()
+    state = run_live_auto.LiveAutoState(tmp_path, None, facts_publisher=facts)           # shadow: no main publisher
+    assert state.publisher is None and state.facts_publisher is facts
+    state._emit_facts("cricbuzz:1", "🎯 FACT-O-METER · A vs B -- X\n\ncard")
+    state._emit_facts("cricbuzz:1", "🎯 FACT-O-METER · A vs B -- X\n\ncard")              # unchanged: not sent again
+    state._emit_facts("cricbuzz:1", "")                                                   # nothing to say: nothing sent
+    state._emit_facts("cricbuzz:1", "🎯 FACT-O-METER · A vs B -- X\n\ncard + toss")        # changed after the toss: sent again
+    assert [k.split(":")[0] for k, _ in facts.sent] == ["factometer", "factometer"] and len(facts.sent) == 2
+    # live in-play cards use the same route; the session's own (shadow) publisher is untouched
+    session = CricbuzzMatchSession(match_id="7", match_url="u", pipeline=SimpleNamespace(), facts_publisher=facts)
+    session._send_card("🎯 FACT-O-METER (T20) · X \n   fact", (1, "ground", "X"))
+    assert facts.sent[-1][0] == "factometer:live:7:1:ground:X" and session.publisher is None
+    # a restart must not re-send: the send-once file remembers
+    path = tmp_path / "sent.json"
+    first = run_live_auto.SendOnceFile(Fake(), path)
+    first.publish("k1", "t")
+    inner2 = Fake()
+    second = run_live_auto.SendOnceFile(inner2, path)
+    second.publish("k1", "t")
+    second.publish("k2", "t")
+    assert inner2.sent == [("k2", "t")] and set(json.loads(path.read_text())) == {"k1", "k2"}
+    # the ODI watcher sends its card to the facts publisher and its briefing to the main one only
+    main, side = Fake(), Fake()
+    watcher = OdiBriefingWatcher(publisher=main, facts_publisher=side)
+    watcher._results.put(("briefing", "b", "briefing text"))
+    watcher._results.put(("facts", "f", "🎯 card"))
+    watcher._next_cycle = 1e18
+    watcher.tick()
+    assert main.sent == [("b", "briefing text")] and side.sent == [("f", "🎯 card")]
+    shadow_only = OdiBriefingWatcher(publisher=None, facts_publisher=side)
+    shadow_only._results.put(("briefing", "b2", "briefing text"))
+    shadow_only._next_cycle = 1e18
+    shadow_only.tick()
+    assert ("b2", "briefing text") not in side.sent                                     # briefings never leak to the facts route

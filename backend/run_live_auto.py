@@ -74,6 +74,30 @@ def _telegram(project_root: Path) -> TelegramPublisher:
     return TelegramPublisher(config["bot_token"], config["chat_id"])
 
 
+class SendOnceFile:
+    """Wraps a Telegram publisher and remembers on disk which keys were sent, so a driver restart never re-sends a card."""
+
+    def __init__(self, inner, path: Path) -> None:
+        self._inner = inner
+        self._path = path
+        try:
+            self._sent = set(json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, ValueError):
+            self._sent = set()
+
+    def publish(self, key: str, text: str):
+        if key in self._sent:
+            return None
+        result = self._inner.publish(key, text)
+        self._sent.add(key)
+        try:
+            self._path.parent.mkdir(parents=True, exist_ok=True)
+            self._path.write_text(json.dumps(sorted(self._sent)), encoding="utf-8")
+        except OSError:
+            pass
+        return result
+
+
 def _team_pair(label: str) -> frozenset[str] | None:
     """Order-independent, case-insensitive team-pair key from a "Team A
     vs Team B" label, or None if the label doesn't look like one (the
@@ -159,9 +183,13 @@ class LiveAutoState:
         project_root: Path,
         publisher: TelegramPublisher | None,
         stuck_alert_seconds: float = 300.0,
+        facts_publisher=None,
     ) -> None:
         self.project_root = project_root
         self.publisher = publisher
+        # Where Fact-o-Meter cards go besides the console. Defaults to the main publisher; --facts-telegram sets it on its own
+        # so predictions and briefings can stay in shadow mode while the cards are sent (user 2026-10-11).
+        self.facts_publisher = facts_publisher if facts_publisher is not None else publisher
         self.stuck_alert_seconds = stuck_alert_seconds
         self.active_cricbuzz: dict[str, CricbuzzMatchSession] = {}
         self.active_toi: dict[
@@ -216,6 +244,7 @@ class LiveAutoState:
                     publisher=self.publisher, output_file=output_file
                 ),
                 publisher=self.publisher,
+                facts_publisher=self.facts_publisher,
                 stuck_alert_seconds=self.stuck_alert_seconds,
                 commentary_log_path=self.project_root
                 / "data"
@@ -322,10 +351,13 @@ class LiveAutoState:
             return
         self._facts_sent[key] = text
         print(text)
-        if self.publisher is not None:
+        if self.facts_publisher is not None:
             source, _, match_id = key.partition(":")
             tag = hashlib.md5(text.encode()).hexdigest()[:8]
-            self.publisher.publish(f"factometer:{source}:{match_id}:{tag}", text)
+            try:
+                self.facts_publisher.publish(f"factometer:{source}:{match_id}:{tag}", text)
+            except Exception as error:  # a failed send must never disturb the feed
+                print(f"[facts] Telegram send failed: {error!r}")
 
     def _match_started(self, key: str) -> bool:
         source, _, match_id = key.partition(":")
@@ -524,6 +556,10 @@ def main() -> None:
         "--shadow", action="store_true", help="Do not publish to Telegram."
     )
     parser.add_argument(
+        "--facts-telegram", action="store_true",
+        help="Send ONLY the Fact-o-Meter cards to Telegram, even with --shadow (predictions and briefings stay in shadow).",
+    )
+    parser.add_argument(
         "--no-odi", action="store_true", help="Do not watch ODIs for pre-match briefings."
     )
     parser.add_argument(
@@ -538,10 +574,15 @@ def main() -> None:
     cricbuzz_discovery = CricbuzzMatchDiscovery()
     toi_discovery = ToiMatchDiscovery()
     publisher = None if args.shadow else _telegram(project_root)
-    state = LiveAutoState(project_root, publisher, stuck_alert_seconds=args.stuck_alert_seconds)
+    facts_publisher = publisher
+    if args.facts_telegram and publisher is None:
+        facts_publisher = SendOnceFile(_telegram(project_root), project_root / "data" / "live" / "factometer-sent.json")
+    state = LiveAutoState(project_root, publisher, stuck_alert_seconds=args.stuck_alert_seconds, facts_publisher=facts_publisher)
 
     last_scan = 0.0
     mode = "shadow (no Telegram)" if args.shadow else "LIVE (publishing to Telegram)"
+    if args.facts_telegram and args.shadow:
+        mode += " -- except Fact-o-Meter cards, which ARE sent to Telegram"
     print(
         f"CricketBaba is watching Cricbuzz (primary) + TOI (backup) for live "
         f"T20Is -- mode: {mode}. Press Control+C to stop."
@@ -551,7 +592,8 @@ def main() -> None:
     print("Keep-awake: " + ("on (caffeinate, Mac will not idle-sleep while this runs)" if awake else "off"))
     watchdog = PollWatchdog()
     worker = _ScanWorker(cricbuzz_discovery, toi_discovery)
-    odi_watcher = None if args.no_odi else OdiBriefingWatcher(publisher, only_top10=not args.odi_all_teams)
+    odi_watcher = None if args.no_odi else OdiBriefingWatcher(
+        publisher, only_top10=not args.odi_all_teams, facts_publisher=facts_publisher)
     if odi_watcher is not None:
         print("Also watching men's ODIs for pre-match briefings only (" + ("all national sides" if args.odi_all_teams else "ICC top-10 sides") + "); no in-play ODI predictions.")
     while True:

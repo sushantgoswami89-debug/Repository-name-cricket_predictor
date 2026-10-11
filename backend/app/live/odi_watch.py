@@ -70,8 +70,9 @@ def fetch_toss(match) -> tuple[str, str]:
 
 class OdiBriefingWatcher:
     def __init__(self, publisher=None, only_top10: bool = True, discovery=None, toss_fetcher=fetch_toss,
-                 refresh_seconds: float = 60.0) -> None:
+                 refresh_seconds: float = 60.0, facts_publisher=None) -> None:
         self.publisher = publisher
+        self.facts_publisher = facts_publisher if facts_publisher is not None else publisher
         self.only_top10 = only_top10
         self._discovery = discovery
         self._toss_fetcher = toss_fetcher
@@ -89,9 +90,10 @@ class OdiBriefingWatcher:
             except queue.Empty:
                 break
             print(text)
-            if self.publisher is not None and kind in ("briefing", "facts"):
+            target = self.facts_publisher if kind == "facts" else self.publisher if kind == "briefing" else None
+            if target is not None:
                 try:
-                    self.publisher.publish(key, text)
+                    target.publish(key, text)
                 except Exception:
                     pass
         now = time.monotonic()

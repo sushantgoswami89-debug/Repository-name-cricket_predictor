@@ -609,6 +609,9 @@ class CricbuzzMatchSession:
     match_url: str
     pipeline: VerifiedLivePredictionPipeline
     publisher: PredictionPublisher | None = None
+    # Where Fact-o-Meter cards go besides the console (user 2026-10-11: send them to Telegram too). Separate from `publisher`
+    # so predictions can stay in shadow mode while the cards are sent.
+    facts_publisher: PredictionPublisher | None = None
     reader: CricbuzzLiveReader = field(default_factory=CricbuzzLiveReader)
     label: str = ""
     _seen_delivery_keys: set[tuple[int, int, int]] = field(default_factory=set)
@@ -654,6 +657,16 @@ class CricbuzzMatchSession:
     @property
     def finished(self) -> bool:
         return self._finished
+
+    def _send_card(self, stat: str, key: tuple) -> None:
+        """Print a live Fact-o-Meter card and send it to Telegram when a facts publisher is set (never raises)."""
+        print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
+        if self.facts_publisher is None:
+            return
+        try:
+            self.facts_publisher.publish(f"factometer:live:{self.match_id}:" + ":".join(str(part) for part in key), stat)
+        except Exception as error:  # a failed send must never disturb the feed
+            print(f"[{self.match_id}] [stat] Telegram send failed: {error!r}")
 
     def poll_once(self) -> None:
         """Fetch, guard, and (if a boundary was reached) predict for one
@@ -776,7 +789,7 @@ class CricbuzzMatchSession:
                 print(f"[{self.match_id}] [stat] unavailable: {error!r}")
             if stat:
                 self._settled_shown.add(key)
-                print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
+                self._send_card(stat, key)
         for name in (crease or []):
             runs_balls = self._card_nums.get(name)
             key = (snapshot.innings, "result", name)
@@ -792,7 +805,7 @@ class CricbuzzMatchSession:
                 print(f"[{self.match_id}] [stat] unavailable: {error!r}")
             if stat:
                 self._settled_shown.add(key)
-                print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
+                self._send_card(stat, key)
         for name in (crease or []):
             runs_balls = self._card_nums.get(name)
             key = (snapshot.innings, "ground", name)
@@ -811,7 +824,7 @@ class CricbuzzMatchSession:
                 print(f"[{self.match_id}] [stat] unavailable: {error!r}")
             if stat:
                 self._settled_shown.add(key)
-                print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
+                self._send_card(stat, key)
         if _at_over_break(snapshot):
             for name in dict.fromkeys([snapshot.deliveries[-1].bowler, announced]):
                 figures_now = self._card_bowl_nums.get(name) if name else None
@@ -843,7 +856,7 @@ class CricbuzzMatchSession:
                         print(f"[{self.match_id}] [stat] unavailable: {error!r}")
                     if stat:
                         self._settled_shown.add(key)
-                        print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
+                        self._send_card(stat, key)
         for line in _delivery_event_lines(snapshot, self._seen_delivery_keys):
             print(f"[{self.match_id}] {line}")
         if self.commentary_log_path is not None:
