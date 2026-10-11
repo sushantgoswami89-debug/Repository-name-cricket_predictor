@@ -1,7 +1,7 @@
 """Player performance -> team result table for the Fact-o-Meter "when he does X his team wins/loses" facts.
 
 One row per player per match (men's, decided matches only; ties / no results / super-over-decided skipped):
-  [date, player, team, batted innings (1/2/0), runs, balls, bowled innings (1/2/0), wickets, balls bowled, team won (1/0), source]
+  [date, player, team, batted innings (1/2/0), runs, balls, bowled innings (1/2/0), wickets, balls bowled, team won (1/0), source, opponent]
 "batted innings" is the innings number his team batted in (0 if he did not bat); "bowled innings" is the innings number in
 which he bowled (the other one). Wickets are bowler-credited. Output data/features/player_results[_t20|_odi].json.
 Usage: python build_player_results.py [odi]   (default: all men's T20 competitions)
@@ -57,7 +57,8 @@ def main() -> None:
                         bowl["wkts"] += sum(1 for w in d.get("wickets", []) if w.get("kind") not in NOT_BOWLER)
             for name, p in players.items():
                 rows.append([info["dates"][0], name, p["team"], p["bat_inn"], p["runs"], p["balls"], p["bowl_inn"], p["wkts"],
-                             p["bowled"], int(outcome["winner"] == p["team"]), source])
+                             p["bowled"], int(outcome["winner"] == p["team"]), source,
+                             teams[1] if p["team"] == teams[0] else teams[0]])
     rows.sort(key=lambda r: r[0])
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(rows))

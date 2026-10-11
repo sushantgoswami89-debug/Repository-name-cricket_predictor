@@ -408,26 +408,31 @@ def test_batter_fact_is_a_100_percent_record_shown_only_when_the_ask_is_large():
         assert records, fmt
         rows = json.loads(PATHS[fmt].read_text(encoding="utf-8"))
         for name, claims in records.items():
-            for target, (balls_needed, innings, base) in claims.items():     # every claim is literally true in its format
-                picked = [r[3] for r in rows if r[1] == name and r[2] >= balls_needed]
-                assert len(picked) == innings >= MIN_INNINGS and min(picked) >= target and base <= 0.70, (fmt, name, target)
+            for (target, opp), (balls_needed, innings, base) in claims.items():   # every claim is literally true
+                picked = [r[3] for r in rows if r[1] == name and r[2] >= balls_needed and opp in ("", r[9])]
+                assert len(picked) == innings >= MIN_INNINGS and min(picked) >= target and base <= 0.70, (fmt, name, target, opp)
     assert set(all_records("t20")) != set(all_records("odi"))                 # formats are kept apart
-    assert 100 in batter_records("Fakhar Zaman", "odi")
+    assert any(opp for c in all_records("odi").values() for _, opp in c) and any(not opp for c in all_records("odi").values() for _, opp in c)
+    assert (100, "") in batter_records("Fakhar Zaman", "odi")
     original = xi.resolve_player
     xi.resolve_player = lambda full, team: full                               # live name -> Cricsheet name: identity here
     try:
-        name, claims = next(iter(all_records("t20").items()))
-        target = max(claims)
-        n_balls = claims[target][0]
+        name, claims = next((n, {k: v for k, v in c.items() if not k[1]}) for n, c in all_records("t20").items()
+                            if any(not k[1] for k in c))
+        target = max(x for x, _ in claims)
+        n_balls = claims[(target, "")][0]
         runs_now = max(0, target - ASK_MIN_RUNS - 5)                          # a big ask: 35 runs still to get
         line = settled_line(name, "X", n_balls, runs_now)
-        assert line == (f"🎯 FACT-O-METER (T20) · {name} {runs_now}*({n_balls}) \n"
-                        f"   Every single time he has faced {n_balls}+ balls, he has gone on to make "
-                        f"{ {50: 'a FIFTY', 100: 'a HUNDRED'}.get(target, f'{target}+ runs') }  ▰▰▰▰▰▰▰▰▰▰  " + line.rsplit("  ", 1)[1])
-        assert line.rstrip().endswith("🔥")
+        assert line.startswith(f"🎯 FACT-O-METER (T20) · {name} {runs_now}*({n_balls}) \n   Every single time he has faced {n_balls}+ balls, he has gone on to make ")
+        assert line.rstrip().endswith("🔥") and " vs " not in line
         assert settled_line(name, "X", n_balls - 1, runs_now) == ""           # not yet at the ball count
         assert settled_line(name, "X", n_balls, target - ASK_MIN_RUNS + 1) == ""   # ask too small now (29 to go)
         assert settled_line("SA Yadav", "X", 41, 31) == ""                    # 50 after 41 balls: nothing big left to ask
+        # team-specific: Kohli's 50+ record from 50 balls holds against West Indies only
+        kn = batter_records("V Kohli", "odi")[(50, "West Indies")][0]
+        vs = settled_line("V Kohli", "X", kn, 10, "odi", opponent="West Indies")
+        assert f"faced {kn}+ balls vs West Indies, he has gone on to make a FIFTY" in vs
+        assert settled_line("V Kohli", "X", kn, 10, "odi", opponent="Australia") == ""
     finally:
         xi.resolve_player = original
     assert settled_line("Nobody Unknown", "India", 60, 20) == ""
@@ -445,20 +450,24 @@ def test_bowler_records_are_literally_true_in_the_data_and_line_respects_the_tri
     try:
         for fmt in ("t20", "odi"):
             records = all_records(fmt)
-            assert records and all(n >= MIN_INNINGS and base <= 0.70 for _, _, n, base in records.values()), fmt
+            assert records and any(c[4] for v in records.values() for c in v), fmt
             rows = json.loads(PATHS[fmt].read_text(encoding="utf-8"))
-            for name, (k, balls_needed, innings, _base) in records.items():
-                picked = [r[4] for r in rows if r[1] == name and r[2] >= balls_needed]
-                assert len(picked) == innings and min(picked) >= k, (fmt, name)
-                if k - 0 < ASK_MIN_WICKETS:   # "a wicket" is a small ask: never shown, even at 0 wickets
-                    assert bowler_line(name, "X", balls_needed, 0, fmt) == ""
-        big = next(((n, r, f) for f in ("t20", "odi") for n, r in all_records(f).items() if r[0] >= 2), None)
+            for name, claims in records.items():
+                for k, balls_needed, innings, base, opp in claims:
+                    picked = [r[4] for r in rows if r[1] == name and r[2] >= balls_needed and opp in ("", r[6])]
+                    assert len(picked) == innings >= MIN_INNINGS and min(picked) >= k and base <= 0.70, (fmt, name, opp)
+                    if k < ASK_MIN_WICKETS:   # "a wicket" is a small ask: never shown, even at 0 wickets
+                        assert bowler_line(name, "X", balls_needed, 0, fmt, opponent=opp) == ""
+        big = next(((n, c, f) for f in ("t20", "odi") for n, v in all_records(f).items() for c in v if c[0] >= 2), None)
         if big:                                                                # a 2+ wicket record: a big ask, shown
-            name, (k, balls_needed, innings, base), fmt = big
-            line = bowler_line(name, "X", balls_needed, 0, fmt)
+            name, (k, balls_needed, innings, base, opp), fmt = big
+            line = bowler_line(name, "X", balls_needed, 0, fmt, opponent=opp)
             assert line.startswith(f"🎯 FACT-O-METER ({fmt.upper()}) · {name} ") and "▰▰▰▰▰▰▰▰▰▰  🔥" in line and "every one of his innings" in line
-            assert bowler_line(name, "X", balls_needed - 1, 0, fmt) == ""      # has not bowled that many balls yet
-            assert bowler_line(name, "X", balls_needed, 1, fmt) == ""          # one wicket in: only one more needed
+            assert (f" vs {opp} " in line) == bool(opp)
+            assert bowler_line(name, "X", balls_needed - 1, 0, fmt, opponent=opp) == ""      # has not bowled that many balls yet
+            assert bowler_line(name, "X", balls_needed, 1, fmt, opponent=opp) == ""          # one wicket in: only one more needed
+            if opp:
+                assert bowler_line(name, "X", balls_needed, 0, fmt, opponent="Nowhere XI") == ""   # only against that team
     finally:
         xi.resolve_player = original
     assert set(all_records("t20")) != set(all_records("odi"))
@@ -544,14 +553,16 @@ def test_result_facts_are_literally_true_in_the_data_and_show_only_on_the_way():
         rows = json.loads(PATHS[fmt].read_text(encoding="utf-8"))
         for name, items in claims.items():
             for c in items:                                                  # every record is literally true in its format
+                vs_ok = lambda r: c["opp"] in ("", r[11])                       # overall or against that one opponent
                 if c["kind"] == "bat":
-                    hits = [r[9] for r in rows if r[1] == name and r[3] and r[4] >= c["x"] and c["inn"] in (0, r[3])]
+                    hits = [r[9] for r in rows if r[1] == name and r[3] and r[4] >= c["x"] and c["inn"] in (0, r[3]) and vs_ok(r)]
                 else:
-                    hits = [r[9] for r in rows if r[1] == name and r[6] and r[8] >= 6 and r[7] >= c["x"] and c["inn"] in (0, r[6])]
+                    hits = [r[9] for r in rows if r[1] == name and r[6] and r[8] >= 6 and r[7] >= c["x"] and c["inn"] in (0, r[6]) and vs_ok(r)]
                 assert len(hits) == c["n"] >= MIN_MATCHES and set(hits) == {1 if c["outcome"] == "WON" else 0}, (fmt, name, c)
                 assert c["fluke"] <= 0.01
     assert set(all_claims("t20")) != set(all_claims("odi"))
-    stoinis = all_claims("odi")["MP Stoinis"][0]
+    assert any(c["opp"] for v in all_claims("odi").values() for c in v) and any(not c["opp"] for v in all_claims("odi").values() for c in v)
+    stoinis = next(c for c in all_claims("odi")["MP Stoinis"] if not c["opp"])
     assert stoinis["kind"] == "bat" and stoinis["outcome"] == "LOST" and stoinis["x"] == 50
     line = result_line("Marcus Stoinis", "MP Stoinis", "Australia", "bat", 41, 38, 2, "odi")
     assert line == ("🎯 FACT-O-METER (ODI) · Marcus Stoinis 41*(38) \n"
@@ -560,3 +571,8 @@ def test_result_facts_are_literally_true_in_the_data_and_show_only_on_the_way():
     assert result_line("Marcus Stoinis", "MP Stoinis", "Australia", "bat", 50, 45, 2, "odi") == ""                       # already there
     assert result_line("Virat Kohli", "V Kohli", "India", "bat", 90, 80, 2, "odi") == ""                                 # Kohli: no 100% record
     assert result_line("Nobody", None, "X", "bat", 40, 30, 1) == ""
+    # team-specific: Kohli has no overall record, but against Sri Lanka India won all 14 ODIs when he made 75+
+    vs_sl = result_line("Virat Kohli", "V Kohli", "India", "bat", 50, 40, 1, "odi", opponent="Sri Lanka")
+    assert vs_sl == ("🎯 FACT-O-METER (ODI) · Virat Kohli 50*(40) \n"
+                     "   India have WON all 14 matches vs Sri Lanka in which he scored 75+  ▰▰▰▰▰▰▰▰▰▰  🔥")
+    assert result_line("Virat Kohli", "V Kohli", "India", "bat", 50, 40, 1, "odi", opponent="West Indies") == ""   # applies only vs Sri Lanka

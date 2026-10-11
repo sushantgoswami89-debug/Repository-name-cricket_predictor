@@ -1,5 +1,9 @@
 """Fact-o-Meter: "when he does X, his team ALWAYS wins / loses" -- 100% result records for batters and bowlers.
 
+Each record is either OVERALL or against ONE OPPONENT (user 2026-10-11: "team specific, like India vs West Indies, so
+West Indies specific stats"): "India have WON all 9 matches vs West Indies in which he scored 50+". Opponent records use the
+same rules (n >= 5, fluke <= 1% against the league's overall rate for that outcome) so they are rarer.
+
 Per format (T20 = every men's T20 competition, ODI = men's ODIs; never mixed), from every decided match
 (data/features/player_results[_odi].json, build_player_results.py [odi]). A record is "in all n matches where he scored
 X+ (batting first / chasing / either) his team WON" -- or LOST -- and it needs
@@ -34,14 +38,14 @@ APPROACH = 0.6  # a batter is "on the way" from 60% of the target
 
 @lru_cache(maxsize=2)
 def _claims(fmt: str = "t20") -> dict[str, list[dict]]:
-    """player -> list of {kind, x, inn, outcome ("WON"/"LOST"), n, fluke}."""
+    """player -> list of {kind, x, inn, opp ("" = overall), outcome ("WON"/"LOST"), n, fluke}."""
     try:
         rows = json.loads(PATHS[fmt].read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
     league = defaultdict(lambda: [0, 0])
     per = defaultdict(lambda: defaultdict(list))
-    for _date, name, _team, bat_inn, runs, _balls, bowl_inn, wkts, bowled, won, *_rest in rows:
+    for _date, name, _team, bat_inn, runs, _balls, bowl_inn, wkts, bowled, won, _src, opponent in rows:
         events = []
         if bat_inn:
             for x in BAT_TARGETS[fmt]:
@@ -54,10 +58,11 @@ def _claims(fmt: str = "t20") -> dict[str, list[dict]]:
         for key in events:
             league[key][0] += 1
             league[key][1] += won
-            per[name][key].append(won)
+            per[name][key + ("",)].append(won)       # overall
+            per[name][key + (opponent,)].append(won)  # against this opponent only
     out: dict[str, list[dict]] = {}
     for name, conditions in per.items():
-        for (kind, x, inn), results in conditions.items():
+        for (kind, x, inn, opp), results in conditions.items():
             n = len(results)
             if n < MIN_MATCHES or len(set(results)) != 1:
                 continue
@@ -65,8 +70,8 @@ def _claims(fmt: str = "t20") -> dict[str, list[dict]]:
             won = bool(results[0])
             fluke = (win_rate if won else 1 - win_rate) ** n
             if fluke <= MAX_FLUKE:
-                out.setdefault(name, []).append({"kind": kind, "x": x, "inn": inn, "outcome": "WON" if won else "LOST",
-                                                 "n": n, "fluke": fluke})
+                out.setdefault(name, []).append({"kind": kind, "x": x, "inn": inn, "opp": opp,
+                                                 "outcome": "WON" if won else "LOST", "n": n, "fluke": fluke})
     return out
 
 
@@ -75,22 +80,24 @@ def all_claims(fmt: str = "t20") -> dict[str, list[dict]]:
 
 
 def _words(claim: dict) -> str:
+    vs = f"vs {claim['opp']} " if claim["opp"] else ""
     inn = {0: "", 1: " batting first", 2: " chasing"} if claim["kind"] == "bat" else {0: "", 1: " bowling first", 2: " bowling second"}
     if claim["kind"] == "bat":
-        return f"in which he scored {claim['x']}+{inn[claim['inn']]}"
-    return f"in which he took {claim['x']}+ wickets{inn[claim['inn']]}"
+        return f"{vs}in which he scored {claim['x']}+{inn[claim['inn']]}"
+    return f"{vs}in which he took {claim['x']}+ wickets{inn[claim['inn']]}"
 
 
 def result_line(full_name: str, resolved: str | None, team: str, kind: str, value: int, balls: int, innings: int,
-                fmt: str = "t20") -> str:
+                fmt: str = "t20", opponent: str = "") -> str:
     """The Fact-o-Meter card for his best result record that applies right now, else "".
     kind "bat": value = runs so far, balls = balls faced; kind "bowl": value = wickets so far, balls = legal balls bowled.
-    `resolved` is his Cricsheet name (resolve_player); `team` is the live team name for the wording."""
+    `resolved` is his Cricsheet name (resolve_player); `team` is the live team name for the wording; `opponent` the
+    team he is playing (opponent-specific records apply only against that team)."""
     if not resolved:
         return ""
     live = []
     for claim in _claims(fmt).get(resolved, []):
-        if claim["kind"] != kind or claim["inn"] not in (0, innings):
+        if claim["kind"] != kind or claim["inn"] not in (0, innings) or claim["opp"] not in ("", opponent):
             continue
         if kind == "bat" and not (APPROACH * claim["x"] <= value < claim["x"]):
             continue
@@ -99,7 +106,7 @@ def result_line(full_name: str, resolved: str | None, team: str, kind: str, valu
         live.append(claim)
     if not live:
         return ""
-    claim = min(live, key=lambda c: (c["fluke"], -c["n"]))
+    claim = min(live, key=lambda c: (c["fluke"], -c["n"]))  # the least likely to be luck
     if kind == "bat":
         head = f"{full_name} {value}*({balls})"
     else:

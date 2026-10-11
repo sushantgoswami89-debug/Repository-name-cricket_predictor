@@ -1,7 +1,7 @@
 """Per-batter innings table for the "settled batter" stat (when he faces N balls, how often does he get 50?).
 
 One row per batter innings in all men's T20 (internationals + IPL, BBL, PSL, CPL, ...) (Cricsheet): [date, batter, balls faced, runs, dismissed, runs after 15 balls
-(or -1 if he faced fewer), balls to 50 (or 0)]. Wides are not balls faced; no-balls are. Output data/features/batter_innings.json.
+(or -1 if he faced fewer), balls to 50 (or 0), source, innings no., opponent]. Wides are not balls faced; no-balls are. Output data/features/batter_innings.json.
 Usage: python build_batter_innings.py
 """
 
@@ -27,9 +27,12 @@ def main() -> None:
             if info.get("gender") not in (None, "male"):
                 continue
             date = info["dates"][0]
+            teams = info.get("teams", [])
             for inn_no, innings in enumerate(match.get("innings", [])):
                 if innings.get("super_over") or inn_no > 1:
                     continue
+                batting_team = innings.get("team")
+                opponent = next((t for t in teams if t != batting_team), "")
                 state: dict[str, dict] = {}
                 for over in innings.get("overs", []):
                     for d in over.get("deliveries", []):
@@ -46,7 +49,7 @@ def main() -> None:
                             if w.get("player_out") in state:
                                 state[w["player_out"]]["out"] = 1
                 for name, rec in state.items():
-                    rows.append([date, name, rec["balls"], rec["runs"], rec["out"], rec["at15"], rec["to50"], source, inn_no + 1])
+                    rows.append([date, name, rec["balls"], rec["runs"], rec["out"], rec["at15"], rec["to50"], source, inn_no + 1, opponent])
     rows.sort(key=lambda r: r[0])
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(rows))

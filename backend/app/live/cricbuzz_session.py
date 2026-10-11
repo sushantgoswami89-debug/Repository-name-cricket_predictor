@@ -750,7 +750,7 @@ class CricbuzzMatchSession:
                 continue
             stat = ""
             try:
-                stat = settled_line(name, snapshot.batting_team, runs_balls[1], runs_balls[0])
+                stat = settled_line(name, snapshot.batting_team, runs_balls[1], runs_balls[0], opponent=snapshot.bowling_team)
             except Exception as error:  # a side stat must never disturb the feed
                 print(f"[{self.match_id}] [stat] unavailable: {error!r}")
             if stat:
@@ -766,7 +766,7 @@ class CricbuzzMatchSession:
                 from app.live.prematch_xi import resolve_player
 
                 stat = result_line(name, resolve_player(name, snapshot.batting_team), snapshot.batting_team, "bat",
-                                   runs_balls[0], runs_balls[1], snapshot.innings)
+                                   runs_balls[0], runs_balls[1], snapshot.innings, opponent=snapshot.bowling_team)
             except Exception as error:
                 print(f"[{self.match_id}] [stat] unavailable: {error!r}")
             if stat:
@@ -784,12 +784,13 @@ class CricbuzzMatchSession:
                     stat = ""
                     try:
                         if kind_key == "bowler":
-                            stat = bowler_line(name, snapshot.bowling_team, figures_now[0], figures_now[1])
+                            stat = bowler_line(name, snapshot.bowling_team, figures_now[0], figures_now[1], opponent=snapshot.batting_team)
                         else:
                             from app.live.prematch_xi import resolve_player
 
                             stat = result_line(name, resolve_player(name, snapshot.bowling_team), snapshot.bowling_team,
-                                               "bowl", figures_now[1], figures_now[0], snapshot.innings)
+                                               "bowl", figures_now[1], figures_now[0], snapshot.innings,
+                                               opponent=snapshot.batting_team)
                     except Exception as error:  # a side stat must never disturb the feed
                         print(f"[{self.match_id}] [stat] unavailable: {error!r}")
                     if stat:
