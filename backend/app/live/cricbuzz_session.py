@@ -965,7 +965,7 @@ class CricbuzzMatchSession:
                     handle.write(json.dumps(summary) + "\n")
         drain_notes = getattr(self.reader, "drain_notes", None)
         for note_ts, category, note_text in (drain_notes() if drain_notes else []):
-            print(f"{self.prefix}[note] {category}: {note_text[:240]}")
+            # not printed (user 2026-10-11: details not to be shown); kept in commentary-notes-<id>.jsonl below
             if category == "NEW BATTER":
                 incoming_name = _incoming_batter_name(note_text)
                 if incoming_name and incoming_name not in self._incoming.setdefault(snapshot.innings, []):
@@ -991,11 +991,10 @@ class CricbuzzMatchSession:
         from_board = _board_announced_bowler(snapshot)
         if from_board and not (self._announced_bowler and self._announced_bowler[0] > snapshot.deliveries[-1].timestamp_ms):
             self._announced_bowler = (snapshot.deliveries[-1].timestamp_ms + 1, from_board)
-            print(f"{self.prefix}[note] BOWLING CHANGE (from the mini scorecard): {from_board} is next")
             self._log_announcement(snapshot, "mini scorecard", from_board)
         check = _check_next_over(self._expected_next, snapshot)
         if check:
-            print(f"{self.prefix}{check}")
+            # the HIT/MISS audit is kept in next-over-checks-<id>.jsonl, not printed (user 2026-10-11)
             if self.commentary_log_path is not None:
                 with self.commentary_log_path.with_name(
                     f"next-over-checks-{self.match_id}.jsonl"
@@ -1237,7 +1236,8 @@ class CricbuzzMatchSession:
                 for b in bowlers if b.get("overs") is not None and overs_to_balls(b["overs"]) is not None and b.get("wickets") is not None
             }
         verdict = "OK" if not problems else "MISMATCH: " + "; ".join(problems[:4])
-        print(f"{self.prefix}[card] {snapshot.overs} ov: {verdict}")
+        if problems:  # an OK check is not printed (user 2026-10-11); every verdict goes to the card-checks log
+            print(f"{self.prefix}[card] {snapshot.overs} ov: {verdict}")
         if self.commentary_log_path is not None:
             try:
                 with self.commentary_log_path.with_name(f"card-checks-{self.match_id}.jsonl").open("a", encoding="utf-8") as handle:
