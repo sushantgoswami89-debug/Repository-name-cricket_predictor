@@ -757,3 +757,21 @@ def test_newest_board_ignores_an_older_state_even_with_a_newer_timestamp():
     later = {"innings": 2, "overs": "13.3", "score": 131, "wickets": 4, "last_updated_s": 1791736700}
     assert _newest_board(ahead, later) is later
     assert _newest_board(ahead, {"innings": 3, "overs": "0.1", "score": 0}) is not ahead   # a new innings still wins
+
+
+def test_board_figures_fill_in_when_the_scorecard_page_lags():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _board_figures
+
+    board = {"innings": 2, "score": 168, "wickets": 5, "overs": 17, "striker": "Rutherford", "non_striker": "Paul",
+             "bowler": "Nitish", "other_bowler": "Prince",
+             "striker_stats": {"runs": 31, "balls": 18}, "non_striker_stats": {"runs": 10, "balls": 5},
+             "bowler_stats": {"runs": 19, "overs": 2, "maidens": 0, "wickets": 1},
+             "other_bowler_stats": {"runs": 26, "overs": 3, "maidens": 0, "wickets": 0}}
+    snap = SimpleNamespace(innings=2, score=168, wickets=5, overs="17.0", board=board)
+    batters, bowlers = _board_figures(snap)
+    assert batters == {"Rutherford": " 31(18)", "Paul": " 10(5)"}
+    assert bowlers == {"Nitish": " 2-0-19-1", "Prince": " 3-0-26-0"}
+    snap.score = 170   # the board is behind us: no figures rather than the wrong ones
+    assert _board_figures(snap) == ({}, {})

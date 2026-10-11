@@ -670,6 +670,25 @@ def _score_line(snapshot) -> str:
     return " | ".join(parts)
 
 
+def _board_figures(snapshot) -> tuple[dict, dict]:
+    """Batter and bowler figures from the page's mini scorecard, in the same " 31(18)" / " 2-0-19-1" form as the scorecard page's.
+    Used when the scorecard page lags (its totals disagree with ours, so its figures are dropped); only when the board is
+    current, so a stale board never supplies figures for the wrong over."""
+    board = getattr(snapshot, "board", None)
+    if not board or not _board_is_current(snapshot, board):
+        return {}, {}
+    batters, bowlers = {}, {}
+    for name_key, stats_key in (("striker", "striker_stats"), ("non_striker", "non_striker_stats")):
+        stats = board.get(stats_key) or {}
+        if board.get(name_key) and stats.get("balls") is not None:
+            batters[board[name_key]] = f" {stats.get('runs', 0)}({stats['balls']})"
+    for name_key, stats_key in (("bowler", "bowler_stats"), ("other_bowler", "other_bowler_stats")):
+        stats = board.get(stats_key) or {}
+        if board.get(name_key) and stats.get("overs") is not None:
+            bowlers[board[name_key]] = f" {stats['overs']}-{stats.get('maidens', 0)}-{stats.get('runs', 0)}-{stats.get('wickets', 0)}"
+    return batters, bowlers
+
+
 def _over_break_block(snapshot, crease, card_batters: dict, card_bowlers: dict, announced: str, expected: dict | None) -> str:
     """The over-end summary as a few short lines: score with run rates (and what the chase needs), the bowler who just finished
     with his figures, the batters at the crease, and the next bowler and striker."""
@@ -1019,7 +1038,9 @@ class CricbuzzMatchSession:
         if _at_over_break(snapshot) or snapshot.innings_complete:
             announced_now = (self._announced_bowler[1] if self._announced_bowler
                              and self._announced_bowler[0] > snapshot.deliveries[-1].timestamp_ms else "")
-            summary = _over_break_block(snapshot, crease, self._card_batters, self._card_bowlers, announced_now, expected_now)
+            board_batters, board_bowlers = _board_figures(snapshot)
+            summary = _over_break_block(snapshot, crease, {**board_batters, **self._card_batters},
+                                        {**board_bowlers, **self._card_bowlers}, announced_now, expected_now)
             if summary != self._last_summary:
                 self._last_summary = summary
                 print("\n".join(f"{self.prefix}{line}" for line in summary.splitlines()))
