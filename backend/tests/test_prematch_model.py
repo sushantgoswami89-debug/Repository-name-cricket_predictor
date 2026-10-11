@@ -394,3 +394,16 @@ def test_dew_line_states_the_win_percent_points_for_the_chasing_side(monkeypatch
     assert re.search(r"Dew: HEAVY -- \d+%, sets in ~\d\d:\d\d \(WI \+\d+ pts\), Pitch: flat", lines[1]), lines[1]
     pre = prematch_analysis.prematch_header("India", "West Indies", "JSCA International Stadium Complex, Ranchi", pitch_note="")
     assert "pts" not in pre[1]  # before the toss nobody is the chaser yet
+
+
+def test_settled_batter_stat_shows_converters_only_once_past_15_balls():
+    from app.live.batter_settled import league_rate, settled_line, settled_record
+
+    assert 0.15 < league_rate() < 0.30
+    rec = settled_record("V Kohli")
+    assert rec and rec["fifty"] <= rec["thirty"] <= rec["innings"] and rec["rate50"] > 1.5 * league_rate()
+    line = settled_line("Virat Kohli", "India", 17, 31)
+    assert line.startswith("STAT: Virat Kohli 31*(17)") and "of" in line and "average batter" in line
+    assert settled_line("Virat Kohli", "India", 12, 20) == ""      # not yet 15 balls
+    assert settled_line("Virat Kohli", "India", 30, 52) == ""      # already past 50
+    assert settled_line("Nobody Unknown", "India", 20, 25) == ""   # no record -> nothing printed

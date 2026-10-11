@@ -33,6 +33,7 @@ from app.live.cricbuzz_reader import (
     _extract_flight_chunks,
 )
 from app.live.cricbuzz_scorecard import compare_with_deliveries, fetch_scorecard
+from app.live.batter_settled import settled_line
 from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
 from app.live.pipeline import (
     MatchStateAnomaly,
@@ -614,6 +615,8 @@ class CricbuzzMatchSession:
     _crease: list[str] | None = None
     _card_batters: dict = field(default_factory=dict)
     _card_bowlers: dict = field(default_factory=dict)
+    _card_nums: dict = field(default_factory=dict)  # batter -> (runs, balls) from the fresh scorecard
+    _settled_shown: set = field(default_factory=set)  # (innings, batter) already given the "settled" stat
     _archive_state: dict = field(default_factory=dict)
     _stuck_alert_sent: bool = False
     # User-requested 2026-09-18: a persistent per-delivery commentary log
@@ -737,6 +740,19 @@ class CricbuzzMatchSession:
             f"[{self.match_id}] {_scorecard_line(snapshot)}{figures}"
             f"{_next_over_line(snapshot, self._announced_bowler, crease)}"
         )
+        for name in (crease or []):
+            runs_balls = self._card_nums.get(name)
+            key = (snapshot.innings, name)
+            if runs_balls is None or key in self._settled_shown:
+                continue
+            stat = ""
+            try:
+                stat = settled_line(name, snapshot.batting_team, runs_balls[1], runs_balls[0])
+            except Exception as error:  # a side stat must never disturb the feed
+                print(f"[{self.match_id}] [stat] unavailable: {error!r}")
+            if stat:
+                self._settled_shown.add(key)
+                print(f"[{self.match_id}] 📊 {stat}")
         for line in _delivery_event_lines(snapshot, self._seen_delivery_keys):
             print(f"[{self.match_id}] {line}")
         if self.commentary_log_path is not None:
@@ -842,11 +858,12 @@ class CricbuzzMatchSession:
             problems += compare_with_deliveries(card, snapshot.deliveries, innings)
         # Who is at the crease right now, from the card, but only if the card is as current as we are.
         current = next((i for i in card["innings"] if i.get("innings") == snapshot.innings), None)
-        self._card_batters, self._card_bowlers = {}, {}
+        self._card_batters, self._card_bowlers, self._card_nums = {}, {}, {}
         if current and (current.get("runs"), current.get("wickets")) == (snapshot.score, snapshot.wickets):
             pair = [b["name"] for b in current["batting"] if str(b.get("out", "")).lower() == "not out"]
             self._crease = pair if len(pair) == 2 else None
             self._card_batters = {b["name"]: f" {b['runs']}*({b['balls']})" for b in current["batting"] if b.get("balls") is not None}
+            self._card_nums = {b["name"]: (b["runs"], b["balls"]) for b in current["batting"] if b.get("balls") is not None}
             bowlers = next((i for i in card["innings"] if i.get("innings") == snapshot.innings), current)["bowling"]
             self._card_bowlers = {
                 b["name"]: f" {b['overs']}-{b['maidens']}-{b['runs']}-{b['wickets']}" for b in bowlers if b.get("overs") is not None
