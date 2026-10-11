@@ -179,6 +179,57 @@ def _ground_record(city: str, fmt: str = "t20") -> dict:
     return _cached(("ground-record", fmt), 3600, build).get(city, {})
 
 
+VENUE_RECORD_MIN = 6
+VENUE_RECORD_MAX_FLUKE = 0.01
+
+
+def _venue_event_table() -> tuple[dict, dict]:
+    """(league win rate per event, {city: {event: [won, ...]}}) over decided T20 + ODI matches. Events: the toss
+    winner who chose to bowl / to bat won; the team batting first / chasing won."""
+    from app.live.prematch_conditions import load_facts, load_facts_odi
+
+    def build():
+        per_city: dict = {}
+        league: dict = {}
+        for fact in load_facts() + load_facts_odi():
+            if not fact["winner"] or fact["winner"] not in fact["teams"]:
+                continue
+            events = {}
+            if fact.get("toss_winner") in fact["teams"]:
+                won_toss_side = fact["winner"] == fact["toss_winner"]
+                if fact.get("toss_decision") == "field":
+                    events["the toss winner who chose to bowl"] = won_toss_side
+                elif fact.get("toss_decision") == "bat":
+                    events["the toss winner who chose to bat"] = won_toss_side
+            if fact["first_team"] in fact["teams"]:
+                events["the team batting first"] = fact["winner"] == fact["first_team"]
+                events["the team chasing"] = fact["winner"] != fact["first_team"]
+            for name, won in events.items():
+                per_city.setdefault(fact["city"], {}).setdefault(name, []).append(won)
+                cell = league.setdefault(name, [0, 0])
+                cell[0] += 1
+                cell[1] += int(won)
+        return {k: v[1] / v[0] for k, v in league.items()}, per_city
+
+    return _cached(("venue-events",), 3600, build)
+
+
+def venue_record(city: str) -> str:
+    """"the team chasing has won 8 of 8 here" -- a 100% record at the ground (T20 + ODI pooled), or "".
+    Needs at least 6 such matches and a fluke chance (league rate for that event ** n) of at most 1%; the
+    least likely one is shown. A fact about the past, not a prediction."""
+    rates, per_city = _venue_event_table()
+    best = None
+    for name, results in per_city.get(city, {}).items():
+        n = len(results)
+        if n < VENUE_RECORD_MIN or not all(results):
+            continue
+        fluke = rates[name] ** n
+        if fluke <= VENUE_RECORD_MAX_FLUKE and (best is None or fluke < best[0]):
+            best = (fluke, f"{name} has won {n} of {n} here")
+    return best[1] if best else ""
+
+
 def venue_summary(city: str, fmt: str = "t20") -> str:
     """The title-line ground record.
 
@@ -224,6 +275,9 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
             text += ", toss winner chooses " + (f"bat {bat:.0%}" if bat > 0.5 else f"bowl {1 - bat:.0%}" if bat < 0.5 else "bat 50% / bowl 50%")
         if decided < 10:
             text += " [small sample]"
+    record = venue_record(city)
+    if record:
+        text += f" | Record: {record}"
     return text
 
 

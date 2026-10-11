@@ -422,3 +422,42 @@ def test_settled_batter_stat_is_a_100_percent_fifty_record_only():
     finally:
         xi.resolve_player = original
     assert settled_line("Nobody Unknown", "India", 60, 20) == ""
+
+
+def test_bowler_records_are_literally_true_in_the_data_and_line_respects_the_trigger():
+    import json
+
+    import app.live.prematch_xi as xi
+    from app.live.bowler_records import MIN_INNINGS, PATH, all_records, bowler_line, overs_to_balls
+
+    assert overs_to_balls("3.2") == 20 and overs_to_balls(4) == 24 and overs_to_balls("x") is None
+    records = all_records()
+    assert records and all(n >= MIN_INNINGS for _, _, n in records.values())
+    rows = json.loads(PATH.read_text(encoding="utf-8"))
+    for name, (k, balls_needed, innings) in records.items():
+        picked = [r[4] for r in rows if r[1] == name and r[2] >= balls_needed]
+        assert len(picked) == innings and min(picked) >= k, name
+    name, (k, balls_needed, innings) = next(iter(records.items()))
+    original = xi.resolve_player
+    xi.resolve_player = lambda full, team: full
+    try:
+        line = bowler_line(name, "X", balls_needed, 0)
+        assert line.startswith("STAT: " + name) and f"{innings} of {innings} innings" in line
+        assert bowler_line(name, "X", balls_needed - 1, 0) == ""      # has not bowled that many balls yet
+        assert bowler_line(name, "X", balls_needed, k) == ""          # already has the wicket(s)
+    finally:
+        xi.resolve_player = original
+    assert bowler_line("Nobody Unknown", "India", 24, 0) == ""
+
+
+def test_venue_record_is_only_shown_for_a_perfect_record_and_matches_the_data():
+    from app.live.prematch_analysis import VENUE_RECORD_MIN, _venue_event_table, venue_record
+
+    _, per_city = _venue_event_table()
+    shown = {c: venue_record(c) for c in per_city if venue_record(c)}
+    assert "faisalabad" in shown and "8 of 8" in shown["faisalabad"]
+    for city, text in shown.items():                                  # every shown record is literally true
+        event = text.split(" has won")[0]
+        results = per_city[city][event]
+        assert len(results) >= VENUE_RECORD_MIN and all(results)
+    assert venue_record("ranchi") == "" and venue_record("nowhere-ville") == ""   # Ranchi toss-winner-bowls: 6 of 11
