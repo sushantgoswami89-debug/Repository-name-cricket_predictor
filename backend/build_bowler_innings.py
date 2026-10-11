@@ -1,6 +1,6 @@
 """Per-bowler innings table for the bowler "100% record" stat (e.g. he takes a wicket every time he bowls 4 overs).
 
-One row per bowler innings in men's T20I + IPL (Cricsheet): [date, bowler, legal balls, runs conceded, wickets, source].
+One row per bowler innings in all men's T20 (internationals + IPL, BBL, PSL, CPL, ...) (Cricsheet): [date, bowler, legal balls, runs conceded, wickets, source].
 Wickets are bowler-credited (not run outs, retirements, obstructing, timed out). Runs conceded exclude byes / leg-byes.
 Output data/features/bowler_innings.json. Usage: python build_bowler_innings.py
 """
@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ODI = len(sys.argv) > 1 and sys.argv[1] == "odi"  # `python build_bowler_innings.py odi` builds the ODI table
 OUT = ROOT / "data" / "features" / ("bowler_innings_odi.json" if ODI else "bowler_innings.json")
-SOURCES = ("odi",) if ODI else ("t20i", "ipl")
+SOURCES = ("odi",) if ODI else ("t20i", "ipl", "bbl", "bpl", "cpl", "ilt", "lpl", "mlc", "msl", "ntb", "psl", "sat", "sma", "ssm")  # all men's T20
 NOT_BOWLER = {"run out", "retired hurt", "retired out", "obstructing the field", "timed out"}
 
 

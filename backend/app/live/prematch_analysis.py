@@ -141,13 +141,13 @@ def confirmed_xi(team_players: dict) -> dict[str, list[str]] | None:
 
 def _ground_record(city: str, fmt: str = "t20") -> dict:
     """Per source and combined: matches, first / second innings totals, wickets, bat-first wins and
-    toss-winner wins (decided matches). fmt "t20" pools T20I + IPL; "odi" is men's ODIs (facts built by
+    toss-winner wins (decided matches). fmt "t20" pools every men's T20 competition (internationals + IPL, BBL, PSL, ...); "odi" is men's ODIs (facts built by
     `build_match_facts.py odi`)."""
-    from app.live.prematch_conditions import load_facts, load_facts_odi
+    from app.live.prematch_conditions import load_facts_odi, load_facts_t20
 
     def build():
         table: dict = {}
-        for fact in (load_facts_odi() if fmt == "odi" else load_facts()):
+        for fact in (load_facts_odi() if fmt == "odi" else load_facts_t20()):
             row = table.setdefault(fact["city"], {})
             for key in (fact["src"], "all"):
                 cell = row.setdefault(
@@ -187,12 +187,12 @@ VENUE_RECORD_MAX_FLUKE = 0.01
 def _venue_event_table(fmt: str = "t20") -> tuple[dict, dict]:
     """(league win rate per event, {city: {event: [won, ...]}}) over decided matches of ONE format (T20I + IPL, or
     ODI). Events: the toss winner who chose to bowl / to bat won; the team batting first / chasing won."""
-    from app.live.prematch_conditions import load_facts, load_facts_odi
+    from app.live.prematch_conditions import load_facts_odi, load_facts_t20
 
     def build():
         per_city: dict = {}
         league: dict = {}
-        for fact in (load_facts_odi() if fmt == "odi" else load_facts()):
+        for fact in (load_facts_odi() if fmt == "odi" else load_facts_t20()):
             if not fact["winner"] or fact["winner"] not in fact["teams"]:
                 continue
             events = {}
@@ -234,14 +234,15 @@ def venue_record(city: str, fmt: str = "t20") -> str:
 def venue_summary(city: str, fmt: str = "t20") -> str:
     """The title-line ground record.
 
-    Scoring numbers are T20 only (T20I + IPL at the ground, never ODI):
-      "T20 - 11 1st inns avg 153, avg wkts - 6, pace - 3.2/spin - 2.1"
+    Scoring numbers come from the match's OWN format only, never mixed: a T20 match uses every men's T20
+    competition at the ground (internationals + IPL, BBL, PSL, CPL, ...), an ODI match uses men's ODIs:
+      "T20 - 11 1st inns avg 153, avg wkts - 6, pace - 3.2/spin - 2.1"  /  "ODI - 8 1st inns avg 332, ..."
     (avg wkts = wickets falling per innings, run-outs included; pace / spin = average wickets per innings
     credited to pace / spin bowlers, so they add up to a bit less than avg wkts: run-outs and bowlers
     without a known style are in neither). The results record pools T20 and ODI matches at the ground into one figure:
       "bat 1st wins 38% / chase wins 62% / toss winner wins 56%, toss winner chooses bowl 70%"
     (toss choice shows the more common one only; "[small sample]" is added when under 10 matches pooled.)
-    `fmt` only chooses which format's 100% venue record is appended.
+    `fmt` chooses the format of the scoring numbers and of the 100% venue record that is appended.
     """
     t20 = _ground_record(city, "t20").get("all")
     odi = _ground_record(city, "odi").get("all")
@@ -254,13 +255,14 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
     def mean1(values):
         return f"{sum(values) / len(values):.1f}" if values else "n/a"
 
-    if t20:
-        text = (f"T20 - {t20['n']} 1st inns avg {mean(t20['totals'])}, avg wkts - {mean(t20['wkts'])}, "
-                f"pace - {mean1(t20['pace_wkts'])}/spin - {mean1(t20['spin_wkts'])}")
-        if t20["n"] < 10:
+    own, own_label = (odi, "ODI") if fmt == "odi" else (t20, "T20")
+    if own:
+        text = (f"{own_label} - {own['n']} 1st inns avg {mean(own['totals'])}, avg wkts - {mean(own['wkts'])}, "
+                f"pace - {mean1(own['pace_wkts'])}/spin - {mean1(own['spin_wkts'])}")
+        if own["n"] < 10:
             text += " [small sample]"
     else:
-        text = "T20 - no history here"
+        text = f"{own_label} - no history here"
     cells = [c for c in (t20, odi) if c]
     decided = sum(c["decided"] for c in cells)
     if decided:

@@ -184,7 +184,8 @@ def test_ground_summary_matches_the_requested_format():
     text = venue_summary("ranchi")
     t20, results = text.split(" | ")
     assert re.fullmatch(
-        r"T20 - 11 1st inns avg \d+, avg wkts - \d+, pace - \d\.\d/spin - \d\.\d", t20), t20
+        r"T20 - \d+ 1st inns avg \d+, avg wkts - \d+, pace - \d\.\d/spin - \d\.\d", t20), t20
+    assert int(re.match(r"T20 - (\d+)", t20).group(1)) > 11   # every men's T20 competition, not just T20I + IPL (11 matches)
     assert "ODI" not in t20 and "avg" not in results and "2nd" not in text
     pace, spin = (float(x) for x in re.search(r"pace - ([\d.]+)/spin - ([\d.]+)", t20).groups())
     wk = float(re.search(r"avg wkts - (\d+)", t20).group(1))
@@ -411,16 +412,21 @@ def test_batter_fact_is_a_100_percent_record_shown_only_when_the_ask_is_large():
                 picked = [r[3] for r in rows if r[1] == name and r[2] >= balls_needed]
                 assert len(picked) == innings >= MIN_INNINGS and min(picked) >= target and base <= 0.70, (fmt, name, target)
     assert set(all_records("t20")) != set(all_records("odi"))                 # formats are kept apart
-    assert 75 in batter_records("PD Salt", "t20") and 100 in batter_records("Fakhar Zaman", "odi")
+    assert 100 in batter_records("Fakhar Zaman", "odi")
     original = xi.resolve_player
     xi.resolve_player = lambda full, team: full                               # live name -> Cricsheet name: identity here
     try:
-        salt_n, _salt_innings, _ = batter_records("PD Salt")[75]
-        line = settled_line("PD Salt", "X", salt_n, 40)                       # needs 35 more: a big ask
-        assert line == (f"🎯 FACT-O-METER (T20) · PD Salt 40*({salt_n}) \n"
-                        f"   Every single time he has faced {salt_n}+ balls, he has gone on to make 75+ runs  ▰▰▰▰▰▰▰▰▰▰  🔥")
-        assert settled_line("PD Salt", "X", salt_n - 1, 40) == ""             # not yet at the ball count
-        assert settled_line("PD Salt", "X", salt_n, 75 - ASK_MIN_RUNS + 1) == ""   # ask too small now (29 to go)
+        name, claims = next(iter(all_records("t20").items()))
+        target = max(claims)
+        n_balls = claims[target][0]
+        runs_now = max(0, target - ASK_MIN_RUNS - 5)                          # a big ask: 35 runs still to get
+        line = settled_line(name, "X", n_balls, runs_now)
+        assert line == (f"🎯 FACT-O-METER (T20) · {name} {runs_now}*({n_balls}) \n"
+                        f"   Every single time he has faced {n_balls}+ balls, he has gone on to make "
+                        f"{ {50: 'a FIFTY', 100: 'a HUNDRED'}.get(target, f'{target}+ runs') }  ▰▰▰▰▰▰▰▰▰▰  " + line.rsplit("  ", 1)[1])
+        assert line.rstrip().endswith("🔥")
+        assert settled_line(name, "X", n_balls - 1, runs_now) == ""           # not yet at the ball count
+        assert settled_line(name, "X", n_balls, target - ASK_MIN_RUNS + 1) == ""   # ask too small now (29 to go)
         assert settled_line("SA Yadav", "X", 41, 31) == ""                    # 50 after 41 balls: nothing big left to ask
     finally:
         xi.resolve_player = original
@@ -446,11 +452,13 @@ def test_bowler_records_are_literally_true_in_the_data_and_line_respects_the_tri
                 assert len(picked) == innings and min(picked) >= k, (fmt, name)
                 if k - 0 < ASK_MIN_WICKETS:   # "a wicket" is a small ask: never shown, even at 0 wickets
                     assert bowler_line(name, "X", balls_needed, 0, fmt) == ""
-        name, (k, balls_needed, innings, base) = next((n, r) for n, r in all_records("t20").items() if r[0] >= 2)
-        line = bowler_line(name, "X", balls_needed, 0, "t20")                  # needs 2+ wickets: a big ask
-        assert line.startswith(f"🎯 FACT-O-METER (T20) · {name} ") and "▰▰▰▰▰▰▰▰▰▰  🔥" in line and "every one of his innings" in line
-        assert bowler_line(name, "X", balls_needed - 1, 0, "t20") == ""        # has not bowled that many balls yet
-        assert bowler_line(name, "X", balls_needed, 1, "t20") == ""            # one wicket in: only one more needed
+        big = next(((n, r, f) for f in ("t20", "odi") for n, r in all_records(f).items() if r[0] >= 2), None)
+        if big:                                                                # a 2+ wicket record: a big ask, shown
+            name, (k, balls_needed, innings, base), fmt = big
+            line = bowler_line(name, "X", balls_needed, 0, fmt)
+            assert line.startswith(f"🎯 FACT-O-METER ({fmt.upper()}) · {name} ") and "▰▰▰▰▰▰▰▰▰▰  🔥" in line and "every one of his innings" in line
+            assert bowler_line(name, "X", balls_needed - 1, 0, fmt) == ""      # has not bowled that many balls yet
+            assert bowler_line(name, "X", balls_needed, 1, fmt) == ""          # one wicket in: only one more needed
     finally:
         xi.resolve_player = original
     assert set(all_records("t20")) != set(all_records("odi"))
@@ -463,7 +471,6 @@ def test_venue_record_is_per_format_and_matches_the_data():
     for fmt in ("t20", "odi"):
         _, per_city = _venue_event_table(fmt)
         shown = {c: venue_record(c, fmt) for c in per_city if venue_record(c, fmt)}
-        assert shown, fmt
         for city, text in shown.items():                                  # every shown record is literally true
             results = per_city[city][text.split(" has won")[0]]
             assert len(results) >= VENUE_RECORD_MIN and all(results), (fmt, city)

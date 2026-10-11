@@ -1,6 +1,6 @@
 """Per-batter innings table for the "settled batter" stat (when he faces N balls, how often does he get 50?).
 
-One row per batter innings in men's T20I + IPL (Cricsheet): [date, batter, balls faced, runs, dismissed, runs after 15 balls
+One row per batter innings in all men's T20 (internationals + IPL, BBL, PSL, CPL, ...) (Cricsheet): [date, batter, balls faced, runs, dismissed, runs after 15 balls
 (or -1 if he faced fewer), balls to 50 (or 0)]. Wides are not balls faced; no-balls are. Output data/features/batter_innings.json.
 Usage: python build_batter_innings.py
 """
@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ODI = len(sys.argv) > 1 and sys.argv[1] == "odi"  # `python build_batter_innings.py odi` builds the ODI table
 OUT = ROOT / "data" / "features" / ("batter_innings_odi.json" if ODI else "batter_innings.json")
-SOURCES = ("odi",) if ODI else ("t20i", "ipl")
+SOURCES = ("odi",) if ODI else ("t20i", "ipl", "bbl", "bpl", "cpl", "ilt", "lpl", "mlc", "msl", "ntb", "psl", "sat", "sma", "ssm")  # all men's T20
 CHECKPOINT = 15
 
 

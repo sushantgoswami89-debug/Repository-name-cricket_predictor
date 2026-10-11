@@ -186,6 +186,18 @@ def load_facts() -> list[dict]:
     return json.loads(FACTS_PATH.read_text(encoding="utf-8"))
 
 
+FACTS_T20_PATH = ROOT / "data" / "features" / "prematch_match_facts_t20.json"
+
+
+def load_facts_t20() -> list[dict]:
+    """Ground facts from EVERY men's T20 competition (internationals + IPL, BBL, PSL, CPL, ...) for ground records and
+    Fact-o-Meter only; the win model keeps reading load_facts() (T20I + IPL). Falls back to load_facts() if not built."""
+    try:
+        return json.loads(FACTS_T20_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return load_facts()
+
+
 FACTS_ODI_PATH = ROOT / "data" / "features" / "prematch_match_facts_odi.json"
 
 

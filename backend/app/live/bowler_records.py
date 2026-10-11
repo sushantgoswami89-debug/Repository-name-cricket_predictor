@@ -1,6 +1,6 @@
 """Bowler "100% record" stat: he took a wicket (or two) in EVERY innings in which he bowled N or more balls.
 
-Per format (T20 = men's T20I + IPL, ODI = men's ODIs; never mixed): from every bowler innings (data/features/bowler_innings[_odi].json, build_bowler_innings.py [odi]). A claim is
+Per format (T20 = all men's T20 (internationals + IPL, BBL, PSL, CPL, ...), ODI = men's ODIs; never mixed): from every bowler innings (data/features/bowler_innings[_odi].json, build_bowler_innings.py [odi]). A claim is
 "wickets >= k in every innings with N+ legal balls" (k = 1 or 2, N = 6/12/18/24 balls = 1-4 overs), needing at least
 MIN_INNINGS such innings and a fluke chance <= MAX_FLUKE (the league's own rate of taking k+ wickets from N+ balls,
 to the power n). The claim with the smallest fluke chance is kept. Out-of-sample 2026-10-11 (record built from
@@ -16,7 +16,7 @@ from functools import lru_cache
 from app.live.fact_o_meter import MAX_BASELINE, card
 from app.live.prematch_model import ROOT
 
-PATHS = {"t20": ROOT / "data" / "features" / "bowler_innings.json",           # men's T20I + IPL
+PATHS = {"t20": ROOT / "data" / "features" / "bowler_innings.json",           # all men's T20 (internationals + IPL, BBL, PSL, CPL, ...)
          "odi": ROOT / "data" / "features" / "bowler_innings_odi.json"}       # men's ODIs
 PATH = PATHS["t20"]  # legacy name
 BALL_THRESHOLDS = {"t20": (6, 12, 18, 24), "odi": (12, 24, 36, 48, 60)}  # 1-4 overs / 2-10 overs

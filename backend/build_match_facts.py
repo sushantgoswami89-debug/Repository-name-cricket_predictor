@@ -8,8 +8,9 @@ are skipped, not guessed). Also records the match's spin wicket share and scorin
 which the model uses (from earlier matches only) as the pitch-type signal.
 
 Output: data/features/prematch_match_facts.json (rebuild any time; ~1 minute).
-`python build_match_facts.py odi` builds the men's ODI version (ground records only) into
-data/features/prematch_match_facts_odi.json; the T20 model never reads it.
+`python build_match_facts.py odi` builds the men's ODI version and `python build_match_facts.py t20` the all-T20 one
+(internationals + IPL, BBL, BPL, CPL, ILT20, LPL, MLC, MSL, T20 Blast, PSL, SA20, Syed Mushtaq Ali, Super Smash) for
+ground records only (prematch_match_facts_odi.json / _t20.json); the win model never reads them.
 """
 
 from __future__ import annotations
@@ -21,8 +22,12 @@ from pathlib import Path
 from app.ml.player_style_registry import PlayerStyleRegistry
 
 ROOT = Path(__file__).resolve().parents[1]
-ODI = len(sys.argv) > 1 and sys.argv[1] == "odi"
-OUT = ROOT / "data" / "features" / ("prematch_match_facts_odi.json" if ODI else "prematch_match_facts.json")
+MODE = sys.argv[1] if len(sys.argv) > 1 else "model"   # "model" (T20I + IPL, feeds the win model) | "odi" | "t20" (all T20)
+ODI = MODE == "odi"
+# Every men's T20 competition in the local Cricsheet data (all 20 overs): internationals + franchise leagues.
+T20_SOURCES = ("t20i", "ipl", "bbl", "bpl", "cpl", "ilt", "lpl", "mlc", "msl", "ntb", "psl", "sat", "sma", "ssm")
+OUT = ROOT / "data" / "features" / {"odi": "prematch_match_facts_odi.json", "t20": "prematch_match_facts_t20.json"}.get(
+    MODE, "prematch_match_facts.json")
 GROUPS = {
     "left_arm_pace": "pace",
     "right_arm_pace": "pace",
@@ -56,7 +61,7 @@ def main() -> None:
         return style_cache[bowler]
 
     facts = []
-    for source in (("odi",) if ODI else ("t20i", "ipl")):
+    for source in (("odi",) if ODI else T20_SOURCES if MODE == "t20" else ("t20i", "ipl")):
         for path in sorted((ROOT / "data" / "raw" / "cricsheet" / source).glob("*.json")):
             match = json.loads(path.read_text(encoding="utf-8"))
             info = match["info"]
