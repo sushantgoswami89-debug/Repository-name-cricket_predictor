@@ -316,8 +316,8 @@ def toi_pitch_note(team_a: str, team_b: str) -> str:
 def _track_call(note: str, city: str, cloud: float | None) -> str:
     """Flat / green / turning, only from evidence that holds up.
 
-    * ground scoring level (prior T20I + IPL first-innings totals at the ground vs all
-      grounds) -- validated out of sample: correlation 0.37 with the next match's total;
+    * ground scoring level (prior first-innings totals at the ground from every men's T20
+      competition vs all grounds) -- validated out of sample: correlation 0.37 with the next match's total;
     * TOI's pitch note, the only direct source for "green" or "turning";
     * the ground's spin-vs-pace wicket history is NOT used: its correlation with the next
       match's spin share was 0.05.
@@ -365,10 +365,10 @@ def _track_call(note: str, city: str, cloud: float | None) -> str:
 
 
 def _ground_totals() -> dict:
-    from app.live.prematch_conditions import load_facts
+    from app.live.prematch_conditions import load_facts_t20
 
     out: dict = {"__all__": []}
-    for fact in load_facts():
+    for fact in load_facts_t20():  # every men's T20 competition, like the rest of the ground information
         if fact["totals"]:
             out.setdefault(fact["city"], []).append(fact["totals"][0])
             out["__all__"].append(fact["totals"][0])
