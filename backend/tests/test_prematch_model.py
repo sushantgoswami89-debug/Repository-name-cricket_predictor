@@ -576,3 +576,35 @@ def test_result_facts_are_literally_true_in_the_data_and_show_only_on_the_way():
     assert vs_sl == ("🎯 FACT-O-METER (ODI) · Virat Kohli 50*(40) \n"
                      "   India have WON all 14 matches vs Sri Lanka in which he scored 75+  ▰▰▰▰▰▰▰▰▰▰  🔥")
     assert result_line("Virat Kohli", "V Kohli", "India", "bat", 50, 40, 1, "odi", opponent="West Indies") == ""   # applies only vs Sri Lanka
+
+
+def test_ground_facts_are_literally_true_per_format_and_show_only_with_a_big_ask():
+    import json
+
+    from app.live.venue_form import (ASK_MIN_RUNS, BAT_PATHS, BOWL_PATHS, MIN_INNINGS, all_batter_claims, all_bowler_claims,
+                                     batter_ground_line, bowler_ground_line)
+
+    for fmt in ("t20", "odi"):
+        bats, bowls = all_batter_claims(fmt), all_bowler_claims(fmt)
+        assert bats and bowls, fmt
+        bat_rows = json.loads(BAT_PATHS[fmt].read_text(encoding="utf-8"))
+        for (name, city, inn), c in bats.items():                         # every claim is literally true in its format
+            runs = [r[3] for r in bat_rows if r[1] == name and r[10] == city and inn in (0, r[8])]
+            assert len(runs) == c["n"] >= MIN_INNINGS and min(runs) >= c["x"] and abs(sum(runs) / len(runs) - c["avg"]) < 1e-9 and max(runs) == c["best"]
+        bowl_rows = json.loads(BOWL_PATHS[fmt].read_text(encoding="utf-8"))
+        for (name, city, inn), c in bowls.items():
+            wk = [r[4] for r in bowl_rows if r[1] == name and r[7] == city and r[2] >= 6 and inn in (0, r[8])]
+            assert len(wk) == c["n"] >= MIN_INNINGS and min(wk) >= c["x"] and abs(sum(wk) / len(wk) - c["avg"]) < 1e-9
+    assert set(all_batter_claims("t20")) != set(all_batter_claims("odi"))
+    # a first-innings record applies in the first innings only; the card carries count, average and best
+    claims = all_batter_claims("t20")
+    (name, city, inn), c = next((k, v) for k, v in claims.items() if k[2] == 1 and (k[0], k[1], 0) not in claims)
+    line = batter_ground_line(name, name, city, 1, 5, 4)
+    assert line.startswith(f"🎯 FACT-O-METER (T20) · {name} 5*(4) \n   His favourite ground: {c['x']}+ in every first innings at {city.title()}, "
+                           f"{c['n']} of {c['n']} (avg {c['avg']:.0f}, best {c['best']})") and line.rstrip().endswith("🔥")
+    assert batter_ground_line(name, name, city, 2, 5, 4) == ""                                     # wrong innings
+    assert batter_ground_line(name, name, city, 1, c["x"] - ASK_MIN_RUNS + 1, 30) == ""            # ask too small now
+    assert batter_ground_line(name, name, "another ground", 1, 5, 4) == ""                         # a different ground
+    assert batter_ground_line("Nobody", None, city, 1, 5, 4) == ""
+    (bname, bcity, binn), bc = next(iter(all_bowler_claims("t20").items()))
+    assert "wickets" in bowler_ground_line(bname, bname, bcity, binn, 0, 12) and bowler_ground_line(bname, bname, bcity, binn, bc["x"] - 1, 12) == ""

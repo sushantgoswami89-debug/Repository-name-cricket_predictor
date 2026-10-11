@@ -36,7 +36,7 @@ def _records(fmt: str = "t20") -> dict[str, list[tuple[int, int, int, float, str
     per: dict[str, dict[str, list[tuple[int, int]]]] = {}
     thresholds = BALL_THRESHOLDS[fmt]
     league = {(n, k): [0, 0] for n in thresholds for k in (1, 2)}
-    for _date, name, balls, _runs, wickets, _src, opponent in rows:
+    for _date, name, balls, _runs, wickets, _src, opponent, *_city in rows:
         per.setdefault(name, {}).setdefault("", []).append((balls, wickets))
         if opponent:
             per[name].setdefault(opponent, []).append((balls, wickets))

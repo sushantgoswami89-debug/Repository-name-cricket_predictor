@@ -36,6 +36,7 @@ from app.live.cricbuzz_scorecard import compare_with_deliveries, fetch_scorecard
 from app.live.batter_settled import settled_line
 from app.live.bowler_records import bowler_line, overs_to_balls
 from app.live.result_facts import result_line
+from app.live.venue_form import batter_ground_line, bowler_ground_line
 from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
 from app.live.pipeline import (
     MatchStateAnomaly,
@@ -772,12 +773,30 @@ class CricbuzzMatchSession:
             if stat:
                 self._settled_shown.add(key)
                 print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
+        for name in (crease or []):
+            runs_balls = self._card_nums.get(name)
+            key = (snapshot.innings, "ground", name)
+            if runs_balls is None or key in self._settled_shown:
+                continue
+            stat = ""
+            try:
+                from app.live.prematch_model import venue_city
+                from app.live.prematch_xi import resolve_player
+
+                stat = batter_ground_line(name, resolve_player(name, snapshot.batting_team),
+                                          venue_city(getattr(snapshot, "venue_name", "") or ""), snapshot.innings,
+                                          runs_balls[0], runs_balls[1])
+            except Exception as error:  # a side stat must never disturb the feed
+                print(f"[{self.match_id}] [stat] unavailable: {error!r}")
+            if stat:
+                self._settled_shown.add(key)
+                print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
         if _at_over_break(snapshot):
             for name in dict.fromkeys([snapshot.deliveries[-1].bowler, announced]):
                 figures_now = self._card_bowl_nums.get(name) if name else None
                 if figures_now is None:
                     continue
-                for kind_key in ("bowler", "result"):
+                for kind_key in ("bowler", "result", "ground"):
                     key = (snapshot.innings, kind_key, name)
                     if key in self._settled_shown:
                         continue
@@ -785,6 +804,13 @@ class CricbuzzMatchSession:
                     try:
                         if kind_key == "bowler":
                             stat = bowler_line(name, snapshot.bowling_team, figures_now[0], figures_now[1], opponent=snapshot.batting_team)
+                        elif kind_key == "ground":
+                            from app.live.prematch_model import venue_city
+                            from app.live.prematch_xi import resolve_player
+
+                            stat = bowler_ground_line(name, resolve_player(name, snapshot.bowling_team),
+                                                      venue_city(getattr(snapshot, "venue_name", "") or ""), snapshot.innings,
+                                                      figures_now[1], figures_now[0])
                         else:
                             from app.live.prematch_xi import resolve_player
 

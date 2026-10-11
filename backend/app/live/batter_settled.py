@@ -42,7 +42,7 @@ def _records(fmt: str = "t20") -> dict[str, dict[tuple[int, str], tuple[int, int
     thresholds, targets = BALL_THRESHOLDS[fmt], TARGETS[fmt]
     per: dict[str, dict[str, list[tuple[int, int]]]] = {}
     league = {(n, x): [0, 0] for n in thresholds for x in targets}
-    for _date, name, balls, runs, _out, _at15, _to50, _src, _inn, opponent in rows:
+    for _date, name, balls, runs, _out, _at15, _to50, _src, _inn, opponent, *_city in rows:
         per.setdefault(name, {}).setdefault("", []).append((balls, runs))
         if opponent:
             per[name].setdefault(opponent, []).append((balls, runs))
