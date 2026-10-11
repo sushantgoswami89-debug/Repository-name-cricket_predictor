@@ -732,7 +732,8 @@ def test_over_break_block_shows_score_run_rates_chase_and_both_bowlers():
         scheduled_overs=20, deliveries=[last],
     )
     text = _over_break_block(
-        snap, ["Chamindu Wickramasinghe", "Maheesh Theekshana"], {"Chamindu Wickramasinghe": " 9*(9)"},
+        snap, ["Chamindu Wickramasinghe", "Maheesh Theekshana"],
+        {"Chamindu Wickramasinghe": " 9*(9)", "Maheesh Theekshana": " 8*(7)"},
         {"Abrar Ahmed": " 4-0-29-2", "Naseem Shah": " 2-0-11-0"}, "Naseem Shah",
         {"bowler": "Naseem Shah", "striker": "Chamindu Wickramasinghe", "other": "Maheesh Theekshana"},
     )
@@ -740,8 +741,8 @@ def test_over_break_block_shows_score_run_rates_chase_and_both_bowlers():
         "--- end of over 17 ---",
         "SL 105/6 (17.0 ov) | CRR 6.18 | need 63 off 18 balls | RRR 21.00",
         "Bowled: Abrar Ahmed 4-0-29-2",
-        "At the crease: Chamindu Wickramasinghe 9*(9), Maheesh Theekshana",
-        "Next: Naseem Shah 2-0-11-0 | Chamindu Wickramasinghe* to face",
+        "At the crease: Chamindu Wickramasinghe 9*(9), Maheesh Theekshana 8(7)",   # * only on the batter on strike
+        "Next: Naseem Shah* 2-0-11-0",                                             # * on the bowler bowling
     ]
     snap.innings, snap.target = 1, 0
     assert "need" not in _over_break_block(snap, [], {}, {}, "", None)   # first innings: run rate only

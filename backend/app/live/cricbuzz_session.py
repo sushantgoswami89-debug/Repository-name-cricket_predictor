@@ -675,15 +675,22 @@ def _over_break_block(snapshot, crease, card_batters: dict, card_bowlers: dict, 
     over_number = str(snapshot.overs).partition(".")[0]
     lines = [f"--- end of over {over_number} ---", _score_line(snapshot),
              f"Bowled: {last.bowler}{card_bowlers.get(last.bowler, '')}"]
+    striker = expected["striker"] if expected is not None and not snapshot.innings_complete else ""
     if crease:
-        lines.append("At the crease: " + ", ".join(f"{name}{card_batters.get(name, '')}" for name in crease))
+        def batter(name: str) -> str:
+            """"Name 9*(9)" for the batter on strike (* marks him), "Name 8(7)" for the other one."""
+            figures = card_batters.get(name, "").replace("*", "")
+            if name != striker:
+                return f"{name}{figures}"
+            return f"{name}{figures.replace('(', '*(', 1)}" if "(" in figures else f"{name}*{figures}"
+
+        lines.append("At the crease: " + ", ".join(batter(name) for name in crease))
     if expected is not None and not snapshot.innings_complete:
         bowler = expected["bowler"]
         if bowler:
-            lines.append(f"Next: {bowler}{card_bowlers.get(bowler, ' (not bowled yet)')}"
-                         + (f" | {expected['striker']}* to face" if expected["striker"] else ""))
+            lines.append(f"Next: {bowler}*{card_bowlers.get(bowler, ' (not bowled yet)')}")   # * marks the bowler bowling
         else:
-            lines.append("Next: bowler not announced yet" + (f" | {expected['striker']}* to face" if expected["striker"] else ""))
+            lines.append("Next: bowler not announced yet")
     return "\n".join(lines)
 
 
