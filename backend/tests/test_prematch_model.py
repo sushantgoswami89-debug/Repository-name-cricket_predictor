@@ -471,3 +471,56 @@ def test_venue_record_is_per_format_and_matches_the_data():
     assert venue_summary("faisalabad", "odi").endswith("🎯 Fact-o-Meter (ODI): the team chasing has won 8 of 8 here ▰▰▰▰▰▰▰▰▰▰  🔥")
     assert "Fact-o-Meter" not in venue_summary("faisalabad", "t20")
     assert venue_record("ranchi", "t20") == "" and venue_record("nowhere-ville") == ""   # Ranchi toss-winner-bowls: 6 of 11
+
+
+def test_odi_watcher_briefs_once_updates_at_toss_and_records_the_result(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from app.live import prematch_log
+    from app.live.odi_watch import OdiBriefingWatcher, is_men_international_odi, winner_from_status
+
+    monkeypatch.setattr(prematch_log, "LOG_PATH", tmp_path / "p.jsonl")
+    monkeypatch.setattr(prematch_log, "RESULTS_PATH", tmp_path / "r.jsonl")
+    prematch_log._LAST.clear()
+
+    def match(state, status="", **kw):
+        base = dict(match_id="9", label="India vs Australia", match_format="ODI", match_type="International", state=state,
+                    status=status, venue="Wankhede Stadium, Mumbai", url="http://x", match_desc="1st ODI", series="Test series")
+        return SimpleNamespace(**{**base, **kw})
+
+    assert is_men_international_odi(match("Preview"))
+    assert not is_men_international_odi(match("Preview", label="India Women vs Australia Women"))
+    assert not is_men_international_odi(match("Preview", label="India A vs Australia A"))
+    assert not is_men_international_odi(match("Preview", label="Nepal vs Canada"))                    # not top 10
+    assert is_men_international_odi(match("Preview", label="Nepal vs Canada"), only_top10=False)
+    assert not is_men_international_odi(match("Preview", match_format="T20"))
+    assert winner_from_status("India won by 5 wkts", ["India", "Australia"]) == "India"
+    assert winner_from_status("Match tied", ["India", "Australia"]) is None
+
+    listing = [match("Preview")]
+    toss = {"value": ("", "")}
+    watcher = OdiBriefingWatcher(discovery=SimpleNamespace(matches=lambda: listing), toss_fetcher=lambda m: toss["value"])
+
+    def run():
+        watcher.cycle()
+        out = []
+        while not watcher._results.empty():
+            out.append(watcher._results.get())
+        return out
+
+    first = run()
+    assert len(first) == 1 and first[0][0] == "briefing" and "Win %: India" in first[0][2] and "ODI" in first[0][2]
+    assert run() == []                                                  # nothing changed: nothing re-sent
+    toss["value"] = ("Australia", "bowl")
+    second = run()
+    assert len(second) == 1 and "Toss is in" in second[0][2] and "Australia won" in second[0][2]
+    assert run() == []                                                  # toss known: the watcher stops updating
+    listing[0] = match("Complete", "Australia won by 3 wkts")
+    done = run()
+    assert done and "result recorded" in done[0][2]
+    assert prematch_log.score(tmp_path / "p.jsonl", tmp_path / "r.jsonl", fmt="odi")["by_stage"]["pre-toss"]["n"] == 1
+    assert run() == []                                                  # recorded once
+    # joined mid-match: no stale "pre-match" briefing
+    late = OdiBriefingWatcher(discovery=SimpleNamespace(matches=lambda: [match("In Progress", match_id="10")]), toss_fetcher=lambda m: ("", ""))
+    late.cycle()
+    assert late._results.empty()

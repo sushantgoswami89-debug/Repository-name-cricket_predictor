@@ -54,6 +54,7 @@ from app.live.cricbuzz_discovery import CricbuzzMatchDiscovery
 from app.live.cricbuzz_discovery import is_t20_international as cricbuzz_is_t20i
 from app.live.cricbuzz_session import CricbuzzMatchSession
 from app.live.cricbuzz_session import briefing_text as cricbuzz_briefing_text
+from app.live.odi_watch import OdiBriefingWatcher
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery
@@ -502,6 +503,13 @@ def main() -> None:
         "--shadow", action="store_true", help="Do not publish to Telegram."
     )
     parser.add_argument(
+        "--no-odi", action="store_true", help="Do not watch ODIs for pre-match briefings."
+    )
+    parser.add_argument(
+        "--odi-all-teams", action="store_true",
+        help="ODI briefings for every national side, not only ICC top-10 vs top-10 (prematch_log.ICC_TOP_10).",
+    )
+    parser.add_argument(
         "--no-keep-awake", action="store_true", help="Do not stop the Mac from idle-sleeping while running."
     )
     args = parser.parse_args()
@@ -522,6 +530,9 @@ def main() -> None:
     print("Keep-awake: " + ("on (caffeinate, Mac will not idle-sleep while this runs)" if awake else "off"))
     watchdog = PollWatchdog()
     worker = _ScanWorker(cricbuzz_discovery, toi_discovery)
+    odi_watcher = None if args.no_odi else OdiBriefingWatcher(publisher, only_top10=not args.odi_all_teams)
+    if odi_watcher is not None:
+        print("Also watching men's ODIs for pre-match briefings only (" + ("all national sides" if args.odi_all_teams else "ICC top-10 sides") + "); no in-play ODI predictions.")
     while True:
         gap = watchdog.tick()
         if gap is not None:
@@ -546,6 +557,8 @@ def main() -> None:
 
         state.poll()
         state.refresh_briefings()
+        if odi_watcher is not None:
+            odi_watcher.tick()
         time.sleep(max(1.0, args.poll_seconds))
 
 

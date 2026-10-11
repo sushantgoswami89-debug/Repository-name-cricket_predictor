@@ -53,6 +53,11 @@ def log_prediction(match_id: str, record: dict, path: Path | None = None) -> boo
         return False
 
 
+def has_prediction(match_id: str, path: Path | None = None) -> bool:
+    """True when at least one pre-match prediction was logged for this match."""
+    return any(r.get("match_id") == match_id for r in _read(path or LOG_PATH))
+
+
 def record_result(match_id: str, winner: str | None, text: str, path: Path | None = None) -> bool:
     """Append a finished match's outcome once (winner None = no result)."""
     path = path or RESULTS_PATH
