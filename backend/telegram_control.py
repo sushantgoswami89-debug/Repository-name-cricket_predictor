@@ -88,9 +88,12 @@ class TelegramControl:
         pid = self._running_pid()
         if pid is not None:
             return f"CricketBaba is already watching for live matches (process {pid})."
+        other = subprocess.run(["pgrep", "-f", "run_live_auto.py"], capture_output=True, text=True).stdout.split()
+        if other:  # a driver started by hand (Terminal) is already running: a second one would fight over the same files
+            return f"CricketBaba is already watching for live matches (process {other[0]}, started from the terminal)."
         with LOG_PATH.open("a", encoding="utf-8") as log:
             process = subprocess.Popen(
-                [sys.executable, str(BACKEND_DIR / "run_toi_auto.py")],
+                [sys.executable, str(BACKEND_DIR / "run_live_auto.py"), "--shadow", "--facts-telegram", "--poll-seconds", "5"],
                 cwd=BACKEND_DIR,
                 stdin=subprocess.DEVNULL,
                 stdout=log,
@@ -99,15 +102,15 @@ class TelegramControl:
             )
         PID_PATH.write_text(str(process.pid), encoding="utf-8")
         return (
-            "CricketBaba is now watching TOI. I will send verified "
-            "predictions automatically."
+            "CricketBaba is now watching Cricbuzz (primary) and TOI (backup) in shadow mode: "
+            "predictions are logged, not sent; only Fact-o-Meter cards come to Telegram."
         )
 
     def _status(self) -> str:
         pid = self._running_pid()
         if pid is None:
             return "CricketBaba is ready, but the live-match watcher is stopped."
-        return f"CricketBaba is watching TOI for live matches (process {pid})."
+        return f"CricketBaba is watching Cricbuzz and TOI for live matches (process {pid})."
 
     def _prematch_status(self) -> str:
         # Read-only: asking for a status must never launch the live-publishing

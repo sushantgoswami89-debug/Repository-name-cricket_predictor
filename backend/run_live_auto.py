@@ -62,8 +62,8 @@ from app.live.toi_discovery import ToiMatchDiscovery
 from app.live.toi_discovery import is_t20_international as toi_is_t20i
 from app.live.toi_reader import ToiFeedError, ToiLiveReader
 from app.live.verification import VerificationError
-from run_toi_auto import _briefing_text as toi_briefing_text
-from run_toi_auto import _fact_text as toi_fact_text
+from app.live.toi_briefing import briefing_text as toi_briefing_text
+from app.live.toi_briefing import fact_text as toi_fact_text
 
 
 def _telegram(project_root: Path) -> TelegramPublisher:
