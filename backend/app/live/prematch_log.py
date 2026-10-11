@@ -77,11 +77,12 @@ ICC_TOP_10 = frozenset({
 })
 
 
-def score(pred_path: Path | None = None, result_path: Path | None = None, teams: frozenset | None = ICC_TOP_10) -> dict:
+def score(pred_path: Path | None = None, result_path: Path | None = None, teams: frozenset | None = ICC_TOP_10, fmt: str = "t20") -> dict:
     """Per stage: games, picks right, Brier, using the LAST prediction logged at each stage.
     Two-way probability = p_a / (p_a + p_b), i.e. conditional on the match finishing; matches
     that ended without a result are counted separately."""
     predictions = _read(pred_path or LOG_PATH)
+    predictions = [p for p in predictions if p.get("format", "t20") == fmt]  # records without "format" are T20
     if teams is not None:
         predictions = [p for p in predictions if p["team_a"] in teams and p["team_b"] in teams]
     results = {r["match_id"]: r for r in _read(result_path or RESULTS_PATH)}
@@ -108,4 +109,4 @@ def score(pred_path: Path | None = None, result_path: Path | None = None, teams:
     for cell in by_stage.values():
         cell["brier"] = cell["brier"] / cell["n"] if cell["n"] else None
     return {"by_stage": by_stage, "no_result": no_result, "matches_logged": len({p["match_id"] for p in predictions}),
-            "results": len(results)}
+            "results": len(set(results) & {p["match_id"] for p in predictions})}

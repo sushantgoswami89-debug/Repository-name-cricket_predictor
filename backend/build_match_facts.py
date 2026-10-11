@@ -8,17 +8,21 @@ are skipped, not guessed). Also records the match's spin wicket share and scorin
 which the model uses (from earlier matches only) as the pitch-type signal.
 
 Output: data/features/prematch_match_facts.json (rebuild any time; ~1 minute).
+`python build_match_facts.py odi` builds the men's ODI version (ground records only) into
+data/features/prematch_match_facts_odi.json; the T20 model never reads it.
 """
 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 from app.ml.player_style_registry import PlayerStyleRegistry
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "data" / "features" / "prematch_match_facts.json"
+ODI = len(sys.argv) > 1 and sys.argv[1] == "odi"
+OUT = ROOT / "data" / "features" / ("prematch_match_facts_odi.json" if ODI else "prematch_match_facts.json")
 GROUPS = {
     "left_arm_pace": "pace",
     "right_arm_pace": "pace",
@@ -52,7 +56,7 @@ def main() -> None:
         return style_cache[bowler]
 
     facts = []
-    for source in ("t20i", "ipl"):
+    for source in (("odi",) if ODI else ("t20i", "ipl")):
         for path in sorted((ROOT / "data" / "raw" / "cricsheet" / source).glob("*.json")):
             match = json.loads(path.read_text(encoding="utf-8"))
             info = match["info"]

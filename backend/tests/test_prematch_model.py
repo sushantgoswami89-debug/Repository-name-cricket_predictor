@@ -182,9 +182,32 @@ def test_ground_summary_matches_the_requested_format():
     from app.live.prematch_analysis import venue_summary
 
     text = venue_summary("ranchi")
-    assert re.fullmatch(r"T20 - 11 1st inns avg \d+, avg wkts - \d+, pace - \d+/spin - \d+", text), text
+    t20, odi = text.split(" | ")
+    assert re.fullmatch(
+        r"T20 - 11 1st inns avg \d+, 2nd inns avg \d+, avg wkts - \d+, pace - \d+/spin - \d+, "
+        r"win bat 1st \d+%/chase \d+%", t20), t20
+    assert re.fullmatch(r"ODI - \d+ 1st inns avg \d+, 2nd inns avg \d+, win bat 1st \d+%/chase \d+%( \[small sample\])?", odi), odi
+    bat, chase = map(int, re.search(r"bat 1st (\d+)%/chase (\d+)%", t20).groups())
+    assert abs(bat + chase - 100) <= 1
     assert venue_summary("nowhere-ville") == "T20 - no history here"
-    assert venue_summary("rawalpindi").endswith("spin - " + venue_summary("rawalpindi").rsplit("- ", 1)[1])  # no small-sample tag at 13 matches
+    assert venue_summary("indore", "odi").startswith("ODI - ")  # an ODI match leads with the ODI record, T20 short
+
+
+def test_odi_prematch_block_and_log_are_kept_apart_from_t20(tmp_path, monkeypatch):
+    from app.live import prematch_log
+    from app.live.prematch_odi import odi_text, predict_base
+
+    p = predict_base("India", "West Indies")
+    assert p and abs(p["p_a"] + p["p_b"] - 1) < 1e-9 and p["p_a"] > 0.5
+    monkeypatch.setattr(prematch_log, "LOG_PATH", tmp_path / "p.jsonl")
+    prematch_log._LAST.clear()
+    text = odi_text("India", "West Indies", {"match_id": "cricbuzz:odi1", "source": "cricbuzz", "city": "x"})
+    assert text.splitlines()[0].startswith("Win %: India ") and "ODI" in text.splitlines()[0]
+    assert text.splitlines()[1].startswith("Form (last 5)") and text.splitlines()[2].startswith("Head to head")
+    prematch_log.record_result("cricbuzz:odi1", "India", "India won", tmp_path / "r.jsonl")
+    assert prematch_log.score(tmp_path / "p.jsonl", tmp_path / "r.jsonl")["matches_logged"] == 0          # T20 report
+    assert prematch_log.score(tmp_path / "p.jsonl", tmp_path / "r.jsonl", fmt="odi")["by_stage"]["pre-toss"]["right"] == 1
+    assert odi_text("Afghanistan", "India").startswith("Win %: not available")
 
 
 def test_weather_failure_is_retried_not_cached_and_flagged(monkeypatch):

@@ -186,6 +186,17 @@ def load_facts() -> list[dict]:
     return json.loads(FACTS_PATH.read_text(encoding="utf-8"))
 
 
+FACTS_ODI_PATH = ROOT / "data" / "features" / "prematch_match_facts_odi.json"
+
+
+def load_facts_odi() -> list[dict]:
+    """Men's ODI ground facts (ground records only; no model reads these). [] when not built."""
+    try:
+        return json.loads(FACTS_ODI_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+
+
 def build_dataset_v2() -> list[dict]:
     """One row per decided men's T20I; every feature uses earlier matches only."""
     facts = load_facts()
