@@ -171,6 +171,72 @@ def _briefing_update_header(old: tuple[str, bool], new: tuple[str, bool]) -> str
     return "🔄 Updated briefing -- " + " and ".join(changes or ["details changed"])
 
 
+
+class _MatchConsoles:
+    """One console per match (user 2026-10-11: "use 2 diff consoles for 2 diff matches").
+
+    The loop polls the matches one after another in a single thread, so while a match is being polled everything
+    printed (ball lines, over summaries, predictions, cards) goes to data/live/console-<match id>.log instead of this
+    window; open one Terminal tab per match with `tail -n 50 -f` on that file. Driver-level lines (attach, scan,
+    errors) stay in this window.
+    """
+
+    def __init__(self, real, folder: Path):
+        self.real = real
+        self.folder = folder
+        self._local = threading.local()
+        self._files: dict[str, object] = {}
+
+    def path(self, name: str) -> Path:
+        return self.folder / f"console-{name}.log"
+
+    def _file(self, name: str):
+        if name not in self._files:
+            self.folder.mkdir(parents=True, exist_ok=True)
+            handle = self.path(name).open("a", encoding="utf-8")
+            handle.write(f"\n===== console started {time.strftime('%Y-%m-%d %H:%M:%S')} =====\n")
+            self._files[name] = handle
+        return self._files[name]
+
+    def match(self, name: str):
+        consoles = self
+
+        class _Scope:
+            def __enter__(self):
+                self.previous = getattr(consoles._local, "name", None)
+                consoles._local.name = name
+
+            def __exit__(self, *exc):
+                consoles._local.name = self.previous
+
+        return _Scope()
+
+    def write(self, text):
+        name = getattr(self._local, "name", None)
+        if name:
+            handle = self._file(name)
+            handle.write(text)
+            handle.flush()
+            return len(text)
+        return self.real.write(text)
+
+    def flush(self):
+        self.real.flush()
+
+    def __getattr__(self, attribute):
+        return getattr(self.real, attribute)
+
+
+_CONSOLES: _MatchConsoles | None = None
+
+
+def match_console(name: str):
+    """Context manager: print into this match's own console file (a no-op scope when the split is not installed)."""
+    import contextlib
+
+    return _CONSOLES.match(name) if _CONSOLES is not None else contextlib.nullcontext()
+
+
 class LiveAutoState:
     """Active sessions from both sources, plus which team-pairs are
     already covered -- extracted from main()'s loop body so the scan/
@@ -246,6 +312,7 @@ class LiveAutoState:
                 publisher=self.publisher,
                 facts_publisher=self.facts_publisher,
                 stuck_alert_seconds=self.stuck_alert_seconds,
+                tag_lines=_CONSOLES is None,  # a match with its own console needs no team tag on every line
                 commentary_log_path=self.project_root
                 / "data"
                 / "live"
@@ -256,7 +323,8 @@ class LiveAutoState:
             print(f"[cricbuzz] Attached: {match.label} ({match.match_desc})")
             briefing = cricbuzz_briefing_text(match.match_id, match.url, match.label)
             if briefing:
-                print(briefing)
+                with match_console(match.match_id):
+                    print(briefing)
                 if self.publisher is not None:
                     self.publisher.publish(f"briefing:cricbuzz:{match.match_id}", briefing)
             self._track_briefing(f"cricbuzz:{match.match_id}", briefing, match.label)
@@ -421,7 +489,8 @@ class LiveAutoState:
     def poll(self) -> None:
         for match_id, session in tuple(self.active_cricbuzz.items()):
             try:
-                session.poll_once()
+                with match_console(match_id):
+                    session.poll_once()
             except Exception as error:  # one bad match must not kill the watcher
                 print(f"[cricbuzz] Unexpected error on {match_id}: {type(error).__name__}: {error}")
                 continue
@@ -567,10 +636,18 @@ def main() -> None:
         help="ODI briefings for every national side, not only ICC top-10 vs top-10 (prematch_log.ICC_TOP_10).",
     )
     parser.add_argument(
+        "--single-console", action="store_true",
+        help="Print every match into this window (default: one console file per match, data/live/console-<match id>.log).",
+    )
+    parser.add_argument(
         "--no-keep-awake", action="store_true", help="Do not stop the Mac from idle-sleeping while running."
     )
     args = parser.parse_args()
     project_root = Path(__file__).resolve().parents[1]
+    global _CONSOLES
+    if not args.single_console:
+        _CONSOLES = _MatchConsoles(sys.stdout, project_root / "data" / "live")
+        sys.stdout = _CONSOLES
     cricbuzz_discovery = CricbuzzMatchDiscovery()
     toi_discovery = ToiMatchDiscovery()
     publisher = None if args.shadow else _telegram(project_root)

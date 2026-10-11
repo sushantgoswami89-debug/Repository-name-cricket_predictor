@@ -701,6 +701,7 @@ class CricbuzzMatchSession:
     _waiting_notice_printed: bool = False
     _last_summary: str = ""
     _tag: str = ""
+    tag_lines: bool = True
     _last_board_mismatch: str | None = None
     _newest_board_seen: dict | None = None
     _announced_bowler: tuple[int, str] | None = None
@@ -785,7 +786,7 @@ class CricbuzzMatchSession:
             return False
         self._resyncs[key] = used + 1
         what = "re-reading the commentary" if rebuild else "looking at a fresher copy of the page"
-        print(f"[{self.tag}] [sync] {what} ({used + 1}/{RESYNC_MAX_PER_OVER}): {reason}")
+        print(f"{self.prefix}[sync] {what} ({used + 1}/{RESYNC_MAX_PER_OVER}): {reason}")
         if rebuild:  # a fresh reader rebuilds the innings from what the page shows now, the board as the baseline
             self._previous_reader = self.reader
             self.reader = CricbuzzLiveReader()
@@ -821,13 +822,18 @@ class CricbuzzMatchSession:
 
     def _send_card(self, stat: str, key: tuple) -> None:
         """Print a live Fact-o-Meter card and send it to Telegram when a facts publisher is set (never raises)."""
-        print(f"[{self.tag}] " + stat.replace("\n", "\n    "))
+        print(f"{self.prefix}" + stat.replace("\n", "\n    "))
         if self.facts_publisher is None:
             return
         try:
             self.facts_publisher.publish(f"factometer:live:{self.match_id}:" + ":".join(str(part) for part in key), stat)
         except Exception as error:  # a failed send must never disturb the feed
-            print(f"[{self.tag}] [stat] Telegram send failed: {error!r}")
+            print(f"{self.prefix}[stat] Telegram send failed: {error!r}")
+
+    @property
+    def prefix(self) -> str:
+        """"[IND-WI] " before every console line -- empty when the match has its own console (nothing to tell apart)."""
+        return f"[{self.tag}] " if self.tag_lines else ""
 
     @property
     def tag(self) -> str:
@@ -841,24 +847,24 @@ class CricbuzzMatchSession:
         snapshot, error = _fetch_freshest(self.reader, self.match_url)
         if self._previous_reader is not None:
             if snapshot is None:  # the fresh reader could not rebuild (e.g. no baseline yet): go back to the record we had
-                print(f"[{self.tag}] [sync] re-read produced no snapshot ({error}); keeping the previous record")
+                print(f"{self.prefix}[sync] re-read produced no snapshot ({error}); keeping the previous record")
                 self.reader, self._previous_reader = self._previous_reader, None
                 return
             self._previous_reader = None
         if snapshot is None and isinstance(error, CricbuzzInningsNotStarted):
             if not self._waiting_notice_printed:
-                print(f"[{self.tag}] Waiting: {error}")
+                print(f"{self.prefix}Waiting: {error}")
                 self._waiting_notice_printed = True
             self._consecutive_feed_errors = 0
             self._error_streak_started_at = None
             return
         if snapshot is None:
             label = "Deferred" if isinstance(error, CricbuzzFeedError) else "Deferred (network)"
-            print(f"[{self.tag}] {label}: {error}")
+            print(f"{self.prefix}{label}: {error}")
             self._consecutive_feed_errors += 1
             if self._consecutive_feed_errors >= RESEED_AFTER_CONSECUTIVE_ERRORS:
                 print(
-                    f"[{self.tag}] Reseeding Cricbuzz reader after "
+                    f"{self.prefix}Reseeding Cricbuzz reader after "
                     f"{self._consecutive_feed_errors} consecutive feed errors."
                 )
                 self.reader = CricbuzzLiveReader()
@@ -873,7 +879,7 @@ class CricbuzzMatchSession:
         progress = _progress(snapshot)
         if self._best_progress is not None and progress < self._best_progress:
             print(
-                f"[{self.tag}] Stale snapshot skipped: innings "
+                f"{self.prefix}Stale snapshot skipped: innings "
                 f"{snapshot.innings} at {snapshot.overs} ov is behind the "
                 f"innings {self._best_progress[0]} / {self._best_progress[1]} "
                 "legal balls already seen."
@@ -894,18 +900,18 @@ class CricbuzzMatchSession:
                 pass
         mismatch = _board_check(snapshot)
         if mismatch and mismatch != self._last_board_mismatch:
-            print(f"[{self.tag}] ⚠️  BOARD MISMATCH: ours {mismatch}")
+            print(f"{self.prefix}⚠️  BOARD MISMATCH: ours {mismatch}")
         self._last_board_mismatch = mismatch
         drain_repairs = getattr(self.reader, "drain_repairs", None)
         for repair in (drain_repairs() if drain_repairs else []):
-            print(f"[{self.tag}] [repair] {repair}")
+            print(f"{self.prefix}[repair] {repair}")
             if self.commentary_log_path is not None:
                 repairs_path = self.commentary_log_path.with_name(f"repairs-{self.match_id}.jsonl")
                 with repairs_path.open("a", encoding="utf-8") as handle:
                     handle.write(json.dumps({"at": datetime.now(timezone.utc).isoformat(), "repair": repair}) + "\n")
         drain_summaries = getattr(self.reader, "drain_over_summaries", None)
         for summary in (drain_summaries() if drain_summaries else []):
-            print(f"[{self.tag}] {_audit_over(snapshot, summary)}")
+            print(f"{self.prefix}{_audit_over(snapshot, summary)}")
             verdict = _audit_ok(snapshot, summary)
             if verdict is not None:
                 self._confirm.setdefault((summary["innings"], summary["over"]), {})["summary"] = verdict
@@ -915,7 +921,7 @@ class CricbuzzMatchSession:
                     handle.write(json.dumps(summary) + "\n")
         drain_notes = getattr(self.reader, "drain_notes", None)
         for note_ts, category, note_text in (drain_notes() if drain_notes else []):
-            print(f"[{self.tag}] [note] {category}: {note_text[:240]}")
+            print(f"{self.prefix}[note] {category}: {note_text[:240]}")
             if category == "NEW BATTER":
                 incoming_name = _incoming_batter_name(note_text)
                 if incoming_name and incoming_name not in self._incoming.setdefault(snapshot.innings, []):
@@ -941,11 +947,11 @@ class CricbuzzMatchSession:
         from_board = _board_announced_bowler(snapshot)
         if from_board and not (self._announced_bowler and self._announced_bowler[0] > snapshot.deliveries[-1].timestamp_ms):
             self._announced_bowler = (snapshot.deliveries[-1].timestamp_ms + 1, from_board)
-            print(f"[{self.tag}] [note] BOWLING CHANGE (from the mini scorecard): {from_board} is next")
+            print(f"{self.prefix}[note] BOWLING CHANGE (from the mini scorecard): {from_board} is next")
             self._log_announcement(snapshot, "mini scorecard", from_board)
         check = _check_next_over(self._expected_next, snapshot)
         if check:
-            print(f"[{self.tag}] {check}")
+            print(f"{self.prefix}{check}")
             if self.commentary_log_path is not None:
                 with self.commentary_log_path.with_name(
                     f"next-over-checks-{self.match_id}.jsonl"
@@ -963,10 +969,10 @@ class CricbuzzMatchSession:
             announced = self._announced_bowler[1] if self._announced_bowler and self._announced_bowler[0] > snapshot.deliveries[-1].timestamp_ms else ""
             figures = _over_break_figures(snapshot, crease, self._card_batters, self._card_bowlers, announced)
         for line in _delivery_event_lines(snapshot, self._seen_delivery_keys):
-            print(f"[{self.tag}] {line}")
+            print(f"{self.prefix}{line}")
         # Summary only (user 2026-10-11): one score line per over break / innings end, not one per poll.
         if _at_over_break(snapshot) or snapshot.innings_complete:
-            summary = (f"[{self.tag}] {_scorecard_line(snapshot)}{figures}"
+            summary = (f"{self.prefix}{_scorecard_line(snapshot)}{figures}"
                        f"{_next_over_line(snapshot, self._announced_bowler, crease, incoming)}")
             if summary != self._last_summary:
                 self._last_summary = summary
@@ -980,7 +986,7 @@ class CricbuzzMatchSession:
             try:
                 stat = settled_line(name, snapshot.batting_team, runs_balls[1], runs_balls[0], opponent=snapshot.bowling_team)
             except Exception as error:  # a side stat must never disturb the feed
-                print(f"[{self.tag}] [stat] unavailable: {error!r}")
+                print(f"{self.prefix}[stat] unavailable: {error!r}")
             if stat:
                 self._settled_shown.add(key)
                 self._send_card(stat, key)
@@ -996,7 +1002,7 @@ class CricbuzzMatchSession:
                 stat = result_line(name, resolve_player(name, snapshot.batting_team), snapshot.batting_team, "bat",
                                    runs_balls[0], runs_balls[1], snapshot.innings, opponent=snapshot.bowling_team)
             except Exception as error:
-                print(f"[{self.tag}] [stat] unavailable: {error!r}")
+                print(f"{self.prefix}[stat] unavailable: {error!r}")
             if stat:
                 self._settled_shown.add(key)
                 self._send_card(stat, key)
@@ -1015,7 +1021,7 @@ class CricbuzzMatchSession:
                 stat = (batter_ground_line(name, resolved, city, snapshot.innings, runs_balls[0], runs_balls[1])
                         or batter_average_line(name, resolved, city, runs_balls[0], runs_balls[1]))  # 100% record first
             except Exception as error:  # a side stat must never disturb the feed
-                print(f"[{self.tag}] [stat] unavailable: {error!r}")
+                print(f"{self.prefix}[stat] unavailable: {error!r}")
             if stat:
                 self._settled_shown.add(key)
                 self._send_card(stat, key)
@@ -1047,7 +1053,7 @@ class CricbuzzMatchSession:
                                                "bowl", figures_now[1], figures_now[0], snapshot.innings,
                                                opponent=snapshot.batting_team)
                     except Exception as error:  # a side stat must never disturb the feed
-                        print(f"[{self.tag}] [stat] unavailable: {error!r}")
+                        print(f"{self.prefix}[stat] unavailable: {error!r}")
                     if stat:
                         self._settled_shown.add(key)
                         self._send_card(stat, key)
@@ -1079,11 +1085,11 @@ class CricbuzzMatchSession:
                 return
             if status == "contradiction":
                 if why != self._last_hold:
-                    print(f"[{self.tag}] ⚠️  PREDICTION HELD (still disagrees after re-reading the commentary): {why}")
+                    print(f"{self.prefix}⚠️  PREDICTION HELD (still disagrees after re-reading the commentary): {why}")
                 self._last_hold = why
                 return
             if why != self._last_gate:  # unconfirmed after the re-reads: go on, say so
-                print(f"[{self.tag}] [sync] predicting UNCONFIRMED (the page has no source at this point yet): {why}")
+                print(f"{self.prefix}[sync] predicting UNCONFIRMED (the page has no source at this point yet): {why}")
             self._last_gate = why
         else:
             self._last_gate = None
@@ -1091,16 +1097,16 @@ class CricbuzzMatchSession:
         try:
             output = self.pipeline.process(snapshot)
         except VerificationError as error:
-            print(f"[{self.tag}] Verification error: {error}")
+            print(f"{self.prefix}Verification error: {error}")
             return
         except MatchStateAnomaly as error:
-            print(f"[{self.tag}] MATCH STATE ANOMALY (skipped): {error}")
+            print(f"{self.prefix}MATCH STATE ANOMALY (skipped): {error}")
             return
 
         if output:
             sent = "Sent" if self.publisher else "Recorded"
             print(
-                f"[{self.tag}] {sent} innings {output['innings']} "
+                f"{self.prefix}{sent} innings {output['innings']} "
                 f"over {output['over']} prediction."
             )
             if self.publisher is None:
@@ -1113,7 +1119,7 @@ class CricbuzzMatchSession:
             prior = self._last_over_sent.get(innings)
             if prior is not None and over > prior + 1:
                 print(
-                    f"[{self.tag}] OVER GAP DETECTED: innings {innings} "
+                    f"{self.prefix}OVER GAP DETECTED: innings {innings} "
                     f"jumped from over {prior} to {over} -- over(s) "
                     f"{prior + 1}-{over - 1} never got a prediction."
                 )
@@ -1125,7 +1131,7 @@ class CricbuzzMatchSession:
 
             record_result(f"cricbuzz:{self.match_id}", _match_winner(snapshot), result)  # lets the pre-match log be scored
             self._capture_all_pages()
-            print(f"[{self.tag}] MATCH COMPLETE: {result}")
+            print(f"{self.prefix}MATCH COMPLETE: {result}")
             if self.publisher is not None:
                 self.publisher.publish(f"result:{self.match_id}", f"🏆 {result}")
             self._finished = True
@@ -1142,7 +1148,7 @@ class CricbuzzMatchSession:
             from app.live.cricbuzz_capture import capture_match
 
             threading.Thread(target=capture_match, args=(self.match_id,), daemon=True).start()
-            print(f"[{self.tag}] capturing all Cricbuzz pages + win curve in the background")
+            print(f"{self.prefix}capturing all Cricbuzz pages + win curve in the background")
         except Exception:
             pass
 
@@ -1186,7 +1192,7 @@ class CricbuzzMatchSession:
                 for b in bowlers if b.get("overs") is not None and overs_to_balls(b["overs"]) is not None and b.get("wickets") is not None
             }
         verdict = "OK" if not problems else "MISMATCH: " + "; ".join(problems[:4])
-        print(f"[{self.tag}] [card] {snapshot.overs} ov: {verdict}")
+        print(f"{self.prefix}[card] {snapshot.overs} ov: {verdict}")
         if self.commentary_log_path is not None:
             try:
                 with self.commentary_log_path.with_name(f"card-checks-{self.match_id}.jsonl").open("a", encoding="utf-8") as handle:
@@ -1216,7 +1222,7 @@ class CricbuzzMatchSession:
             "paused until it recovers. No action needed; will resume "
             "automatically."
         )
-        print(f"[{self.tag}] {message}")
+        print(f"{self.prefix}{message}")
         if self.publisher is not None:
             try:
                 self.publisher.publish(
