@@ -689,13 +689,47 @@ def _board_figures(snapshot) -> tuple[dict, dict]:
     return batters, bowlers
 
 
-def _over_break_block(snapshot, crease, card_batters: dict, card_bowlers: dict, announced: str, expected: dict | None) -> str:
+def _first_innings_at(log_path, over: int) -> tuple[int, int] | None:
+    """(score, wickets) the side batting first had at the end of `over`, from the per-poll board log (every poll writes our
+    rebuilt state), or None when that over was never polled -- e.g. the driver was started after it."""
+    try:
+        with log_path.open(encoding="utf-8") as handle:
+            for line in handle:
+                try:
+                    row = json.loads(line)
+                    ours = row["ours"]
+                    if row["innings"] == 1 and abs(float(ours["overs"]) - over) < 0.001:
+                        return int(ours["score"]), int(ours["wickets"])
+                except (ValueError, KeyError, TypeError):
+                    continue
+    except OSError:
+        return None
+    return None
+
+
+def _chase_comparison(snapshot, first: tuple[int, int] | None) -> str:
+    """"IND after 5 ov: 52/1 | WI 35/1 | behind by 17" -- the other side's score at the same stage of its innings."""
+    if snapshot.innings != 2 or first is None:
+        return ""
+    over = int(str(snapshot.overs).partition(".")[0])
+    ahead = snapshot.score - first[0]
+    gap = "level" if ahead == 0 else f"{'ahead' if ahead > 0 else 'behind'} by {abs(ahead)}"
+    short = lambda team: _TEAM_CODES.get(team, team)  # noqa: E731
+    return (f"{short(snapshot.bowling_team)} after {over} ov: {first[0]}/{first[1]} | "
+            f"{short(snapshot.batting_team)} {snapshot.score}/{snapshot.wickets} | {gap}")
+
+
+def _over_break_block(snapshot, crease, card_batters: dict, card_bowlers: dict, announced: str, expected: dict | None,
+                      first: tuple[int, int] | None = None) -> str:
     """The over-end summary as a few short lines: score with run rates (and what the chase needs), the bowler who just finished
     with his figures, the batters at the crease, and the next bowler and striker."""
     last = snapshot.deliveries[-1]
     over_number = str(snapshot.overs).partition(".")[0]
-    lines = [f"--- end of over {over_number} ---", _score_line(snapshot),
-             f"Bowled: {last.bowler}{card_bowlers.get(last.bowler, '')}"]
+    lines = [f"--- end of over {over_number} ---", _score_line(snapshot)]
+    comparison = _chase_comparison(snapshot, first)
+    if comparison:
+        lines.append(comparison)
+    lines.append(f"Bowled: {last.bowler}{card_bowlers.get(last.bowler, '')}")
     striker = expected["striker"] if expected is not None and not snapshot.innings_complete else ""
     if crease:
         def batter(name: str) -> str:
@@ -1039,8 +1073,12 @@ class CricbuzzMatchSession:
             announced_now = (self._announced_bowler[1] if self._announced_bowler
                              and self._announced_bowler[0] > snapshot.deliveries[-1].timestamp_ms else "")
             board_batters, board_bowlers = _board_figures(snapshot)
+            first = None
+            if snapshot.innings == 2 and self.commentary_log_path is not None:
+                over_now = int(str(snapshot.overs).partition(".")[0])
+                first = _first_innings_at(self.commentary_log_path.with_name(f"board-{self.match_id}.jsonl"), over_now)
             summary = _over_break_block(snapshot, crease, {**board_batters, **self._card_batters},
-                                        {**board_bowlers, **self._card_bowlers}, announced_now, expected_now)
+                                        {**board_bowlers, **self._card_bowlers}, announced_now, expected_now, first)
             if summary != self._last_summary:
                 self._last_summary = summary
                 print("\n".join(f"{self.prefix}{line}" for line in summary.splitlines()))

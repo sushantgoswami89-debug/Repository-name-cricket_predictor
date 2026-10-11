@@ -775,3 +775,25 @@ def test_board_figures_fill_in_when_the_scorecard_page_lags():
     assert bowlers == {"Nitish": " 2-0-19-1", "Prince": " 3-0-26-0"}
     snap.score = 170   # the board is behind us: no figures rather than the wrong ones
     assert _board_figures(snap) == ({}, {})
+
+
+def test_chase_block_compares_with_the_other_side_at_the_same_over(tmp_path):
+    import json
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _first_innings_at, _over_break_block
+
+    log = tmp_path / "board-1.jsonl"
+    rows = [{"innings": 1, "ours": {"score": 49, "wickets": 1, "overs": "4.5"}},
+            {"innings": 1, "ours": {"score": 52, "wickets": 1, "overs": "5.0"}},
+            {"innings": 2, "ours": {"score": 35, "wickets": 1, "overs": "5.0"}}]
+    log.write_text("\n".join(json.dumps(r) for r in rows))
+    assert _first_innings_at(log, 5) == (52, 1)
+    assert _first_innings_at(log, 6) is None
+    last = SimpleNamespace(bowler="Hosein", timestamp_ms=1)
+    snap = SimpleNamespace(overs="5.0", innings=2, innings_complete=False, batting_team="West Indies", bowling_team="India",
+                           score=35, wickets=1, target=0, scheduled_overs=20, deliveries=[last])
+    text = _over_break_block(snap, [], {}, {}, "", None, (52, 1))
+    assert "IND after 5 ov: 52/1 | WI 35/1 | behind by 17" in text.splitlines()
+    snap.innings = 1
+    assert "after 5 ov" not in _over_break_block(snap, [], {}, {}, "", None, (52, 1))   # chase only
