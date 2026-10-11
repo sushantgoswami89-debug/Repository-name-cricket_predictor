@@ -194,3 +194,19 @@ def test_counted_wides_without_comma_before_number():
 def test_no_ball_boundary_counts_the_no_ball_run_too():
     text = "Seshnie Naidu to Mugeri, no ball, FOUR"
     assert _runs_and_extras(text, ["four"]) == (5, 4, {"noballs": 1})
+
+
+def test_run_out_counts_the_runs_completed_before_the_dismissal():
+    """2026-10-11 India v West Indies 16.4: "out Tilak Varma Run Out!! 1 run completed." was read as 0 runs, so our score ran one
+    behind the page and every later prediction was held."""
+    from app.live.cricbuzz_reader import _runs_and_extras
+
+    text = ("Gudakesh Motie to Axar Patel, out Tilak Varma Run Out!! 1 run completed. Such poor cricket from India. "
+            "This is what happened: A low full-toss on the pads, Axar flicks to the deep backward square-leg fence "
+            "Varma run out (Kamil Pooran/Shai Hope/Gudakesh Motie) 28(16) [4s-4]")
+    assert _runs_and_extras(text, ["wicket"]) == (1, 1, {})
+    assert _runs_and_extras(text.replace("1 run completed", "2 runs completed"), ["wicket"]) == (2, 2, {})
+    # a run out with nothing completed, or any other wicket, is unchanged
+    assert _runs_and_extras("Jofra Archer to Buttler, out Run Out!! Direct hit at the keeper's end.", ["wicket"]) == (0, 0, {})
+    assert _runs_and_extras("Bumrah to Hope, no run, beaten outside off", []) == (0, 0, {})
+    assert _runs_and_extras("Bumrah to Hope, 2 runs, driven to deep cover. 2 runs completed for sure", []) == (2, 2, {})

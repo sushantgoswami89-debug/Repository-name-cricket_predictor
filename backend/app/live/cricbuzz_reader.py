@@ -365,6 +365,15 @@ def _runs_and_extras(comm_text: str, events: list[str]) -> tuple[int, int, dict[
         extras[kind] = runs
         return runs, 0, extras
 
+    # A run out after runs were completed: "...out Tilak Varma Run Out!! 1 run completed. Such poor cricket ..." has no
+    # ", 1 run" head, so the runs fell through as 0 and our score ran one behind the page for the rest of the innings
+    # (India v West Indies, 2026-10-11, 16.4: every later prediction was held).
+    if re.search(r"\brun\s*out\b", text, re.IGNORECASE):
+        completed = re.search(r"\b(\d+)\s+runs?\s+completed\b", text, re.IGNORECASE)
+        if completed:
+            runs = int(completed.group(1))
+            return runs, runs, extras
+
     match = re.search(r",\s*(no\s*run|\d+\s*runs?)\b", lower)
     if match:
         token = match.group(1)
