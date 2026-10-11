@@ -396,14 +396,29 @@ def test_dew_line_states_the_win_percent_points_for_the_chasing_side(monkeypatch
     assert "pts" not in pre[1]  # before the toss nobody is the chaser yet
 
 
-def test_settled_batter_stat_shows_converters_only_once_past_15_balls():
-    from app.live.batter_settled import league_rate, settled_line, settled_record
+def test_settled_batter_stat_is_a_100_percent_fifty_record_only():
+    import json
 
-    assert 0.15 < league_rate() < 0.30
-    rec = settled_record("V Kohli")
-    assert rec and rec["fifty"] <= rec["thirty"] <= rec["innings"] and rec["rate50"] > 1.5 * league_rate()
-    line = settled_line("Virat Kohli", "India", 17, 31)
-    assert line.startswith("STAT: Virat Kohli 31*(17)") and "of" in line and "average batter" in line
-    assert settled_line("Virat Kohli", "India", 12, 20) == ""      # not yet 15 balls
-    assert settled_line("Virat Kohli", "India", 30, 52) == ""      # already past 50
-    assert settled_line("Nobody Unknown", "India", 20, 25) == ""   # no record -> nothing printed
+    from app.live.batter_settled import MIN_INNINGS, PATH, all_records, fifty_record, settled_line
+
+    records = all_records()
+    assert records and all(n >= MIN_INNINGS for _, n in records.values())
+    rows = json.loads(PATH.read_text(encoding="utf-8"))
+    for name, (balls_needed, innings) in records.items():            # every claim is literally true in the data
+        picked = [r[3] for r in rows if r[1] == name and r[2] >= balls_needed]
+        assert len(picked) == innings and min(picked) >= 50, name
+    assert fifty_record("V Kohli") is None                           # 45%, not 100%: never shown
+    name = next(iter(records))
+    balls_needed = records[name][0]
+    import app.live.prematch_xi as xi  # the live name -> Cricsheet name step is replaced by the identity here
+
+    original = xi.resolve_player
+    xi.resolve_player = lambda full, team: full
+    try:
+        line = settled_line(name, "X", balls_needed, 30)
+        assert line.startswith(f"STAT: {name} 30*({balls_needed})") and f"{records[name][1]} of {records[name][1]} innings" in line
+        assert settled_line(name, "X", balls_needed - 1, 30) == ""   # not yet at the ball count
+        assert settled_line(name, "X", balls_needed + 3, 50) == ""   # already made the fifty
+    finally:
+        xi.resolve_player = original
+    assert settled_line("Nobody Unknown", "India", 60, 20) == ""

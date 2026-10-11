@@ -1,13 +1,15 @@
-"""The commentator's "once he has faced 15 balls he usually goes on to a fifty" stat, from the data.
+"""The commentator's "every time he gets to 40 balls he makes a fifty" stat: only 100% records, never a rate.
 
-From every men's T20I + IPL batter innings (data/features/batter_innings.json, build_batter_innings.py):
-among a batter's innings in which he faced 15+ balls, how often did he finish with 30+ and 50+?
-Checked 2026-10-11 out of sample (2022+ innings, rates built only from earlier ones): the player's own
-rate beats the league rate (22% reach 50 once settled) -- Brier 0.1617 vs 0.1686 on all 14,729 innings and
-0.1963 vs 0.2074 for batters with 10+ earlier 15-ball innings; batters flagged at 45%+ then went on to 50
-in 47% of their next 15-ball innings. So it is real but not "always": the line shows the count.
-
-Shown only for batters whose rate is at least 1.5x the league's with enough innings to mean something.
+From every men's T20I + IPL batter innings (data/features/batter_innings.json, build_batter_innings.py) a batter
+has a "50 record" at N balls when EVERY innings of his in which he faced N or more balls ended on 50+, with
+  * at least MIN_INNINGS such innings, and
+  * the record not being a fluke: an average batter's chance of going that many out of that many (the league's
+    own rate of reaching 50 from N balls, to the power n) is at most MAX_FLUKE (1%).
+His claim is the lowest such N. Checked out of sample 2026-10-11 (record built from earlier innings, tested on
+the next one he faced N+ balls in): such records held 81% of the time (70 tests; 88% / 88% / 91% at 30 / 35 / 40
+balls, no better than the league at 20-25). A record is a fact about the past, not a guarantee -- the line
+says "N of N innings". With these limits only a handful of batters qualify at any time (4 on 2026-10-11).
+There is no 15-ball record: no batter has gone 6-for-6 on fifties from 15 balls.
 """
 
 from __future__ import annotations
@@ -18,56 +20,57 @@ from functools import lru_cache
 from app.live.prematch_model import ROOT
 
 PATH = ROOT / "data" / "features" / "batter_innings.json"
-CHECKPOINT = 15
-MIN_INNINGS = 10
-MIN_RATIO = 1.5
+BALL_THRESHOLDS = tuple(range(10, 46, 5))
+TARGET = 50
+MIN_INNINGS = 6
+MAX_FLUKE = 0.01
 
 
 @lru_cache(maxsize=1)
-def _table() -> tuple[dict, float]:
+def _records() -> dict[str, tuple[int, int]]:
+    """batter -> (N, innings) for the lowest N at which his 50 record qualifies."""
     try:
         rows = json.loads(PATH.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return {}, 0.0
-    per: dict[str, list[int]] = {}
-    total = hit = 0
+        return {}
+    per: dict[str, list[tuple[int, int]]] = {}
+    league = {n: [0, 0] for n in BALL_THRESHOLDS}
     for _date, name, balls, runs, *_rest in rows:
-        if balls < CHECKPOINT:
-            continue
-        cell = per.setdefault(name, [0, 0, 0])
-        cell[0] += 1
-        cell[1] += int(runs >= 30)
-        cell[2] += int(runs >= 50)
-        total += 1
-        hit += int(runs >= 50)
-    return per, (hit / total if total else 0.0)
+        per.setdefault(name, []).append((balls, runs))
+        for n in BALL_THRESHOLDS:
+            if balls >= n:
+                league[n][0] += 1
+                league[n][1] += int(runs >= TARGET)
+    rate = {n: (hit / seen if seen else 0.0) for n, (seen, hit) in league.items()}
+    out: dict[str, tuple[int, int]] = {}
+    for name, innings in per.items():
+        for n in BALL_THRESHOLDS:
+            picked = [runs for balls, runs in innings if balls >= n]
+            if len(picked) >= MIN_INNINGS and min(picked) >= TARGET and rate[n] ** len(picked) <= MAX_FLUKE:
+                out[name] = (n, len(picked))
+                break
+    return out
 
 
-def league_rate() -> float:
-    return _table()[1]
+def fifty_record(cricsheet_name: str) -> tuple[int, int] | None:
+    """(N balls, innings) of the batter's 100% fifty record, or None."""
+    return _records().get(cricsheet_name)
 
 
-def settled_record(cricsheet_name: str) -> dict | None:
-    """{"innings": n, "thirty": k30, "fifty": k50, "rate50": ..} for innings of 15+ balls, or None."""
-    cell = _table()[0].get(cricsheet_name)
-    if not cell:
-        return None
-    return {"innings": cell[0], "thirty": cell[1], "fifty": cell[2], "rate50": cell[2] / cell[0]}
+def all_records() -> dict[str, tuple[int, int]]:
+    return dict(_records())
 
 
 def settled_line(full_name: str, team: str, balls: int, runs: int) -> str:
-    """"STAT: Shai Hope 38*(19) -- reached 50 in 24 of 41 innings (59%) where he faced 15+ balls; average batter 22%"
-    for a converter who has faced 15+ balls and is still short of 50, else ""."""
-    if balls < CHECKPOINT or runs >= 50:
+    """"STAT: Suryakumar Yadav 31*(42) -- 50+ in 26 of 26 innings where he has faced 40+ balls" for a batter with a
+    100% record who has reached its ball count and is still short of 50, else ""."""
+    if runs >= TARGET:
         return ""
     from app.live.prematch_xi import resolve_player
 
     name = resolve_player(full_name, team)
-    record = settled_record(name) if name else None
-    base = league_rate()
-    if not record or record["innings"] < MIN_INNINGS or base <= 0 or record["rate50"] < MIN_RATIO * base:
+    record = fifty_record(name) if name else None
+    if not record or balls < record[0]:
         return ""
-    return (
-        f"STAT: {full_name} {runs}*({balls}) -- reached 50 in {record['fifty']} of {record['innings']} innings "
-        f"({record['rate50']:.0%}) where he faced {CHECKPOINT}+ balls; average batter {base:.0%}"
-    )
+    n, innings = record
+    return f"STAT: {full_name} {runs}*({balls}) -- scored 50+ in {innings} of {innings} innings where he faced {n}+ balls"
