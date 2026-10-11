@@ -399,26 +399,27 @@ def test_dew_line_states_the_win_percent_points_for_the_chasing_side(monkeypatch
 def test_settled_batter_stat_is_a_100_percent_fifty_record_only():
     import json
 
-    from app.live.batter_settled import MIN_INNINGS, PATH, all_records, fifty_record, settled_line
+    import app.live.prematch_xi as xi
+    from app.live.batter_settled import MIN_INNINGS, PATHS, all_records, fifty_record, settled_line
 
-    records = all_records()
-    assert records and all(n >= MIN_INNINGS for _, n in records.values())
-    rows = json.loads(PATH.read_text(encoding="utf-8"))
-    for name, (balls_needed, innings) in records.items():            # every claim is literally true in the data
-        picked = [r[3] for r in rows if r[1] == name and r[2] >= balls_needed]
-        assert len(picked) == innings and min(picked) >= 50, name
-    assert fifty_record("V Kohli") is None                           # 45%, not 100%: never shown
-    name = next(iter(records))
-    balls_needed = records[name][0]
-    import app.live.prematch_xi as xi  # the live name -> Cricsheet name step is replaced by the identity here
-
+    for fmt in ("t20", "odi"):
+        records = all_records(fmt)
+        assert records and all(n >= MIN_INNINGS for _, n in records.values()), fmt
+        rows = json.loads(PATHS[fmt].read_text(encoding="utf-8"))
+        for name, (balls_needed, innings) in records.items():            # every claim is literally true in its format
+            picked = [r[3] for r in rows if r[1] == name and r[2] >= balls_needed]
+            assert len(picked) == innings and min(picked) >= 50, (fmt, name)
+    assert set(all_records("t20")) != set(all_records("odi"))             # formats are kept apart
+    assert fifty_record("V Kohli", "t20") is None and fifty_record("V Kohli", "odi") is not None
     original = xi.resolve_player
-    xi.resolve_player = lambda full, team: full
+    xi.resolve_player = lambda full, team: full                           # live name -> Cricsheet name: identity here
     try:
-        line = settled_line(name, "X", balls_needed, 30)
-        assert line.startswith(f"STAT: {name} 30*({balls_needed})") and f"{records[name][1]} of {records[name][1]} innings" in line
-        assert settled_line(name, "X", balls_needed - 1, 30) == ""   # not yet at the ball count
-        assert settled_line(name, "X", balls_needed + 3, 50) == ""   # already made the fifty
+        for fmt in ("t20", "odi"):
+            name, (balls_needed, innings) = next(iter(all_records(fmt).items()))
+            line = settled_line(name, "X", balls_needed, 30, fmt)
+            assert line.startswith(f"STAT: {name} 30*({balls_needed})") and f"{innings} of {innings} innings" in line and fmt.upper() in line
+            assert settled_line(name, "X", balls_needed - 1, 30, fmt) == ""   # not yet at the ball count
+            assert settled_line(name, "X", balls_needed + 3, 50, fmt) == ""   # already made the fifty
     finally:
         xi.resolve_player = original
     assert settled_line("Nobody Unknown", "India", 60, 20) == ""
@@ -428,36 +429,41 @@ def test_bowler_records_are_literally_true_in_the_data_and_line_respects_the_tri
     import json
 
     import app.live.prematch_xi as xi
-    from app.live.bowler_records import MIN_INNINGS, PATH, all_records, bowler_line, overs_to_balls
+    from app.live.bowler_records import MIN_INNINGS, PATHS, all_records, bowler_line, overs_to_balls
 
     assert overs_to_balls("3.2") == 20 and overs_to_balls(4) == 24 and overs_to_balls("x") is None
-    records = all_records()
-    assert records and all(n >= MIN_INNINGS for _, _, n in records.values())
-    rows = json.loads(PATH.read_text(encoding="utf-8"))
-    for name, (k, balls_needed, innings) in records.items():
-        picked = [r[4] for r in rows if r[1] == name and r[2] >= balls_needed]
-        assert len(picked) == innings and min(picked) >= k, name
-    name, (k, balls_needed, innings) = next(iter(records.items()))
     original = xi.resolve_player
     xi.resolve_player = lambda full, team: full
     try:
-        line = bowler_line(name, "X", balls_needed, 0)
-        assert line.startswith("STAT: " + name) and f"{innings} of {innings} innings" in line
-        assert bowler_line(name, "X", balls_needed - 1, 0) == ""      # has not bowled that many balls yet
-        assert bowler_line(name, "X", balls_needed, k) == ""          # already has the wicket(s)
+        for fmt in ("t20", "odi"):
+            records = all_records(fmt)
+            assert records and all(n >= MIN_INNINGS for _, _, n in records.values()), fmt
+            rows = json.loads(PATHS[fmt].read_text(encoding="utf-8"))
+            for name, (k, balls_needed, innings) in records.items():
+                picked = [r[4] for r in rows if r[1] == name and r[2] >= balls_needed]
+                assert len(picked) == innings and min(picked) >= k, (fmt, name)
+            name, (k, balls_needed, innings) = next(iter(records.items()))
+            line = bowler_line(name, "X", balls_needed, 0, fmt)
+            assert line.startswith("STAT: " + name) and f"{innings} of {innings} innings" in line and fmt.upper() in line
+            assert bowler_line(name, "X", balls_needed - 1, 0, fmt) == ""      # has not bowled that many balls yet
+            assert bowler_line(name, "X", balls_needed, k, fmt) == ""          # already has the wicket(s)
     finally:
         xi.resolve_player = original
+    assert set(all_records("t20")) != set(all_records("odi"))
     assert bowler_line("Nobody Unknown", "India", 24, 0) == ""
 
 
-def test_venue_record_is_only_shown_for_a_perfect_record_and_matches_the_data():
-    from app.live.prematch_analysis import VENUE_RECORD_MIN, _venue_event_table, venue_record
+def test_venue_record_is_per_format_and_matches_the_data():
+    from app.live.prematch_analysis import VENUE_RECORD_MIN, _venue_event_table, venue_record, venue_summary
 
-    _, per_city = _venue_event_table()
-    shown = {c: venue_record(c) for c in per_city if venue_record(c)}
-    assert "faisalabad" in shown and "8 of 8" in shown["faisalabad"]
-    for city, text in shown.items():                                  # every shown record is literally true
-        event = text.split(" has won")[0]
-        results = per_city[city][event]
-        assert len(results) >= VENUE_RECORD_MIN and all(results)
-    assert venue_record("ranchi") == "" and venue_record("nowhere-ville") == ""   # Ranchi toss-winner-bowls: 6 of 11
+    for fmt in ("t20", "odi"):
+        _, per_city = _venue_event_table(fmt)
+        shown = {c: venue_record(c, fmt) for c in per_city if venue_record(c, fmt)}
+        assert shown, fmt
+        for city, text in shown.items():                                  # every shown record is literally true
+            results = per_city[city][text.split(" has won")[0]]
+            assert len(results) >= VENUE_RECORD_MIN and all(results), (fmt, city)
+    assert "8 of 8" in venue_record("faisalabad", "odi") and venue_record("faisalabad", "t20") == ""
+    assert venue_summary("faisalabad", "odi").endswith("ODI record: the team chasing has won 8 of 8 here")
+    assert "ODI record" not in venue_summary("faisalabad", "t20")
+    assert venue_record("ranchi", "t20") == "" and venue_record("nowhere-ville") == ""   # Ranchi toss-winner-bowls: 6 of 11

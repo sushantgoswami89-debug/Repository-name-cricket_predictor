@@ -8,11 +8,13 @@ Output data/features/bowler_innings.json. Usage: python build_bowler_innings.py
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "data" / "features" / "bowler_innings.json"
-SOURCES = ("t20i", "ipl")
+ODI = len(sys.argv) > 1 and sys.argv[1] == "odi"  # `python build_bowler_innings.py odi` builds the ODI table
+OUT = ROOT / "data" / "features" / ("bowler_innings_odi.json" if ODI else "bowler_innings.json")
+SOURCES = ("odi",) if ODI else ("t20i", "ipl")
 NOT_BOWLER = {"run out", "retired hurt", "retired out", "obstructing the field", "timed out"}
 
 

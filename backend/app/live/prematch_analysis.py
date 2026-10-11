@@ -183,15 +183,15 @@ VENUE_RECORD_MIN = 6
 VENUE_RECORD_MAX_FLUKE = 0.01
 
 
-def _venue_event_table() -> tuple[dict, dict]:
-    """(league win rate per event, {city: {event: [won, ...]}}) over decided T20 + ODI matches. Events: the toss
-    winner who chose to bowl / to bat won; the team batting first / chasing won."""
+def _venue_event_table(fmt: str = "t20") -> tuple[dict, dict]:
+    """(league win rate per event, {city: {event: [won, ...]}}) over decided matches of ONE format (T20I + IPL, or
+    ODI). Events: the toss winner who chose to bowl / to bat won; the team batting first / chasing won."""
     from app.live.prematch_conditions import load_facts, load_facts_odi
 
     def build():
         per_city: dict = {}
         league: dict = {}
-        for fact in load_facts() + load_facts_odi():
+        for fact in (load_facts_odi() if fmt == "odi" else load_facts()):
             if not fact["winner"] or fact["winner"] not in fact["teams"]:
                 continue
             events = {}
@@ -211,14 +211,14 @@ def _venue_event_table() -> tuple[dict, dict]:
                 cell[1] += int(won)
         return {k: v[1] / v[0] for k, v in league.items()}, per_city
 
-    return _cached(("venue-events",), 3600, build)
+    return _cached(("venue-events", fmt), 3600, build)
 
 
-def venue_record(city: str) -> str:
-    """"the team chasing has won 8 of 8 here" -- a 100% record at the ground (T20 + ODI pooled), or "".
+def venue_record(city: str, fmt: str = "t20") -> str:
+    """"the team chasing has won 8 of 8 here" -- a 100% record at the ground in that format only, or "".
     Needs at least 6 such matches and a fluke chance (league rate for that event ** n) of at most 1%; the
     least likely one is shown. A fact about the past, not a prediction."""
-    rates, per_city = _venue_event_table()
+    rates, per_city = _venue_event_table(fmt)
     best = None
     for name, results in per_city.get(city, {}).items():
         n = len(results)
@@ -240,8 +240,7 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
     without a known style are in neither). The results record pools T20 and ODI matches at the ground into one figure:
       "bat 1st wins 38% / chase wins 62% / toss winner wins 56%, toss winner chooses bowl 70%"
     (toss choice shows the more common one only; "[small sample]" is added when under 10 matches pooled.)
-    `fmt` is kept for callers
-    but no longer changes the output.
+    `fmt` only chooses which format's 100% venue record is appended.
     """
     t20 = _ground_record(city, "t20").get("all")
     odi = _ground_record(city, "odi").get("all")
@@ -275,9 +274,9 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
             text += ", toss winner chooses " + (f"bat {bat:.0%}" if bat > 0.5 else f"bowl {1 - bat:.0%}" if bat < 0.5 else "bat 50% / bowl 50%")
         if decided < 10:
             text += " [small sample]"
-    record = venue_record(city)
+    record = venue_record(city, "odi" if fmt == "odi" else "t20")  # records are format-specific, never pooled
     if record:
-        text += f" | Record: {record}"
+        text += f" | {'ODI' if fmt == 'odi' else 'T20'} record: {record}"
     return text
 
 

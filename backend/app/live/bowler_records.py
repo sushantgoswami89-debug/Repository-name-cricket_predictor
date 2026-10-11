@@ -1,6 +1,6 @@
 """Bowler "100% record" stat: he took a wicket (or two) in EVERY innings in which he bowled N or more balls.
 
-From every men's T20I + IPL bowler innings (data/features/bowler_innings.json, build_bowler_innings.py). A claim is
+Per format (T20 = men's T20I + IPL, ODI = men's ODIs; never mixed): from every bowler innings (data/features/bowler_innings[_odi].json, build_bowler_innings.py [odi]). A claim is
 "wickets >= k in every innings with N+ legal balls" (k = 1 or 2, N = 6/12/18/24 balls = 1-4 overs), needing at least
 MIN_INNINGS such innings and a fluke chance <= MAX_FLUKE (the league's own rate of taking k+ wickets from N+ balls,
 to the power n). The claim with the smallest fluke chance is kept. Out-of-sample 2026-10-11 (record built from
@@ -15,24 +15,27 @@ from functools import lru_cache
 
 from app.live.prematch_model import ROOT
 
-PATH = ROOT / "data" / "features" / "bowler_innings.json"
-BALL_THRESHOLDS = (6, 12, 18, 24)
+PATHS = {"t20": ROOT / "data" / "features" / "bowler_innings.json",           # men's T20I + IPL
+         "odi": ROOT / "data" / "features" / "bowler_innings_odi.json"}       # men's ODIs
+PATH = PATHS["t20"]  # legacy name
+BALL_THRESHOLDS = {"t20": (6, 12, 18, 24), "odi": (12, 24, 36, 48, 60)}  # 1-4 overs / 2-10 overs
 MIN_INNINGS = 6
 MAX_FLUKE = 0.01
 
 
-@lru_cache(maxsize=1)
-def _records() -> dict[str, tuple[int, int, int]]:
+@lru_cache(maxsize=2)
+def _records(fmt: str = "t20") -> dict[str, tuple[int, int, int]]:
     """bowler -> (wickets k, balls N, innings n) for the claim with the smallest fluke chance."""
     try:
-        rows = json.loads(PATH.read_text(encoding="utf-8"))
+        rows = json.loads(PATHS[fmt].read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
     per: dict[str, list[tuple[int, int]]] = {}
-    league = {(n, k): [0, 0] for n in BALL_THRESHOLDS for k in (1, 2)}
+    thresholds = BALL_THRESHOLDS[fmt]
+    league = {(n, k): [0, 0] for n in thresholds for k in (1, 2)}
     for _date, name, balls, _runs, wickets, *_rest in rows:
         per.setdefault(name, []).append((balls, wickets))
-        for n in BALL_THRESHOLDS:
+        for n in thresholds:
             if balls >= n:
                 for k in (1, 2):
                     league[(n, k)][0] += 1
@@ -42,7 +45,7 @@ def _records() -> dict[str, tuple[int, int, int]]:
     for name, innings in per.items():
         best = None
         for k in (1, 2):
-            for n in BALL_THRESHOLDS:
+            for n in thresholds:
                 picked = [w for balls, w in innings if balls >= n]
                 if len(picked) < MIN_INNINGS or min(picked) < k:
                     continue
@@ -54,8 +57,8 @@ def _records() -> dict[str, tuple[int, int, int]]:
     return out
 
 
-def all_records() -> dict[str, tuple[int, int, int]]:
-    return dict(_records())
+def all_records(fmt: str = "t20") -> dict[str, tuple[int, int, int]]:
+    return dict(_records(fmt))
 
 
 def overs_to_balls(overs) -> int | None:
@@ -67,13 +70,13 @@ def overs_to_balls(overs) -> int | None:
         return None
 
 
-def bowler_line(full_name: str, team: str, balls: int, wickets: int) -> str:
+def bowler_line(full_name: str, team: str, balls: int, wickets: int, fmt: str = "t20") -> str:
     """"STAT: J Coetzee 3.0-0-22-0 ..." text for a bowler with a 100% record who has bowled his record's ball count
     without yet reaching its wicket count, else ""."""
     from app.live.prematch_xi import resolve_player
 
     name = resolve_player(full_name, team)
-    record = _records().get(name) if name else None
+    record = _records(fmt).get(name) if name else None
     if not record:
         return ""
     k, n, innings = record
@@ -81,4 +84,4 @@ def bowler_line(full_name: str, team: str, balls: int, wickets: int) -> str:
         return ""
     what = "a wicket" if k == 1 else f"{k}+ wickets"
     spell = f"{n // 6}+ overs" if n % 6 == 0 else f"{n}+ balls"
-    return f"STAT: {full_name} ({balls // 6}.{balls % 6} ov, {wickets} wkts) -- took {what} in {innings} of {innings} innings where he bowled {spell}"
+    return f"STAT: {full_name} ({balls // 6}.{balls % 6} ov, {wickets} wkts) -- took {what} in {innings} of {innings} innings where he bowled {spell} ({fmt.upper()})"
