@@ -396,31 +396,32 @@ def test_dew_line_states_the_win_percent_points_for_the_chasing_side(monkeypatch
     assert "pts" not in pre[1]  # before the toss nobody is the chaser yet
 
 
-def test_settled_batter_stat_is_a_100_percent_fifty_record_only():
+def test_batter_fact_is_a_100_percent_record_shown_only_when_the_ask_is_large():
     import json
 
     import app.live.prematch_xi as xi
-    from app.live.batter_settled import MIN_INNINGS, PATHS, all_records, fifty_record, settled_line
+    from app.live.batter_settled import ASK_MIN_RUNS, MIN_INNINGS, PATHS, all_records, batter_records, settled_line
 
     for fmt in ("t20", "odi"):
         records = all_records(fmt)
-        assert records and all(n >= MIN_INNINGS and base <= 0.70 for _, n, base in records.values()), fmt
+        assert records, fmt
         rows = json.loads(PATHS[fmt].read_text(encoding="utf-8"))
-        for name, (balls_needed, innings, _base) in records.items():     # every claim is literally true in its format
-            picked = [r[3] for r in rows if r[1] == name and r[2] >= balls_needed]
-            assert len(picked) == innings and min(picked) >= 50, (fmt, name)
-    assert set(all_records("t20")) != set(all_records("odi"))             # formats are kept apart
-    # a 100% record that the average batter nearly matches is not a fact: 50 after 40 balls (83% do it), Kohli's 107/107
-    assert fifty_record("SA Yadav", "t20") is None and fifty_record("V Kohli", "odi") is None and fifty_record("V Kohli", "t20") is None
+        for name, claims in records.items():
+            for target, (balls_needed, innings, base) in claims.items():     # every claim is literally true in its format
+                picked = [r[3] for r in rows if r[1] == name and r[2] >= balls_needed]
+                assert len(picked) == innings >= MIN_INNINGS and min(picked) >= target and base <= 0.70, (fmt, name, target)
+    assert set(all_records("t20")) != set(all_records("odi"))                 # formats are kept apart
+    assert 75 in batter_records("PD Salt", "t20") and 100 in batter_records("Fakhar Zaman", "odi")
     original = xi.resolve_player
-    xi.resolve_player = lambda full, team: full                           # live name -> Cricsheet name: identity here
+    xi.resolve_player = lambda full, team: full                               # live name -> Cricsheet name: identity here
     try:
-        for fmt in ("t20", "odi"):
-            name, (balls_needed, innings, base) = next(iter(all_records(fmt).items()))
-            line = settled_line(name, "X", balls_needed, 30, fmt)
-            assert line.startswith(f"🎯 FACT-O-METER ({fmt.upper()}) · {name} 30*({balls_needed})") and f"{innings}/{innings}" in line and "FIFTY" in line and f"(avg batter {base:.0%})" in line
-            assert settled_line(name, "X", balls_needed - 1, 30, fmt) == ""   # not yet at the ball count
-            assert settled_line(name, "X", balls_needed + 3, 50, fmt) == ""   # already made the fifty
+        salt_n, salt_innings, _ = batter_records("PD Salt")[75]
+        line = settled_line("PD Salt", "X", salt_n, 40)                       # needs 35 more: a big ask
+        assert line.startswith(f"🎯 FACT-O-METER (T20) · PD Salt 40*({salt_n}) -- needs 35 more") and f"{salt_innings}/{salt_innings}" in line
+        assert "(avg batter" in line and "75+ runs" in line
+        assert settled_line("PD Salt", "X", salt_n - 1, 40) == ""             # not yet at the ball count
+        assert settled_line("PD Salt", "X", salt_n, 75 - ASK_MIN_RUNS + 1) == ""   # ask too small now (29 to go)
+        assert settled_line("SA Yadav", "X", 41, 31) == ""                    # 50 after 41 balls: nothing big left to ask
     finally:
         xi.resolve_player = original
     assert settled_line("Nobody Unknown", "India", 60, 20) == ""
@@ -430,7 +431,7 @@ def test_bowler_records_are_literally_true_in_the_data_and_line_respects_the_tri
     import json
 
     import app.live.prematch_xi as xi
-    from app.live.bowler_records import MIN_INNINGS, PATHS, all_records, bowler_line, overs_to_balls
+    from app.live.bowler_records import ASK_MIN_WICKETS, MIN_INNINGS, PATHS, all_records, bowler_line, overs_to_balls
 
     assert overs_to_balls("3.2") == 20 and overs_to_balls(4) == 24 and overs_to_balls("x") is None
     original = xi.resolve_player
@@ -443,11 +444,13 @@ def test_bowler_records_are_literally_true_in_the_data_and_line_respects_the_tri
             for name, (k, balls_needed, innings, _base) in records.items():
                 picked = [r[4] for r in rows if r[1] == name and r[2] >= balls_needed]
                 assert len(picked) == innings and min(picked) >= k, (fmt, name)
-            name, (k, balls_needed, innings, base) = next(iter(records.items()))
-            line = bowler_line(name, "X", balls_needed, 0, fmt)
-            assert line.startswith(f"🎯 FACT-O-METER ({fmt.upper()}) · " + name) and f"{innings}/{innings}" in line and "▰▰▰▰▰▰▰▰▰▰" in line and f"(avg bowler {base:.0%})" in line
-            assert bowler_line(name, "X", balls_needed - 1, 0, fmt) == ""      # has not bowled that many balls yet
-            assert bowler_line(name, "X", balls_needed, k, fmt) == ""          # already has the wicket(s)
+                if k - 0 < ASK_MIN_WICKETS:   # "a wicket" is a small ask: never shown, even at 0 wickets
+                    assert bowler_line(name, "X", balls_needed, 0, fmt) == ""
+        name, (k, balls_needed, innings, base) = next((n, r) for n, r in all_records("t20").items() if r[0] >= 2)
+        line = bowler_line(name, "X", balls_needed, 0, "t20")                  # needs 2+ wickets: a big ask
+        assert line.startswith(f"🎯 FACT-O-METER (T20) · {name}") and f"{innings}/{innings}" in line and f"(avg bowler {base:.0%})" in line
+        assert bowler_line(name, "X", balls_needed - 1, 0, "t20") == ""        # has not bowled that many balls yet
+        assert bowler_line(name, "X", balls_needed, 1, "t20") == ""            # one wicket in: only one more needed
     finally:
         xi.resolve_player = original
     assert set(all_records("t20")) != set(all_records("odi"))

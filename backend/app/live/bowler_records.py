@@ -22,6 +22,7 @@ PATH = PATHS["t20"]  # legacy name
 BALL_THRESHOLDS = {"t20": (6, 12, 18, 24), "odi": (12, 24, 36, 48, 60)}  # 1-4 overs / 2-10 overs
 MIN_INNINGS = 6
 MAX_FLUKE = 0.01
+ASK_MIN_WICKETS = 2  # shown only when he still needs this many wickets to keep the record (same "big ask" idea as batters)
 
 
 @lru_cache(maxsize=2)
@@ -73,7 +74,7 @@ def overs_to_balls(overs) -> int | None:
 
 def bowler_line(full_name: str, team: str, balls: int, wickets: int, fmt: str = "t20") -> str:
     """"Fact-o-Meter (T20): J Coetzee 3.0-0-22-0 ..." text for a bowler with a 100% record who has bowled his record's ball count
-    without yet reaching its wicket count, else ""."""
+    and still needs ASK_MIN_WICKETS+ wickets to reach its wicket count, else ""."""
     from app.live.prematch_xi import resolve_player
 
     name = resolve_player(full_name, team)
@@ -81,7 +82,7 @@ def bowler_line(full_name: str, team: str, balls: int, wickets: int, fmt: str = 
     if not record:
         return ""
     k, n, innings, baseline = record
-    if balls < n or wickets >= k:
+    if balls < n or k - wickets < ASK_MIN_WICKETS:
         return ""
     what = "a wicket" if k == 1 else f"{k}+ wickets"
     spell = f"{n // 6}+ overs" if n % 6 == 0 else f"{n}+ balls"
