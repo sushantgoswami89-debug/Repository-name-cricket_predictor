@@ -136,6 +136,12 @@ def odi_briefing(label: str, venue: str = "", toss_won_by: str = "", toss_decisi
         note = toi_pitch_note(teams[0], teams[1])
         lines.append(_pitch_short(note) if note else "Pitch: unknown")
         lines.append(toss_line(toss_won_by, toss_decision, teams[0], teams[1]))
+        from app.live.prematch_analysis import team_card_block
+
+        cards = team_card_block(teams[0], teams[1], venue or "", toss_won_by, toss_decision, "odi")
+        if cards:
+            lines.append("")
+            lines.extend(cards)
         lines.append("")
         lines.append(odi_text(teams[0], teams[1], {"match_id": match_id, "source": source, "city": city} if match_id else None))
     return "\n".join(lines)

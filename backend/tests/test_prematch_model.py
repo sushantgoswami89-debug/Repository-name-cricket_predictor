@@ -650,3 +650,36 @@ def test_prematch_xi_facts_are_ranked_one_per_player_and_need_the_xi():
     assert not any("Rawalpindi" in l for l in xi_fact_lines("Pakistan", "Sri Lanka", xi, ""))        # no ground: no ground facts
     assert fact_o_meter_block("Pakistan", "Sri Lanka", None, "Rawalpindi") == []
     assert fact_o_meter_block("Pakistan", "Sri Lanka", xi, "Rawalpindi Cricket Stadium, Rawalpindi", "Sri Lanka", "bat")
+
+
+def test_team_cards_are_true_per_format_and_follow_the_toss():
+    from app.live.prematch_conditions import load_facts_odi, load_facts_t20
+    from app.live.team_records import MIN_MATCHES, all_claims, team_card
+
+    for fmt, facts in (("t20", load_facts_t20()), ("odi", load_facts_odi())):
+        claims = all_claims(fmt)
+        assert claims, fmt
+        decided = [f for f in facts if f["winner"] in f["teams"] and len(f["teams"]) == 2]
+        for team, items in list(claims.items())[:15]:                              # recompute a sample from the raw facts
+            for c in items[:6]:
+                def picks(f):
+                    if team not in f["teams"]:
+                        return False
+                    if c["scope"] == "ground" and f["city"] != c["where"]:
+                        return False
+                    if c["scope"] == "opponent" and c["where"] not in f["teams"]:
+                        return False
+                    first, tw = f["first_team"], f.get("toss_winner")
+                    return {"won the toss": tw == team, "batting first": first == team, "chasing": first in f["teams"] and first != team,
+                            "won the toss and bowled": tw == team and f.get("toss_decision") == "field",
+                            "won the toss and batted": tw == team and f.get("toss_decision") == "bat"}[c["situation"]]
+                results = [int(f["winner"] == team) for f in decided if picks(f)]
+                assert len(results) == c["n"] >= MIN_MATCHES and set(results) == {1 if c["outcome"] == "WON" else 0}, (fmt, team, c)
+    assert set(all_claims("t20")) != set(all_claims("odi"))
+    pre = team_card("Australia", "Pakistan", "melbourne", fmt="odi")
+    assert pre.startswith("🎯 FACT-O-METER (ODI) · Australia\n") and "Chasing vs Pakistan: won 14 of 14" in pre and "Winning the toss at Melbourne: won 8 of 8" in pre
+    # once the toss is known only what applies stays: Pakistan batting first means Australia are chasing; Pakistan won the toss
+    post = team_card("Australia", "Pakistan", "melbourne", "Pakistan", "bat", "Pakistan", fmt="odi")
+    assert "Chasing vs Pakistan: won 14 of 14" in post and "Winning the toss" not in post
+    assert team_card("Australia", "Pakistan", "melbourne", "Australia", "bowl", "Pakistan", fmt="odi").count("Winning the toss at Melbourne") == 1
+    assert team_card("Nowhere XI", "Pakistan", "melbourne", fmt="odi") == ""

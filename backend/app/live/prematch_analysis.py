@@ -707,3 +707,20 @@ def fact_o_meter_block(team_a: str, team_b: str, xi: dict | None, venue: str, to
     except Exception as error:
         print(f"[briefing] fact-o-meter unavailable: {error!r}")
         return []
+
+
+def team_card_block(team_a: str, team_b: str, venue: str, toss_won_by: str = "", toss_decision: str = "",
+                    fmt: str = "t20") -> list[str]:
+    """Team Fact-o-Meter cards (toss winning, batting first, chasing records) for both sides; [] when neither has one."""
+    try:
+        from app.live.prematch_model import venue_city
+        from app.live.team_records import team_card
+
+        city = venue_city(venue or "")
+        bat_first = _bat_first_team(team_a, team_b, toss_won_by, toss_decision)
+        cards = [team_card(team, other, city, toss_won_by, toss_decision, bat_first, fmt)
+                 for team, other in ((team_a, team_b), (team_b, team_a))]
+        return [c for c in cards if c]
+    except Exception as error:
+        print(f"[briefing] team fact-o-meter unavailable: {error!r}")
+        return []

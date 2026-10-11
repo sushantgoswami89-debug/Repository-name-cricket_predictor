@@ -37,7 +37,7 @@ from app.live.batter_settled import settled_line
 from app.live.bowler_records import bowler_line, overs_to_balls
 from app.live.result_facts import result_line
 from app.live.venue_form import batter_average_line, batter_ground_line, bowler_average_line, bowler_ground_line
-from app.live.prematch_analysis import confirmed_xi, fact_o_meter_block, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
+from app.live.prematch_analysis import confirmed_xi, fact_o_meter_block, prematch_header, team_card_block, prematch_text, toss_line, venue_summary, xi_line, xi_names
 from app.live.pipeline import (
     MatchStateAnomaly,
     PredictionPublisher,
@@ -546,7 +546,9 @@ def briefing_text(match_id: str, match_url: str, label: str) -> str | None:
             lines.append("")
             lines.append(analysis)
     if len(teams) == 2:
-        facts = fact_o_meter_block(teams[0], teams[1], confirmed_xi(team_players), venue or "", toss_won_by, toss_decision)
+        facts = team_card_block(teams[0], teams[1], venue or "", toss_won_by, toss_decision) + fact_o_meter_block(
+            teams[0], teams[1], confirmed_xi(team_players), venue or "", toss_won_by, toss_decision
+        )
         if facts:
             lines.append("")
             lines.extend(facts)
