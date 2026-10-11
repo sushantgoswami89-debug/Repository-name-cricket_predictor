@@ -650,6 +650,43 @@ def _at_over_break(snapshot) -> bool:
     )
 
 
+def _score_line(snapshot) -> str:
+    """"SL 105/6 (17.0 ov) | CRR 6.18 | need 62 off 18 balls | RRR 20.67" -- the chase part only in the second innings."""
+    overs_completed, _, balls_into_over = str(snapshot.overs).partition(".")
+    balls = int(overs_completed or 0) * 6 + int(balls_into_over or 0)
+    parts = [f"{_TEAM_CODES.get(snapshot.batting_team, snapshot.batting_team)} {snapshot.score}/{snapshot.wickets} ({snapshot.overs} ov)"]
+    if balls:
+        parts.append(f"CRR {snapshot.score * 6 / balls:.2f}")
+    target = getattr(snapshot, "target", 0) or 0
+    if snapshot.innings == 2 and target:
+        left = (getattr(snapshot, "scheduled_overs", 0) or 20) * 6 - balls
+        need = target - snapshot.score
+        if need <= 0:
+            parts.append("target reached")
+        elif left > 0:
+            parts.append(f"need {need} off {left} balls | RRR {need * 6 / left:.2f}")
+    return " | ".join(parts)
+
+
+def _over_break_block(snapshot, crease, card_batters: dict, card_bowlers: dict, announced: str, expected: dict | None) -> str:
+    """The over-end summary as a few short lines: score with run rates (and what the chase needs), the bowler who just finished
+    with his figures, the batters at the crease, and the next bowler and striker."""
+    last = snapshot.deliveries[-1]
+    over_number = str(snapshot.overs).partition(".")[0]
+    lines = [f"--- end of over {over_number} ---", _score_line(snapshot),
+             f"Bowled: {last.bowler}{card_bowlers.get(last.bowler, '')}"]
+    if crease:
+        lines.append("At the crease: " + ", ".join(f"{name}{card_batters.get(name, '')}" for name in crease))
+    if expected is not None and not snapshot.innings_complete:
+        bowler = expected["bowler"]
+        if bowler:
+            lines.append(f"Next: {bowler}{card_bowlers.get(bowler, ' (not bowled yet)')}"
+                         + (f" | {expected['striker']}* to face" if expected["striker"] else ""))
+        else:
+            lines.append("Next: bowler not announced yet" + (f" | {expected['striker']}* to face" if expected["striker"] else ""))
+    return "\n".join(lines)
+
+
 def _scorecard_line(snapshot) -> str:
     deliveries = snapshot.deliveries
     latest = deliveries[-1] if deliveries else None
@@ -972,11 +1009,12 @@ class CricbuzzMatchSession:
             print(f"{self.prefix}{line}")
         # Summary only (user 2026-10-11): one score line per over break / innings end, not one per poll.
         if _at_over_break(snapshot) or snapshot.innings_complete:
-            summary = (f"{self.prefix}{_scorecard_line(snapshot)}{figures}"
-                       f"{_next_over_line(snapshot, self._announced_bowler, crease, incoming)}")
+            announced_now = (self._announced_bowler[1] if self._announced_bowler
+                             and self._announced_bowler[0] > snapshot.deliveries[-1].timestamp_ms else "")
+            summary = _over_break_block(snapshot, crease, self._card_batters, self._card_bowlers, announced_now, expected_now)
             if summary != self._last_summary:
                 self._last_summary = summary
-                print(summary)
+                print("\n".join(f"{self.prefix}{line}" for line in summary.splitlines()))
         for name in (crease or []):
             runs_balls = self._card_nums.get(name)
             key = (snapshot.innings, name)

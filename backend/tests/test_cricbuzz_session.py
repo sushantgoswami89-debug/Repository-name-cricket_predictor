@@ -719,3 +719,29 @@ def test_console_prefix_names_the_teams_so_two_matches_do_not_mix():
     assert _match_tag("West Indies", "India", "151587") == "IND-WI"   # same tag in either innings
     assert _match_tag("Sri Lanka", "Pakistan", "170690") == "PAK-SL"
     assert _match_tag("", "", "170690") == "170690"
+
+
+def test_over_break_block_shows_score_run_rates_chase_and_both_bowlers():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _over_break_block
+
+    last = SimpleNamespace(bowler="Abrar Ahmed", timestamp_ms=1)
+    snap = SimpleNamespace(
+        overs="17.0", innings=2, innings_complete=False, batting_team="Sri Lanka", score=105, wickets=6, target=168,
+        scheduled_overs=20, deliveries=[last],
+    )
+    text = _over_break_block(
+        snap, ["Chamindu Wickramasinghe", "Maheesh Theekshana"], {"Chamindu Wickramasinghe": " 9*(9)"},
+        {"Abrar Ahmed": " 4-0-29-2", "Naseem Shah": " 2-0-11-0"}, "Naseem Shah",
+        {"bowler": "Naseem Shah", "striker": "Chamindu Wickramasinghe", "other": "Maheesh Theekshana"},
+    )
+    assert text.splitlines() == [
+        "--- end of over 17 ---",
+        "SL 105/6 (17.0 ov) | CRR 6.18 | need 63 off 18 balls | RRR 21.00",
+        "Bowled: Abrar Ahmed 4-0-29-2",
+        "At the crease: Chamindu Wickramasinghe 9*(9), Maheesh Theekshana",
+        "Next: Naseem Shah 2-0-11-0 | Chamindu Wickramasinghe* to face",
+    ]
+    snap.innings, snap.target = 1, 0
+    assert "need" not in _over_break_block(snap, [], {}, {}, "", None)   # first innings: run rate only
