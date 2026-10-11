@@ -13,7 +13,7 @@ import requests
 
 from app.live.commentary_log import append_commentary_log
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
-from app.live.prematch_analysis import confirmed_xi, fact_o_meter_block, prematch_header, team_card_block, prematch_text, toss_line, venue_summary, xi_line, xi_names
+from app.live.prematch_analysis import confirmed_xi, fact_o_meter_message, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery, is_t20_international
 from app.live.toi_reader import ToiFeedError, ToiLiveReader
@@ -71,20 +71,27 @@ def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | No
         if analysis:
             lines.append("")
             lines.append(analysis)
-    if len(team_names) == 2:
-        facts = team_card_block(
-            team_names[0], team_names[1], ToiLiveReader._venue_name(raw), toss_won_by, toss_decision
-        ) + fact_o_meter_block(
-            team_names[0], team_names[1], confirmed_xi(team_players), ToiLiveReader._venue_name(raw), toss_won_by, toss_decision
-        )
-        if facts:
-            lines.append("")
-            lines.extend(facts)
     # The whole line-up block (status line, then the names once both XIs are full) goes last.
     lines.append("")
     lines.append(xi_line(team_players))
     lines.extend(xi_names(team_players))
     return "\n".join(lines)
+
+
+def _fact_text(reader: ToiLiveReader, match_id: str, label: str) -> str | None:
+    """The Fact-o-Meter card message for a TOI match, kept apart from the briefing (None if the feed cannot be read)."""
+    try:
+        raw = reader._get_json(ToiLiveReader.RAW_URL.format(match_id=match_id))
+    except Exception:
+        return None
+    team_players = ToiLiveReader._team_players(raw)
+    toss_won_by, toss_decision = ToiLiveReader._toss(raw)
+    team_names = list(team_players)
+    if len(team_names) != 2:
+        return ""
+    return fact_o_meter_message(
+        team_names[0], team_names[1], ToiLiveReader._venue_name(raw), toss_won_by, toss_decision, confirmed_xi(team_players)
+    )
 
 
 def _write_shadow_prediction(

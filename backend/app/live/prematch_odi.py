@@ -136,12 +136,16 @@ def odi_briefing(label: str, venue: str = "", toss_won_by: str = "", toss_decisi
         note = toi_pitch_note(teams[0], teams[1])
         lines.append(_pitch_short(note) if note else "Pitch: unknown")
         lines.append(toss_line(toss_won_by, toss_decision, teams[0], teams[1]))
-        from app.live.prematch_analysis import team_card_block
-
-        cards = team_card_block(teams[0], teams[1], venue or "", toss_won_by, toss_decision, "odi")
-        if cards:
-            lines.append("")
-            lines.extend(cards)
         lines.append("")
         lines.append(odi_text(teams[0], teams[1], {"match_id": match_id, "source": source, "city": city} if match_id else None))
     return "\n".join(lines)
+
+
+def odi_fact_message(label: str, venue: str = "", toss_won_by: str = "", toss_decision: str = "") -> str:
+    """The ODI Fact-o-Meter card message (team cards, ground record), separate from the ODI briefing."""
+    from app.live.prematch_analysis import fact_o_meter_message
+
+    teams = [t.strip() for t in label.split(" vs ")]
+    if len(teams) != 2:
+        return ""
+    return fact_o_meter_message(teams[0], teams[1], venue or "", toss_won_by, toss_decision, None, "odi")

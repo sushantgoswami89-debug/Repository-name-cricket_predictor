@@ -89,7 +89,7 @@ class OdiBriefingWatcher:
             except queue.Empty:
                 break
             print(text)
-            if self.publisher is not None and kind == "briefing":
+            if self.publisher is not None and kind in ("briefing", "facts"):
                 try:
                     self.publisher.publish(key, text)
                 except Exception:
@@ -109,7 +109,7 @@ class OdiBriefingWatcher:
     def cycle(self) -> None:
         """One pass over the match list (runs in the worker thread; output goes through the queue)."""
         from app.live.cricbuzz_discovery import CricbuzzMatchDiscovery
-        from app.live.prematch_odi import odi_briefing
+        from app.live.prematch_odi import odi_briefing, odi_fact_message
 
         discovery = self._discovery or CricbuzzMatchDiscovery()
         for match in discovery.matches():
@@ -128,6 +128,13 @@ class OdiBriefingWatcher:
                     header = "" if first else "🔔 Toss is in -- updated ODI briefing\n"
                     self._results.put(("briefing", f"briefing:cricbuzz-odi:{match.match_id}:{'toss' if toss[0] else 'first'}",
                                        f"[odi] {match.match_desc} -- {match.series}\n{header}{text}"))
+                    try:  # the Fact-o-Meter card is its own message, never part of the briefing
+                        facts = odi_fact_message(match.label, match.venue, toss[0], toss[1])
+                    except Exception:
+                        facts = ""
+                    if facts and facts != state.get("facts"):
+                        state["facts"] = facts
+                        self._results.put(("facts", f"factometer:cricbuzz-odi:{match.match_id}:{'toss' if toss[0] else 'first'}", facts))
                 if toss[0]:
                     state["frozen"] = True
             elif phase in ("in progress", "innings break", "stumps", "toss") and state["toss"] is None:

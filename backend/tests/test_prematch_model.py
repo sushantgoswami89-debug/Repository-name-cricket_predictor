@@ -484,8 +484,7 @@ def test_venue_record_is_per_format_and_matches_the_data():
             results = per_city[city][text.split(" has won")[0]]
             assert len(results) >= VENUE_RECORD_MIN and all(results), (fmt, city)
     assert "8 of 8" in venue_record("faisalabad", "odi") and venue_record("faisalabad", "t20") == ""
-    assert venue_summary("faisalabad", "odi").endswith("🎯 Fact-o-Meter (ODI): the team chasing has won 8 of 8 here ▰▰▰▰▰▰▰▰▰▰  🔥")
-    assert "Fact-o-Meter" not in venue_summary("faisalabad", "t20")
+    assert "Fact-o-Meter" not in venue_summary("faisalabad", "odi")          # the ground line stays plain: cards are separate messages
     assert venue_record("ranchi", "t20") == "" and venue_record("nowhere-ville") == ""   # Ranchi toss-winner-bowls: 6 of 11
 
 
@@ -683,3 +682,30 @@ def test_team_cards_are_true_per_format_and_follow_the_toss():
     assert "Chasing vs Pakistan: won 14 of 14" in post and "Winning the toss" not in post
     assert team_card("Australia", "Pakistan", "melbourne", "Australia", "bowl", "Pakistan", fmt="odi").count("Winning the toss at Melbourne") == 1
     assert team_card("Nowhere XI", "Pakistan", "melbourne", fmt="odi") == ""
+
+
+def test_fact_o_meter_is_its_own_message_never_inside_the_briefing():
+    from types import SimpleNamespace
+
+    from app.live.odi_watch import OdiBriefingWatcher
+    from app.live.prematch_analysis import fact_o_meter_message
+    from app.live.prematch_odi import odi_briefing, odi_fact_message
+
+    briefing = odi_briefing("Australia vs Pakistan", "Melbourne Cricket Ground, Melbourne", "Pakistan", "bat")
+    assert "FACT-O-METER" not in briefing.upper() and "🎯" not in briefing and "Win %" in briefing
+    card = odi_fact_message("Australia vs Pakistan", "Melbourne Cricket Ground, Melbourne", "Pakistan", "bat")
+    assert card.startswith("🎯 FACT-O-METER · Australia vs Pakistan -- Melbourne\n") and "Chasing vs Pakistan: won 14 of 14" in card
+    assert "Win %" not in card and "Weather" not in card
+    faisal = fact_o_meter_message("Pakistan", "England", "Iqbal Stadium, Faisalabad", fmt="odi")
+    assert "Ground record: the team chasing has won 8 of 8 here" in faisal
+    assert fact_o_meter_message("Nowhere XI", "Other XI", "Nowhere Park, Nowhere") == ""
+    # the ODI watcher sends the card as a second message, once, and not inside the briefing
+    listing = [SimpleNamespace(match_id="9", label="Australia vs Pakistan", match_format="ODI", match_type="International",
+                               state="Preview", status="", venue="Melbourne Cricket Ground, Melbourne", url="http://x",
+                               match_desc="1st ODI", series="Test series")]
+    watcher = OdiBriefingWatcher(discovery=SimpleNamespace(matches=lambda: listing), toss_fetcher=lambda m: ("", ""))
+    watcher.cycle()
+    kinds = []
+    while not watcher._results.empty():
+        kinds.append(watcher._results.get())
+    assert [k[0] for k in kinds] == ["briefing", "facts"] and "🎯" not in kinds[0][2] and kinds[1][2].startswith("🎯 FACT-O-METER")

@@ -37,7 +37,7 @@ from app.live.batter_settled import settled_line
 from app.live.bowler_records import bowler_line, overs_to_balls
 from app.live.result_facts import result_line
 from app.live.venue_form import batter_average_line, batter_ground_line, bowler_average_line, bowler_ground_line
-from app.live.prematch_analysis import confirmed_xi, fact_o_meter_block, prematch_header, team_card_block, prematch_text, toss_line, venue_summary, xi_line, xi_names
+from app.live.prematch_analysis import confirmed_xi, fact_o_meter_message, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
 from app.live.pipeline import (
     MatchStateAnomaly,
     PredictionPublisher,
@@ -545,18 +545,31 @@ def briefing_text(match_id: str, match_url: str, label: str) -> str | None:
         if analysis:
             lines.append("")
             lines.append(analysis)
-    if len(teams) == 2:
-        facts = team_card_block(teams[0], teams[1], venue or "", toss_won_by, toss_decision) + fact_o_meter_block(
-            teams[0], teams[1], confirmed_xi(team_players), venue or "", toss_won_by, toss_decision
-        )
-        if facts:
-            lines.append("")
-            lines.extend(facts)
     # The whole line-up block (status line, then the names once both XIs are full) goes last.
     lines.append("")
     lines.append(xi_line(team_players))
     lines.extend(xi_names(team_players))
     return "\n".join(lines)
+
+
+def fact_text(match_id: str, match_url: str, label: str) -> str | None:
+    """The Fact-o-Meter card message for a match (team cards, ground record, facts about the confirmed XIs), kept apart
+    from briefing_text. None when the page cannot be read; "" when there is nothing to say."""
+    try:
+        session = requests.Session()
+        session.headers.update({"User-Agent": "Mozilla/5.0 (compatible; CricketBaba/3.0)"})
+        response = session.get(match_url, timeout=12.0)
+        response.raise_for_status()
+        chunks = _extract_flight_chunks(response.text)
+    except Exception:
+        return None
+    toss_won_by, toss_decision = CricbuzzLiveReader._toss_from_chunks(chunks)
+    venue = CricbuzzLiveReader._venue_from_chunks(chunks, match_id)
+    team_players = CricbuzzLiveReader._squads_from_chunks(chunks)
+    teams = CricbuzzLiveReader._teams_from_ldjson(response.text)
+    if len(teams) != 2:
+        return ""
+    return fact_o_meter_message(teams[0], teams[1], venue or "", toss_won_by, toss_decision, confirmed_xi(team_players))
 
 
 def _at_over_break(snapshot) -> bool:

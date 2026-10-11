@@ -20,3 +20,14 @@ def _no_cricbuzz_capture(monkeypatch):
     from app.live import cricbuzz_capture
 
     monkeypatch.setattr(cricbuzz_capture, "capture_match", lambda match_id, root=None: {"saved": [], "winner": None, "curve_points": 0})
+
+
+@pytest.fixture(autouse=True)
+def _no_live_fact_cards(monkeypatch):
+    """The driver's Fact-o-Meter card fetch is a network call; tests of the driver must not make it."""
+    try:
+        import run_live_auto
+    except Exception:
+        return
+    monkeypatch.setattr(run_live_auto, "cricbuzz_fact_text", lambda *a, **k: None, raising=False)
+    monkeypatch.setattr(run_live_auto, "toi_fact_text", lambda *a, **k: None, raising=False)

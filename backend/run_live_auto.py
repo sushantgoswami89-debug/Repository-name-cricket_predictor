@@ -54,6 +54,7 @@ from app.live.cricbuzz_discovery import CricbuzzMatchDiscovery
 from app.live.cricbuzz_discovery import is_t20_international as cricbuzz_is_t20i
 from app.live.cricbuzz_session import CricbuzzMatchSession
 from app.live.cricbuzz_session import briefing_text as cricbuzz_briefing_text
+from app.live.cricbuzz_session import fact_text as cricbuzz_fact_text
 from app.live.odi_watch import OdiBriefingWatcher
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
 from app.live.telegram import TelegramPublisher
@@ -62,6 +63,7 @@ from app.live.toi_discovery import is_t20_international as toi_is_t20i
 from app.live.toi_reader import ToiFeedError, ToiLiveReader
 from app.live.verification import VerificationError
 from run_toi_auto import _briefing_text as toi_briefing_text
+from run_toi_auto import _fact_text as toi_fact_text
 
 
 def _telegram(project_root: Path) -> TelegramPublisher:
@@ -181,6 +183,8 @@ class LiveAutoState:
         # "cricbuzz:<id>" / "toi:<id>" -> [last signature, next check time, give-up time].
         self._briefings: dict[str, list] = {}
         self._briefing_results: queue.Queue = queue.Queue()
+        # Fact-o-Meter cards are their own messages (never inside the briefing): last text sent per match key.
+        self._facts_sent: dict[str, str] = {}
         self._briefing_running: set[str] = set()
         self._toi_started: set[str] = set()
         self.briefing_refresh_seconds = BRIEFING_REFRESH_SECONDS
@@ -227,6 +231,7 @@ class LiveAutoState:
                 if self.publisher is not None:
                     self.publisher.publish(f"briefing:cricbuzz:{match.match_id}", briefing)
             self._track_briefing(f"cricbuzz:{match.match_id}", briefing, match.label)
+            self._emit_facts(f"cricbuzz:{match.match_id}", cricbuzz_fact_text(match.match_id, match.url, match.label))
         for match_id in set(self.active_cricbuzz) - cricbuzz_live_ids:
             del self.active_cricbuzz[match_id]
             print(f"[cricbuzz] No longer live, detaching: {match_id}")
@@ -280,6 +285,7 @@ class LiveAutoState:
                 if self.publisher is not None:
                     self.publisher.publish(f"briefing:toi:{match.match_id}", briefing)
             self._track_briefing(f"toi:{match.match_id}", briefing, match.label)
+            self._emit_facts(f"toi:{match.match_id}", toi_fact_text(reader, match.match_id, match.label))
         for match_id in set(self.active_toi) - toi_live_ids:
             del self.active_toi[match_id]
             print(f"[toi] No longer live, detaching: {match_id}")
@@ -310,6 +316,17 @@ class LiveAutoState:
             label,
         ]
 
+    def _emit_facts(self, key: str, text: str | None) -> None:
+        """Print (and publish, outside shadow mode) a match's Fact-o-Meter card message when it is new or changed."""
+        if not text or self._facts_sent.get(key) == text:
+            return
+        self._facts_sent[key] = text
+        print(text)
+        if self.publisher is not None:
+            source, _, match_id = key.partition(":")
+            tag = hashlib.md5(text.encode()).hexdigest()[:8]
+            self.publisher.publish(f"factometer:{source}:{match_id}:{tag}", text)
+
     def _match_started(self, key: str) -> bool:
         source, _, match_id = key.partition(":")
         if source == "cricbuzz":
@@ -322,15 +339,18 @@ class LiveAutoState:
         try:
             source, _, match_id = key.partition(":")
             label = self._briefings.get(key, [None, 0, 0, match_id])[3]
+            facts = None
             if source == "cricbuzz":
                 session = self.active_cricbuzz.get(match_id)
                 text = cricbuzz_briefing_text(match_id, session.match_url, label) if session else None
+                facts = cricbuzz_fact_text(match_id, session.match_url, label) if session else None
             else:
                 entry = self.active_toi.get(match_id)
                 text = toi_briefing_text(entry[1], match_id, label) if entry else None
+                facts = toi_fact_text(entry[1], match_id, label) if entry else None
         except Exception:
-            text = None
-        self._briefing_results.put((key, text))
+            text, facts = None, None
+        self._briefing_results.put((key, text, facts))
 
     def refresh_briefings(self) -> None:
         """Call every loop: start due refreshes in the background, then apply finished ones
@@ -345,13 +365,14 @@ class LiveAutoState:
                 threading.Thread(target=self._build_briefing, args=(key,), daemon=True).start()
         while True:
             try:
-                key, text = self._briefing_results.get_nowait()
+                key, text, facts = self._briefing_results.get_nowait()
             except queue.Empty:
                 break
             self._briefing_running.discard(key)
             entry = self._briefings.get(key)
             if not text or entry is None or self._match_started(key):
                 continue
+            self._emit_facts(key, facts)  # a changed card (toss / XIs in) goes out as its own message
             new_signature = briefing_signature(text)
             if new_signature == entry[0]:
                 continue

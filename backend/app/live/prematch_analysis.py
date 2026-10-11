@@ -242,7 +242,8 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
     without a known style are in neither). The results record pools T20 and ODI matches at the ground into one figure:
       "bat 1st wins 38% / chase wins 62% / toss winner wins 56%, toss winner chooses bowl 70%"
     (toss choice shows the more common one only; "[small sample]" is added when under 10 matches pooled.)
-    `fmt` chooses the format of the scoring numbers and of the 100% venue record that is appended.
+    `fmt` chooses the format of the scoring numbers. (The 100% venue record is a Fact-o-Meter and lives in its own
+    card, fact_o_meter_message -- never in the briefing.)
     """
     t20 = _ground_record(city, "t20").get("all")
     odi = _ground_record(city, "odi").get("all")
@@ -277,10 +278,6 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
             text += ", toss winner chooses " + (f"bat {bat:.0%}" if bat > 0.5 else f"bowl {1 - bat:.0%}" if bat < 0.5 else "bat 50% / bowl 50%")
         if decided < 10:
             text += " [small sample]"
-    record = venue_record(city, "odi" if fmt == "odi" else "t20")  # records are format-specific, never pooled
-    if record:
-        n = int(re.search(r"won (\d+) of", record).group(1))
-        text += f" | 🎯 {fact_label('odi' if fmt == 'odi' else 't20')}: {record} {meter(n)}"
     return text
 
 
@@ -724,3 +721,29 @@ def team_card_block(team_a: str, team_b: str, venue: str, toss_won_by: str = "",
     except Exception as error:
         print(f"[briefing] team fact-o-meter unavailable: {error!r}")
         return []
+
+
+def fact_o_meter_message(team_a: str, team_b: str, venue: str, toss_won_by: str = "", toss_decision: str = "",
+                         xi: dict | None = None, fmt: str = "t20") -> str:
+    """The Fact-o-Meter as its OWN message (user 2026-10-11: keep it separate from the pre-match briefing): the team cards
+    (toss winning, batting first / chasing), the ground's 100% record if it has one, then facts about the players in the
+    confirmed XIs. "" when there is nothing to say. Never raises."""
+    import re
+
+    from app.live.prematch_model import venue_city
+
+    city = venue_city(venue or "")
+    parts: list[str] = []
+    parts += team_card_block(team_a, team_b, venue, toss_won_by, toss_decision, fmt)
+    try:
+        record = venue_record(city, fmt) if city else ""
+        if record:
+            n = int(re.search(r"won (\d+) of", record).group(1))
+            parts.append(f"🎯 {fact_label(fmt)} · {city.title()}\n   Ground record: {record}  {meter(n)}")
+    except Exception as error:
+        print(f"[facts] ground record unavailable: {error!r}")
+    if fmt == "t20":
+        parts += fact_o_meter_block(team_a, team_b, xi, venue, toss_won_by, toss_decision)
+    if not parts:
+        return ""
+    return f"🎯 FACT-O-METER · {team_a} vs {team_b} -- {city.title() or 'venue unknown'}\n\n" + "\n".join(parts)
