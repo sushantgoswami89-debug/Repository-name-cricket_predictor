@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 
-from app.live.fact_o_meter import label
+from app.live.fact_o_meter import card
 from app.live.prematch_model import ROOT
 
 PATHS = {"t20": ROOT / "data" / "features" / "bowler_innings.json",           # men's T20I + IPL
@@ -85,4 +85,5 @@ def bowler_line(full_name: str, team: str, balls: int, wickets: int, fmt: str = 
         return ""
     what = "a wicket" if k == 1 else f"{k}+ wickets"
     spell = f"{n // 6}+ overs" if n % 6 == 0 else f"{n}+ balls"
-    return f"{label(fmt)}: {full_name} ({balls // 6}.{balls % 6} ov, {wickets} wkts) -- took {what} in {innings} of {innings} innings where he bowled {spell}"
+    return card(fmt, f"{full_name} {balls // 6}.{balls % 6} ov, {wickets} wkt{'' if wickets == 1 else 's'}",
+                f"Has taken {what} in every one of his innings of {spell}", innings)

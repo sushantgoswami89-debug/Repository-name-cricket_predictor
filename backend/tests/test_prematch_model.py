@@ -417,7 +417,7 @@ def test_settled_batter_stat_is_a_100_percent_fifty_record_only():
         for fmt in ("t20", "odi"):
             name, (balls_needed, innings) = next(iter(all_records(fmt).items()))
             line = settled_line(name, "X", balls_needed, 30, fmt)
-            assert line.startswith(f"Fact-o-Meter ({fmt.upper()}): {name} 30*({balls_needed})") and f"{innings} of {innings} innings" in line and fmt.upper() in line
+            assert line.startswith(f"🎯 FACT-O-METER ({fmt.upper()}) · {name} 30*({balls_needed})") and f"{innings}/{innings}" in line and "FIFTY" in line
             assert settled_line(name, "X", balls_needed - 1, 30, fmt) == ""   # not yet at the ball count
             assert settled_line(name, "X", balls_needed + 3, 50, fmt) == ""   # already made the fifty
     finally:
@@ -444,7 +444,7 @@ def test_bowler_records_are_literally_true_in_the_data_and_line_respects_the_tri
                 assert len(picked) == innings and min(picked) >= k, (fmt, name)
             name, (k, balls_needed, innings) = next(iter(records.items()))
             line = bowler_line(name, "X", balls_needed, 0, fmt)
-            assert line.startswith(f"Fact-o-Meter ({fmt.upper()}): " + name) and f"{innings} of {innings} innings" in line and fmt.upper() in line
+            assert line.startswith(f"🎯 FACT-O-METER ({fmt.upper()}) · " + name) and f"{innings}/{innings}" in line and "▰▰▰▰▰▰▰▰▰▰" in line
             assert bowler_line(name, "X", balls_needed - 1, 0, fmt) == ""      # has not bowled that many balls yet
             assert bowler_line(name, "X", balls_needed, k, fmt) == ""          # already has the wicket(s)
     finally:
@@ -464,6 +464,6 @@ def test_venue_record_is_per_format_and_matches_the_data():
             results = per_city[city][text.split(" has won")[0]]
             assert len(results) >= VENUE_RECORD_MIN and all(results), (fmt, city)
     assert "8 of 8" in venue_record("faisalabad", "odi") and venue_record("faisalabad", "t20") == ""
-    assert venue_summary("faisalabad", "odi").endswith("Fact-o-Meter (ODI): the team chasing has won 8 of 8 here")
+    assert venue_summary("faisalabad", "odi").endswith("🎯 Fact-o-Meter (ODI): the team chasing has won 8 of 8 here ▰▰▰▰▰▰▰▰▰▰ 8/8 🔥")
     assert "Fact-o-Meter" not in venue_summary("faisalabad", "t20")
     assert venue_record("ranchi", "t20") == "" and venue_record("nowhere-ville") == ""   # Ranchi toss-winner-bowls: 6 of 11

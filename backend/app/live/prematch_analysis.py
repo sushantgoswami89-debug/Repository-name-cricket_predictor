@@ -19,7 +19,7 @@ import json
 from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
-from app.live.fact_o_meter import label as fact_label
+from app.live.fact_o_meter import label as fact_label, meter
 
 ROOT = Path(__file__).resolve().parents[3]
 T20I_DIR = ROOT / "data" / "raw" / "cricsheet" / "t20i"
@@ -227,7 +227,7 @@ def venue_record(city: str, fmt: str = "t20") -> str:
             continue
         fluke = rates[name] ** n
         if fluke <= VENUE_RECORD_MAX_FLUKE and (best is None or fluke < best[0]):
-            best = (fluke, f"{name} has won {n} of {n} here")
+            best = (fluke, f"{name} has won {n} of {n} here", n)
     return best[1] if best else ""
 
 
@@ -277,7 +277,8 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
             text += " [small sample]"
     record = venue_record(city, "odi" if fmt == "odi" else "t20")  # records are format-specific, never pooled
     if record:
-        text += f" | {fact_label('odi' if fmt == 'odi' else 't20')}: {record}"
+        n = int(re.search(r"won (\d+) of", record).group(1))
+        text += f" | 🎯 {fact_label('odi' if fmt == 'odi' else 't20')}: {record} {meter(n)}"
     return text
 
 

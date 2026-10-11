@@ -754,7 +754,7 @@ class CricbuzzMatchSession:
                 print(f"[{self.match_id}] [stat] unavailable: {error!r}")
             if stat:
                 self._settled_shown.add(key)
-                print(f"[{self.match_id}] 📊 {stat}")
+                print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
         if _at_over_break(snapshot):
             for name in dict.fromkeys([snapshot.deliveries[-1].bowler, announced]):
                 figures_now = self._card_bowl_nums.get(name) if name else None
@@ -768,7 +768,7 @@ class CricbuzzMatchSession:
                     print(f"[{self.match_id}] [stat] unavailable: {error!r}")
                 if stat:
                     self._settled_shown.add(key)
-                    print(f"[{self.match_id}] 📊 {stat}")
+                    print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
         for line in _delivery_event_lines(snapshot, self._seen_delivery_keys):
             print(f"[{self.match_id}] {line}")
         if self.commentary_log_path is not None:

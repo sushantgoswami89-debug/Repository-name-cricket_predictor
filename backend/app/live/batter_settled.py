@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 
-from app.live.fact_o_meter import label
+from app.live.fact_o_meter import card
 from app.live.prematch_model import ROOT
 
 PATHS = {"t20": ROOT / "data" / "features" / "batter_innings.json",           # men's T20I + IPL
@@ -78,4 +78,5 @@ def settled_line(full_name: str, team: str, balls: int, runs: int, fmt: str = "t
     if not record or balls < record[0]:
         return ""
     n, innings = record
-    return f"{label(fmt)}: {full_name} {runs}*({balls}) -- scored 50+ in {innings} of {innings} innings where he faced {n}+ balls"
+    return card(fmt, f"{full_name} {runs}*({balls})",
+                f"Every single time he has faced {n}+ balls, he has made a FIFTY", innings)
