@@ -69,11 +69,21 @@ def record_result(match_id: str, winner: str | None, text: str, path: Path | Non
         return False
 
 
-def score(pred_path: Path | None = None, result_path: Path | None = None) -> dict:
+# ICC men's T20I top 10 (user choice 2026-10-11): only matches between two of these are scored.
+# Update when the ranking changes. Names as Cricbuzz/TOI/Cricsheet spell them.
+ICC_TOP_10 = frozenset({
+    "India", "England", "Australia", "Pakistan", "South Africa",
+    "New Zealand", "West Indies", "Sri Lanka", "Afghanistan", "Bangladesh",
+})
+
+
+def score(pred_path: Path | None = None, result_path: Path | None = None, teams: frozenset | None = ICC_TOP_10) -> dict:
     """Per stage: games, picks right, Brier, using the LAST prediction logged at each stage.
     Two-way probability = p_a / (p_a + p_b), i.e. conditional on the match finishing; matches
     that ended without a result are counted separately."""
     predictions = _read(pred_path or LOG_PATH)
+    if teams is not None:
+        predictions = [p for p in predictions if p["team_a"] in teams and p["team_b"] in teams]
     results = {r["match_id"]: r for r in _read(result_path or RESULTS_PATH)}
     by_stage: dict[str, dict] = {}
     no_result = 0

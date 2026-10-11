@@ -736,3 +736,7 @@ Batter/bowler data: the board (miniscore) and the scorecard page carry exact fig
 economy -- but we displayed names only. Now: mid-over `[NOW: Mayank Yadav* 3-0-36-3 bowling, Shai Hope* 38(19) on strike, Sherfane Rutherford 19(7) at the other end]`
 (from the board; stats kept in the board dict), and at the over break `[JUST BOWLED: Hosein 4-0-37-1 | AT THE CREASE: Hope 102*(45), Shepherd 34*(13) | NEXT BOWLER: Forde 2-0-39-0]`
 from the fresh scorecard page (used only when its total matches ours; otherwise just the bowler's name, nothing invented), followed by the expected next striker.
+
+## 2026-10-11 -- scoring limited to the ICC top 10
+- User decision: check pre-match results only for the ICC T20I top 10 (India, England, Australia, Pakistan, South Africa, New Zealand, West Indies, Sri Lanka, Afghanistan, Bangladesh). `prematch_log.ICC_TOP_10`; `score()` counts only matches where both teams are in it (`teams=None` scores everything). Update the set when the ranking changes.
+- Today's TOI-only Asia-region matches (Malaysia v Maldives, China v Singapore, Hong Kong v Saudi) are outside it; Hong Kong's TOI name ("Hong Kong, China") does not match Cricsheet's ("Hong Kong"), left unfixed on purpose.

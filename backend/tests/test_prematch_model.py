@@ -309,7 +309,9 @@ def test_prematch_log_records_changes_only_and_scores_against_results(tmp_path):
 
     log.log_prediction("cricbuzz:2", {**pre, "team_a": "A", "team_b": "B", "p_a": 0.6, "p_b": 0.4, "pct_a": 60, "pct_b": 40}, preds)
     log.record_result("cricbuzz:2", None, "no result", results)                  # washed out: counted apart, not scored
-    assert log.score(preds, results)["no_result"] == 1
+    assert log.score(preds, results, teams=None)["no_result"] == 1
+    # only matches between two ICC top-10 sides are scored by default
+    assert log.score(preds, results)["no_result"] == 0 and log.score(preds, results)["matches_logged"] == 1
 
 
 def test_briefing_logs_the_prediction_when_given_a_match_id(tmp_path, monkeypatch):

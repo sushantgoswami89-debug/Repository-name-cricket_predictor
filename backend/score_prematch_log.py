@@ -1,6 +1,6 @@
 """Score the live pre-match win % log against how the matches ended.
 
-Usage: python score_prematch_log.py
+Usage: python score_prematch_log.py   (ICC top-10 sides only: see prematch_log.ICC_TOP_10)
 Coin flip = 50% right, Brier 0.2500. The backtest to compare with (2021-25, fit on earlier years only):
 all games ~67.7% right / 0.2056-0.2098; full-member games ~63.7% right / 0.2235-0.2270.
 With only a handful of matches the live numbers are anecdotes: one match is a 30%-70% coin.
