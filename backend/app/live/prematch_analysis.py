@@ -19,7 +19,7 @@ import json
 from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
-from app.live.fact_o_meter import MAX_BASELINE, label as fact_label, meter, versus
+from app.live.fact_o_meter import MAX_BASELINE, label as fact_label, meter
 
 ROOT = Path(__file__).resolve().parents[3]
 T20I_DIR = ROOT / "data" / "raw" / "cricsheet" / "t20i"
@@ -278,9 +278,7 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
     record = venue_record(city, "odi" if fmt == "odi" else "t20")  # records are format-specific, never pooled
     if record:
         n = int(re.search(r"won (\d+) of", record).group(1))
-        event = record.split(" has won")[0]
-        baseline = _venue_event_table("odi" if fmt == "odi" else "t20")[0][event]
-        text += f" | 🎯 {fact_label('odi' if fmt == 'odi' else 't20')}: {record} {meter(n)} {versus(baseline, 'ground')}"
+        text += f" | 🎯 {fact_label('odi' if fmt == 'odi' else 't20')}: {record} {meter(n)}"
     return text
 
 

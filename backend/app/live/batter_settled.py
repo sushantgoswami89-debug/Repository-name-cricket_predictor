@@ -86,5 +86,5 @@ def settled_line(full_name: str, team: str, balls: int, runs: int, fmt: str = "t
     if not live:
         return ""
     x, n, innings, base = max(live)
-    return card(fmt, f"{full_name} {runs}*({balls}) -- needs {x - runs} more",
-                f"Every single time he has faced {n}+ balls, he has gone on to make {_what(x)}", innings, base, "batter")
+    return card(fmt, f"{full_name} {runs}*({balls})",
+                f"Every single time he has faced {n}+ balls, he has gone on to make {_what(x)}", innings)

@@ -87,4 +87,4 @@ def bowler_line(full_name: str, team: str, balls: int, wickets: int, fmt: str = 
     what = "a wicket" if k == 1 else f"{k}+ wickets"
     spell = f"{n // 6}+ overs" if n % 6 == 0 else f"{n}+ balls"
     return card(fmt, f"{full_name} {balls // 6}.{balls % 6} ov, {wickets} wkt{'' if wickets == 1 else 's'}",
-                f"Has taken {what} in every one of his innings of {spell}", innings, baseline, "bowler")
+                f"Has taken {what} in every one of his innings of {spell}", innings)
