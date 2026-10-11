@@ -400,6 +400,36 @@ def _prediction_hold(snapshot) -> str | None:
     )
 
 
+def _audit_ok(snapshot, summary: dict) -> bool | None:
+    """True when our rebuilt over matches Cricbuzz's own summary (runs and delivery count), False when it does not, None when
+    we cannot tell (the over was not seen live)."""
+    ours = [d for d in snapshot.deliveries if d.innings == summary["innings"] and d.over == summary["over"]]
+    if not ours:
+        return None
+    ok_runs = summary["over_runs"] is None or sum(d.total_runs for d in ours) == int(summary["over_runs"])
+    ok_balls = not summary["summary"] or len(ours) == len(summary["summary"].split())
+    return bool(ok_runs and ok_balls)
+
+
+def _board_verdict(snapshot) -> bool | None:
+    """The page's board against our state AT THE SAME over.ball: True agree, False disagree, None if the board is not at
+    this point (an older cached copy tells us nothing)."""
+    board = getattr(snapshot, "board", None)
+    if not board or board.get("score") is None or snapshot.innings_complete:
+        return None
+    if board.get("innings") not in (None, snapshot.innings):
+        return None
+    try:
+        if abs(float(board.get("overs")) - float(snapshot.overs)) > 0.001:
+            return None
+    except (TypeError, ValueError):
+        return None
+    return (board["score"], board.get("wickets")) == (snapshot.score, snapshot.wickets)
+
+
+SYNC_TIMEOUT_SECONDS = 120.0
+
+
 def _audit_over(snapshot, summary: dict) -> str:
     """Compare one finished over as we rebuilt it with Cricbuzz's own per-over
     summary (runs and the ball-by-ball result string)."""
@@ -673,6 +703,13 @@ class CricbuzzMatchSession:
     _carded: set = field(default_factory=set)
     _captured: bool = False
     _crease: list[str] | None = None
+    # Sync gate (user 2026-10-11: "first match commentary and our recording in perfect sync, then only go for prediction"):
+    # per (innings, completed over) which independent sources have confirmed / contradicted our record.
+    _confirm: dict = field(default_factory=dict)
+    _sync_wait_since: dict = field(default_factory=dict)
+    _sync_card_tries: dict = field(default_factory=dict)
+    _sync_released: set = field(default_factory=set)
+    _last_gate: str | None = None
     _card_not_out: list[str] = field(default_factory=list)  # the latest scorecard page's not-out names (it may lag)
     _incoming: dict = field(default_factory=dict)  # innings -> batters the commentary said "comes to the crease"
     _card_batters: dict = field(default_factory=dict)
@@ -693,6 +730,48 @@ class CricbuzzMatchSession:
     @property
     def finished(self) -> bool:
         return self._finished
+
+    def _sync_gate(self, snapshot) -> str | None:
+        """Reason to wait before predicting, or None. A prediction for the over after completed over C is only released when at
+        least one independent source AT THE SAME POINT confirms our record (the page's board, Cricbuzz's own over summary, or the
+        scorecard page's total) and none contradicts it. After SYNC_TIMEOUT_SECONDS without any confirmation it is released
+        and says so (the page can lag for minutes; the gate must not silence a whole match)."""
+        if not snapshot.deliveries or snapshot.innings_complete:
+            return None
+        completed = int(float(snapshot.overs))
+        if completed < 1 or self._last_over_sent.get(snapshot.innings, 0) >= completed + 1:
+            return None  # nothing pending: the next over's prediction was already made
+        key = (snapshot.innings, completed)
+        info = self._confirm.setdefault(key, {})
+        board = _board_verdict(snapshot)
+        if board is not None:
+            info["board"] = board
+        contradicted = [name for name, ok in info.items() if ok is False]
+        if contradicted:
+            return f"over {completed}: {', '.join(contradicted)} disagree with our record at {snapshot.overs} ov ({snapshot.score}/{snapshot.wickets})"
+        if any(ok is True for ok in info.values()):
+            return None
+        now = time.monotonic()
+        started = self._sync_wait_since.setdefault(key, now)
+        if now - started >= SYNC_TIMEOUT_SECONDS:
+            if key not in self._sync_released:
+                self._sync_released.add(key)
+                print(f"[{self.match_id}] [sync] no confirmation for {SYNC_TIMEOUT_SECONDS:.0f}s after over {completed}: predicting UNCONFIRMED")
+            return None
+        # the scorecard page is the slowest source: look again now and then while we wait
+        tries = self._sync_card_tries.get(key, 0)
+        if tries < 8 and now - self._sync_wait_since.get((key, "card"), 0.0) >= 12.0:
+            self._sync_card_tries[key] = tries + 1
+            self._sync_wait_since[(key, "card")] = now
+            try:
+                card = fetch_scorecard(self.match_id)
+                current = next((i for i in (card or {}).get("innings", []) if i.get("innings") == snapshot.innings), None)
+                if current and (current.get("runs"), current.get("wickets")) == (snapshot.score, snapshot.wickets):
+                    info["card"] = True
+                    return None
+            except Exception:
+                pass
+        return f"over {completed}: waiting for the page (board / over summary / scorecard) to confirm {snapshot.score}/{snapshot.wickets} at {snapshot.overs} ov"
 
     def _derived_crease(self, snapshot) -> list[str] | None:
         """The two batters at the crease when the scorecard page lags: the page's last not-out names (stale or not), the
@@ -783,6 +862,9 @@ class CricbuzzMatchSession:
         drain_summaries = getattr(self.reader, "drain_over_summaries", None)
         for summary in (drain_summaries() if drain_summaries else []):
             print(f"[{self.match_id}] {_audit_over(snapshot, summary)}")
+            verdict = _audit_ok(snapshot, summary)
+            if verdict is not None:
+                self._confirm.setdefault((summary["innings"], summary["over"]), {})["summary"] = verdict
             if self.commentary_log_path is not None:
                 archive = self.commentary_log_path.with_name(f"over-summaries-{self.match_id}.jsonl")
                 with archive.open("a", encoding="utf-8") as handle:
@@ -931,6 +1013,13 @@ class CricbuzzMatchSession:
             )
 
         snapshot = _with_announced_bowler(snapshot, self._announced_bowler)
+        gate = self._sync_gate(snapshot)
+        if gate:
+            if gate != self._last_gate:
+                print(f"[{self.match_id}] ⏳ SYNC GATE (no prediction until the page confirms our record): {gate}")
+            self._last_gate = gate
+            return
+        self._last_gate = None
         hold = _prediction_hold(snapshot)
         if hold:
             if hold != self._last_hold:
@@ -1022,6 +1111,7 @@ class CricbuzzMatchSession:
             self._card_not_out = [b["name"] for b in current["batting"] if str(b.get("out", "")).lower() == "not out"]
         self._card_batters, self._card_bowlers, self._card_nums, self._card_bowl_nums = {}, {}, {}, {}
         if current and (current.get("runs"), current.get("wickets")) == (snapshot.score, snapshot.wickets):
+            self._confirm.setdefault((snapshot.innings, snapshot.deliveries[-1].over), {})["card"] = True
             pair = [b["name"] for b in current["batting"] if str(b.get("out", "")).lower() == "not out"]
             self._crease = pair if len(pair) == 2 else None
             self._card_batters = {b["name"]: f" {b['runs']}*({b['balls']})" for b in current["batting"] if b.get("balls") is not None}

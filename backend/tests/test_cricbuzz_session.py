@@ -573,3 +573,61 @@ def test_last_ball_wicket_names_the_survivor_to_face_and_the_new_batter():
     # a stale pair that cannot be resolved to exactly two gives no crease
     session._card_not_out, session._incoming = [], {}
     assert session._derived_crease(snap) is None or len(session._derived_crease(snap)) == 2
+
+
+def test_sync_gate_waits_for_the_page_to_confirm_our_record_before_predicting(monkeypatch):
+    """User 2026-10-11: commentary and our recording must be in perfect sync before any prediction. A prediction for the
+    over after completed over C is released only when the board / the over summary / the scorecard total at the SAME point
+    confirms our record and nothing contradicts it; after the timeout it is released and says so."""
+    from types import SimpleNamespace
+
+    import app.live.cricbuzz_session as cs
+    from app.live.cricbuzz_session import SYNC_TIMEOUT_SECONDS, CricbuzzMatchSession
+
+    def snap(board=None, overs="13.0", score=140, wickets=2):
+        last = SimpleNamespace(timestamp_ms=1000, over=13, innings=2, striker="A", bowler="B", total_runs=1, batter_runs=1,
+                               wicket_kind=None, dismissed="", commentary="")
+        return SimpleNamespace(overs=overs, innings=2, innings_complete=False, deliveries=[last], batting_team="India",
+                               score=score, wickets=wickets, board=board)
+
+    clock = {"t": 100.0}
+    monkeypatch.setattr(cs.time, "monotonic", lambda: clock["t"])
+    monkeypatch.setattr(cs, "fetch_scorecard", lambda match_id: None)
+    new = lambda: CricbuzzMatchSession(match_id="9", match_url="u", pipeline=SimpleNamespace())
+
+    # nothing confirms yet -> wait (the page's board is an older copy: it says nothing about this point)
+    old_board = {"innings": 2, "score": 120, "wickets": 2, "overs": "11.2"}
+    session = new()
+    assert "waiting for the page" in session._sync_gate(snap(old_board))
+    # the board arrives at the same point and agrees -> released
+    assert session._sync_gate(snap({"innings": 2, "score": 140, "wickets": 2, "overs": "13.0"})) is None
+    # ... but if it disagrees at the same point, blocked and says so
+    session = new()
+    gate = session._sync_gate(snap({"innings": 2, "score": 141, "wickets": 2, "overs": "13.0"}))
+    assert "board disagree" in gate
+    # Cricbuzz's own over summary confirms (True) or contradicts (False)
+    session = new()
+    session._confirm[(2, 13)] = {"summary": True}
+    assert session._sync_gate(snap(old_board)) is None
+    session = new()
+    session._confirm[(2, 13)] = {"summary": False}
+    assert "summary disagree" in session._sync_gate(snap(old_board))
+    # the scorecard page's total, fetched again while waiting, can confirm
+    session = new()
+    monkeypatch.setattr(cs, "fetch_scorecard", lambda match_id: {"innings": [{"innings": 2, "runs": 140, "wickets": 2}]})
+    assert session._sync_gate(snap(old_board)) is None and session._confirm[(2, 13)]["card"] is True
+    monkeypatch.setattr(cs, "fetch_scorecard", lambda match_id: None)
+    # nothing ever confirms: released after the timeout, once, with a visible note
+    session = new()
+    assert "waiting" in session._sync_gate(snap(old_board))
+    clock["t"] += SYNC_TIMEOUT_SECONDS + 1
+    assert session._sync_gate(snap(old_board)) is None
+    # a prediction that was already made for the next over is not gated
+    session = new()
+    session._last_over_sent[2] = 14
+    assert session._sync_gate(snap(old_board)) is None
+    # the first over (nothing completed yet) and a finished innings are never gated
+    assert new()._sync_gate(snap(old_board, overs="0.3")) is None
+    done = snap(old_board)
+    done.innings_complete = True
+    assert new()._sync_gate(done) is None
