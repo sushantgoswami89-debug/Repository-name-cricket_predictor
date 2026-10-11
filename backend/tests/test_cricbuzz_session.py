@@ -797,3 +797,24 @@ def test_chase_block_compares_with_the_other_side_at_the_same_over(tmp_path):
     assert "IND after 5 ov: 52/1 | WI 35/1 | behind by 17" in text.splitlines()
     snap.innings = 1
     assert "after 5 ov" not in _over_break_block(snap, [], {}, {}, "", None, (52, 1))   # chase only
+
+
+def test_innings_break_is_not_the_end_of_the_match():
+    """2026-10-11: the header says complete=True at the innings break; the session logged "Innings Break" as the result
+    and was dropped, so the chase was re-attached mid-over and its first-over prediction was lost."""
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_reader import board_match_complete
+    from app.live.cricbuzz_session import _match_result_text, _match_winner
+
+    break_board = {"state": "Innings Break", "status": "Innings Break", "complete": True, "result": None}
+    done_board = {"state": "Complete", "status": "India won by 14 runs", "complete": True,
+                  "result": {"resultType": "win", "winningTeam": "India"}}
+    assert not board_match_complete(break_board)
+    assert board_match_complete(done_board)
+    assert not board_match_complete(None) and not board_match_complete({"state": "In Progress", "complete": False})
+    snap = SimpleNamespace(board=break_board, innings=1, target=0, score=223, wickets=10, innings_complete=True,
+                           batting_team="India", bowling_team="West Indies")
+    assert _match_result_text(snap) is None and _match_winner(snap) is None
+    snap.board = done_board
+    assert _match_result_text(snap) == "India won by 14 runs" and _match_winner(snap) == "India"

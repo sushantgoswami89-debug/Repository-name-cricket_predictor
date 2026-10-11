@@ -31,6 +31,7 @@ from app.live.cricbuzz_reader import (
     CricbuzzInningsNotStarted,
     CricbuzzLiveReader,
     _extract_flight_chunks,
+    board_match_complete,
 )
 from app.live.cricbuzz_scorecard import compare_with_deliveries, fetch_scorecard
 from app.live.batter_settled import settled_line
@@ -108,7 +109,7 @@ def _header_result(snapshot) -> tuple[str | None, str | None] | None:
     """(status text, winning team or None) when the page's own match header says the match is over, else None.
     A win names the winner; a tie / no result / abandonment has no winner."""
     board = getattr(snapshot, "board", None) or {}
-    if not (board.get("complete") is True or str(board.get("state") or "").lower() == "complete"):
+    if not board_match_complete(board):
         return None
     result = board.get("result") if isinstance(board.get("result"), dict) else {}
     winner = result.get("winningTeam") if result.get("resultType") == "win" else None

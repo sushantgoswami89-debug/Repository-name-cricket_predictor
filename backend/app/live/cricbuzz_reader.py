@@ -412,6 +412,19 @@ def _align(wanted: list, have: list) -> dict[int, int]:
             j += 1
     return pairs
 
+
+def board_match_complete(board: dict | None) -> bool:
+    """True only when the page's match header says the MATCH is over. At the innings break the header also has
+    complete=True ("Innings Break"), which on 2026-10-11 made both drivers treat the match as finished at the break: the
+    result was logged as "Innings Break" (so the pre-match log could not be scored) and the session was dropped, so the
+    chase was re-attached mid-over and its first-over prediction was lost."""
+    if not board:
+        return False
+    if any("break" in str(board.get(key) or "").lower() for key in ("state", "status")):
+        return False
+    return board.get("complete") is True or str(board.get("state") or "").lower() == "complete"
+
+
 @dataclass
 class CricbuzzLiveReader:
     """Poll Cricbuzz's match-center page and return a LiveSnapshot-shaped
@@ -630,7 +643,7 @@ class CricbuzzLiveReader:
         toss_won_by, toss_decision = self._toss_from_chunks(chunks)
         # The page's own match header says when the match is over ("Complete" + a result), which is more
         # reliable than inferring it from the score and the target.
-        match_complete = bool(board and (board.get("complete") is True or str(board.get("state") or "").lower() == "complete"))
+        match_complete = board_match_complete(board)
         if match_complete:
             innings_complete = True
 

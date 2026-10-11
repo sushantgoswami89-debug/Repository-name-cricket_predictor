@@ -818,3 +818,20 @@ User: "dont show full commentary only summary like 6.1 run 6.2 4 run and then in
 Console now prints one short line per ball (`6.1  1 run`, `6.2  FOUR`, `6.3  WICKET -- X (caught)`) and one score line per over break
 (score, just bowled, batters, next bowler/striker expected), not one per poll. Full commentary and shot-quality flags (STREAKY/BEATEN/
 dropped catch) are no longer printed; they stay in data/live/commentary-<id>.jsonl. Takes effect at the next restart.
+
+## 2026-10-11 night: log review -- the innings break was treated as the end of the match (fixed)
+Found in the board log: at the innings break the header has state "Innings Break" AND complete=True. Both the reader
+(`match_complete`) and the session (`_header_result`) read complete=True as "match over":
+ * `record_result` logged "Innings Break" (winner None) as the result at the break, and dedupes by match id, so the real
+   result was never recorded -> tonight's two matches were unscorable in score_prematch_log.py. Corrected the two lines by
+   hand (Pakistan won by 82; India won by 14): pre-toss 2/2, after toss 2/2 for tonight's matches.
+ * `_finished = True` made the driver drop the session at the break; the chase was re-attached mid-over ("[repair] innings 2:
+   starting score N taken from the page's board") and the chase pre-snapshot (`_pre_next_innings_snapshot`) was skipped because
+   it requires `not match_complete`. That is why the chase over-1 prediction was missing in both matches ("again we missed 1st
+   over prediction") even after that fix. Neither the pre-snapshot nor the sync path has therefore been seen live yet.
+Fix: `board_match_complete()` in cricbuzz_reader.py (a "break" in state/status is never the end of the match); test added.
+Other numbers from tonight's logs: striker HIT 34/34, announced bowler HIT 14/14 (the only two "nothing was derived" were after
+a wicket on the last ball); announce sources: commentary note 32, mini scorecard 1; scorecard page disagreed with our total at
+44 of ~80 over ends (it lags, so figures now come from the mini scorecard when it is current); 26 restarts/attaches logged as
+"[repair] ... taken from the page's board" (all restarts and the break bug). Predictions logged for innings 2: all overs 2-19 in
+Pak v SL, 2-12 and 14-19 in India v WI (over 13 missing in the ensemble log although the console printed it -- unexplained).
