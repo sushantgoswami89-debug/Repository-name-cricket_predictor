@@ -153,6 +153,9 @@ _NOTE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("REVIEW", re.compile(r"\bDRS\b|\bumpire'?s call\b|\bthird umpire\b|\bhas reviewed\b|\btakes? the review\b", re.I)),
     ("BALL/EQUIPMENT", re.compile(r"\bball (?:has been |is )?changed\b|\bchange of ball\b|\bnew ball\b|\bball inspection\b", re.I)),
     ("BOWLING CHANGE", re.compile(r"\bcomes? into the attack\b|\bis back into the attack\b|\bback into the attack\b", re.I)),
+    # "Mayank Yadav, right handed bat, comes to the crease": the clearest statement of who walks in after a wicket
+    # (2026-10-11: the scorecard page lagged after dismissals while this note was already there).
+    ("NEW BATTER", re.compile(r"\b(?:right|left)[- ]?handed bat,?\s+comes? to the crease\b", re.I)),
 )
 
 

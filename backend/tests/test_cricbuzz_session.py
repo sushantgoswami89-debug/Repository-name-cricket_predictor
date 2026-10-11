@@ -536,3 +536,40 @@ def test_now_tag_is_left_out_when_the_board_is_behind_our_state():
     assert _board_players(SimpleNamespace(innings=1, score=193, wickets=6, overs="16.4", board=board)) == ""      # one ball apart
     assert _board_players(SimpleNamespace(innings=2, score=193, wickets=6, overs="16.3", board=board)) == ""      # other innings
     assert _board_players(SimpleNamespace(innings=1, score=193, wickets=6, overs="16.3", board=None)) == ""
+
+
+def test_new_batter_note_is_read_and_names_the_batter_walking_in():
+    """2026-10-11: after Arshdeep Singh was out lbw off the last ball of the over, the scorecard page lagged and the line said
+    "batters: see board after the first ball" although the commentary already said who was walking in."""
+    from app.live.cricbuzz_reader import _classify_note
+    from app.live.cricbuzz_session import _incoming_batter_name
+
+    note = "Mayank Yadav, right handed bat, comes to the crease"
+    assert _classify_note(note) == "NEW BATTER" and _incoming_batter_name(note) == "Mayank Yadav"
+    assert _classify_note("Prince Yadav, left-handed bat, comes to the crease") == "NEW BATTER"
+    assert _incoming_batter_name("Shamar Joseph [3.0-0-42-1] is back into the attack") == ""
+    assert _classify_note("Shamar Joseph [3.0-0-42-1] is back into the attack") == "BOWLING CHANGE"      # unchanged
+
+
+def test_last_ball_wicket_names_the_survivor_to_face_and_the_new_batter():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import CricbuzzMatchSession, _expected_next_over, _next_over_line
+
+    # Arshdeep Singh lbw off the last ball (19.0); Prince Yadav is the other not-out batter; Mayank Yadav was announced in
+    snap = _over_break_snapshot(striker="Arshdeep Singh", last_runs=0, wicket="lbw", dismissed="Arshdeep Singh",
+                                board_pair=("Arshdeep Singh", "Prince Yadav"))
+    snap.innings = 2
+    session = CricbuzzMatchSession(match_id="9", match_url="u", pipeline=SimpleNamespace())
+    session._card_not_out = ["Arshdeep Singh", "Prince Yadav"]          # the (lagging) scorecard page still lists the pair
+    session._incoming = {2: ["Mayank Yadav"]}
+    crease = session._derived_crease(snap)
+    assert crease == ["Prince Yadav", "Mayank Yadav"]                    # dismissed removed, walking-in batter added
+    expected = _expected_next_over(snap, None, crease, ("Mayank Yadav",))
+    assert expected["striker"] == "Prince Yadav" and expected["other"] == "Mayank Yadav"
+    assert "Prince Yadav* expected to face, Mayank Yadav at the other end" in _next_over_line(snap, None, crease, ("Mayank Yadav",))
+    # without the note the old behaviour stays: no guess
+    assert "batters: see board after the first ball" in _next_over_line(snap, None, ["Prince Yadav"], ())
+    # a stale pair that cannot be resolved to exactly two gives no crease
+    session._card_not_out, session._incoming = [], {}
+    assert session._derived_crease(snap) is None or len(session._derived_crease(snap)) == 2

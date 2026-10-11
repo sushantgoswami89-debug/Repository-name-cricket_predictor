@@ -198,7 +198,17 @@ def _with_announced_bowler(snapshot, announced: tuple[int, str] | None):
     return replace(snapshot, announced_bowler=name, announced_bowler_over=next_over)
 
 
-def _expected_next_over(snapshot, announced: tuple[int, str] | None, crease: list[str] | None = None) -> dict | None:
+_NEW_BATTER_NAME = re.compile(r"^\s*(.+?),\s*(?:right|left)[- ]?handed bat", re.IGNORECASE)
+
+
+def _incoming_batter_name(note_text: str) -> str:
+    """"Mayank Yadav, right handed bat, comes to the crease" -> "Mayank Yadav" ("" if the note is not that)."""
+    match = _NEW_BATTER_NAME.match(note_text or "")
+    return match.group(1).strip() if match else ""
+
+
+def _expected_next_over(snapshot, announced: tuple[int, str] | None, crease: list[str] | None = None,
+                        incoming: tuple[str, ...] = ()) -> dict | None:
     """What the next over should look like, derived at the end of an over (see
     _next_over_line): {"over": n, "bowler": name or "", "striker": name or "",
     "other": name or ""}, or None when it is not an over end."""
@@ -229,17 +239,24 @@ def _expected_next_over(snapshot, announced: tuple[int, str] | None, crease: lis
         crossed = (not boundary) and last.total_runs % 2 == 1
         striker = last.striker if crossed else next(n for n in pair if n != last.striker)
         other = next(n for n in pair if n != striker)
+    elif last.wicket_kind and len(pair) == 2 and set(incoming) & set(pair) and len(set(incoming) & set(pair)) == 1:
+        # A wicket fell on the last ball and the commentary named the batter walking in. The ends change for the new
+        # over, so the SURVIVING batter faces and the new one is at the other end (checked later by the HIT/MISS audit;
+        # a run out with a crossing can differ).
+        other = next(n for n in pair if n in incoming)
+        striker = next(n for n in pair if n != other)
     return {"over": last.over + 1, "bowler": bowler, "striker": striker, "other": other}
 
 
-def _next_over_line(snapshot, announced: tuple[int, str] | None, crease: list[str] | None = None) -> str:
+def _next_over_line(snapshot, announced: tuple[int, str] | None, crease: list[str] | None = None,
+                    incoming: tuple[str, ...] = ()) -> str:
     """At the end of an over Cricbuzz's board still shows the finished over's
     bowler and batting positions until the next over's first ball (user,
     2026-10-06: "still previous bowler and batter until one ball is bowled").
     Show what is expected instead, clearly marked as expected: the bowler
     announced in the commentary (if any since the last ball), and the batters
     at the opposite ends."""
-    expected = _expected_next_over(snapshot, announced, crease)
+    expected = _expected_next_over(snapshot, announced, crease, incoming)
     if expected is None:
         return ""
     if expected["striker"]:
@@ -656,6 +673,8 @@ class CricbuzzMatchSession:
     _carded: set = field(default_factory=set)
     _captured: bool = False
     _crease: list[str] | None = None
+    _card_not_out: list[str] = field(default_factory=list)  # the latest scorecard page's not-out names (it may lag)
+    _incoming: dict = field(default_factory=dict)  # innings -> batters the commentary said "comes to the crease"
     _card_batters: dict = field(default_factory=dict)
     _card_bowlers: dict = field(default_factory=dict)
     _card_nums: dict = field(default_factory=dict)  # batter -> (runs, balls) from the fresh scorecard
@@ -674,6 +693,20 @@ class CricbuzzMatchSession:
     @property
     def finished(self) -> bool:
         return self._finished
+
+    def _derived_crease(self, snapshot) -> list[str] | None:
+        """The two batters at the crease when the scorecard page lags: the page's last not-out names (stale or not), the
+        board's pair and every batter the commentary said "comes to the crease", minus everyone our own deliveries show
+        as dismissed. Only when that leaves exactly two."""
+        if not snapshot.deliveries:
+            return None
+        board = getattr(snapshot, "board", None) or {}
+        out = {d.dismissed or d.striker for d in snapshot.deliveries if d.wicket_kind and d.innings == snapshot.innings}
+        names: list[str] = []
+        for name in [*self._card_not_out, board.get("striker"), board.get("non_striker"), *self._incoming.get(snapshot.innings, [])]:
+            if name and name not in out and name not in names:
+                names.append(name)
+        return names if len(names) == 2 else None
 
     def _send_card(self, stat: str, key: tuple) -> None:
         """Print a live Fact-o-Meter card and send it to Telegram when a facts publisher is set (never raises)."""
@@ -757,6 +790,10 @@ class CricbuzzMatchSession:
         drain_notes = getattr(self.reader, "drain_notes", None)
         for note_ts, category, note_text in (drain_notes() if drain_notes else []):
             print(f"[{self.match_id}] [note] {category}: {note_text[:240]}")
+            if category == "NEW BATTER":
+                incoming_name = _incoming_batter_name(note_text)
+                if incoming_name and incoming_name not in self._incoming.setdefault(snapshot.innings, []):
+                    self._incoming[snapshot.innings].append(incoming_name)
             if category == "BOWLING CHANGE":
                 announced_name = _announced_bowler_name(note_text)
                 if announced_name:
@@ -782,8 +819,9 @@ class CricbuzzMatchSession:
                     handle.write(json.dumps({"check": check, "expected": self._expected_next}) + "\n")
             self._expected_next = None
         self._card_check(snapshot)  # at an over end this also refreshes the not-out pair used just below
-        crease = self._crease if _at_over_break(snapshot) else None
-        expected_now = _expected_next_over(snapshot, self._announced_bowler, crease)
+        crease = (self._crease or self._derived_crease(snapshot)) if _at_over_break(snapshot) else None
+        incoming = tuple(self._incoming.get(snapshot.innings, []))
+        expected_now = _expected_next_over(snapshot, self._announced_bowler, crease, incoming)
         if expected_now is not None:
             self._expected_next = expected_now
         figures = ""
@@ -792,7 +830,7 @@ class CricbuzzMatchSession:
             figures = _over_break_figures(snapshot, crease, self._card_batters, self._card_bowlers, announced)
         print(
             f"[{self.match_id}] {_scorecard_line(snapshot)}{figures}"
-            f"{_next_over_line(snapshot, self._announced_bowler, crease)}"
+            f"{_next_over_line(snapshot, self._announced_bowler, crease, incoming)}"
         )
         for name in (crease or []):
             runs_balls = self._card_nums.get(name)
@@ -971,6 +1009,7 @@ class CricbuzzMatchSession:
             return
         self._carded.add(key)
         self._crease = None  # never carry the previous over's pair into this one if the fetch fails
+        self._card_not_out = []  # nor the previous innings' / over's not-out names
         card = fetch_scorecard(self.match_id)
         if card is None:
             return
@@ -979,6 +1018,8 @@ class CricbuzzMatchSession:
             problems += compare_with_deliveries(card, snapshot.deliveries, innings)
         # Who is at the crease right now, from the card, but only if the card is as current as we are.
         current = next((i for i in card["innings"] if i.get("innings") == snapshot.innings), None)
+        if current:
+            self._card_not_out = [b["name"] for b in current["batting"] if str(b.get("out", "")).lower() == "not out"]
         self._card_batters, self._card_bowlers, self._card_nums, self._card_bowl_nums = {}, {}, {}, {}
         if current and (current.get("runs"), current.get("wickets")) == (snapshot.score, snapshot.wickets):
             pair = [b["name"] for b in current["batting"] if str(b.get("out", "")).lower() == "not out"]
