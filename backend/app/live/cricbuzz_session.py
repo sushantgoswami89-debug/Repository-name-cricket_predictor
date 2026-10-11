@@ -151,8 +151,9 @@ def _ball_label(snapshot, delivery) -> str:
 def _newest_board(previous: dict | None, current: dict | None) -> dict | None:
     """Cricbuzz serves cached copies of different ages: consecutive polls gave
     boards at 79/2, 102/2, 117/2, 121/2, so the striker/bowler/score shown
-    flickered back to stale values. Keep the board with the newest
-    `last_updated_s` (then innings/overs) and ignore older copies."""
+    flickered back to stale values. Keep the board that is furthest along (innings, then balls bowled, then score) and ignore
+    older copies. The page's own `last_updated_s` is only the tie-break: on 2026-10-11 a copy showing 123/4 at 13.0 overs came
+    back with a NEWER timestamp than the 130/4 at 13.2 board before it, so the timestamp alone let a stale copy win."""
     if not current:
         return previous
     if not previous:
@@ -163,7 +164,8 @@ def _newest_board(previous: dict | None, current: dict | None) -> dict | None:
             overs = float(board.get("overs") or 0)
         except (TypeError, ValueError):
             overs = 0.0
-        return (board.get("innings") or 0, board.get("last_updated_s") or 0, overs)
+        whole, _, part = f"{overs:.1f}".partition(".")
+        return (board.get("innings") or 0, int(whole) * 6 + int(part or 0), board.get("score") or 0, board.get("last_updated_s") or 0)
 
     return current if stamp(current) >= stamp(previous) else previous
 

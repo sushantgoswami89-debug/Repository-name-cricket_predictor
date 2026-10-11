@@ -746,3 +746,14 @@ def test_over_break_block_shows_score_run_rates_chase_and_both_bowlers():
     ]
     snap.innings, snap.target = 1, 0
     assert "need" not in _over_break_block(snap, [], {}, {}, "", None)   # first innings: run rate only
+
+
+def test_newest_board_ignores_an_older_state_even_with_a_newer_timestamp():
+    from app.live.cricbuzz_session import _newest_board
+
+    ahead = {"innings": 2, "overs": "13.2", "score": 130, "wickets": 4, "last_updated_s": 1791736716}
+    stale = {"innings": 2, "overs": "13", "score": 123, "wickets": 4, "last_updated_s": 1791736755}
+    assert _newest_board(ahead, stale) is ahead
+    later = {"innings": 2, "overs": "13.3", "score": 131, "wickets": 4, "last_updated_s": 1791736700}
+    assert _newest_board(ahead, later) is later
+    assert _newest_board(ahead, {"innings": 3, "overs": "0.1", "score": 0}) is not ahead   # a new innings still wins
