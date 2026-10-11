@@ -19,6 +19,7 @@ import json
 from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
+from app.live.fact_o_meter import label as fact_label
 
 ROOT = Path(__file__).resolve().parents[3]
 T20I_DIR = ROOT / "data" / "raw" / "cricsheet" / "t20i"
@@ -276,7 +277,7 @@ def venue_summary(city: str, fmt: str = "t20") -> str:
             text += " [small sample]"
     record = venue_record(city, "odi" if fmt == "odi" else "t20")  # records are format-specific, never pooled
     if record:
-        text += f" | {'ODI' if fmt == 'odi' else 'T20'} record: {record}"
+        text += f" | {fact_label('odi' if fmt == 'odi' else 't20')}: {record}"
     return text
 
 

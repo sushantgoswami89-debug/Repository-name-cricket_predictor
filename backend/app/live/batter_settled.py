@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 
+from app.live.fact_o_meter import label
 from app.live.prematch_model import ROOT
 
 PATHS = {"t20": ROOT / "data" / "features" / "batter_innings.json",           # men's T20I + IPL
@@ -66,7 +67,7 @@ def all_records(fmt: str = "t20") -> dict[str, tuple[int, int]]:
 
 
 def settled_line(full_name: str, team: str, balls: int, runs: int, fmt: str = "t20") -> str:
-    """"STAT: Suryakumar Yadav 31*(42) -- 50+ in 26 of 26 innings where he has faced 40+ balls" for a batter with a
+    """"Fact-o-Meter (T20): Suryakumar Yadav 31*(42) -- 50+ in 26 of 26 innings where he has faced 40+ balls" for a batter with a
     100% record who has reached its ball count and is still short of 50, else ""."""
     if runs >= TARGET:
         return ""
@@ -77,4 +78,4 @@ def settled_line(full_name: str, team: str, balls: int, runs: int, fmt: str = "t
     if not record or balls < record[0]:
         return ""
     n, innings = record
-    return f"STAT: {full_name} {runs}*({balls}) -- scored 50+ in {innings} of {innings} innings where he faced {n}+ balls ({fmt.upper()})"
+    return f"{label(fmt)}: {full_name} {runs}*({balls}) -- scored 50+ in {innings} of {innings} innings where he faced {n}+ balls"

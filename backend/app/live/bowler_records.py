@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 
+from app.live.fact_o_meter import label
 from app.live.prematch_model import ROOT
 
 PATHS = {"t20": ROOT / "data" / "features" / "bowler_innings.json",           # men's T20I + IPL
@@ -71,7 +72,7 @@ def overs_to_balls(overs) -> int | None:
 
 
 def bowler_line(full_name: str, team: str, balls: int, wickets: int, fmt: str = "t20") -> str:
-    """"STAT: J Coetzee 3.0-0-22-0 ..." text for a bowler with a 100% record who has bowled his record's ball count
+    """"Fact-o-Meter (T20): J Coetzee 3.0-0-22-0 ..." text for a bowler with a 100% record who has bowled his record's ball count
     without yet reaching its wicket count, else ""."""
     from app.live.prematch_xi import resolve_player
 
@@ -84,4 +85,4 @@ def bowler_line(full_name: str, team: str, balls: int, wickets: int, fmt: str = 
         return ""
     what = "a wicket" if k == 1 else f"{k}+ wickets"
     spell = f"{n // 6}+ overs" if n % 6 == 0 else f"{n}+ balls"
-    return f"STAT: {full_name} ({balls // 6}.{balls % 6} ov, {wickets} wkts) -- took {what} in {innings} of {innings} innings where he bowled {spell} ({fmt.upper()})"
+    return f"{label(fmt)}: {full_name} ({balls // 6}.{balls % 6} ov, {wickets} wkts) -- took {what} in {innings} of {innings} innings where he bowled {spell}"
