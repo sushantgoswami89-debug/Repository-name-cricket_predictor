@@ -710,3 +710,12 @@ def test_console_shows_one_short_line_per_ball():
     assert _delivery_event_lines(snapshot, set()) == [
         "6.1  1 run", "6.2  FOUR", "6.3  dot", "6.4  SIX", "6.5  wide, 1 run", "6.5  WICKET -- Kishan (caught)",
     ]
+
+
+def test_console_prefix_names_the_teams_so_two_matches_do_not_mix():
+    from app.live.cricbuzz_session import _match_tag
+
+    assert _match_tag("India", "West Indies", "151587") == "IND-WI"
+    assert _match_tag("West Indies", "India", "151587") == "IND-WI"   # same tag in either innings
+    assert _match_tag("Sri Lanka", "Pakistan", "170690") == "PAK-SL"
+    assert _match_tag("", "", "170690") == "170690"
