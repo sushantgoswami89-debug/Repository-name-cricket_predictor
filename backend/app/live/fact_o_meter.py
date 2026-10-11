@@ -17,11 +17,18 @@ def label(fmt: str) -> str:
     return f"{NAME} ({fmt.upper()})"
 
 
-def meter(n: int) -> str:
-    """"▰▰▰▰▰▰▰▰▰▰  🔥🔥" -- full bar, flames by sample size (the count itself is in the fact where it matters)."""
-    return f"{BAR}  " + "🔥" * (1 if n < 20 else 2 if n < 40 else 3)
+def meter(n: int, fill: int = 10) -> str:
+    """"▰▰▰▰▰▰▰▰▰▰  🔥🔥" -- bar and flames by sample size (the count itself is in the fact where it matters).
+    A 100% record is a full bar; an average-gap fact fills only part of it (see ratio_fill)."""
+    fill = max(0, min(10, fill))
+    return "▰" * fill + "▱" * (10 - fill) + "  " + "🔥" * (1 if n < 20 else 2 if n < 40 else 3)
 
 
-def card(fmt: str, head: str, fact: str, n: int) -> str:
+def ratio_fill(ratio: float) -> int:
+    """Bar length for "N times his usual level": 1.5x -> 3 of 10, 2x -> 5, 3x -> 7, 5x -> 8."""
+    return max(3, min(9, round(10 * (1 - 1 / max(ratio, 1.0)))))  # never a full bar: that is for 100% records
+
+
+def card(fmt: str, head: str, fact: str, n: int, fill: int = 10) -> str:
     """Two fun lines for the console: title + who, then the fact with the meter."""
-    return f"🎯 {NAME.upper()} ({fmt.upper()}) · {head} \n   {fact}  {meter(n)}"
+    return f"🎯 {NAME.upper()} ({fmt.upper()}) · {head} \n   {fact}  {meter(n, fill)}"

@@ -608,3 +608,45 @@ def test_ground_facts_are_literally_true_per_format_and_show_only_with_a_big_ask
     assert batter_ground_line("Nobody", None, city, 1, 5, 4) == ""
     (bname, bcity, binn), bc = next(iter(all_bowler_claims("t20").items()))
     assert "wickets" in bowler_ground_line(bname, bname, bcity, binn, 0, 12) and bowler_ground_line(bname, bname, bcity, binn, bc["x"] - 1, 12) == ""
+
+
+def test_average_gap_facts_are_true_and_use_a_partial_bar():
+    import json
+    import math
+
+    from app.live.fact_o_meter import meter, ratio_fill
+    from app.live.venue_form import (AVG_MIN_INNINGS, AVG_RATIO, AVG_Z, BAT_PATHS, all_average_claims, batter_average_line,
+                                     bowler_average_line)
+
+    assert ratio_fill(1.5) == 3 and ratio_fill(2) == 5 and ratio_fill(3) == 7 and ratio_fill(50) == 9 and meter(5, 10).startswith("▰" * 10)
+    assert meter(5, 7).startswith("▰" * 7 + "▱" * 3)
+    for fmt in ("t20", "odi"):
+        claims = all_average_claims(fmt, "bat")
+        assert claims, fmt
+        rows = json.loads(BAT_PATHS[fmt].read_text(encoding="utf-8"))
+        for (name, city), c in list(claims.items())[:40]:               # recompute from the raw table
+            here = [r[3] for r in rows if r[1] == name and r[10] == city]
+            career = [r[3] for r in rows if r[1] == name]
+            assert len(here) == c["n"] >= AVG_MIN_INNINGS and abs(sum(here) / len(here) - c["avg"]) < 1e-9
+            assert c["avg"] >= AVG_RATIO * c["career"] and c["z"] >= AVG_Z and max(here) == c["best"] and abs(sum(career) / len(career) - c["career"]) < 1e-9
+    assert all_average_claims("t20", "bowl") and all_average_claims("odi", "bowl")
+    line = batter_average_line("Imad Wasim", "Imad Wasim", "rawalpindi", 5, 4)
+    assert line.startswith("🎯 FACT-O-METER (T20) · Imad Wasim 5*(4) \n   Loves Rawalpindi: averages 42 here in 8 innings vs 14 overall (3.0x), best 92")
+    assert "▰▰▰▰▰▰▰▱▱▱" in line and "▰▰▰▰▰▰▰▰▰▰" not in line               # 3x his usual: 7 of 10, not a full bar
+    assert batter_average_line("Imad Wasim", "Imad Wasim", "somewhere else", 5, 4) == "" and batter_average_line("X", None, "rawalpindi", 5, 4) == ""
+    assert "wickets per innings" in bowler_average_line("B Howell", "BAC Howell", "cheltenham", 0, 12)
+
+
+def test_prematch_xi_facts_are_ranked_one_per_player_and_need_the_xi():
+    from app.live.prematch_analysis import fact_o_meter_block
+    from app.live.prematch_facts import xi_fact_lines
+
+    xi = {"Pakistan": ["Imad Wasim", "Babar Azam", "Shadab Khan", "Shaheen Afridi"], "Sri Lanka": ["Kusal Mendis", "Pathum Nissanka"]}
+    lines = xi_fact_lines("Pakistan", "Sri Lanka", xi, "Rawalpindi Cricket Stadium, Rawalpindi", "Sri Lanka")
+    assert lines and all(l.startswith("🎯 Fact-o-Meter (T20): ") for l in lines)
+    assert len({l.split(": ", 1)[1].split(" -- ")[0] for l in lines}) == len(lines)            # one line per player
+    assert any("Imad Wasim -- averages 42 runs at Rawalpindi (8 inns) vs 14 overall" in l for l in lines)
+    assert xi_fact_lines("Pakistan", "Sri Lanka", None, "Rawalpindi Cricket Stadium, Rawalpindi") == []     # no confirmed XI
+    assert not any("Rawalpindi" in l for l in xi_fact_lines("Pakistan", "Sri Lanka", xi, ""))        # no ground: no ground facts
+    assert fact_o_meter_block("Pakistan", "Sri Lanka", None, "Rawalpindi") == []
+    assert fact_o_meter_block("Pakistan", "Sri Lanka", xi, "Rawalpindi Cricket Stadium, Rawalpindi", "Sri Lanka", "bat")

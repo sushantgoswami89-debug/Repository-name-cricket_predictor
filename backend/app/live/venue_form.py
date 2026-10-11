@@ -19,7 +19,7 @@ import json
 from collections import defaultdict
 from functools import lru_cache
 
-from app.live.fact_o_meter import card
+from app.live.fact_o_meter import card, ratio_fill
 from app.live.prematch_model import ROOT
 
 BAT_PATHS = {"t20": ROOT / "data" / "features" / "batter_innings.json", "odi": ROOT / "data" / "features" / "batter_innings_odi.json"}
@@ -137,3 +137,66 @@ def bowler_ground_line(full_name: str, resolved: str | None, city: str, innings:
     when = {0: "every spell", 1: "every time he bowls first", 2: "every time he bowls second"}[c["inn"]]
     fact = f"Loves this ground: {c['x']}+ wickets {when} at {city.title()}, {c['n']} of {c['n']} (avg {c['avg']:.1f} wkts)"
     return card(fmt, f"{full_name} {balls // 6}.{balls % 6} ov, {wickets} wkt{'' if wickets == 1 else 's'}", fact, c["n"])
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Average-gap facts: not a 100% record, but a big gap between his average at this ground and his own career average.
+# A batter / bowler needs at least AVG_MIN_INNINGS there, an average at least AVG_RATIO times his career average and a
+# z-score of AVG_Z or more (gap / (his career spread / sqrt(n))). Checked 2026-10-11 out of sample: the next innings
+# comes back most of the way to his career average (T20 batters: claimed 46.9, next innings 27.5 vs career 23.2), so the
+# card gives the numbers and never a forecast.
+AVG_MIN_INNINGS = 5
+AVG_RATIO = 1.5
+AVG_Z = 3.0
+AVG_MIN_CAREER = 20
+
+
+@lru_cache(maxsize=2)
+def _average_claims(fmt: str = "t20", kind: str = "bat") -> dict[tuple[str, str], dict]:
+    """(player, city) -> {n, avg, career, best, ratio} for the grounds where he is far above his own level."""
+    import math
+
+    if kind == "bat":
+        rows = [(r[1], r[10], r[3]) for r in _load(BAT_PATHS[fmt])]
+    else:
+        rows = [(r[1], r[7], r[4]) for r in _load(BOWL_PATHS[fmt]) if r[2] >= 6]
+    career = defaultdict(list)
+    ground = defaultdict(list)
+    for name, city, value in rows:
+        career[name].append(value)
+        ground[(name, city)].append(value)
+    out = {}
+    for (name, city), values in ground.items():
+        base = career[name]
+        if len(values) < AVG_MIN_INNINGS or len(base) < AVG_MIN_CAREER:
+            continue
+        mean_base = sum(base) / len(base)
+        sd = math.sqrt(sum((v - mean_base) ** 2 for v in base) / len(base)) or 1e-9
+        avg = sum(values) / len(values)
+        z = (avg - mean_base) / (sd / math.sqrt(len(values)))
+        if mean_base > 0 and avg >= AVG_RATIO * mean_base and z >= AVG_Z:
+            out[(name, city)] = {"n": len(values), "avg": avg, "career": mean_base, "best": max(values), "ratio": avg / mean_base, "z": z}
+    return out
+
+
+def all_average_claims(fmt: str = "t20", kind: str = "bat") -> dict:
+    return {k: dict(v) for k, v in _average_claims(fmt, kind).items()}
+
+
+def batter_average_line(full_name: str, resolved: str | None, city: str, runs: int, balls: int, fmt: str = "t20") -> str:
+    """Card for a batter far above his usual level at this ground (shown while he is still batting)."""
+    c = _average_claims(fmt, "bat").get((resolved, city)) if resolved and city else None
+    if not c:
+        return ""
+    fact = (f"Loves {city.title()}: averages {c['avg']:.0f} here in {c['n']} innings vs {c['career']:.0f} overall "
+            f"({c['ratio']:.1f}x), best {c['best']}")
+    return card(fmt, f"{full_name} {runs}*({balls})", fact, c["n"], ratio_fill(c["ratio"]))
+
+
+def bowler_average_line(full_name: str, resolved: str | None, city: str, wickets: int, balls: int, fmt: str = "t20") -> str:
+    c = _average_claims(fmt, "bowl").get((resolved, city)) if resolved and city else None
+    if not c:
+        return ""
+    fact = (f"Loves {city.title()}: {c['avg']:.1f} wickets per innings here in {c['n']} innings vs {c['career']:.1f} overall "
+            f"({c['ratio']:.1f}x), best {c['best']}")
+    return card(fmt, f"{full_name} {balls // 6}.{balls % 6} ov, {wickets} wkt{'' if wickets == 1 else 's'}", fact, c["n"], ratio_fill(c["ratio"]))

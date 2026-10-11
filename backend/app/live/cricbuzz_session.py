@@ -36,8 +36,8 @@ from app.live.cricbuzz_scorecard import compare_with_deliveries, fetch_scorecard
 from app.live.batter_settled import settled_line
 from app.live.bowler_records import bowler_line, overs_to_balls
 from app.live.result_facts import result_line
-from app.live.venue_form import batter_ground_line, bowler_ground_line
-from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
+from app.live.venue_form import batter_average_line, batter_ground_line, bowler_average_line, bowler_ground_line
+from app.live.prematch_analysis import confirmed_xi, fact_o_meter_block, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
 from app.live.pipeline import (
     MatchStateAnomaly,
     PredictionPublisher,
@@ -545,6 +545,11 @@ def briefing_text(match_id: str, match_url: str, label: str) -> str | None:
         if analysis:
             lines.append("")
             lines.append(analysis)
+    if len(teams) == 2:
+        facts = fact_o_meter_block(teams[0], teams[1], confirmed_xi(team_players), venue or "", toss_won_by, toss_decision)
+        if facts:
+            lines.append("")
+            lines.extend(facts)
     # The whole line-up block (status line, then the names once both XIs are full) goes last.
     lines.append("")
     lines.append(xi_line(team_players))
@@ -783,9 +788,10 @@ class CricbuzzMatchSession:
                 from app.live.prematch_model import venue_city
                 from app.live.prematch_xi import resolve_player
 
-                stat = batter_ground_line(name, resolve_player(name, snapshot.batting_team),
-                                          venue_city(getattr(snapshot, "venue_name", "") or ""), snapshot.innings,
-                                          runs_balls[0], runs_balls[1])
+                resolved = resolve_player(name, snapshot.batting_team)
+                city = venue_city(getattr(snapshot, "venue_name", "") or "")
+                stat = (batter_ground_line(name, resolved, city, snapshot.innings, runs_balls[0], runs_balls[1])
+                        or batter_average_line(name, resolved, city, runs_balls[0], runs_balls[1]))  # 100% record first
             except Exception as error:  # a side stat must never disturb the feed
                 print(f"[{self.match_id}] [stat] unavailable: {error!r}")
             if stat:
@@ -808,9 +814,10 @@ class CricbuzzMatchSession:
                             from app.live.prematch_model import venue_city
                             from app.live.prematch_xi import resolve_player
 
-                            stat = bowler_ground_line(name, resolve_player(name, snapshot.bowling_team),
-                                                      venue_city(getattr(snapshot, "venue_name", "") or ""), snapshot.innings,
-                                                      figures_now[1], figures_now[0])
+                            resolved = resolve_player(name, snapshot.bowling_team)
+                            city = venue_city(getattr(snapshot, "venue_name", "") or "")
+                            stat = (bowler_ground_line(name, resolved, city, snapshot.innings, figures_now[1], figures_now[0])
+                                    or bowler_average_line(name, resolved, city, figures_now[1], figures_now[0]))
                         else:
                             from app.live.prematch_xi import resolve_player
 

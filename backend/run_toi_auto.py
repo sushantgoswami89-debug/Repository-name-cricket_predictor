@@ -13,7 +13,7 @@ import requests
 
 from app.live.commentary_log import append_commentary_log
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
-from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
+from app.live.prematch_analysis import confirmed_xi, fact_o_meter_block, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery, is_t20_international
 from app.live.toi_reader import ToiFeedError, ToiLiveReader
@@ -71,6 +71,13 @@ def _briefing_text(reader: ToiLiveReader, match_id: str, label: str) -> str | No
         if analysis:
             lines.append("")
             lines.append(analysis)
+    if len(team_names) == 2:
+        facts = fact_o_meter_block(
+            team_names[0], team_names[1], confirmed_xi(team_players), ToiLiveReader._venue_name(raw), toss_won_by, toss_decision
+        )
+        if facts:
+            lines.append("")
+            lines.extend(facts)
     # The whole line-up block (status line, then the names once both XIs are full) goes last.
     lines.append("")
     lines.append(xi_line(team_players))

@@ -692,3 +692,18 @@ def prematch_header(
         _weather_line(weather),
         dew_text + ", " + _pitch_short(note),
     ]
+
+
+def fact_o_meter_block(team_a: str, team_b: str, xi: dict | None, venue: str, toss_won_by: str = "",
+                       toss_decision: str = "") -> list[str]:
+    """Fact-o-Meter lines about the players in the confirmed XIs at this ground / against this team (see prematch_facts).
+    Empty until both XIs are confirmed; never raises (a side feature must not block the briefing)."""
+    if not xi:
+        return []
+    try:
+        from app.live.prematch_facts import xi_fact_lines
+
+        return xi_fact_lines(team_a, team_b, xi, venue, _bat_first_team(team_a, team_b, toss_won_by, toss_decision))
+    except Exception as error:
+        print(f"[briefing] fact-o-meter unavailable: {error!r}")
+        return []
