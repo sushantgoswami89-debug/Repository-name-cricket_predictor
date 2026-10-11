@@ -43,8 +43,6 @@ from app.live.pipeline import (
     PredictionPublisher,
     VerifiedLivePredictionPipeline,
 )
-from app.live.shot_quality import classify_near_wicket, classify_shot_quality
-from app.live.delivery_detail import extract_delivery_detail, format_delivery_detail
 from app.live.verification import VerificationError
 
 _EXTRA_LABELS = {"wides": "WIDE", "noballs": "NO-BALL", "byes": "BYE", "legbyes": "LEG-BYE"}
@@ -511,57 +509,34 @@ def _archive_page(snapshot, log_path, state: dict) -> None:
         )
 
 
+def _ball_summary(snapshot, delivery) -> str:
+    """One short console line per ball: "6.1  1 run", "6.2  FOUR", "6.3  WICKET -- Kusal Mendis (caught)".
+    The full commentary and the shot-quality flags stay in the commentary log (user 2026-10-11: summary only)."""
+    extras = [label.lower() for key, label in _EXTRA_LABELS.items() if key in delivery.extras]
+    if delivery.wicket_kind:
+        what = f"WICKET -- {_dismissed_batter(delivery)} ({delivery.wicket_kind})"
+        if delivery.total_runs:
+            what += f", {delivery.total_runs} run" + ("s" if delivery.total_runs != 1 else "")
+    elif extras:
+        what = f"{'+'.join(extras)}, {delivery.total_runs} run" + ("s" if delivery.total_runs != 1 else "")
+    elif delivery.batter_runs == 6:
+        what = "SIX"
+    elif delivery.batter_runs == 4:
+        what = "FOUR"
+    elif delivery.total_runs == 0:
+        what = "dot"
+    else:
+        what = f"{delivery.total_runs} run" + ("s" if delivery.total_runs != 1 else "")
+    return f"{_ball_label(snapshot, delivery)}  {what}"
+
+
 def _delivery_event_lines(snapshot, seen_keys: set[tuple[int, int, int]]) -> list[str]:
     lines = []
     for delivery in snapshot.deliveries:
         if delivery.key in seen_keys:
             continue
         seen_keys.add(delivery.key)
-        detail_text = format_delivery_detail(extract_delivery_detail(delivery.commentary))
-        if detail_text:
-            lines.append(
-                f"[ball] {_ball_label(snapshot, delivery)} {delivery.bowler} to {delivery.striker}: "
-                f"{delivery.total_runs} run(s); {detail_text}"
-            )
-        tags = []
-        if delivery.batter_runs == 6:
-            tags.append("SIX")
-        for extra_key, label in _EXTRA_LABELS.items():
-            if extra_key in delivery.extras:
-                tags.append(label)
-        if delivery.wicket_kind:
-            tags.append(f"WICKET({delivery.wicket_kind})")
-        if tags:
-            lines.append(
-                f"[event] inn{delivery.innings} {_ball_label(snapshot, delivery)} "
-                f"{'/'.join(tags)} -- "
-                f"{_dismissed_batter(delivery) if delivery.wicket_kind else delivery.striker} "
-                f"off {delivery.bowler}"
-            )
-        # User-requested 2026-09-18: surface shot quality/near-wicket
-        # signals live, not just log them for later -- see
-        # app/live/shot_quality.py's docstring. An edge for four scores
-        # exactly like a well-timed four in every structured field
-        # above; this is the only place that distinction is visible.
-        quality = classify_shot_quality(delivery.commentary)
-        if quality == "edge" and not delivery.wicket_kind:
-            note = (
-                f"⚠️  STREAKY: inn{delivery.innings} {_ball_label(snapshot, delivery)} "
-                f"{delivery.striker} edged that for {delivery.total_runs} off "
-                f"{delivery.bowler} -- not a clean shot despite the runs"
-            )
-            lines.append(note)
-        elif quality == "beaten" and not delivery.wicket_kind:
-            lines.append(
-                f"⚠️  BEATEN: inn{delivery.innings} {_ball_label(snapshot, delivery)} "
-                f"{delivery.striker} played and missed off {delivery.bowler}"
-            )
-        near_wicket = classify_near_wicket(delivery.commentary)
-        if near_wicket:
-            lines.append(
-                f"⚠️  {near_wicket.upper()}: inn{delivery.innings} {_ball_label(snapshot, delivery)} "
-                f"{delivery.striker} off {delivery.bowler} -- real wicket chance, not on the scorecard"
-            )
+        lines.append(_ball_summary(snapshot, delivery))
     return lines
 
 
@@ -712,6 +687,7 @@ class CricbuzzMatchSession:
     stuck_alert_seconds: float = 300.0
     _error_streak_started_at: float | None = None
     _waiting_notice_printed: bool = False
+    _last_summary: str = ""
     _last_board_mismatch: str | None = None
     _newest_board_seen: dict | None = None
     _announced_bowler: tuple[int, str] | None = None
@@ -967,10 +943,15 @@ class CricbuzzMatchSession:
         if _at_over_break(snapshot):
             announced = self._announced_bowler[1] if self._announced_bowler and self._announced_bowler[0] > snapshot.deliveries[-1].timestamp_ms else ""
             figures = _over_break_figures(snapshot, crease, self._card_batters, self._card_bowlers, announced)
-        print(
-            f"[{self.match_id}] {_scorecard_line(snapshot)}{figures}"
-            f"{_next_over_line(snapshot, self._announced_bowler, crease, incoming)}"
-        )
+        for line in _delivery_event_lines(snapshot, self._seen_delivery_keys):
+            print(f"[{self.match_id}] {line}")
+        # Summary only (user 2026-10-11): one score line per over break / innings end, not one per poll.
+        if _at_over_break(snapshot) or snapshot.innings_complete:
+            summary = (f"[{self.match_id}] {_scorecard_line(snapshot)}{figures}"
+                       f"{_next_over_line(snapshot, self._announced_bowler, crease, incoming)}")
+            if summary != self._last_summary:
+                self._last_summary = summary
+                print(summary)
         for name in (crease or []):
             runs_balls = self._card_nums.get(name)
             key = (snapshot.innings, name)
@@ -1051,8 +1032,6 @@ class CricbuzzMatchSession:
                     if stat:
                         self._settled_shown.add(key)
                         self._send_card(stat, key)
-        for line in _delivery_event_lines(snapshot, self._seen_delivery_keys):
-            print(f"[{self.match_id}] {line}")
         if self.commentary_log_path is not None:
             # Log a delivery only once its over has finished (or the innings
             # has ended): Cricbuzz rewrites an entry's prose after posting it,

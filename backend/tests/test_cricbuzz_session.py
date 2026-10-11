@@ -693,3 +693,20 @@ def test_mini_scorecard_names_the_next_bowler_only_when_it_is_unambiguous():
     assert _board_announced_bowler(snap({**base, "bowler": "Joseph", "other_bowler": "Paul"})) == ""              # other bowler is not him
     assert _board_announced_bowler(snap({**base, "overs": "12.5", "bowler": "Joseph", "other_bowler": "Hosein"})) == ""   # board behind us
     assert _board_announced_bowler(snap(None)) == ""
+
+
+def test_console_shows_one_short_line_per_ball():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _delivery_event_lines
+
+    def ball(n, runs, bat=None, extras=None, wicket=None):
+        return SimpleNamespace(innings=2, over=7, ball=n, key=(2, 7, n), bowler="Hosein", striker="Kishan",
+                               total_runs=runs, batter_runs=runs if bat is None else bat, extras=extras or {},
+                               wicket_kind=wicket, dismissed="", is_legal="wides" not in (extras or {}), commentary="")
+
+    balls = [ball(1, 1), ball(2, 4), ball(3, 0), ball(4, 6), ball(5, 1, bat=0, extras={"wides": 1}), ball(6, 0, wicket="caught")]
+    snapshot = SimpleNamespace(deliveries=balls)
+    assert _delivery_event_lines(snapshot, set()) == [
+        "6.1  1 run", "6.2  FOUR", "6.3  dot", "6.4  SIX", "6.5  wide, 1 run", "6.5  WICKET -- Kishan (caught)",
+    ]
