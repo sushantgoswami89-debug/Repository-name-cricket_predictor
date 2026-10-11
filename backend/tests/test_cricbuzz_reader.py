@@ -210,3 +210,23 @@ def test_run_out_counts_the_runs_completed_before_the_dismissal():
     assert _runs_and_extras("Jofra Archer to Buttler, out Run Out!! Direct hit at the keeper's end.", ["wicket"]) == (0, 0, {})
     assert _runs_and_extras("Bumrah to Hope, no run, beaten outside off", []) == (0, 0, {})
     assert _runs_and_extras("Bumrah to Hope, 2 runs, driven to deep cover. 2 runs completed for sure", []) == (2, 2, {})
+
+
+def test_chase_gets_an_empty_pre_first_ball_snapshot_at_the_innings_break():
+    """2026-10-11, India v West Indies and every earlier chase: the reader only handed out a pre-first-ball snapshot for innings 1, so
+    the over-1 prediction of the chase never fired. At the innings break the reader now hands out innings 2 with the target."""
+    from app.live.cricbuzz_reader import CricbuzzLiveReader
+
+    assert CricbuzzLiveReader._at_innings_break({"state": "Innings Break", "status": "Innings Break"})
+    assert CricbuzzLiveReader._at_innings_break({"state": "In Progress", "status": "Innings break - West Indies need 223"})
+    assert not CricbuzzLiveReader._at_innings_break({"state": "In Progress", "status": "West Indies opt to bowl"})
+    assert not CricbuzzLiveReader._at_innings_break(None)
+
+    reader = CricbuzzLiveReader()
+    snap = reader._pre_next_innings_snapshot(
+        "151587", "<html></html>", [], {"state": "Innings Break"}, ["India", "West Indies"], "T20", "India", 20,
+        first_innings_score=222,
+    )
+    assert (snap.innings, snap.batting_team, snap.bowling_team) == (2, "West Indies", "India")
+    assert (snap.score, snap.wickets, snap.overs, snap.deliveries) == (0, 0, "0.0", ())
+    assert snap.target == 223 and snap.is_live and not snap.innings_complete and snap.scheduled_overs == 20

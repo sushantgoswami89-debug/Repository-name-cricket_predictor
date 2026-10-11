@@ -646,3 +646,26 @@ def test_a_failed_reread_goes_back_to_the_previous_record(monkeypatch):
     assert session._resync(snapshot, "board disagrees") is True and session.reader is not original
     session.poll_once()
     assert session.reader is original and session._previous_reader is None
+
+
+def test_chase_over_1_prediction_uses_the_side_that_batted_first_in_the_staged_model(monkeypatch):
+    """The over-1 win % of a chase must tell the staged model that the OTHER side batted first (it only knew innings 1)."""
+    from types import SimpleNamespace
+
+    import app.live.prematch_xi as xi
+    from app.live.pipeline import VerifiedLivePredictionPipeline
+
+    seen = {}
+
+    def fake_predict_stages(a, b, bat_first, weather, xi_a, xi_b, city):
+        seen["args"] = (a, b, bat_first)
+        return {"stage": "after toss", "p_a": 0.4, "p_b": 0.6, "dew_shift": 0.0}
+
+    monkeypatch.setattr(xi, "predict_stages", fake_predict_stages)
+    pipeline = VerifiedLivePredictionPipeline.__new__(VerifiedLivePredictionPipeline)
+    chase = SimpleNamespace(batting_team="West Indies", bowling_team="India", innings=2, venue_name="", team_players={})
+    pipeline._pre_innings_win_probability(chase, {"win_probability": 0.5})
+    assert seen["args"] == ("West Indies", "India", "India")                     # India batted first
+    first = SimpleNamespace(batting_team="India", bowling_team="West Indies", innings=1, venue_name="", team_players={})
+    pipeline._pre_innings_win_probability(first, {"win_probability": 0.5})
+    assert seen["args"] == ("India", "West Indies", "India")

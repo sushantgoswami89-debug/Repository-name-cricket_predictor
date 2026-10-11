@@ -570,8 +570,9 @@ class VerifiedLivePredictionPipeline:
             city = venue_city(snapshot.venue_name or "")
             weather = _cached(("weather", city), 600, lambda: match_day_weather(city)) if city else None
             xi = confirmed_xi(snapshot.team_players) or {}
+            first_batting = snapshot.batting_team if snapshot.innings == 1 else snapshot.bowling_team  # who batted first
             staged = predict_stages(
-                snapshot.batting_team, snapshot.bowling_team, snapshot.batting_team, weather,
+                snapshot.batting_team, snapshot.bowling_team, first_batting, weather,
                 xi.get(snapshot.batting_team, []), xi.get(snapshot.bowling_team, []), city,
             )
             if staged is None:

@@ -444,6 +444,9 @@ class CricbuzzLiveReader:
     _seen_over_summaries: set[tuple[int, int]] | None = None
     _pending_summaries: list[dict] | None = None
     _pending_notes: list[tuple[int, str, str]] | None = None
+    # matches whose finished first innings has been handed out once; later polls at the innings break then get the
+    # next innings' empty pre-first-ball snapshot (so the over-1 prediction of a chase can fire)
+    _first_innings_final_sent: set[str] | None = None
     # Cricbuzz's own per-over result (overSummary tokens + checkpoint score),
     # keyed (match_id, innings, over); the ground truth an over is rebuilt from.
     _over_truth: dict[tuple[str, int, int], dict] | None = None
@@ -631,6 +634,21 @@ class CricbuzzLiveReader:
         if match_complete:
             innings_complete = True
 
+        if (
+            current_innings == 1 and innings_complete and not match_complete and scheduled_overs
+            and self._at_innings_break(board)
+        ):
+            if self._first_innings_final_sent is None:
+                self._first_innings_final_sent = set()
+            if match_id in self._first_innings_final_sent and len(teams) == 2:
+                # The finished innings went out once already; until the chase bowls its first ball, hand out the chase's
+                # empty snapshot so the pipeline can make the over-1 prediction (user 2026-10-11: it was missed every time).
+                return self._pre_next_innings_snapshot(
+                    match_id, html, chunks, board, teams, match_format, batting_team, scheduled_overs,
+                    first_innings_score=self._running_score.get(scope, 0),
+                )
+            self._first_innings_final_sent.add(match_id)
+
         return LiveSnapshot(
             match_id=match_id,
             match_format=match_format,
@@ -671,6 +689,41 @@ class CricbuzzLiveReader:
             except ValueError:
                 continue
         return max(parsed) if parsed else None
+
+    @staticmethod
+    def _at_innings_break(board: dict | None) -> bool:
+        """The page's own match header says "Innings Break" (so the first innings really is over, not just our count)."""
+        return bool(board) and any("break" in str(board.get(key) or "").lower() for key in ("state", "status"))
+
+    def _pre_next_innings_snapshot(
+        self, match_id: str, html: str, chunks: list[str], board: dict | None, teams: list[str], match_format: str,
+        first_batting_team: str, scheduled_overs: int, first_innings_score: int,
+    ) -> LiveSnapshot:
+        """Empty second-innings snapshot at the innings break: the chasing side bats, the target is the first innings total + 1
+        (the page's own target when it already shows one)."""
+        chasing = next((team for team in teams if team != first_batting_team), "")
+        toss_won_by, toss_decision = self._toss_from_chunks(chunks)
+        target = self._target_from_chunks(chunks) or (first_innings_score + 1 if first_innings_score else 0)
+        return LiveSnapshot(
+            match_id=match_id,
+            match_format=match_format,
+            batting_team=chasing,
+            bowling_team=first_batting_team,
+            innings=2,
+            score=0,
+            wickets=0,
+            overs="0.0",
+            is_live=True,
+            target=target,
+            scheduled_overs=scheduled_overs,
+            deliveries=(),
+            team_players=self._squads_from_chunks(chunks),
+            venue_name=self._venue_from_chunks(chunks, match_id),
+            toss_won_by=toss_won_by,
+            toss_decision=toss_decision,
+            board=board,
+            raw_html=html,
+        )
 
     def _pre_first_ball_snapshot(self, match_id: str, html: str, chunks: list[str]) -> LiveSnapshot:
         """Empty first-innings snapshot, handed out once the scheduled start
