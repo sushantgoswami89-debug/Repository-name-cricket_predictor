@@ -531,3 +531,32 @@ def test_odi_watcher_briefs_once_updates_at_toss_and_records_the_result(tmp_path
     late = OdiBriefingWatcher(discovery=SimpleNamespace(matches=lambda: [match("In Progress", match_id="10")]), toss_fetcher=lambda m: ("", ""))
     late.cycle()
     assert late._results.empty()
+
+
+def test_result_facts_are_literally_true_in_the_data_and_show_only_on_the_way():
+    import json
+
+    from app.live.result_facts import APPROACH, MIN_MATCHES, PATHS, all_claims, result_line
+
+    for fmt in ("t20", "odi"):
+        claims = all_claims(fmt)
+        assert claims, fmt
+        rows = json.loads(PATHS[fmt].read_text(encoding="utf-8"))
+        for name, items in claims.items():
+            for c in items:                                                  # every record is literally true in its format
+                if c["kind"] == "bat":
+                    hits = [r[9] for r in rows if r[1] == name and r[3] and r[4] >= c["x"] and c["inn"] in (0, r[3])]
+                else:
+                    hits = [r[9] for r in rows if r[1] == name and r[6] and r[8] >= 6 and r[7] >= c["x"] and c["inn"] in (0, r[6])]
+                assert len(hits) == c["n"] >= MIN_MATCHES and set(hits) == {1 if c["outcome"] == "WON" else 0}, (fmt, name, c)
+                assert c["fluke"] <= 0.01
+    assert set(all_claims("t20")) != set(all_claims("odi"))
+    stoinis = all_claims("odi")["MP Stoinis"][0]
+    assert stoinis["kind"] == "bat" and stoinis["outcome"] == "LOST" and stoinis["x"] == 50
+    line = result_line("Marcus Stoinis", "MP Stoinis", "Australia", "bat", 41, 38, 2, "odi")
+    assert line == ("🎯 FACT-O-METER (ODI) · Marcus Stoinis 41*(38) \n"
+                    "   Australia have LOST all 7 matches in which he scored 50+  ▰▰▰▰▰▰▰▰▰▰  🔥")
+    assert result_line("Marcus Stoinis", "MP Stoinis", "Australia", "bat", int(APPROACH * 50) - 1, 20, 2, "odi") == ""   # not on the way yet
+    assert result_line("Marcus Stoinis", "MP Stoinis", "Australia", "bat", 50, 45, 2, "odi") == ""                       # already there
+    assert result_line("Virat Kohli", "V Kohli", "India", "bat", 90, 80, 2, "odi") == ""                                 # Kohli: no 100% record
+    assert result_line("Nobody", None, "X", "bat", 40, 30, 1) == ""

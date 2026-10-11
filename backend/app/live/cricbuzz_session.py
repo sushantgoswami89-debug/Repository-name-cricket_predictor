@@ -35,6 +35,7 @@ from app.live.cricbuzz_reader import (
 from app.live.cricbuzz_scorecard import compare_with_deliveries, fetch_scorecard
 from app.live.batter_settled import settled_line
 from app.live.bowler_records import bowler_line, overs_to_balls
+from app.live.result_facts import result_line
 from app.live.prematch_analysis import confirmed_xi, prematch_header, prematch_text, toss_line, venue_summary, xi_line, xi_names
 from app.live.pipeline import (
     MatchStateAnomaly,
@@ -755,20 +756,45 @@ class CricbuzzMatchSession:
             if stat:
                 self._settled_shown.add(key)
                 print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
+        for name in (crease or []):
+            runs_balls = self._card_nums.get(name)
+            key = (snapshot.innings, "result", name)
+            if runs_balls is None or key in self._settled_shown:
+                continue
+            stat = ""
+            try:
+                from app.live.prematch_xi import resolve_player
+
+                stat = result_line(name, resolve_player(name, snapshot.batting_team), snapshot.batting_team, "bat",
+                                   runs_balls[0], runs_balls[1], snapshot.innings)
+            except Exception as error:
+                print(f"[{self.match_id}] [stat] unavailable: {error!r}")
+            if stat:
+                self._settled_shown.add(key)
+                print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
         if _at_over_break(snapshot):
             for name in dict.fromkeys([snapshot.deliveries[-1].bowler, announced]):
                 figures_now = self._card_bowl_nums.get(name) if name else None
-                key = (snapshot.innings, "bowler", name)
-                if figures_now is None or key in self._settled_shown:
+                if figures_now is None:
                     continue
-                stat = ""
-                try:
-                    stat = bowler_line(name, snapshot.bowling_team, figures_now[0], figures_now[1])
-                except Exception as error:
-                    print(f"[{self.match_id}] [stat] unavailable: {error!r}")
-                if stat:
-                    self._settled_shown.add(key)
-                    print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
+                for kind_key in ("bowler", "result"):
+                    key = (snapshot.innings, kind_key, name)
+                    if key in self._settled_shown:
+                        continue
+                    stat = ""
+                    try:
+                        if kind_key == "bowler":
+                            stat = bowler_line(name, snapshot.bowling_team, figures_now[0], figures_now[1])
+                        else:
+                            from app.live.prematch_xi import resolve_player
+
+                            stat = result_line(name, resolve_player(name, snapshot.bowling_team), snapshot.bowling_team,
+                                               "bowl", figures_now[1], figures_now[0], snapshot.innings)
+                    except Exception as error:  # a side stat must never disturb the feed
+                        print(f"[{self.match_id}] [stat] unavailable: {error!r}")
+                    if stat:
+                        self._settled_shown.add(key)
+                        print(f"[{self.match_id}] " + stat.replace("\n", "\n    "))
         for line in _delivery_event_lines(snapshot, self._seen_delivery_keys):
             print(f"[{self.match_id}] {line}")
         if self.commentary_log_path is not None:
