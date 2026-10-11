@@ -517,3 +517,22 @@ def test_board_parsing_keeps_the_exact_figures():
     assert board["striker_stats"] == {"runs": 38, "balls": 19, "fours": 4, "sixes": 2, "strikeRate": "200.00"}
     assert board["bowler_stats"] == {"overs": 3, "maidens": 0, "runs": 36, "wickets": 3, "economy": 12}
     assert board["other_bowler_stats"]["wickets"] == 0 and board["non_striker_stats"]["balls"] == 7
+
+
+def test_now_tag_is_left_out_when_the_board_is_behind_our_state():
+    """2026-10-11 India v West Indies: Tilak Varma was run out at 16.4 but the scorecard line still listed him "at the other
+    end" because the cached board was still at 16.3 (193/6). A stale board must not name players."""
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _board_players
+
+    board = {"innings": 1, "score": 193, "wickets": 6, "overs": "16.3", "bowler": "Gudakesh Motie", "striker": "Axar Patel",
+             "non_striker": "Tilak Varma", "striker_stats": {"runs": 15, "balls": 8}, "non_striker_stats": {"runs": 28, "balls": 16},
+             "bowler_stats": {"overs": "3.3", "maidens": 0, "runs": 34, "wickets": 1}}
+    current = SimpleNamespace(innings=1, score=193, wickets=6, overs="16.3", board=board)
+    assert "Tilak Varma 28(16) at the other end" in _board_players(current)               # board at the same point: shown
+    behind = SimpleNamespace(innings=1, score=194, wickets=7, overs="16.5", board=board)   # we are past the board (run out at 16.4)
+    assert _board_players(behind) == ""
+    assert _board_players(SimpleNamespace(innings=1, score=193, wickets=6, overs="16.4", board=board)) == ""      # one ball apart
+    assert _board_players(SimpleNamespace(innings=2, score=193, wickets=6, overs="16.3", board=board)) == ""      # other innings
+    assert _board_players(SimpleNamespace(innings=1, score=193, wickets=6, overs="16.3", board=None)) == ""

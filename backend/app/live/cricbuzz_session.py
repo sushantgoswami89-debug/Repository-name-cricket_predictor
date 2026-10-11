@@ -288,11 +288,28 @@ def _bowl_figures(stats: dict | None) -> str:
     return ""
 
 
+def _board_is_current(snapshot, board: dict) -> bool:
+    """True only when the page's board is at the SAME point as our rebuilt state (same innings, score, wickets and over.ball).
+    A board that is behind (a cached older page) still lists a batter who has since gone out -- 2026-10-11: Tilak Varma was
+    shown "at the other end" after his run out at 16.4 because the board was still at 16.3."""
+    try:
+        if board.get("innings") is not None and board["innings"] != getattr(snapshot, "innings", board["innings"]):
+            return False
+        if board.get("score") is not None and (board["score"], board.get("wickets")) != (snapshot.score, snapshot.wickets):
+            return False
+        if board.get("overs") is not None and abs(float(board["overs"]) - float(snapshot.overs)) > 0.001:
+            return False
+    except (AttributeError, TypeError, ValueError):
+        return False
+    return True  # fields the board does not carry cannot show it is behind
+
+
 def _board_players(snapshot) -> str:
     """Starred players from the page's live board with their exact figures:
-    bowler* 3-0-36-3 bowling, striker* 38(19) on strike, other 19(7) at the other end."""
+    bowler* 3-0-36-3 bowling, striker* 38(19) on strike, other 19(7) at the other end.
+    Only when the board is current; a stale board is left out (print less rather than a batter who is already out)."""
     board = getattr(snapshot, "board", None)
-    if not board or not board.get("striker"):
+    if not board or not board.get("striker") or not _board_is_current(snapshot, board):
         return ""
     return (
         f"   [NOW: {board.get('bowler', '?')}*{_bowl_figures(board.get('bowler_stats'))} bowling, "
