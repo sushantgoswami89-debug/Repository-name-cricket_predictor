@@ -139,8 +139,9 @@ def confirmed_xi(team_players: dict) -> dict[str, list[str]] | None:
 
 
 def _ground_record(city: str, fmt: str = "t20") -> dict:
-    """Per source and combined: matches, mean first-innings total, bat-first wins (decided matches).
-    fmt "t20" pools T20I + IPL; "odi" is men's ODIs (facts built by `build_match_facts.py odi`)."""
+    """Per source and combined: matches, first / second innings totals, wickets, bat-first wins and
+    toss-winner wins (decided matches). fmt "t20" pools T20I + IPL; "odi" is men's ODIs (facts built by
+    `build_match_facts.py odi`)."""
     from app.live.prematch_conditions import load_facts, load_facts_odi
 
     def build():
@@ -151,7 +152,7 @@ def _ground_record(city: str, fmt: str = "t20") -> dict:
                 cell = row.setdefault(
                     key,
                     {"n": 0, "totals": [], "second_totals": [], "all_totals": [], "wkts": [], "best_pace": 0,
-                     "best_spin": 0, "decided": 0, "bat_first_wins": 0},
+                     "best_spin": 0, "decided": 0, "bat_first_wins": 0, "toss_decided": 0, "toss_wins": 0},
                 )
                 cell["n"] += 1
                 if fact["totals"]:
@@ -166,51 +167,50 @@ def _ground_record(city: str, fmt: str = "t20") -> dict:
                 if fact["winner"] and fact["first_team"] in fact["teams"]:
                     cell["decided"] += 1
                     cell["bat_first_wins"] += int(fact["winner"] == fact["first_team"])
+                if fact["winner"] and fact.get("toss_winner") in fact["teams"]:
+                    cell["toss_decided"] += 1
+                    cell["toss_wins"] += int(fact["winner"] == fact["toss_winner"])
         return table
 
     return _cached(("ground-record", fmt), 3600, build).get(city, {})
 
 
-def _win_rates(total: dict) -> str:
-    """"win bat 1st 45%/chase 55%" over decided matches (ties / no results excluded)."""
-    if not total["decided"]:
-        return ""
-    first = total["bat_first_wins"] / total["decided"]
-    return f"win bat 1st {first:.0%}/chase {1 - first:.0%}"
+def venue_summary(city: str, fmt: str = "t20") -> str:
+    """The title-line ground record.
 
+    Scoring numbers are T20 only (T20I + IPL at the ground, never ODI):
+      "T20 - 11 1st inns avg 153, 2nd inns avg 136, avg wkts - 6, pace - 3/spin - 4"
+    (pace / spin = most wickets by one bowler of that kind in a match; bowlers without a known style are
+    not counted in those two). The results record pools T20 and ODI matches at the ground into one figure:
+      "bat 1st wins 38% / chase wins 62% / toss winner wins 56% (T20+ODI, 18 matches)"
+    ("2nd inns avg" runs low because a successful chase stops at the target.) `fmt` is kept for callers
+    but no longer changes the output.
+    """
+    t20 = _ground_record(city, "t20").get("all")
+    odi = _ground_record(city, "odi").get("all")
+    if not t20 and not odi:
+        return "T20 - no history here"
 
-def _format_record(label: str, total: dict, full: bool) -> str:
     def mean(values):
         return f"{sum(values) / len(values):.0f}" if values else "n/a"
 
-    parts = [f"{label} - {total['n']} 1st inns avg {mean(total['totals'])}, 2nd inns avg {mean(total['second_totals'])}"]
-    if full:
-        parts.append(f"avg wkts - {mean(total['wkts'])}, pace - {total['best_pace']}/spin - {total['best_spin']}")
-    rates = _win_rates(total)
-    if rates:
-        parts.append(rates)
-    text = ", ".join(parts)
-    return text + (" [small sample]" if total["n"] < 10 else "")
-
-
-def venue_summary(city: str, fmt: str = "t20") -> str:
-    """The title-line ground record: the match's own format in full, the other format short.
-
-    T20 (pooled over every T20I and IPL match at the ground):
-      "T20 - 11 1st inns avg 153, 2nd inns avg 141, avg wkts - 6, pace - 3/spin - 4, win bat 1st 45%/chase 55%"
-    plus " | ODI - 14 1st inns avg 262, 2nd inns avg 231, win bat 1st 52%/chase 48%" when the ground has ODIs.
-    (pace / spin = most wickets by one bowler of that kind in a match; bowlers without a known style are
-    not counted in those two.) An ODI match leads with the full ODI record and shows the T20 one short.
-    """
-    primary, other = ("ODI", "T20") if fmt == "odi" else ("T20", "ODI")
-    main = _ground_record(city, fmt).get("all")
-    side = _ground_record(city, "t20" if fmt == "odi" else "odi").get("all")
-    if not main and not side:
-        return f"{primary} - no history here"
-    pieces = [_format_record(primary, main, True) if main else f"{primary} - no history here"]
-    if side:
-        pieces.append(_format_record(other, side, False))
-    return " | ".join(pieces)
+    if t20:
+        text = (f"T20 - {t20['n']} 1st inns avg {mean(t20['totals'])}, 2nd inns avg {mean(t20['second_totals'])}, "
+                f"avg wkts - {mean(t20['wkts'])}, pace - {t20['best_pace']}/spin - {t20['best_spin']}")
+        if t20["n"] < 10:
+            text += " [small sample]"
+    else:
+        text = "T20 - no history here"
+    cells = [c for c in (t20, odi) if c]
+    decided = sum(c["decided"] for c in cells)
+    if decided:
+        first = sum(c["bat_first_wins"] for c in cells) / decided
+        text += f" | bat 1st wins {first:.0%} / chase wins {1 - first:.0%}"
+        toss = sum(c["toss_decided"] for c in cells)
+        if toss:
+            text += f" / toss winner wins {sum(c['toss_wins'] for c in cells) / toss:.0%}"
+        text += f" (T20+ODI, {decided} matches)" + (" [small sample]" if decided < 10 else "")
+    return text
 
 
 _TTL: dict = {}

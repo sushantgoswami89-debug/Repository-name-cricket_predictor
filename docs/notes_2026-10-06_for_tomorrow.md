@@ -747,3 +747,4 @@ from the fresh scorecard page (used only when its total matches ours; otherwise 
 - ODI ground facts: `python build_match_facts.py odi` -> data/features/prematch_match_facts_odi.json (T20 model never reads it).
 - `python show_prematch_odi.py [--all]` prints ODI briefings for today's international ODI fixtures (nothing published). `score_prematch_log.py` reports T20I and ODI separately (`format` field; old records = T20).
 - NOT done: the live driver still attaches only T20Is, so ODI briefings are not sent automatically (no toss refresh, no ODI result recording). Needs a decision before wiring.
+- **Revised ground line (user, later 10-11):** scoring numbers (1st/2nd inns avg, wkts, pace/spin) are T20 only, no ODI segment; the results record is ONE pooled T20+ODI figure: `... | bat 1st wins 41% / chase wins 59% / toss winner wins 47% (T20+ODI, 17 matches)`. `venue_summary(city, fmt)` ignores fmt now (ODI briefings show the same line).

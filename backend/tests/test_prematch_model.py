@@ -182,15 +182,17 @@ def test_ground_summary_matches_the_requested_format():
     from app.live.prematch_analysis import venue_summary
 
     text = venue_summary("ranchi")
-    t20, odi = text.split(" | ")
+    t20, results = text.split(" | ")
     assert re.fullmatch(
-        r"T20 - 11 1st inns avg \d+, 2nd inns avg \d+, avg wkts - \d+, pace - \d+/spin - \d+, "
-        r"win bat 1st \d+%/chase \d+%", t20), t20
-    assert re.fullmatch(r"ODI - \d+ 1st inns avg \d+, 2nd inns avg \d+, win bat 1st \d+%/chase \d+%( \[small sample\])?", odi), odi
-    bat, chase = map(int, re.search(r"bat 1st (\d+)%/chase (\d+)%", t20).groups())
+        r"T20 - 11 1st inns avg \d+, 2nd inns avg \d+, avg wkts - \d+, pace - \d+/spin - \d+", t20), t20
+    assert "ODI" not in t20 and "avg" not in results
+    assert re.fullmatch(
+        r"bat 1st wins \d+% / chase wins \d+% / toss winner wins \d+% \(T20\+ODI, \d+ matches\)( \[small sample\])?",
+        results), results
+    bat, chase = map(int, re.search(r"wins (\d+)% / chase wins (\d+)%", results).groups())
     assert abs(bat + chase - 100) <= 1
+    assert int(re.search(r"(\d+) matches", results).group(1)) > 11  # ODIs are pooled in (T20 alone is 11 here)
     assert venue_summary("nowhere-ville") == "T20 - no history here"
-    assert venue_summary("indore", "odi").startswith("ODI - ")  # an ODI match leads with the ODI record, T20 short
 
 
 def test_odi_prematch_block_and_log_are_kept_apart_from_t20(tmp_path, monkeypatch):

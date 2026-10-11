@@ -126,7 +126,7 @@ def odi_briefing(label: str, venue: str = "", toss_won_by: str = "", toss_decisi
 
     teams = [t.strip() for t in label.split(" vs ")]
     city = venue_city(venue or "")
-    lines = [f"🏏 {label}" + (f" -- {city.title()} | {venue_summary(city, 'odi')}" if city else "")]
+    lines = [f"🏏 {label}" + (f" -- {city.title()} | {venue_summary(city)}" if city else "")]
     if city:
         try:
             lines.append(_weather_line(_cached(("weather", city), 600, lambda: match_day_weather(city))))
