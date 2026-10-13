@@ -230,3 +230,21 @@ def test_chase_gets_an_empty_pre_first_ball_snapshot_at_the_innings_break():
     assert (snap.innings, snap.batting_team, snap.bowling_team) == (2, "West Indies", "India")
     assert (snap.score, snap.wickets, snap.overs, snap.deliveries) == (0, 0, "0.0", ())
     assert snap.target == 223 and snap.is_live and not snap.innings_complete and snap.scheduled_overs == 20
+
+
+def test_wicket_ball_posted_with_empty_player_fields_takes_the_names_from_its_text():
+    """2026-10-13, 7.6: the entry first came with batsmanDetails/bowlerDetails playerName "" (filled ~16 s later); the console showed
+    "WICKET --  (caught)" and an empty "Bowled:" although the text names both players."""
+    from app.live.cricbuzz_reader import CricbuzzLiveReader, names_from_text
+
+    text = ("Arafat Minhas to Sineth Jayawardena, <b>out</b> Caught by Razaullah at !! "
+            "<b>Sineth Jayawardena c Razaullah b Arafat Minhas 38(26) [4s-5 6s-2]</b>")
+    assert names_from_text(text) == ("Arafat Minhas", "Sineth Jayawardena")
+    assert names_from_text("no names here") == ("", "")
+    obj = {"matchId": 1, "commType": "commentary", "inningsId": 2, "ballMetric": 0.1, "timestamp": 5, "commText": text,
+           "event": ["wicket", "all"], "batsmanDetails": {"playerId": 0, "playerName": ""},
+           "bowlerDetails": {"playerId": 0, "playerName": ""}}
+    reader = CricbuzzLiveReader()
+    delivery = reader._build_deliveries(("1", 2), [obj])[-1]
+    assert (delivery.bowler, delivery.striker) == ("Arafat Minhas", "Sineth Jayawardena")
+    assert delivery.dismissed == "Sineth Jayawardena"

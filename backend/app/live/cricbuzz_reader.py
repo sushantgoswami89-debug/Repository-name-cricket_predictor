@@ -413,6 +413,16 @@ def _align(wanted: list, have: list) -> dict[int, int]:
     return pairs
 
 
+_TO_NAMES = re.compile(r"^\s*([^,<>]+?)\s+to\s+([^,<>]+?)\s*,")
+
+
+def names_from_text(comm_text: str) -> tuple[str, str]:
+    """(bowler, striker) from "Arafat Minhas to Sineth Jayawardena, out Caught by ...". A wicket ball is first posted with EMPTY
+    batsmanDetails / bowlerDetails (playerName "", seen 2026-10-13, filled about 16 s later) although its text names both."""
+    match = _TO_NAMES.match(re.sub(r"<[^>]+>", "", comm_text or ""))
+    return (match.group(1).strip(), match.group(2).strip()) if match else ("", "")
+
+
 def board_match_complete(board: dict | None) -> bool:
     """True only when the page's match header says the MATCH is over. At the innings break the header also has
     complete=True ("Innings Break"), which on 2026-10-11 made both drivers treat the match as finished at the break: the
@@ -1189,8 +1199,8 @@ class CricbuzzLiveReader:
                     innings=prior.innings,
                     over=prior.over,
                     ball=prior.ball,
-                    bowler=obj.get("bowlerDetails", {}).get("playerName", "") or prior.bowler,
-                    striker=obj.get("batsmanDetails", {}).get("playerName", "") or prior.striker,
+                    bowler=obj.get("bowlerDetails", {}).get("playerName", "") or names_from_text(comm_text)[0] or prior.bowler,
+                    striker=obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1] or prior.striker,
                     total_runs=total_runs,
                     batter_runs=batter_runs,
                     extras=extras,
@@ -1202,7 +1212,7 @@ class CricbuzzLiveReader:
                     dismissed=dismissed_batter(
                         wicket_kind,
                         re.sub(r"<[^>]+>", "", comm_text),
-                        obj.get("batsmanDetails", {}).get("playerName", "") or prior.striker,
+                        obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1] or prior.striker,
                     ),
                 )
                 self._pending_repairs.append(
@@ -1250,8 +1260,8 @@ class CricbuzzLiveReader:
                 innings=key[0],
                 over=over_index + 1,
                 ball=ball_number,
-                bowler=obj.get("bowlerDetails", {}).get("playerName", ""),
-                striker=obj.get("batsmanDetails", {}).get("playerName", ""),
+                bowler=obj.get("bowlerDetails", {}).get("playerName", "") or names_from_text(comm_text)[0],
+                striker=obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1],
                 total_runs=total_runs,
                 batter_runs=batter_runs,
                 extras=extras,
@@ -1263,7 +1273,7 @@ class CricbuzzLiveReader:
                 dismissed=dismissed_batter(
                     wicket_kind,
                     re.sub(r"<[^>]+>", "", comm_text),
-                    obj.get("batsmanDetails", {}).get("playerName", ""),
+                    obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1],
                 ),
             )
 
