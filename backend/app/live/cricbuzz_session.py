@@ -1214,6 +1214,10 @@ class CricbuzzMatchSession:
 
         if output:
             sent = "Sent" if self.publisher else "Recorded"
+            started = [d for d in snapshot.deliveries if d.innings == output["innings"] and d.over == output["over"]]
+            if started:  # 2026-10-13: over 4's forecast came out at 3.5 after a recovery; it still uses the pre-over state but is no use live
+                print(f"{self.prefix}⚠️  LATE: over {output['over']} was already under way ({snapshot.overs} ov, "
+                      f"{len(started)} ball(s) bowled) when this forecast came out -- do not use it live")
             print(
                 f"{self.prefix}{sent} innings {output['innings']} "
                 f"over {output['over']} prediction."
