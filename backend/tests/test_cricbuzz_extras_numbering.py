@@ -178,10 +178,17 @@ def test_mid_innings_attach_without_checkpoint_takes_baseline_from_matching_boar
     again = reader._build_deliveries(("1", 1), older, board=board, require_baseline=True)
     assert again[-1].feed_total == 98
 
-    # no board, or a board at a different point, means wait -- never guess 0/0
-    for bad_board in (None, {"innings": 1, "score": 90, "wickets": 2, "overs": "9.1"}):
+    # no board, or a board from before the window starts, means wait -- never guess 0/0
+    for bad_board in (None, {"innings": 1, "score": 90, "wickets": 2, "overs": "8.4"},
+                      {"innings": 1, "score": 120, "wickets": 2, "overs": "9.4"}):
         with _pytest.raises(CricbuzzFeedError):
             CricbuzzLiveReader()._build_deliveries(("1", 1), window, board=bad_board, require_baseline=True)
+
+    # a board a few balls BEHIND the commentary (the usual cache skew) is the true score at its own ball: 90/2 at 9.1
+    # means 85/2 before 8.5, so after 9.3 we are 8 runs ahead of 85 = 93, i.e. 3 ahead of the board
+    behind = CricbuzzLiveReader()._build_deliveries(
+        ("1", 1), window, board={"innings": 1, "score": 90, "wickets": 2, "overs": "9.1"}, require_baseline=True)
+    assert behind[-1].feed_total == 93 and behind[-1].feed_wickets == 2
 
 
 def test_window_that_reaches_the_first_ball_still_starts_from_zero():

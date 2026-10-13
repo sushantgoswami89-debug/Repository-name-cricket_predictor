@@ -929,29 +929,41 @@ class CricbuzzLiveReader:
         balls = [o for o in ordered if isinstance(o.get("ballMetric"), (int, float))]
         if not balls:
             return None
-        latest = max(balls, key=lambda o: o.get("timestamp", 0))
-        over_index = int(latest["ballMetric"])
-        in_over = [o for o in balls if int(o["ballMetric"]) == over_index]
-        legal_in_over = 0
-        for o in in_over:
-            total, _bat, extras = _runs_and_extras(o.get("commText", ""), [str(e) for e in o.get("event", [])])
-            if "wides" not in extras and "noballs" not in extras:
-                legal_in_over += 1
-        ours = over_index + 1.0 if legal_in_over >= 6 else over_index + min(legal_in_over, 5) / 10.0
         try:
-            if abs(float(board["overs"]) - ours) > 0.001:
-                return None
+            board_overs = float(board["overs"])
         except (TypeError, ValueError):
             return None
-        window_runs = window_wickets = 0
-        for o in balls:
-            events = [str(e) for e in o.get("event", [])]
-            total, _bat, _extras = _runs_and_extras(o.get("commText", ""), events)
-            window_runs += total
-            if "wicket" in events and _classify_wicket(o.get("commText", "")) is not None:
-                window_wickets += 1
-        baseline = (int(board["score"]) - window_runs, int(board.get("wickets") or 0) - window_wickets)
-        return baseline if baseline[0] >= 0 and baseline[1] >= 0 else None
+
+        def position(prefix: list[dict[str, Any]]) -> float:
+            """over.ball after the last ball of `prefix`, counting only legal balls of that over."""
+            latest = max(prefix, key=lambda o: o.get("timestamp", 0))
+            over_index = int(latest["ballMetric"])
+            legal_in_over = 0
+            for o in prefix:
+                if int(o["ballMetric"]) != over_index:
+                    continue
+                _total, _bat, extras = _runs_and_extras(o.get("commText", ""), [str(e) for e in o.get("event", [])])
+                if "wides" not in extras and "noballs" not in extras:
+                    legal_in_over += 1
+            return over_index + 1.0 if legal_in_over >= 6 else over_index + min(legal_in_over, 5) / 10.0
+
+        # Cricbuzz serves the board and the commentary from caches of different ages (2026-10-13: for minutes the board was
+        # a ball behind the commentary and no start was ever accepted). The board is the true score at ITS ball, so find that
+        # ball in the window (longest prefix first) and take the baseline there; the balls after it are then added on top.
+        for size in range(len(balls), 0, -1):
+            prefix = balls[:size]
+            if abs(board_overs - position(prefix)) > 0.001:
+                continue
+            window_runs = window_wickets = 0
+            for o in prefix:
+                events = [str(e) for e in o.get("event", [])]
+                total, _bat, _extras = _runs_and_extras(o.get("commText", ""), events)
+                window_runs += total
+                if "wicket" in events and _classify_wicket(o.get("commText", "")) is not None:
+                    window_wickets += 1
+            baseline = (int(board["score"]) - window_runs, int(board.get("wickets") or 0) - window_wickets)
+            return baseline if baseline[0] >= 0 and baseline[1] >= 0 else None
+        return None
 
     def _build_deliveries(
         self,
