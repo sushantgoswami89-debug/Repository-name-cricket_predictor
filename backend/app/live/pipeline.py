@@ -106,6 +106,13 @@ def _toss_metadata(snapshot: LiveSnapshot) -> dict[str, object]:
     }
 
 
+def _expected_mean_text(prediction: dict) -> str:
+    """" | expected 8.0": the mean of the model's run distribution next to its most-likely band, which sits lower (skewed overs)."""
+    metadata = prediction.get("metadata") if isinstance(prediction.get("metadata"), dict) else {}
+    value = metadata.get("expected_runs_mean")
+    return f" | expected {float(value):.1f}" if value else ""
+
+
 class VerifiedLivePredictionPipeline:
     """Publish only predictions derived from fully reconciled deliveries."""
 
@@ -1174,7 +1181,8 @@ class VerifiedLivePredictionPipeline:
             f"🏏 Candidate v3 — Over {output['over']} Prediction\n"
             f"Score: {output['score_before_over']}/{output['wickets_before_over']}\n"
             f"Runs: {prediction['expected_range']} "
-            f"(point {prediction['expected_runs']})\n"
+            f"(point {prediction['expected_runs']})"
+            f"{_expected_mean_text(prediction)}\n"
             f"Wicket risk (phase baseline): {probability:.1f}%"
             f"{win_line}\n"
             f"Confidence: {confidence_color} "

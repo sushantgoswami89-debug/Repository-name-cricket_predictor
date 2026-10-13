@@ -820,3 +820,11 @@ def test_rebuilding_the_same_over_does_not_emit_the_same_forecast_twice() -> Non
     pipeline._pending_prediction = None
     assert pipeline.process(_snapshot()) is None
     assert pipeline._pending_prediction == pending   # the next review still has its forecast to score
+
+
+def test_forecast_text_shows_the_expected_runs_next_to_the_most_likely_band() -> None:
+    from app.live.pipeline import _expected_mean_text
+
+    assert _expected_mean_text({"metadata": {"expected_runs_mean": 8.04}}) == " | expected 8.0"
+    assert _expected_mean_text({"metadata": {}}) == ""
+    assert _expected_mean_text({}) == ""

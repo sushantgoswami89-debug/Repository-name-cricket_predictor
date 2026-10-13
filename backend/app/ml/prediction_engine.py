@@ -551,6 +551,7 @@ class PredictionEngine:
                 "batting_team": batting_team,
                 "sharp_band_width": width,
                 "sharp_band_prob": round(run_range[f"sharp_{width}_prob"], 3),
+                "expected_runs_mean": round(float(run_range.get("expected_runs_mean", 0.0)), 1),
                 "display_runs": pivot,
                 "confidence_type": "dynamic stability indicator",
                 "raw_confidence": round(raw_confidence, 3),
