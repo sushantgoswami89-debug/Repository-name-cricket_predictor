@@ -237,3 +237,18 @@ def test_baseline_never_matches_inside_the_windows_first_partial_over():
     ok = CricbuzzLiveReader()._build_deliveries(("1", 1), window, board={"innings": 1, "score": 60, "wickets": 1, "overs": "9"},
                                                 require_baseline=True)
     assert ok[-1].feed_total == 62
+
+
+def test_window_starting_at_ball_two_is_not_taken_as_the_start_of_the_innings():
+    import pytest as _pytest
+
+    from app.live.cricbuzz_reader import CricbuzzFeedError
+
+    window = [_obj(2, 0.2, "A to B, FOUR", "four"), _obj(3, 0.3, "A to B, no run")]
+    with _pytest.raises(CricbuzzFeedError):   # no board: wait rather than start from 0/0 and miss ball 0.1
+        CricbuzzLiveReader()._build_deliveries(("1", 1), window, board=None, require_baseline=True)
+    longer = window + [_obj(4, 0.4, "A to B, no run"), _obj(5, 0.5, "A to B, no run"), _obj(6, 0.6, "A to B, no run"),
+                       _obj(7, 1.1, "A to B, 2 runs")]
+    ok = CricbuzzLiveReader()._build_deliveries(
+        ("1", 1), longer, board={"innings": 1, "score": 7, "wickets": 0, "overs": "1.1"}, require_baseline=True)
+    assert ok[-1].feed_total == 7   # the board already counts ball 0.1: 1 + 4 + 2 = 7 with the 1 run of ball 0.1 inside the baseline

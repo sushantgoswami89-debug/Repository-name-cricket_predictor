@@ -807,3 +807,16 @@ def test_a_wrong_toss_guess_before_the_first_ball_does_not_block_the_innings(mon
     pipeline.process(replace(_pre_innings_snapshot(), batting_team="India", bowling_team="West Indies"))  # toss guess: wrong side
     real = replace(_snapshot(), innings=1, batting_team="West Indies", bowling_team="India")
     pipeline.process(real)  # must not raise MatchStateAnomaly (it may legitimately return no prediction yet)
+
+
+def test_rebuilding_the_same_over_does_not_emit_the_same_forecast_twice() -> None:
+    """2026-10-13: a revised entry made the session rebuild; the same over was resolved again and its forecast was printed,
+    logged and scored a second time (72 of 262 shadow rows were such repeats)."""
+    pipeline = VerifiedLivePredictionPipeline(engine=FakeEngine())
+    first = pipeline.process(_snapshot())
+    assert first is not None
+    pending = pipeline._pending_prediction
+    pipeline._last_resolved_over = 0  # what the rebuild branch does
+    pipeline._pending_prediction = None
+    assert pipeline.process(_snapshot()) is None
+    assert pipeline._pending_prediction == pending   # the next review still has its forecast to score

@@ -170,6 +170,9 @@ class VerifiedLivePredictionPipeline:
         self._output = output_file
         self._verifier: LiveDeliveryVerifier | None = None
         self._last_resolved_over: int | None = None
+        # (match, innings, over) -> (inputs, prediction) of what was already emitted: a rebuild after a revised entry re-resolves the
+        # same over, and without this the same forecast was printed, logged and scored a second time (2026-10-13: 72 of 262 rows).
+        self._emitted: dict[tuple[str, int, int], tuple[tuple, dict]] = {}
         self._pending_prediction: dict[str, object] | None = None
         self._pending_over: int | None = None
         self._review_history: list[dict[str, object]] = []
@@ -209,6 +212,7 @@ class VerifiedLivePredictionPipeline:
             self._review_history = []
             self._publication_history = []
             self._published_keys = set()
+            self._emitted = {}
             self._restore(snapshot)
             self._restored_scope = scope
             self._retry_pending_publications(snapshot)
@@ -377,6 +381,14 @@ class VerifiedLivePredictionPipeline:
         wkts_before_over = verifier.base_wickets + sum(
             verifier.over_wickets.get(over, 0) for over in range(1, completed + 1)
         )
+        emitted_key = (snapshot.match_id, snapshot.innings, next_over)
+        emitted_inputs = (score_before_over, wkts_before_over, announced_bowler)
+        already = self._emitted.get(emitted_key)
+        if already is not None and already[0] == emitted_inputs:
+            # Same state at the end of this over as the forecast already given (a rebuild after a revised entry): keep that
+            # forecast as the pending one for the next review, but do not print, log or publish it again.
+            self._pending_prediction, self._pending_over = already[1], next_over
+            return None
         runs_required = (
             max(0, snapshot.target - score_before_over) if snapshot.target else 0
         )
@@ -469,6 +481,7 @@ class VerifiedLivePredictionPipeline:
             metadata["bowler_shadow"] = shadow
         self._pending_prediction = prediction
         self._pending_over = next_over
+        self._emitted[emitted_key] = (emitted_inputs, prediction)
         # Separate model, separate output key -- never merged into
         # `prediction` (see app/ml/match_winner_engine.py's docstring).
         win_probability = self._predict_win_probability(context)

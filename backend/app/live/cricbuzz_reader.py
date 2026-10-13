@@ -1053,7 +1053,9 @@ class CricbuzzLiveReader:
                     float(o["ballMetric"]) for o in ordered
                     if isinstance(o.get("ballMetric"), (int, float))
                 ]
-                from_start = (not starts) or min(starts) < 0.25
+                # ball 0.1 must be IN the window: 2026-10-13 a window starting at 0.2 counted as "from the start", missed the 1 run
+                # of ball 0.1 and sat one run behind the board until the next re-sync
+                from_start = (not starts) or min(starts) < 0.15
                 baseline = (0, 0)
                 if require_baseline and not from_start:
                     baseline = self._baseline_from_board(ordered, board, innings)
