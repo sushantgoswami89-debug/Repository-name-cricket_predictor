@@ -950,9 +950,21 @@ class CricbuzzLiveReader:
         # Cricbuzz serves the board and the commentary from caches of different ages (2026-10-13: for minutes the board was
         # a ball behind the commentary and no start was ever accepted). The board is the true score at ITS ball, so find that
         # ball in the window (longest prefix first) and take the baseline there; the balls after it are then added on top.
+        first_over = int(min(balls, key=lambda o: o.get("timestamp", 0))["ballMetric"])
+        first_over_complete_from_ball_one = min(
+            (o["ballMetric"] - int(o["ballMetric"]) for o in balls if int(o["ballMetric"]) == first_over), default=1.0
+        ) < 0.15
         for size in range(len(balls), 0, -1):
             prefix = balls[:size]
-            if abs(board_overs - position(prefix)) > 0.001:
+            last_over = int(max(prefix, key=lambda o: o.get("timestamp", 0))["ballMetric"])
+            over_finished = size < len(balls) and int(balls[size]["ballMetric"]) > last_over  # a later over has started
+            if over_finished:
+                where = last_over + 1.0  # overs only move on once the previous one is complete
+            elif last_over == first_over and not first_over_complete_from_ball_one:
+                continue  # the window starts mid-over: the balls we hold of that over are not all of it, so its position is unknown
+            else:
+                where = position(prefix)
+            if abs(board_overs - where) > 0.001:
                 continue
             window_runs = window_wickets = 0
             for o in prefix:

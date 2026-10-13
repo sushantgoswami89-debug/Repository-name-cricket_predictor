@@ -218,3 +218,22 @@ def test_long_commentary_sent_as_a_text_row_pointer_is_resolved():
     smart = "Hope ’s six, 6 runs"
     chunks = [entry.replace("$26", "$30"), f"30:T{len(smart.encode()):x},", smart]
     assert _delivery_objects(chunks, "1")[0]["commText"] == smart
+
+
+def test_baseline_never_matches_inside_the_windows_first_partial_over():
+    """2026-10-13: a window that starts at ball 3 of an over looked like "2 balls into that over" for a prefix, matched a board at
+    that position by accident, and gave a baseline 4 runs too low (ours 42/1 vs board 46/1) for the rest of the chase."""
+    import pytest as _pytest
+
+    from app.live.cricbuzz_reader import CricbuzzFeedError
+
+    window = [_obj(1, 8.3, "A to B, 1 run"), _obj(2, 8.4, "A to B, FOUR", "four"), _obj(3, 8.5, "A to B, no run"),
+              _obj(4, 8.6, "A to B, no run"), _obj(5, 9.1, "A to B, 2 runs")]
+    # the board at "8.2" can only be a coincidence with the two balls we hold of over 9 (8.3 and 8.4)
+    with _pytest.raises(CricbuzzFeedError):
+        CricbuzzLiveReader()._build_deliveries(("1", 1), window, board={"innings": 1, "score": 50, "wickets": 1, "overs": "8.2"},
+                                               require_baseline=True)
+    # the board at the end of the (complete) over 8 is a real match: 60/1 at 9.0 -> 60 - (1+4+0+0) = 55 before the window
+    ok = CricbuzzLiveReader()._build_deliveries(("1", 1), window, board={"innings": 1, "score": 60, "wickets": 1, "overs": "9"},
+                                                require_baseline=True)
+    assert ok[-1].feed_total == 62
