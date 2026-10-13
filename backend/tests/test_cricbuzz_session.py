@@ -818,3 +818,23 @@ def test_innings_break_is_not_the_end_of_the_match():
     assert _match_result_text(snap) is None and _match_winner(snap) is None
     snap.board = done_board
     assert _match_result_text(snap) == "India won by 14 runs" and _match_winner(snap) == "India"
+
+
+def test_over_that_mentions_a_save_or_an_umpire_is_flagged_as_possibly_revised():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _over_break_block, _revision_risk
+
+    def ball(n, text, over=7):
+        return SimpleNamespace(over=over, ball=n, commentary=text, bowler="A", timestamp_ms=n)
+
+    calm = SimpleNamespace(deliveries=[ball(5, "A to B, 1 run, pushed to long-on"), ball(6, "A to B, no run, defended")])
+    assert _revision_risk(calm) == ""
+    risky = SimpleNamespace(deliveries=[ball(5, "A to B, 1 run"), ball(6, "A to B, 2 runs, Saim Ayub saves a six! Dragged down short")])
+    assert _revision_risk(risky) == '6.6: "saves a six"'
+    earlier_over = SimpleNamespace(deliveries=[ball(1, "third umpire is checking", over=6), ball(6, "A to B, no run")])
+    assert _revision_risk(earlier_over) == ""   # only the over that just ended counts
+    snap = SimpleNamespace(overs="7.0", innings=1, innings_complete=False, batting_team="India", bowling_team="West Indies",
+                           score=60, wickets=1, target=0, scheduled_overs=20, deliveries=risky.deliveries)
+    text = _over_break_block(snap, [], {}, {}, "", None)
+    assert "this over's total may still change" in text and "saves a six" in text

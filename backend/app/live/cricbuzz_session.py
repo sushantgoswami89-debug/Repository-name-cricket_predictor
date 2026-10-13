@@ -720,6 +720,29 @@ def _chase_comparison(snapshot, first: tuple[int, int] | None) -> str:
             f"{short(snapshot.batting_team)} {snapshot.score}/{snapshot.wickets} | {gap}")
 
 
+_REVISION_RISK = re.compile(
+    r"saves? (?:a |the )?(?:six|four|boundary)|stepped on|steps on|touch(?:ed|es) the (?:rope|cushion|boundary)|third umpire|tv umpire|"
+    r"\bumpires?\b|\breview|referr|checking|\bchecks?\b|replay|\bDRS\b",
+    re.I,
+)
+
+
+def _revision_risk(snapshot) -> str:
+    """The phrase in the just-finished over's commentary that says a ball may still be changed, or "".
+    2026-10-13, Pakistan v Sri Lanka 6.6: "2 runs, Saim Ayub saves a six!" became SIX 70 s later ("he has actually stepped on the
+    cushion"), so the over total was 4 low when the forecast was made."""
+    if not snapshot.deliveries:
+        return ""
+    over = getattr(snapshot.deliveries[-1], "over", None)
+    for delivery in snapshot.deliveries:
+        if over is None or getattr(delivery, "over", None) != over:
+            continue
+        found = _REVISION_RISK.search(getattr(delivery, "commentary", "") or "")
+        if found:
+            return f"{delivery.over - 1}.{delivery.ball}: \"{found.group(0).strip()}\""
+    return ""
+
+
 def _over_break_block(snapshot, crease, card_batters: dict, card_bowlers: dict, announced: str, expected: dict | None,
                       first: tuple[int, int] | None = None) -> str:
     """The over-end summary as a few short lines: score with run rates (and what the chase needs), the bowler who just finished
@@ -730,6 +753,9 @@ def _over_break_block(snapshot, crease, card_batters: dict, card_bowlers: dict, 
     comparison = _chase_comparison(snapshot, first)
     if comparison:
         lines.append(comparison)
+    risk = _revision_risk(snapshot)
+    if risk:
+        lines.append(f"⚠️  this over's total may still change -- {risk}")
     lines.append(f"Bowled: {last.bowler}{card_bowlers.get(last.bowler, '')}")
     striker = expected["striker"] if expected is not None and not snapshot.innings_complete else ""
     if crease:
