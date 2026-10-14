@@ -252,3 +252,17 @@ def test_window_starting_at_ball_two_is_not_taken_as_the_start_of_the_innings():
     ok = CricbuzzLiveReader()._build_deliveries(
         ("1", 1), longer, board={"innings": 1, "score": 7, "wickets": 0, "overs": "1.1"}, require_baseline=True)
     assert ok[-1].feed_total == 7   # the board already counts ball 0.1: 1 + 4 + 2 = 7 with the 1 run of ball 0.1 inside the baseline
+
+
+def test_baseline_does_not_count_the_twin_copy_of_an_over_break_ball_twice():
+    """2026-10-14, 16.6: Cricbuzz posts the last ball of an over twice with the same timestamp (one tagged over-break). The baseline
+    from the board summed both, so every later total was 1 run low (ours 206 vs board 207 from 17.0 to the end of the innings)."""
+    twin = dict(_obj(7, 1.1, "A to B, 1 run"))
+    window = [_obj(1, 0.1, "A to B, 1 run"), _obj(2, 0.2, "A to B, no run"), _obj(3, 0.3, "A to B, no run"),
+              _obj(4, 0.4, "A to B, no run"), _obj(5, 0.5, "A to B, no run"), _obj(6, 0.6, "A to B, 1 run"), _obj(7, 1.1, "A to B, 1 run"), twin]
+    window = window[2:]   # a window that does not reach the first ball (so the board supplies the baseline)
+    reader = CricbuzzLiveReader()
+    # truth: 3 runs scored in the balls shown here + 20 before them; board after ball 1.1 says 24
+    board = {"innings": 1, "score": 24, "wickets": 0, "overs": "1.1"}
+    deliveries = reader._build_deliveries(("1", 1), window, board=board, require_baseline=True)
+    assert deliveries[-1].feed_total == 24

@@ -240,8 +240,49 @@ def _delivery_objects(chunks: list[str], match_id: str) -> list[dict[str, Any]]:
                 rows = _text_rows(chunks) if rows is None else rows
                 if reference.group(1) in rows:
                     obj["commText"] = rows[reference.group(1)]
+            if not str(obj.get("commText", "")).strip():
+                # Cricbuzz posts an EMPTY twin of a ball a few seconds after it (151598 ball 16.1: the FOUR, then a blank entry with the
+                # same ballMetric and a new timestamp). It looked like a revision "4 -> 0 run(s)" and left the total 4 low.
+                continue
             objects.append(obj)
+    _attach_over_separators(chunks, objects)
     return objects
+
+
+_SEPARATOR_MARKER = '{"commType":"over-separator"'
+
+
+def _attach_over_separators(chunks: list[str], objects: list[dict[str, Any]]) -> None:
+    """Put each over separator back on the last ball of its over.
+
+    Until about 2026-10-10 Cricbuzz sent the separator (overSummary tokens, overRuns, the team score after the over) INSIDE the last
+    ball's object; the repair, re-anchoring, audit and confirmation code all read it there. Since then it comes as a separate object
+    ({"commType":"over-separator", "inningsId":..., "overSeparator":{"overNumber":N,...}}), so none of that code saw a separator
+    and every total depended on the starting baseline alone (found 2026-10-14: 1-run offsets that lasted to the end of an innings).
+    Re-attaching it makes the existing code work again."""
+    for chunk in chunks:
+        for hit in re.finditer(re.escape(_SEPARATOR_MARKER), chunk):
+            raw = _extract_balanced(chunk, hit.start())
+            if raw is None:
+                continue
+            try:
+                holder = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            separator = holder.get("overSeparator")
+            if not isinstance(separator, dict) or separator.get("overNumber") is None:
+                continue
+            innings = holder.get("inningsId")
+            over_number = _int_field(separator, "overNumber", 0)
+            balls = [
+                o for o in objects
+                if o.get("inningsId") == innings and isinstance(o.get("ballMetric"), (int, float)) and int(o["ballMetric"]) == over_number - 1
+            ]
+            if not balls:
+                continue
+            last = max(balls, key=lambda o: (o["ballMetric"], o.get("timestamp", 0)))
+            if not isinstance(last.get("overSeparator"), dict):
+                last["overSeparator"] = separator
 
 
 def _classify_wicket(comm_text: str) -> str | None:
@@ -942,7 +983,18 @@ class CricbuzzLiveReader:
             return None
         if board.get("innings") not in (None, innings):
             return None
-        balls = [o for o in ordered if isinstance(o.get("ballMetric"), (int, float))]
+        balls = []
+        seen_stamps: set = set()
+        for o in ordered:
+            if not isinstance(o.get("ballMetric"), (int, float)):
+                continue
+            # The last ball of an over is posted TWICE with the same timestamp (one copy tagged over-break). Counting both put the
+            # baseline 1 run too low for the rest of the innings (2026-10-14, 16.6: ours 206 vs board 207 from 17.0 on).
+            stamp = o.get("timestamp")
+            if stamp is not None and stamp in seen_stamps:
+                continue
+            seen_stamps.add(stamp)
+            balls.append(o)
         if not balls:
             return None
         try:

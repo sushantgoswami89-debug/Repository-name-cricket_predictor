@@ -265,3 +265,19 @@ def test_batting_side_is_remembered_when_a_copy_of_the_page_names_no_team():
 
     assert _resolve_full_team_name("WI", teams) == "West Indies"
     assert _resolve_full_team_name("", teams) == ""   # no code: the caller must use what it remembers, not teams[0]
+
+
+def test_empty_twin_of_a_ball_is_ignored_and_separators_are_reattached_to_their_over():
+    """2026-10-14: (1) a blank entry with the same ballMetric as a FOUR arrived 4 s later and was read as a revision to 0 runs;
+    (2) over separators now arrive as separate {"commType":"over-separator"} objects and the code that reads them never saw them."""
+    from app.live.cricbuzz_reader import _delivery_objects
+
+    ball = ('{"matchId":9,"commType":"commentary","inningsId":1,"ballMetric":0.6,"timestamp":100,'
+            '"commText":"A to B, <b>FOUR</b>","event":["four","all"],"teamName":"WI"}')
+    blank = ('{"matchId":9,"commType":"commentary","inningsId":1,"ballMetric":0.6,"timestamp":104,'
+             '"commText":"","event":["none","all"],"teamName":"WI"}')
+    separator = ('{"commType":"over-separator","matchId":9,"inningsId":1,"timestamp":120,'
+                 '"overSeparator":{"overNumber":1,"overSummary":"0 0 0 0 0 4 ","overRuns":4,"batTeamObj":{"teamName":"WI","teamScore":"4-0"}}}')
+    objects = _delivery_objects([ball, blank, separator], "9")
+    assert len(objects) == 1 and objects[0]["timestamp"] == 100            # the blank twin is gone
+    assert objects[0]["overSeparator"]["batTeamObj"]["teamScore"] == "4-0"  # the separator sits on the last ball of over 1
