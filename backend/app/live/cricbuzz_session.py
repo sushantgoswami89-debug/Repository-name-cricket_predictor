@@ -365,6 +365,22 @@ def _over_break_figures(snapshot, crease: list[str] | None, card_batters: dict, 
     return "   [" + " | ".join(parts) + "]"
 
 
+def _our_state_at(snapshot, board_overs: float) -> tuple[int, int] | None:
+    """(score, wickets) of OUR record at the board's over.ball, or None when we cannot place it. The board is usually a ball or two
+    behind the commentary; if our record at THAT ball equals the board, there is nothing wrong -- the board just has not caught up."""
+    legal_in_over: dict[int, int] = {}
+    state = None
+    for delivery in sorted(snapshot.deliveries, key=lambda d: (d.over, d.ball)):
+        if getattr(delivery, "is_legal", True):
+            legal_in_over[delivery.over] = legal_in_over.get(delivery.over, 0) + 1
+        legal = legal_in_over.get(delivery.over, 0)
+        position = delivery.over if legal >= 6 else (delivery.over - 1) + legal / 10.0
+        if position > board_overs + 0.001:
+            break
+        state = (delivery.feed_total, delivery.feed_wickets)
+    return state
+
+
 def _board_check(snapshot) -> str | None:
     """Disagreement between the state we rebuilt from ball-by-ball commentary
     and the page's own live scoreboard, or None. This is the check that would
@@ -377,6 +393,13 @@ def _board_check(snapshot) -> str | None:
     problems = []
     if board.get("innings") not in (None, snapshot.innings):
         problems.append(f"innings {snapshot.innings} vs board {board['innings']}")
+    else:
+        try:
+            behind = float(board.get("overs")) < float(snapshot.overs)
+        except (TypeError, ValueError):
+            behind = False
+        if behind and _our_state_at(snapshot, float(board["overs"])) == (board["score"], board.get("wickets")):
+            return None  # the board is simply behind us and agrees with our record at its own ball (the usual 1-ball lag)
     if (board["score"], board.get("wickets")) != (snapshot.score, snapshot.wickets):
         problems.append(
             f"score {snapshot.score}/{snapshot.wickets} vs board {board['score']}/{board.get('wickets')}"

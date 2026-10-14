@@ -847,3 +847,21 @@ def test_a_wide_bowled_first_in_the_next_over_is_not_the_over_break():
     assert _at_over_break(snap)
     snap.deliveries[-1].over = 14                      # 13.1 wide: overs still read "13.0" but over 14 has begun
     assert not _at_over_break(snap)
+
+
+def test_board_one_ball_behind_that_agrees_with_our_record_at_its_ball_is_not_a_mismatch():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _board_check
+
+    def ball(over, n, total):
+        return SimpleNamespace(over=over, ball=n, is_legal=True, feed_total=total, feed_wickets=1)
+
+    deliveries = [ball(7, 1, 80), ball(7, 2, 81), ball(7, 3, 82), ball(7, 4, 86)]   # 6.3 -> 82/1, 6.4 FOUR -> 86/1
+    snap = SimpleNamespace(deliveries=deliveries, innings=1, score=86, wickets=1, overs="6.4",
+                           board={"innings": 1, "score": 82, "wickets": 1, "overs": "6.3"})
+    assert _board_check(snap) is None                       # board is a ball behind and right for its ball
+    snap.board = {"innings": 1, "score": 81, "wickets": 1, "overs": "6.3"}   # but 81 at 6.3 is wrong: we say 82
+    assert "board 81/1" in _board_check(snap)
+    snap.board = {"innings": 1, "score": 86, "wickets": 1, "overs": "6.5"}   # board AHEAD of us is always reported
+    assert _board_check(snap) is not None
