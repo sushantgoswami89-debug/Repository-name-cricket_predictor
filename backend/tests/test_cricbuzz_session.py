@@ -865,3 +865,28 @@ def test_board_one_ball_behind_that_agrees_with_our_record_at_its_ball_is_not_a_
     assert "board 81/1" in _board_check(snap)
     snap.board = {"innings": 1, "score": 86, "wickets": 1, "overs": "6.5"}   # board AHEAD of us is always reported
     assert _board_check(snap) is not None
+
+
+def test_over_end_forecast_waits_for_confirmation_then_goes_out(monkeypatch, capsys):
+    """User 2026-10-13: the forecast must not run ahead of correctly captured data -- "gate, then publish flagged"."""
+    from app.live import cricbuzz_session
+    from app.live.cricbuzz_session import GATE_SECONDS, CricbuzzMatchSession
+
+    session = CricbuzzMatchSession.__new__(CricbuzzMatchSession)
+    session._gate_started, session._gate_notice, session.tag_lines = {}, None, False
+    session._tag = ""
+    session.match_id = "1"
+    snap = _over_break_snapshot()
+    snap.innings = 2
+    clock = [1000.0]
+    monkeypatch.setattr(cricbuzz_session.time, "monotonic", lambda: clock[0])
+    assert session._hold_for_confirmation(snap, "no source yet") is True            # first poll of the over end: wait
+    clock[0] += GATE_SECONDS - 1
+    assert session._hold_for_confirmation(snap, "no source yet") is True
+    assert capsys.readouterr().out.count("[gate]") == 1                              # said once, not every poll
+    clock[0] += 2
+    assert session._hold_for_confirmation(snap, "no source yet") is False           # waited long enough: publish flagged
+    mid = _over_break_snapshot()
+    mid.innings = 2
+    mid.deliveries[-1].over = 14                                                     # the next over has begun: no more waiting
+    assert session._hold_for_confirmation(mid, "no source yet") is False

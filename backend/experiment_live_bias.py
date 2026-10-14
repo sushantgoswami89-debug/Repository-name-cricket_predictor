@@ -36,6 +36,7 @@ def pipeline_in(tmp: Path) -> VerifiedLivePredictionPipeline:
     )
 
 
+KNOW_BOWLER = "--bowler" in sys.argv
 LAST_MEAN: list[float] = []
 
 
@@ -75,10 +76,14 @@ def replay(raw: dict, match_id: str, pipeline: VerifiedLivePredictionPipeline) -
                     total_runs=runs, batter_runs=int(d["runs"]["batter"]), extras={k: int(v) for k, v in extras.items()},
                     wicket_kind=str(d["wickets"][0]["kind"]) if d.get("wickets") else None, feed_total=score, feed_wickets=wickets,
                     timestamp_ms=timestamp, commentary=""))
+                nxt = None
+                if KNOW_BOWLER and legal == 6 and source_over is not innings["overs"][-1]:
+                    nxt = innings["overs"][innings["overs"].index(source_over) + 1]["deliveries"][0]["bowler"]
                 snapshot = LiveSnapshot(
                     match_id=match_id, match_format="T20", batting_team=batting, bowling_team=bowling, innings=number, score=score,
                     wickets=wickets, overs=f"{over_number - 1}.{legal}", is_live=True, deliveries=tuple(deliveries), target=target,
-                    scheduled_overs=20, venue_name=raw["info"].get("venue", ""))
+                    scheduled_overs=20, venue_name=raw["info"].get("venue", ""),
+                    announced_bowler=nxt or "", announced_bowler_over=over_number + 1 if nxt else 0)
                 try:
                     out = pipeline.process(snapshot)
                 except Exception:
@@ -86,9 +91,9 @@ def replay(raw: dict, match_id: str, pipeline: VerifiedLivePredictionPipeline) -
                 if out:
                     review = out.get("previous_over_evaluation")
                     if review and pending:
-                        rows.append((number, pending[0], pending[1], pending[2], int(review["actual_runs"]), pending[3]))
+                        rows.append((number, pending[0], pending[1], pending[2], int(review["actual_runs"]), pending[3], pending[4]))
                     pred = out["prediction"]
-                    pending = (out["over"], float(pred.get("expected_runs", 0)), float(pred.get("point", pred.get("expected_runs", 0))), LAST_MEAN[0] if LAST_MEAN else 0.0)
+                    pending = (out["over"], float(pred.get("expected_runs", 0)), float(pred.get("point", pred.get("expected_runs", 0))), LAST_MEAN[0] if LAST_MEAN else 0.0, str(pred.get("expected_range", "")))
         if number == 1:
             first_total = score
     return rows
@@ -107,7 +112,7 @@ def main() -> None:
     import runtime_run_range_v3
 
     runtime_run_range_v3.select_inclusive_bands = _record_mean(runtime_run_range_v3.select_inclusive_bands)
-    limit = int(sys.argv[1]) if len(sys.argv) > 1 else 40
+    limit = int([a for a in sys.argv[1:] if not a.startswith("--")][0]) if [a for a in sys.argv[1:] if not a.startswith("--")] else 40
     files = []
     for path in (ROOT / "data" / "raw" / "cricsheet" / "t20i").glob("*.json"):
         info = json.loads(path.read_text(encoding="utf-8"))["info"]
@@ -128,6 +133,8 @@ def main() -> None:
     print(f"matches {len(files)}  forecasts scored {len(rows)}")
     print(f"mean forecast {statistics.mean(pred):.2f}  mean actual {statistics.mean(act):.2f}  bias {statistics.mean(pred) - statistics.mean(act):+.2f}")
     print(f"MAE {statistics.mean(abs(p - a) for p, a in zip(pred, act)):.2f}  std forecast {statistics.pstdev(pred):.2f}  std actual {statistics.pstdev(act):.2f}")
+    hits = sum(1 for r in rows if r[6] and int(r[6].split('-')[0]) <= r[4] <= int(r[6].split('-')[1]))
+    print(f"bowler known at the over end: {KNOW_BOWLER}   band hit rate {hits / len(rows):.1%}")
     mean_forecast = [r[5] for r in rows]
     print(f"distribution MEAN: forecast {statistics.mean(mean_forecast):.2f} vs actual {statistics.mean(act):.2f}  bias {statistics.mean(mean_forecast) - statistics.mean(act):+.2f}  "
           f"MAE {statistics.mean(abs(p - a) for p, a in zip(mean_forecast, act)):.2f}  std {statistics.pstdev(mean_forecast):.2f}")

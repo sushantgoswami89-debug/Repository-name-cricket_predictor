@@ -468,6 +468,7 @@ def _board_verdict(snapshot) -> bool | None:
     return (board["score"], board.get("wickets")) == (snapshot.score, snapshot.wickets)
 
 
+GATE_SECONDS = 90.0  # how long an over-end forecast waits for the page to confirm our record before it goes out flagged UNCONFIRMED
 RESYNC_MAX_PER_OVER = 2  # re-reads of the commentary per over before a contradiction is allowed to hold a prediction
 
 
@@ -873,6 +874,8 @@ class CricbuzzMatchSession:
     _resyncs: dict = field(default_factory=dict)
     _previous_reader: object = None  # the reader replaced by a re-read, kept until the fresh one has produced a snapshot
     _last_gate: str | None = None
+    _gate_started: dict = field(default_factory=dict)
+    _gate_notice: str | None = None
     _card_not_out: list[str] = field(default_factory=list)  # the latest scorecard page's not-out names (it may lag)
     _incoming: dict = field(default_factory=dict)  # innings -> batters the commentary said "comes to the crease"
     _card_batters: dict = field(default_factory=dict)
@@ -930,6 +933,24 @@ class CricbuzzMatchSession:
             except Exception:
                 pass
         return "unconfirmed", f"over {completed}: no source at this point yet to confirm {snapshot.score}/{snapshot.wickets} at {snapshot.overs} ov"
+
+    def _hold_for_confirmation(self, snapshot, why: str) -> bool:
+        """True while an over-end forecast should wait because no source confirms our record yet (user 2026-10-13: the forecast must
+        not run ahead of correctly captured data; "gate, then publish flagged"). Waits at most GATE_SECONDS from the first poll of
+        this over end, and only while that over end is still the latest thing that happened -- once the next over's first ball is in,
+        waiting is over (the forecast then goes out marked LATE)."""
+        if not _at_over_break(snapshot):
+            return False
+        key = (snapshot.innings, str(snapshot.overs))
+        started = self._gate_started.setdefault(key, time.monotonic())
+        waited = time.monotonic() - started
+        if waited >= GATE_SECONDS:
+            return False
+        if self._gate_notice != why:
+            print(f"{self.prefix}[gate] holding the forecast until the page confirms {snapshot.score}/{snapshot.wickets} at "
+                  f"{snapshot.overs} ov (up to {GATE_SECONDS:.0f} s): {why}")
+            self._gate_notice = why
+        return True
 
     def _resync(self, snapshot, reason: str, rebuild: bool = True) -> bool:
         """Re-read the commentary instead of blocking (user 2026-10-11: "dont block, read commentary ... it will hardly take 1
@@ -1250,7 +1271,9 @@ class CricbuzzMatchSession:
                     print(f"{self.prefix}⚠️  PREDICTION HELD (still disagrees after re-reading the commentary): {why}")
                 self._last_hold = why
                 return
-            if why != self._last_gate:  # unconfirmed after the re-reads: go on, say so
+            if self._hold_for_confirmation(snapshot, why):
+                return
+            if why != self._last_gate:  # unconfirmed after the re-reads and the wait: go on, say so
                 print(f"{self.prefix}[sync] predicting UNCONFIRMED (the page has no source at this point yet): {why}")
             self._last_gate = why
         else:
