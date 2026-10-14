@@ -248,3 +248,20 @@ def test_wicket_ball_posted_with_empty_player_fields_takes_the_names_from_its_te
     delivery = reader._build_deliveries(("1", 2), [obj])[-1]
     assert (delivery.bowler, delivery.striker) == ("Arafat Minhas", "Sineth Jayawardena")
     assert delivery.dismissed == "Sineth Jayawardena"
+
+
+def test_batting_side_is_remembered_when_a_copy_of_the_page_names_no_team():
+    """2026-10-14: a page copy whose window had no team name fell back to the first team in the list (India) for minutes and every poll
+    was refused with "Batting team changed inside innings 1"."""
+    from app.live.cricbuzz_reader import CricbuzzLiveReader
+
+    reader = CricbuzzLiveReader()
+    scope = ("1", 1)
+    reader._batting_team_by_scope[scope] = "West Indies"
+    named = [{"teamName": "WI", "timestamp": 1}]
+    unnamed = [{"teamName": "", "timestamp": 2}]
+    teams = ["India", "West Indies"]
+    from app.live.cricbuzz_reader import _resolve_full_team_name
+
+    assert _resolve_full_team_name("WI", teams) == "West Indies"
+    assert _resolve_full_team_name("", teams) == ""   # no code: the caller must use what it remembers, not teams[0]

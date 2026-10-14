@@ -53,7 +53,7 @@ from __future__ import annotations
 import json
 import re
 import time
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Any
 
@@ -459,6 +459,7 @@ class CricbuzzLiveReader:
     # TOI's own feed returns the complete scorecard every time), not just
     # this poll's new balls.
     _all_deliveries: dict[tuple[str, int], dict[tuple[int, int, int], LiveDelivery]] | None = None
+    _batting_team_by_scope: dict = field(default_factory=dict)
     _seed_cutoff_ms: dict[tuple[str, int], int] | None = None
     _last_delivery: dict[tuple[str, int], LiveDelivery] | None = None
     _seen_timestamps: dict[tuple[str, int], set[int]] | None = None
@@ -617,9 +618,14 @@ class CricbuzzLiveReader:
         named = [o for o in current_innings_objects if str(o.get("teamName", "")).strip()]
         latest_raw = max(named or current_innings_objects, key=lambda obj: obj.get("timestamp", 0))
         batting_code = str(latest_raw.get("teamName", ""))
-        batting_team = _resolve_full_team_name(batting_code, teams) or (
-            teams[0] if teams else batting_code
-        )
+        resolved_team = _resolve_full_team_name(batting_code, teams)
+        # The side batting cannot change inside an innings. 2026-10-14 (West Indies v India): a copy of the page whose window
+        # named no team fell back to teams[0] and flipped the batting side to India for minutes, so every poll was refused
+        # ("Batting team changed inside innings 1"). Remember the side the first time a ball object names it and keep it.
+        remembered = self._batting_team_by_scope.setdefault(scope, "")
+        if resolved_team:
+            self._batting_team_by_scope[scope] = resolved_team
+        batting_team = resolved_team or remembered or (teams[0] if teams else batting_code)
         bowling_team = next((team for team in teams if team != batting_team), "")
 
         wickets = self._running_wickets.get(scope, 0)

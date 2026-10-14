@@ -838,3 +838,12 @@ def test_over_that_mentions_a_save_or_an_umpire_is_flagged_as_possibly_revised()
                            score=60, wickets=1, target=0, scheduled_overs=20, deliveries=risky.deliveries)
     text = _over_break_block(snap, [], {}, {}, "", None)
     assert "this over's total may still change" in text and "saves a six" in text
+
+
+def test_a_wide_bowled_first_in_the_next_over_is_not_the_over_break():
+    from app.live.cricbuzz_session import _at_over_break
+
+    snap = _over_break_snapshot()                     # overs "13.0", last delivery in over 13
+    assert _at_over_break(snap)
+    snap.deliveries[-1].over = 14                      # 13.1 wide: overs still read "13.0" but over 14 has begun
+    assert not _at_over_break(snap)

@@ -646,11 +646,15 @@ def fact_text(match_id: str, match_url: str, label: str) -> str | None:
 def _at_over_break(snapshot) -> bool:
     """True between the last ball of an over and the first ball of the next: the page's board still shows the
     finished over's bowler and batters until a new ball is bowled (user, 2026-10-06 and again 2026-10-10)."""
-    return bool(
-        snapshot.deliveries
-        and str(snapshot.overs).endswith(".0")
-        and not snapshot.innings_complete
-    )
+    if not (snapshot.deliveries and str(snapshot.overs).endswith(".0") and not snapshot.innings_complete):
+        return False
+    # A wide or no-ball bowled FIRST in the next over leaves the overs reading "5.0" although that over has begun (2026-10-14, 5.1
+    # wide): then the last delivery belongs to over 6, not 5, and it is no longer the break.
+    try:
+        completed = int(str(snapshot.overs).partition(".")[0])
+        return getattr(snapshot.deliveries[-1], "over", completed) <= completed
+    except ValueError:
+        return True
 
 
 def _score_line(snapshot) -> str:
