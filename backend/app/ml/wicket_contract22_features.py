@@ -377,7 +377,7 @@ class WicketContract22FeatureComputer:
             is_return_spell = int(bowler_spell_count.get(bowler_id, 0) >= 1)
 
         striker_balls = batter_match.get(striker_id, _empty_batter())["balls"]
-        # Genuine live TOI has no non-striker field at all (ToiDelivery
+        # Genuine live TOI has no non-striker field at all (LiveDelivery
         # carries only the current striker per ball) -- partner_id is
         # UNKNOWN_PLAYER whenever the caller can't supply one. Don't let
         # that manufacture a false 0-balls partner and force "new_batter"

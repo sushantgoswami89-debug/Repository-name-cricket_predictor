@@ -17,10 +17,11 @@ from __future__ import annotations
 
 import argparse
 
-from app.live.toi_reader import ToiFeedError, ToiLiveReader, ToiPlayer
+from app.live.live_snapshot import LivePlayer
+from app.live.toi_reader import ToiFeedError, ToiLiveReader
 
 
-def _role_group(players: tuple[ToiPlayer, ...]) -> str:
+def _role_group(players: tuple[LivePlayer, ...]) -> str:
     if not players:
         return "  (playing XI not yet available -- try again closer to toss)"
     lines = []

@@ -12,15 +12,17 @@ from tempfile import NamedTemporaryFile
 from typing import Protocol
 
 from app.live.persistence import LiveStateStore
-from app.live.toi_reader import ToiDelivery, ToiSnapshot
+from app.live.live_snapshot import LiveDelivery, LiveSnapshot
 from app.live.verification import LiveDeliveryVerifier, VerificationError
-from app.ml.engine_router import EngineRouter
+from app.ml.engine_router import EngineFamily, EngineRouter, UnsupportedCricketFormat
 from app.ml.bowler_shadow_predictor import BowlerShadowPredictor
+from app.ml.ipl_identities import UNKNOWN_TEAM, canonical_team_id
 from app.ml.match_winner_engine import MatchWinnerEngine
 from app.ml.prediction_engine import PredictionEngine
 from app.ml.win_probability_shadow_log import WinProbabilityShadowLog
 from app.ml.wicket_ensemble_shadow_log import WicketEnsembleShadowLog
 from app.ml.run_range_ensemble_shadow_log import RunRangeEnsembleShadowLog
+from app.ml.match_winner_ensemble_shadow_log import MatchWinnerEnsembleShadowLog
 from app.models.live_match_state import LiveMatchState
 from app.models.match_context import MatchContext
 from app.services.prediction_rating import rate_prediction
@@ -30,20 +32,70 @@ class PredictionPublisher(Protocol):
     def publish(self, key: str, text: str) -> bool: ...
 
 
-def _team_player_names(snapshot: ToiSnapshot, team_name: str) -> list[str]:
-    # team_players is best-effort (see ToiSnapshot's own docstring -- a
+class MatchStateAnomaly(Exception):
+    """A live snapshot's match state is internally inconsistent.
+
+    Every one of these checks codifies a real bug that previously reached
+    production and was only caught because a human was watching a live
+    match by hand (docs/live_field_test_2026-09-15.md,
+    docs/live_field_test_2026-09-17.md): the batting/bowling teams
+    silently swapped to the same team, a prediction was served for an
+    over past the innings' scheduled length, or a team name didn't
+    resolve to a real franchise. Callers should treat this the same as
+    VerificationError -- skip this poll, do not publish.
+    """
+
+
+def _check_match_state(
+    snapshot: LiveSnapshot, context: MatchContext, next_over: int
+) -> None:
+    batting = (context.team1 or "").strip()
+    bowling = (context.team2 or "").strip()
+    if not batting or not bowling:
+        raise MatchStateAnomaly(
+            f"{snapshot.match_id}: empty team name "
+            f"(batting={batting!r}, bowling={bowling!r})"
+        )
+    if batting.casefold() == bowling.casefold():
+        raise MatchStateAnomaly(
+            f"{snapshot.match_id}: batting_team == bowling_team ({batting!r})"
+        )
+    scheduled = snapshot.scheduled_overs
+    if scheduled and next_over > scheduled + 1:
+        raise MatchStateAnomaly(
+            f"{snapshot.match_id}: over {next_over} exceeds this innings' "
+            f"scheduled_overs={scheduled}"
+        )
+    try:
+        is_ipl = EngineRouter.resolve(context.format, context.competition).family == (
+            EngineFamily.IPL
+        )
+    except UnsupportedCricketFormat:
+        is_ipl = False
+    if is_ipl:
+        for label, name in (("batting", batting), ("bowling", bowling)):
+            resolved = canonical_team_id(name)
+            if resolved == UNKNOWN_TEAM or resolved.startswith("team:unresolved:"):
+                raise MatchStateAnomaly(
+                    f"{snapshot.match_id}: {label} team {name!r} does not "
+                    f"resolve to a known IPL franchise"
+                )
+
+
+def _team_player_names(snapshot: LiveSnapshot, team_name: str) -> list[str]:
+    # team_players is best-effort (see LiveSnapshot's own docstring -- a
     # missing/malformed block degrades to the empty default rather than
     # raising), so a team with no roster fetched yet just yields an empty
     # list -- team-composition features degrade to zero counts, not a crash.
     return [player.name for player in snapshot.team_players.get(team_name, ())]
 
 
-def _toss_metadata(snapshot: ToiSnapshot) -> dict[str, object]:
-    # toss_won_by/toss_decision are best-effort (ToiSnapshot's own
+def _toss_metadata(snapshot: LiveSnapshot) -> dict[str, object]:
+    # toss_won_by/toss_decision are best-effort (LiveSnapshot's own
     # docstring), so a missing toss block degrades to "unknown"/False --
     # match_winner_v1's feature computer already treats that as neutral,
     # not a crash. Added 2026-08-23 for match_winner_v1 -- the same
-    # toss/decision fields ToiSnapshot has always fetched, previously
+    # toss/decision fields LiveSnapshot has always fetched, previously
     # dropped before reaching MatchContext (same drop pattern this
     # session already found and fixed for team_players).
     return {
@@ -52,6 +104,13 @@ def _toss_metadata(snapshot: ToiSnapshot) -> dict[str, object]:
             snapshot.toss_won_by and snapshot.toss_won_by == snapshot.batting_team
         ),
     }
+
+
+def _expected_mean_text(prediction: dict) -> str:
+    """" | expected 8.0": the mean of the model's run distribution next to its most-likely band, which sits lower (skewed overs)."""
+    metadata = prediction.get("metadata") if isinstance(prediction.get("metadata"), dict) else {}
+    value = metadata.get("expected_runs_mean")
+    return f" | expected {float(value):.1f}" if value else ""
 
 
 class VerifiedLivePredictionPipeline:
@@ -70,6 +129,7 @@ class VerifiedLivePredictionPipeline:
         win_probability_shadow_log: WinProbabilityShadowLog | None = None,
         wicket_ensemble_shadow_log: WicketEnsembleShadowLog | None = None,
         run_range_ensemble_shadow_log: RunRangeEnsembleShadowLog | None = None,
+        match_winner_ensemble_shadow_log: MatchWinnerEnsembleShadowLog | None = None,
     ) -> None:
         self._engine = engine or PredictionEngine()
         self._shadow_predictor = shadow_predictor or BowlerShadowPredictor()
@@ -94,6 +154,13 @@ class VerifiedLivePredictionPipeline:
         # app/ml/run_range_ensemble_shadow_log.py. Real outcome (actual
         # over-runs) is known one over later, logged and resolved together.
         self._run_range_ensemble_shadow_log = run_range_ensemble_shadow_log or RunRangeEnsembleShadowLog()
+        # GBM+NN match-winner ensemble shadow (2026-08-26) -- see
+        # app/ml/match_winner_ensemble_shadow_log.py. Real outcome (did
+        # the batting team win) is known only at match end, same timing
+        # as the Monte Carlo win-probability shadow above.
+        self._match_winner_ensemble_shadow_log = (
+            match_winner_ensemble_shadow_log or MatchWinnerEnsembleShadowLog()
+        )
         # announced_bowler_current_spell_v3 is validated on a proper
         # 2025-2026 holdout (every promotion gate passes -- see
         # models/candidates/announced_bowler_current_spell_v3/validation_report.json)
@@ -110,6 +177,9 @@ class VerifiedLivePredictionPipeline:
         self._output = output_file
         self._verifier: LiveDeliveryVerifier | None = None
         self._last_resolved_over: int | None = None
+        # (match, innings, over) -> (inputs, prediction) of what was already emitted: a rebuild after a revised entry re-resolves the
+        # same over, and without this the same forecast was printed, logged and scored a second time (2026-10-13: 72 of 262 rows).
+        self._emitted: dict[tuple[str, int, int], tuple[tuple, dict]] = {}
         self._pending_prediction: dict[str, object] | None = None
         self._pending_over: int | None = None
         self._review_history: list[dict[str, object]] = []
@@ -121,11 +191,26 @@ class VerifiedLivePredictionPipeline:
             LiveStateStore(resolved_state_file) if resolved_state_file else None
         )
         self._restored_scope: tuple[str, int] | None = None
+        self._batting_team_by_scope: dict[tuple[str, int], str] = {}
         self._published_keys: set[str] = set()
         self._restore_verified_state = restore_verified_state
 
-    def process(self, snapshot: ToiSnapshot) -> dict[str, object] | None:
+    def process(self, snapshot: LiveSnapshot) -> dict[str, object] | None:
         scope = (snapshot.match_id, snapshot.innings)
+        # The batting side cannot change inside an innings. Every field test
+        # found a team-identity bug somewhere new (09-15 team swap, 10-06 empty
+        # teamName falling back to India mid-innings); refuse such a snapshot
+        # instead of letting it reach the models.
+        if snapshot.batting_team and snapshot.deliveries and not self._batting_team_by_scope.get(scope):
+            # Only a snapshot with real deliveries fixes the side: before the first ball it is a guess from
+            # the toss, and a wrong guess must not block the whole innings.
+            self._batting_team_by_scope[scope] = snapshot.batting_team
+        seen_team = self._batting_team_by_scope.get(scope, "")
+        if snapshot.batting_team and seen_team and snapshot.batting_team != seen_team:
+            raise MatchStateAnomaly(
+                f"Batting team changed inside innings {snapshot.innings}: "
+                f"{seen_team!r} -> {snapshot.batting_team!r}."
+            )
         if self._restored_scope != scope:
             self._verifier = None
             self._last_resolved_over = None
@@ -134,6 +219,7 @@ class VerifiedLivePredictionPipeline:
             self._review_history = []
             self._publication_history = []
             self._published_keys = set()
+            self._emitted = {}
             self._restore(snapshot)
             self._restored_scope = scope
             self._retry_pending_publications(snapshot)
@@ -167,6 +253,7 @@ class VerifiedLivePredictionPipeline:
                 # comparison _is_complete already uses, same convention
                 # app/ml/match_winner_dataset.py's historical label uses.
                 self._record_win_probability_shadow_outcome(snapshot, verifier)
+                self._record_match_winner_ensemble_shadow_outcome(snapshot, verifier)
             return None
         completed = verifier.completed_over
         if (
@@ -178,16 +265,37 @@ class VerifiedLivePredictionPipeline:
             return self._pre_innings_prediction(snapshot)
         if completed is None or completed == self._last_resolved_over:
             return None
-        # A prediction is valid only at the over boundary.  If the feed first
-        # becomes consistent after the next over has started, do not backfill a
-        # forecast using mid-over state and present it as pre-over intelligence.
-        if verifier.last_key is None or verifier.last_key[1] != completed:
+        if verifier.last_key is None:
             return None
+        # verifier.last_key[1] (its over) can be AHEAD of `completed` when the
+        # next over's first ball(s) arrive in the same poll that finishes
+        # `completed` -- confirmed live 2026-09-15/-17
+        # (docs/live_field_test_2026-09-15.md item 16,
+        # docs/live_field_test_2026-09-17.md): this used to `return None`
+        # here entirely, silently dropping over 14's prediction and review
+        # with no error logged, even though over 14's own data
+        # (over_runs/over_wickets) was fully populated and correct. Fixed by
+        # still serving this over-`completed` boundary, but deriving every
+        # "as of end of over `completed`" quantity below from
+        # deliveries_through_completed / over_runs / over_wickets (all
+        # naturally bounded to `completed`) instead of verifier.score/
+        # verifier.wickets/the raw accepted-deliveries list, which would
+        # otherwise already include those backfilled later-over balls and
+        # leak future state into a prediction presented as pre-`next_over`
+        # intelligence.
 
         actual_runs = verifier.over_runs[completed]
         actual_wickets = verifier.over_wickets[completed]
         last_delivery = (
             verifier.accepted[verifier.last_key] if verifier.last_key else None
+        )
+        deliveries_through_completed = [
+            delivery
+            for delivery in verifier.accepted.values()
+            if delivery.over <= completed
+        ]
+        last_delivery_of_completed_over = (
+            deliveries_through_completed[-1] if deliveries_through_completed else None
         )
         previous_evaluation: dict[str, object] | None = None
         if (
@@ -216,7 +324,9 @@ class VerifiedLivePredictionPipeline:
             self._engine.update_actuals(
                 actual_runs,
                 actual_wickets,
-                last_delivery.bowler if last_delivery else "",
+                last_delivery_of_completed_over.bowler
+                if last_delivery_of_completed_over
+                else "",
             )
         self._last_resolved_over = completed
         next_over = completed + 1
@@ -230,15 +340,14 @@ class VerifiedLivePredictionPipeline:
         recent_wickets = sum(
             verifier.over_wickets.get(over, 0) for over in recent_overs
         )
-        all_deliveries = list(verifier.accepted.values())
         legal_deliveries = [
             delivery
-            for delivery in all_deliveries
+            for delivery in deliveries_through_completed
             if delivery.is_legal
         ]
-        recent_deliveries: list[ToiDelivery] = []
+        recent_deliveries: list[LiveDelivery] = []
         legal_in_window = 0
-        for delivery in reversed(all_deliveries):
+        for delivery in reversed(deliveries_through_completed):
             recent_deliveries.append(delivery)
             legal_in_window += int(delivery.is_legal)
             if legal_in_window == 12:
@@ -260,11 +369,35 @@ class VerifiedLivePredictionPipeline:
         recent_delivery_wickets = sum(
             delivery.wicket_kind is not None for delivery in recent_deliveries
         )
-        legal_balls = len(legal_deliveries)
+        # Each completed over has exactly 6 legal balls; the verifier may have
+        # attached mid-innings and only counted a later subset.
+        legal_balls = max(len(legal_deliveries), completed * 6)
         innings_balls = self._innings_limit_for(snapshot) * 6
         balls_remaining = max(0, innings_balls - legal_balls)
+        # Summed from over_runs/over_wickets (bounded to `completed`) rather
+        # than verifier.score/verifier.wickets directly, which already
+        # include any later-over balls backfilled in the same poll -- see
+        # the comment above the removed last_key[1] != completed guard.
+        # + base_*: over_runs/over_wickets only cover balls THIS verifier saw,
+        # so after a mid-innings attach or restart they omit everything
+        # before the attach point (2026-10-06: "Score: 9/2" for a real 53/3,
+        # which also fed the models wrong run rate / wickets / balls left).
+        score_before_over = verifier.base_score + sum(
+            verifier.over_runs.get(over, 0) for over in range(1, completed + 1)
+        )
+        wkts_before_over = verifier.base_wickets + sum(
+            verifier.over_wickets.get(over, 0) for over in range(1, completed + 1)
+        )
+        emitted_key = (snapshot.match_id, snapshot.innings, next_over)
+        emitted_inputs = (score_before_over, wkts_before_over, announced_bowler)
+        already = self._emitted.get(emitted_key)
+        if already is not None and already[0] == emitted_inputs:
+            # Same state at the end of this over as the forecast already given (a rebuild after a revised entry): keep that
+            # forecast as the pending one for the next review, but do not print, log or publish it again.
+            self._pending_prediction, self._pending_over = already[1], next_over
+            return None
         runs_required = (
-            max(0, snapshot.target - verifier.score) if snapshot.target else 0
+            max(0, snapshot.target - score_before_over) if snapshot.target else 0
         )
         context = MatchContext(
             match_id=snapshot.match_id,
@@ -280,16 +413,16 @@ class VerifiedLivePredictionPipeline:
                 striker=last_delivery.striker if last_delivery else "",
                 non_striker="",
                 bowler=announced_bowler,
-                score_before_over=verifier.score,
-                wkts_down_before_over=verifier.wickets,
+                score_before_over=score_before_over,
+                wkts_down_before_over=wkts_before_over,
                 balls_faced_before_over=0,
                 runs_last_3_overs=recent_runs,
                 wickets_last_3_overs=recent_wickets,
-                wickets_in_hand=max(0, 10 - verifier.wickets),
+                wickets_in_hand=max(0, 10 - wkts_before_over),
                 legal_balls_bowled=legal_balls,
                 balls_remaining=balls_remaining,
                 current_run_rate=(
-                    verifier.score * 6 / legal_balls if legal_balls else 0.0
+                    score_before_over * 6 / legal_balls if legal_balls else 0.0
                 ),
                 is_chase=int(snapshot.target > 0),
                 runs_required=runs_required,
@@ -325,8 +458,12 @@ class VerifiedLivePredictionPipeline:
             # live TOI has no Cricsheet-style registry, so player identity
             # resolution falls back to the name-alias snapshot, same as
             # everywhere else this session handles that gap.
-            metadata={"deliveries": all_deliveries, **_toss_metadata(snapshot)},
+            metadata={
+                "deliveries": deliveries_through_completed,
+                **_toss_metadata(snapshot),
+            },
         )
+        _check_match_state(snapshot, context, next_over)
         result = self._engine.predict(context)
         prediction = result.to_dict()
         try:
@@ -334,7 +471,7 @@ class VerifiedLivePredictionPipeline:
                 context=context,
                 baseline=prediction,
                 announced_bowler=announced_bowler,
-                deliveries=all_deliveries,
+                deliveries=deliveries_through_completed,
             )
         except Exception as exc:
             shadow = {
@@ -351,18 +488,20 @@ class VerifiedLivePredictionPipeline:
             metadata["bowler_shadow"] = shadow
         self._pending_prediction = prediction
         self._pending_over = next_over
+        self._emitted[emitted_key] = (emitted_inputs, prediction)
         # Separate model, separate output key -- never merged into
         # `prediction` (see app/ml/match_winner_engine.py's docstring).
         win_probability = self._predict_win_probability(context)
         self._log_win_probability_shadow(snapshot, next_over, win_probability)
+        self._log_match_winner_ensemble_shadow(snapshot, next_over, win_probability)
         output: dict[str, object] = {
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
             "innings": snapshot.innings,
             "over": next_over,
             "verified_through": f"{completed}.6",
-            "score_before_over": verifier.score,
-            "wickets_before_over": verifier.wickets,
+            "score_before_over": score_before_over,
+            "wickets_before_over": wkts_before_over,
             "new_deliveries_verified": len(new_deliveries),
             "bowler": announced_bowler,
             "bowler_source": (
@@ -381,7 +520,7 @@ class VerifiedLivePredictionPipeline:
         return output
 
     def _pre_innings_prediction(
-        self, snapshot: ToiSnapshot
+        self, snapshot: LiveSnapshot
     ) -> dict[str, object]:
         innings_balls = self._innings_limit_for(snapshot) * 6
         context = MatchContext(
@@ -406,12 +545,15 @@ class VerifiedLivePredictionPipeline:
             ),
             metadata=_toss_metadata(snapshot),
         )
+        _check_match_state(snapshot, context, next_over=1)
         prediction = self._engine.predict(context).to_dict()
         self._pending_prediction = prediction
         self._pending_over = 1
         self._last_resolved_over = 0
         win_probability = self._predict_win_probability(context)
         self._log_win_probability_shadow(snapshot, 1, win_probability)
+        self._log_match_winner_ensemble_shadow(snapshot, 1, win_probability)
+        win_probability = self._pre_innings_win_probability(snapshot, win_probability)
         output: dict[str, object] = {
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
@@ -432,6 +574,46 @@ class VerifiedLivePredictionPipeline:
         self._persist(snapshot)
         return output
 
+    def _pre_innings_win_probability(
+        self, snapshot: LiveSnapshot, in_play: dict[str, object]
+    ) -> dict[str, object]:
+        """Before a ball is bowled the in-play model has nothing in-play to go on, and the briefing already
+        shows the staged pre-match model's number; on 2026-10-06 the two differed (over-1 message 33.5/66.5 vs
+        a different briefing figure). Use the staged model here too (team strength, head-to-head, dew, XIs),
+        keep the in-play model's number in the metadata. Fault-isolated: any failure keeps the in-play value."""
+        try:
+            from app.live.match_weather import match_day_weather
+            from app.live.prematch_analysis import _cached, confirmed_xi
+            from app.live.prematch_model import venue_city
+            from app.live.prematch_xi import predict_stages
+
+            city = venue_city(snapshot.venue_name or "")
+            weather = _cached(("weather", city), 600, lambda: match_day_weather(city)) if city else None
+            xi = confirmed_xi(snapshot.team_players) or {}
+            first_batting = snapshot.batting_team if snapshot.innings == 1 else snapshot.bowling_team  # who batted first
+            staged = predict_stages(
+                snapshot.batting_team, snapshot.bowling_team, first_batting, weather,
+                xi.get(snapshot.batting_team, []), xi.get(snapshot.bowling_team, []), city,
+            )
+            if staged is None:
+                return in_play
+            metadata = dict(in_play.get("metadata") or {}) if isinstance(in_play, dict) else {}
+            metadata.update(
+                basis="pre_match_staged_model",
+                stage=staged["stage"],
+                in_play_model_probability=in_play.get("win_probability") if isinstance(in_play, dict) else None,
+            )
+            return {
+                **(in_play if isinstance(in_play, dict) else {}),
+                "status": "applied",
+                "win_probability": staged["p_a"],
+                "batting_team": snapshot.batting_team,
+                "bowling_team": snapshot.bowling_team,
+                "metadata": metadata,
+            }
+        except Exception:
+            return in_play
+
     def _predict_win_probability(self, context: MatchContext) -> dict[str, object]:
         """Fault-isolated: a problem here (missing snapshot, artifact
         issue, anything) must never break run-range/wicket prediction,
@@ -449,7 +631,7 @@ class VerifiedLivePredictionPipeline:
             }
 
     def _log_win_probability_shadow(
-        self, snapshot: ToiSnapshot, over: int, win_probability: dict[str, object]
+        self, snapshot: LiveSnapshot, over: int, win_probability: dict[str, object]
     ) -> None:
         """Append the (Monte Carlo, GBM) pair to the live comparison log
         whenever both are present -- see app/ml/win_probability_shadow_log.py.
@@ -475,7 +657,7 @@ class VerifiedLivePredictionPipeline:
             pass
 
     def _record_win_probability_shadow_outcome(
-        self, snapshot: ToiSnapshot, verifier: LiveDeliveryVerifier
+        self, snapshot: LiveSnapshot, verifier: LiveDeliveryVerifier
     ) -> None:
         """Record the real chase outcome (same score-vs-target convention
         as app/ml/match_winner_dataset.py's historical label) once the
@@ -513,8 +695,64 @@ class VerifiedLivePredictionPipeline:
         if self._publisher.publish("win_probability_shadow_summary", text):
             self._win_probability_shadow_log.mark_reminder_sent(match_count=count)
 
+    def _log_match_winner_ensemble_shadow(
+        self, snapshot: LiveSnapshot, over: int, win_probability: dict[str, object]
+    ) -> None:
+        """Append the (GBM, NN, ensemble) triple to the live comparison
+        log -- see app/ml/match_winner_ensemble_shadow_log.py.
+        Fault-isolated: logging must never break live prediction."""
+        try:
+            metadata = win_probability.get("metadata")
+            if not isinstance(metadata, dict):
+                return
+            shadow = metadata.get("ensemble_shadow")
+            if not isinstance(shadow, dict):
+                return
+            self._match_winner_ensemble_shadow_log.record_prediction(
+                match_id=snapshot.match_id, innings=snapshot.innings, over=over,
+                gbm_probability=shadow["gbm_probability"], nn_probability=shadow["nn_probability"],
+                ensemble_probability=shadow["ensemble_probability"],
+            )
+        except Exception:
+            pass
+
+    def _record_match_winner_ensemble_shadow_outcome(
+        self, snapshot: LiveSnapshot, verifier: LiveDeliveryVerifier
+    ) -> None:
+        """Record the real chase outcome once the chase innings completes
+        (same convention as _record_win_probability_shadow_outcome), then
+        check whether enough real matches have accumulated to send the
+        one-time review reminder. Fault-isolated."""
+        try:
+            self._match_winner_ensemble_shadow_log.record_outcome(
+                match_id=snapshot.match_id,
+                batting_team_won=verifier.score >= snapshot.target,
+            )
+            self._maybe_send_match_winner_ensemble_summary_reminder()
+        except Exception:
+            pass
+
+    def _maybe_send_match_winner_ensemble_summary_reminder(self) -> None:
+        """Same 'review after N real matches' plan as every other shadow
+        system -- fires once via the marker file."""
+        if self._publisher is None:
+            return
+        count = self._match_winner_ensemble_shadow_log.matches_with_outcome_count()
+        if count < self._match_winner_ensemble_shadow_log.min_matches_for_summary:
+            return
+        if self._match_winner_ensemble_shadow_log.reminder_already_sent():
+            return
+        text = (
+            "🏏 Match-winner ensemble comparison ready\n\n"
+            f"{self._match_winner_ensemble_shadow_log.summary_text()}\n\n"
+            "Time to review and decide whether to keep the GBM+NN ensemble, "
+            "the GBM alone, or keep comparing further."
+        )
+        if self._publisher.publish("match_winner_ensemble_shadow_summary", text):
+            self._match_winner_ensemble_shadow_log.mark_reminder_sent(match_count=count)
+
     def _record_wicket_ensemble_shadow(
-        self, snapshot: ToiSnapshot, over: int, prediction: dict[str, object], actual_wickets: int
+        self, snapshot: LiveSnapshot, over: int, prediction: dict[str, object], actual_wickets: int
     ) -> None:
         """Logs the GBM/NN/ensemble shadow prediction made for `over` and
         its real outcome together -- unlike win-probability, the real
@@ -561,7 +799,7 @@ class VerifiedLivePredictionPipeline:
             self._wicket_ensemble_shadow_log.mark_reminder_sent(match_count=count)
 
     def _record_run_range_ensemble_shadow(
-        self, snapshot: ToiSnapshot, over: int, prediction: dict[str, object], actual_runs: int
+        self, snapshot: LiveSnapshot, over: int, prediction: dict[str, object], actual_runs: int
     ) -> None:
         """Logs the GBM/ensemble run-range shadow prediction made for
         `over` and its real outcome together -- the real runs-scored
@@ -631,7 +869,7 @@ class VerifiedLivePredictionPipeline:
             metadata["display_runs"] = predicted_runs
         shadow["status"] = "published"
 
-    def _restore(self, snapshot: ToiSnapshot) -> None:
+    def _restore(self, snapshot: LiveSnapshot) -> None:
         if self._state_store is None:
             return
         payload = self._state_store.load(snapshot.match_id, snapshot.innings)
@@ -643,7 +881,7 @@ class VerifiedLivePredictionPipeline:
                 for item in payload.get("accepted_deliveries", []):
                     if not isinstance(item, dict):
                         raise ValueError("Invalid persisted delivery.")
-                    verifier.apply(ToiDelivery(**item))
+                    verifier.apply(LiveDelivery(**item))
                 self._verifier = verifier
             last = payload.get("last_resolved_over")
             self._last_resolved_over = int(last) if last is not None else None
@@ -688,7 +926,7 @@ class VerifiedLivePredictionPipeline:
             self._review_history = []
             self._publication_history = []
 
-    def _retry_pending_publications(self, snapshot: ToiSnapshot) -> None:
+    def _retry_pending_publications(self, snapshot: LiveSnapshot) -> None:
         if self._publisher is None:
             return
         for record in self._publication_history:
@@ -716,7 +954,7 @@ class VerifiedLivePredictionPipeline:
                 self._published_keys.add(str(record["identity"]))
         self._persist(snapshot)
 
-    def _persist(self, snapshot: ToiSnapshot) -> None:
+    def _persist(self, snapshot: LiveSnapshot) -> None:
         if self._state_store is None or self._verifier is None:
             return
         engine_state: dict[str, object] = {}
@@ -744,7 +982,7 @@ class VerifiedLivePredictionPipeline:
 
     def _record_review(
         self,
-        snapshot: ToiSnapshot,
+        snapshot: LiveSnapshot,
         over: int,
         prediction: dict[str, object],
         evaluation: dict[str, object],
@@ -777,7 +1015,7 @@ class VerifiedLivePredictionPipeline:
         )
 
     def _publish_output(
-        self, snapshot: ToiSnapshot, over: int, output: dict[str, object]
+        self, snapshot: LiveSnapshot, over: int, output: dict[str, object]
     ) -> None:
         if self._publisher is None:
             return
@@ -873,7 +1111,7 @@ class VerifiedLivePredictionPipeline:
         ]
 
     def _is_complete(
-        self, snapshot: ToiSnapshot, verifier: LiveDeliveryVerifier
+        self, snapshot: LiveSnapshot, verifier: LiveDeliveryVerifier
     ) -> bool:
         legal_balls = sum(delivery.is_legal for delivery in verifier.accepted.values())
         return (
@@ -886,7 +1124,7 @@ class VerifiedLivePredictionPipeline:
         )
 
     @classmethod
-    def _innings_limit_for(cls, snapshot: ToiSnapshot) -> int:
+    def _innings_limit_for(cls, snapshot: LiveSnapshot) -> int:
         if snapshot.is_super_over or snapshot.innings > 2:
             return 1
         if snapshot.scheduled_overs > 0:
@@ -908,7 +1146,7 @@ class VerifiedLivePredictionPipeline:
         prediction = output["prediction"]
         assert isinstance(prediction, dict)
         probability = float(prediction["wicket_probability"]) * 100
-        health_color = {
+        confidence_color = {
             "HIGH": "🟢",
             "MEDIUM": "🟡",
             "LOW": "🔴",
@@ -921,7 +1159,12 @@ class VerifiedLivePredictionPipeline:
         win_line = ""
         if isinstance(win, dict) and win.get("status") != "not_applied" and "win_probability" in win:
             win_team = win.get("batting_team") or "Batting side"
-            win_line = f"\nWin Probability: {win_team} {float(win['win_probability']) * 100:.1f}%"
+            bowl_team = win.get("bowling_team") or "Bowling side"
+            batting_pct = float(win["win_probability"]) * 100
+            win_line = (
+                f"\nWin Probability: {win_team} {batting_pct:.1f}% | "
+                f"{bowl_team} {100 - batting_pct:.1f}%"
+            )
             # Live comparison, user-requested 2026-08-24: the GBM always
             # serves the primary number; for IPL chases, Monte Carlo runs
             # alongside as a logged-only shadow (see
@@ -929,6 +1172,8 @@ class VerifiedLivePredictionPipeline:
             # both are visible on real live matches -- not routed on yet,
             # just observed. Omitted (not a fake 0%) if the shadow call
             # itself failed -- see monte_carlo_shadow_error handling there.
+            if win.get("metadata", {}).get("basis") == "pre_match_staged_model":
+                win_line += " (pre-match model)"
             shadow = win.get("metadata", {}).get("monte_carlo_shadow_win_probability")
             if shadow is not None:
                 win_line += f" (Monte Carlo shadow: {float(shadow) * 100:.1f}%)"
@@ -936,10 +1181,11 @@ class VerifiedLivePredictionPipeline:
             f"🏏 Candidate v3 — Over {output['over']} Prediction\n"
             f"Score: {output['score_before_over']}/{output['wickets_before_over']}\n"
             f"Runs: {prediction['expected_range']} "
-            f"(point {prediction['expected_runs']})\n"
+            f"(point {prediction['expected_runs']})"
+            f"{_expected_mean_text(prediction)}\n"
             f"Wicket risk (phase baseline): {probability:.1f}%"
             f"{win_line}\n"
-            f"System Health: {health_color} "
+            f"Confidence: {confidence_color} "
             f"{prediction['confidence_percent']}%"
         )
         evaluation = output.get("previous_over_evaluation")

@@ -8,7 +8,8 @@ from app.live.cricketdata_reader import (
     CricketDataReader,
     CricketDataUsage,
 )
-from app.live.toi_reader import ToiDelivery, ToiLiveReader, ToiSnapshot
+from app.live.live_snapshot import LiveDelivery, LiveSnapshot
+from app.live.toi_reader import ToiLiveReader
 from app.live.verification import LiveDeliveryVerifier, VerificationError
 
 __all__ = [
@@ -19,8 +20,8 @@ __all__ = [
     "CricketDataReader",
     "CricketDataUsage",
     "LiveDeliveryVerifier",
-    "ToiDelivery",
+    "LiveDelivery",
     "ToiLiveReader",
-    "ToiSnapshot",
+    "LiveSnapshot",
     "VerificationError",
 ]

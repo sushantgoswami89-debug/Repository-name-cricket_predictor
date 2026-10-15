@@ -30,7 +30,7 @@ from sklearn.isotonic import IsotonicRegression
 
 from app.data_ingestion.json_loader import JsonLoader
 from app.data_ingestion.match_parser import MatchParser
-from app.live.toi_reader import ToiDelivery
+from app.live.live_snapshot import LiveDelivery
 from app.ml.historical_feature_store import match_exclude_key
 from app.ml.prediction_engine import PredictionEngine
 from app.models.match_context import MatchContext
@@ -55,8 +55,8 @@ class _DisabledEnsembleRuntime:
         raise RuntimeError("disabled for confidence-calibrator refitting")
 
 
-def _to_toi_delivery(over_number: int, ball_index: int, delivery) -> ToiDelivery:
-    """Convert a Cricsheet-parsed Delivery into the ToiDelivery shape
+def _to_toi_delivery(over_number: int, ball_index: int, delivery) -> LiveDelivery:
+    """Convert a Cricsheet-parsed Delivery into the LiveDelivery shape
     WicketContract22FeatureComputer expects (deliveries=[]) -- mirrors the
     conversion pipeline.py/run_live_pipeline_replay.py already do."""
     wicket_kind = next(
@@ -67,7 +67,7 @@ def _to_toi_delivery(over_number: int, ball_index: int, delivery) -> ToiDelivery
         ),
         None,
     )
-    return ToiDelivery(
+    return LiveDelivery(
         match_id="", innings=1, over=over_number, ball=ball_index,
         bowler=delivery.bowler, striker=delivery.batter,
         total_runs=delivery.runs.get("total", 0),
@@ -133,7 +133,7 @@ for path in sample:
         # innings, nobody has bowled/batted yet" on every single call,
         # which would bias the raw_confidence values this script fits
         # against relative to how the model actually behaves live.
-        accumulated_deliveries: list[ToiDelivery] = []
+        accumulated_deliveries: list[LiveDelivery] = []
         non_empty_overs = [over for over in innings.overs if over.deliveries]
         for over, frame in zip(non_empty_overs, MatchReplay().frames(innings)):
             context = MatchContext(

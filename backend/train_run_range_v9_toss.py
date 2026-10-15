@@ -1,7 +1,7 @@
 """CTO-agreed roadmap priority #2 (2026-08-23): toss state as a real
 feature, tested against the real live run-range architecture.
 
-Of the four fields `ToiSnapshot` already fetches live but `pipeline.py`
+Of the four fields `LiveSnapshot` already fetches live but `pipeline.py`
 silently drops (toss/pitch/weather/lineup), toss is the only one with a
 historical source (Cricsheet's `info.toss`) and therefore the only one
 backtestable before shipping. `app/ml/toss_dataset.py` derives

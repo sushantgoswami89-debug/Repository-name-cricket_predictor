@@ -28,8 +28,6 @@ class MatchContext:
     country: str = ""
     format: str = ""
     competition: str = ""
-    batting_first: str | None = None
-    bowling_first: str | None = None
     date: str | None = None
     live: LiveMatchState = field(default_factory=LiveMatchState)
     venue_stats: dict[str, Any] = field(default_factory=dict)

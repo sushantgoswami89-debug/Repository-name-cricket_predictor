@@ -3,7 +3,7 @@ bowling-side spin/pace balance.
 
 User-requested direction (2026-08-23): "team combinations opener, middle,
 hitter, allrounder, spinners and pacers combination." The confirmed
-playing XI (`info.players` in Cricsheet, `ToiSnapshot.team_players` live)
+playing XI (`info.players` in Cricsheet, `LiveSnapshot.team_players` live)
 is known before a ball is bowled -- genuinely match-level, constant for
 both innings, same timing as toss. `data/external/cricsheet_player_styles.csv`
 already carries `playing_role` (Bowler/Allrounder/Batter/Wicketkeeper

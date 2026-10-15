@@ -49,6 +49,7 @@ from pathlib import Path
 from typing import Any
 
 from app.ml.engine_router import EngineFamily, EngineRouter, UnsupportedCricketFormat
+from app.ml.match_winner_ensemble_runtime import MatchWinnerEnsembleRuntime
 from app.models.match_context import MatchContext
 from runtime_match_winner import MatchWinnerRuntime
 from runtime_monte_carlo_win_probability import MonteCarloWinProbabilityRuntime
@@ -60,6 +61,10 @@ MATCH_WINNER_ARTIFACTS = (
 MONTE_CARLO_ARTIFACTS = (
     Path(__file__).resolve().parents[3]
     / "models/candidates/win_probability_monte_carlo_v1"
+)
+MATCH_WINNER_ENSEMBLE_ARTIFACTS = (
+    Path(__file__).resolve().parents[3]
+    / "models/candidates/match_winner_v2_nn_gbm_ensemble"
 )
 
 
@@ -97,6 +102,7 @@ class MatchWinnerEngine:
         self,
         runtime: MatchWinnerRuntime | None = None,
         monte_carlo_runtime: MonteCarloWinProbabilityRuntime | None = None,
+        ensemble_runtime: MatchWinnerEnsembleRuntime | None = None,
     ) -> None:
         self._runtime = runtime or MatchWinnerRuntime(MATCH_WINNER_ARTIFACTS)
         self._monte_carlo_runtime = monte_carlo_runtime
@@ -108,6 +114,15 @@ class MatchWinnerEngine:
                 # the engine from constructing -- predict() falls back to
                 # the GBM path for every call if this stays None.
                 self._monte_carlo_runtime = None
+        # GBM+NN ensemble shadow (2026-08-26) -- see
+        # docs/finding_match_winner_nn_gbm_ensemble_real_win.md. Same
+        # "never let a missing artifact break construction" pattern.
+        self._ensemble_runtime = ensemble_runtime
+        if self._ensemble_runtime is None:
+            try:
+                self._ensemble_runtime = MatchWinnerEnsembleRuntime(MATCH_WINNER_ENSEMBLE_ARTIFACTS)
+            except Exception:
+                self._ensemble_runtime = None
 
     @staticmethod
     def _is_ipl(context: MatchContext) -> bool:
@@ -166,6 +181,46 @@ class MatchWinnerEngine:
             except Exception:
                 metadata["monte_carlo_shadow_win_probability"] = None
                 metadata["monte_carlo_shadow_error"] = "shadow_inference_failed"
+
+        # GBM+NN ensemble shadow (2026-08-26) -- same inputs as the served
+        # GBM call above, logged for live comparison
+        # (app/live/pipeline.py), never served. Fault-isolated: a shadow
+        # failure only omits the shadow value, never touches the served
+        # GBM result above.
+        if self._ensemble_runtime is not None:
+            try:
+                metadata["ensemble_shadow"] = self._ensemble_runtime.predict(
+                    registry=context.metadata.get("registry", {}),
+                    striker_name=context.live.striker,
+                    non_striker_name=context.live.non_striker,
+                    bowler_name=context.live.bowler,
+                    venue_name=context.venue,
+                    deliveries=context.metadata.get("deliveries", []),
+                    over=current_over,
+                    score_before_over=context.live.score_before_over,
+                    wkts_down_before_over=context.live.wkts_down_before_over,
+                    wickets_in_hand=context.live.wickets_in_hand,
+                    legal_balls_bowled=context.live.legal_balls_bowled,
+                    balls_remaining=context.live.balls_remaining,
+                    current_run_rate=context.live.current_run_rate,
+                    is_chase=is_chase,
+                    runs_required=context.live.runs_required,
+                    required_run_rate=context.live.required_run_rate,
+                    recent_legal_balls=context.live.recent_legal_balls,
+                    recent_runs_per_ball=context.live.recent_runs_per_ball,
+                    recent_dot_rate=context.live.recent_dot_rate,
+                    recent_single_rate=context.live.recent_single_rate,
+                    recent_boundary_rate=context.live.recent_boundary_rate,
+                    recent_wicket_rate=context.live.recent_wicket_rate,
+                    batting_team_players=batting_team_players,
+                    bowling_team_players=bowling_team_players,
+                    batting_team_name=batting_team,
+                    bowling_team_name=bowling_team,
+                    toss_decision=context.metadata.get("toss_decision", ""),
+                    batting_team_won_toss=bool(context.metadata.get("batting_team_won_toss", False)),
+                )
+            except Exception:
+                metadata["ensemble_shadow"] = None
 
         result = MatchWinnerResult(
             win_probability=round(win_probability, 3),

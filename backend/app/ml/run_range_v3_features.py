@@ -307,7 +307,7 @@ class RunRangeV3FeatureComputer:
         (over, ball) ascending -- e.g. `LiveDeliveryVerifier.accepted.values()`,
         or a replay's equivalent. Each must expose `.striker`, `.bowler`,
         `.over`, `.total_runs`, `.batter_runs`, `.wicket_kind`, `.is_legal`
-        (matches `ToiDelivery`). `bowler_name` is the upcoming over's
+        (matches `LiveDelivery`). `bowler_name` is the upcoming over's
         bowler if known -- often isn't in real live serving, in which case
         the bowler-dependent features below degrade to their unknown
         defaults, same convention as WicketContract22FeatureComputer.
