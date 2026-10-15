@@ -28,7 +28,10 @@ def test_real_over_summaries_parse_to_their_over_runs(summary, runs, legal, wick
 
 
 def test_unverified_token_is_refused_not_guessed():
-    assert parse_over_summary("1 B2 0") is None
+    assert parse_over_summary("1 X2 0") is None   # unverified tokens stay unreadable
+    assert [(t.total_runs, t.wicket) for t in parse_over_summary("4 1 1 W1 1 1")] == [(4, False), (1, False), (1, False), (1, True), (1, False), (1, False)]
+    byes = parse_over_summary("1 B4 2")
+    assert byes[1].total_runs == 4 and byes[1].extras == {"byes": 4} and byes[1].is_legal
     assert parse_over_summary("") is None
 
 

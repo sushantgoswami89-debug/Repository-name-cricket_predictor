@@ -16,7 +16,10 @@ Token meanings, verified against the summed `overRuns` of archived pages
     "Wd"     wide                      -> 1 run
     "Wd3"    wide totalling 3          -> 3 runs (digits are the TOTAL)
     "L1"     leg-bye(s)                -> 1 run (digits are the total)
-Any other token ("B2", "W1", "Lb...") is NOT verified: the summary is then
+    "B4"     bye(s)                    -> 4 runs (digits are the total; verified 2026-10-14 on 151598/170697/170690/151587/151565,
+                                          every over's token sum equals overRuns)
+    "W1"     wicket with 1 run         -> 1 run + a wicket (run out after a run; 151587 innings 1 over 17: 4 1 1 W1 1 1 = 9)
+Any other token ("Lb...", "X2") is NOT verified: the summary is then
 treated as unreadable and nothing is rebuilt from it. Extend only with a real
 example whose token sum matches `overRuns`.
 """
@@ -30,6 +33,8 @@ _DIGITS = re.compile(r"^\d+$")
 _NOBALL = re.compile(r"^N(\d*)$")
 _WIDE = re.compile(r"^Wd(\d*)$")
 _LEGBYE = re.compile(r"^L(\d+)$")
+_BYE = re.compile(r"^B(\d+)$")
+_WICKET_RUNS = re.compile(r"^W(\d+)$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +71,12 @@ def parse_over_summary(summary: str) -> list[OverToken] | None:
         elif (match := _LEGBYE.match(part)):
             total = int(match.group(1))
             tokens.append(OverToken(total, 0, {"legbyes": total}, False))
+        elif (match := _BYE.match(part)):
+            total = int(match.group(1))
+            tokens.append(OverToken(total, 0, {"byes": total}, False))
+        elif (match := _WICKET_RUNS.match(part)):
+            runs = int(match.group(1))
+            tokens.append(OverToken(runs, runs, {}, True))
         else:
             return None
     return tokens
