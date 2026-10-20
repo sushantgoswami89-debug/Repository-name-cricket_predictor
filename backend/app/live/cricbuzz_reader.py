@@ -600,6 +600,7 @@ class CricbuzzLiveReader:
         html = response.text
         chunks = _extract_flight_chunks(html)
         raw_objects = _delivery_objects(chunks, match_id)
+        self._register_unattached_separators(match_id, chunks, raw_objects)
         if not raw_objects:
             if self._last_delivery.get((match_id, 1)) is None:
                 return self._pre_first_ball_snapshot(match_id, html, chunks)
@@ -953,6 +954,56 @@ class CricbuzzLiveReader:
         summary (or score re-anchored to its checkpoint) since the last call."""
         repairs, self._pending_repairs = self._pending_repairs, []
         return repairs
+
+    def _register_unattached_separators(self, match_id: str, chunks: list[str], objects: list[dict[str, Any]]) -> None:
+        """Over summaries for overs whose ball entries are NOT in the page (missed live: a sleep, a late join) still sit in it. They are
+        Cricbuzz's own record of those overs, so keep them as over truth; _reconcile_overs then builds the overs from them (user 2026-10-20:
+        the over summary is the official record). Separators that are attached to a ball go through the normal path."""
+        if self._over_truth is None:
+            self._over_truth = {}
+        if self._seen_over_summaries is None:
+            self._seen_over_summaries = set()
+        for chunk in chunks:
+            for hit in re.finditer(re.escape(_SEPARATOR_MARKER), chunk):
+                raw = _extract_balanced(chunk, hit.start())
+                if raw is None:
+                    continue
+                try:
+                    holder = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                separator = holder.get("overSeparator")
+                if not isinstance(separator, dict) or separator.get("overNumber") is None or holder.get("inningsId") is None:
+                    continue
+                innings = int(holder["inningsId"])
+                over_number = _int_field(separator, "overNumber", 0)
+                if any(o.get("inningsId") == innings and isinstance(o.get("ballMetric"), (int, float)) and int(o["ballMetric"]) == over_number - 1
+                       for o in objects):
+                    continue
+                key = (match_id, innings, over_number)
+                if key in self._over_truth:
+                    continue
+                tokens = parse_over_summary(separator.get("overSummary", ""))
+                if tokens is not None and not tokens_agree_with_total(tokens, separator.get("overRuns")):
+                    tokens = None
+                bowler_obj = separator.get("bowlerObj") if isinstance(separator.get("bowlerObj"), dict) else {}
+                stamp = _int_field(holder, "timestamp", 0) or _int_field(separator, "timestamp", 0)
+                self._over_truth[key] = {
+                    "tokens": tokens,
+                    "checkpoint": self._checkpoint({"overSeparator": separator}),
+                    "bowler": bowler_obj.get("playerName", ""),
+                    "summary": str(separator.get("overSummary", "")).strip(),
+                    "timestamp_ms": stamp,
+                }
+                if (innings, over_number) not in self._seen_over_summaries:
+                    self._seen_over_summaries.add((innings, over_number))
+                    self._pending_summaries.append({
+                        "innings": innings, "over": over_number, "summary": str(separator.get("overSummary", "")).strip(),
+                        "over_runs": separator.get("overRuns"), "score": (separator.get("batTeamObj") or {}).get("teamScore"),
+                        "bowler": bowler_obj.get("playerName"), "bowler_figures": bowler_obj.get("playerScore"),
+                        "striker": (separator.get("batStrikerObj") or {}).get("playerName"),
+                        "non_striker": (separator.get("batNonStrikerObj") or {}).get("playerName"), "timestamp_ms": stamp,
+                    })
 
     def drain_notes(self) -> list[tuple[int, str, str]]:
         """New (timestamp_ms, category, text) notes since the last call."""
@@ -1363,6 +1414,33 @@ class CricbuzzLiveReader:
         base_score = ordered_before[0].feed_total - ordered_before[0].total_runs
         base_wickets = ordered_before[0].feed_wickets - int(ordered_before[0].wicket_kind is not None)
         changed = False
+        # Overs we never saw ball by ball (joined late, a sleep, a gap) whose Cricbuzz over summary is still in the page: build them from
+        # the summary, which is the official record (user 2026-10-20). Only overs BEFORE the newest delivery we hold -- a future over is not a gap.
+        earliest_over, newest_over = ordered_before[0].over, ordered_before[-1].over
+        earlier_runs = earlier_wickets = 0
+        for (m_id, inn, over), truth in sorted(self._over_truth.items()):
+            if m_id != match_id or inn != innings or truth["tokens"] is None or over >= newest_over:
+                continue
+            if any(d.over == over for d in known.values()):
+                continue
+            tokens = truth["tokens"]
+            for index, token in enumerate(tokens, start=1):
+                filled = LiveDelivery(
+                    match_id=match_id, innings=innings, over=over, ball=index, bowler=truth["bowler"], striker="",
+                    total_runs=token.total_runs, batter_runs=token.batter_runs, extras=dict(token.extras),
+                    wicket_kind="wicket" if token.wicket else None, feed_total=0, feed_wickets=0,
+                    timestamp_ms=(truth["timestamp_ms"] or 0) - (len(tokens) - index) * 1000,
+                    commentary="(back-filled from Cricbuzz over summary; not seen ball by ball)",
+                )
+                known[filled.key] = filled
+                timestamp_keys[filled.timestamp_ms] = filled.key
+            changed = True
+            if over < earliest_over:
+                earlier_runs += sum(t.total_runs for t in tokens)
+                earlier_wickets += sum(int(t.wicket) for t in tokens)
+            self._pending_repairs.append(f"innings {innings} over {over}: back-filled from Cricbuzz over summary '{truth['summary']}' (never seen ball by ball)")
+        base_score -= earlier_runs
+        base_wickets -= earlier_wickets
         for (m_id, inn, over), truth in sorted(self._over_truth.items()):
             if m_id != match_id or inn != innings or truth["tokens"] is None:
                 continue

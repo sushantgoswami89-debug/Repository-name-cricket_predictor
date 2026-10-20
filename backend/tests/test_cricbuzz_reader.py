@@ -281,3 +281,29 @@ def test_empty_twin_of_a_ball_is_ignored_and_separators_are_reattached_to_their_
     objects = _delivery_objects([ball, blank, separator], "9")
     assert len(objects) == 1 and objects[0]["timestamp"] == 100            # the blank twin is gone
     assert objects[0]["overSeparator"]["batTeamObj"]["teamScore"] == "4-0"  # the separator sits on the last ball of over 1
+
+
+def test_an_over_never_seen_ball_by_ball_is_built_from_cricbuzz_over_summary():
+    """User 2026-10-20: the over summary is the official record. An earlier over that is only in the page as a summary (missed live) is
+    rebuilt from it, and the running totals of everything after it stay consistent."""
+    from app.live.cricbuzz_reader import CricbuzzLiveReader
+    from app.live.live_snapshot import LiveDelivery
+    from app.live.over_summary import parse_over_summary
+
+    def ball(over, n, runs, total):
+        return LiveDelivery("1", 1, over, n, "Bowler B", "Batter", runs, runs, {}, None, total, 0, over * 100 + n, "text")
+
+    reader = CricbuzzLiveReader()
+    reader._over_truth = {}
+    reader._over_truth[("1", 1, 1)] = {"tokens": parse_over_summary("1 0 4 W 1 1"), "checkpoint": (7, 1), "bowler": "Bowler A",
+                                       "summary": "1 0 4 W 1 1", "timestamp_ms": 1000}
+    # over 2 is the only one we saw ball by ball: 6 balls of 1 run, the score after it 13/1
+    known = {(1, 2, n): ball(2, n, 1, 7 + n) for n in range(1, 7)}
+    # (over 1 has 7 runs and a wicket; we joined during over 2)
+    changed = reader._reconcile_overs(("1", 1), known, {})
+    assert {d.over for d in known.values()} == {1, 2}
+    over_one = sorted((d for d in known.values() if d.over == 1), key=lambda d: d.ball)
+    assert [d.total_runs for d in over_one] == [1, 0, 4, 0, 1, 1] and over_one[3].wicket_kind and over_one[0].bowler == "Bowler A"
+    assert changed == (13, 1)                                            # the corrected running totals after the last ball
+    last = max(known.values(), key=lambda d: d.key)
+    assert (last.feed_total, last.feed_wickets) == (13, 1)
