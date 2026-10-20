@@ -1396,6 +1396,30 @@ class CricbuzzMatchSession:
         except (OSError, TypeError, ValueError):
             pass
 
+    def _log_graph_overs(self) -> None:
+        """Save Cricbuzz's graphs page per-over table (runs and a wicket flag for EVERY over of both innings) to graph-overs-<id>.json at
+        each over end, in the background. The main page keeps only the last few overs, so after a restart or a sleep this is the one place
+        that still holds the overs we missed (graph_audit.py compares it with what we recorded)."""
+        if self.commentary_log_path is None:
+            return
+        path = self.commentary_log_path.with_name(f"graph-overs-{self.match_id}.json")
+        match_id = self.match_id
+
+        def work() -> None:
+            try:
+                from app.live.cricbuzz_capture import fetch_page, per_over_from_graphs
+
+                table = per_over_from_graphs(fetch_page("live-cricket-graphs", match_id, timeout=15.0) or "")
+                if table:
+                    path.write_text(json.dumps({"fetched_at": time.time(), "overs": [
+                        {"innings": i, "over": o, **v} for (i, o), v in sorted(table.items())]}), encoding="utf-8")
+            except Exception:  # a background cross-check: never allowed to disturb the live loop
+                pass
+
+        import threading
+
+        threading.Thread(target=work, daemon=True).start()
+
     def _card_check(self, snapshot) -> None:
         """At each over end (and at the finish) compare our rebuilt innings with Cricbuzz's own scorecard
         page: totals always, per-batter runs and fall of wickets when we saw the innings from ball 1.
@@ -1414,6 +1438,7 @@ class CricbuzzMatchSession:
         if card is None:
             return
         self._log_scorecard(card)
+        self._log_graph_overs()
         problems = []
         for innings in sorted({d.innings for d in snapshot.deliveries}):
             problems += compare_with_deliveries(card, snapshot.deliveries, innings)

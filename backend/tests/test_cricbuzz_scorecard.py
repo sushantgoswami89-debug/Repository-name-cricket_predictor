@@ -119,3 +119,15 @@ def test_batters_are_not_compared_when_an_over_was_rebuilt_from_the_summary_with
     card = parse_scorecard(_page(SCORECARD))
     backfilled = [_delivery(1, 1, "", 20, 20, 0), _delivery(1, 2, "", 0, 20, 1, "caught"), _delivery(1, 3, "S Samson", 21, 41, 1)]
     assert compare_with_deliveries(card, backfilled, 1) == []
+
+
+def test_graphs_page_gives_runs_and_wicket_flag_for_every_over_of_both_innings():
+    from app.live.cricbuzz_capture import per_over_from_graphs
+
+    rows = [{"over": 1, "team1": 4, "team2": 12, "isTeam1Wicket": False, "isTeam2Wicket": True},
+            {"over": 2, "team1": 10, "team2": 6, "isTeam1Wicket": False, "isTeam2Wicket": False},
+            {"over": 3, "team1": 7, "team2": None}]
+    table = per_over_from_graphs(_page({"graphsData": {"data": {"runsPerOverChartData": rows}}}))
+    assert table[(1, 1)] == {"runs": 4, "wicket": False} and table[(2, 1)] == {"runs": 12, "wicket": True}
+    assert table[(1, 3)] == {"runs": 7, "wicket": False} and (2, 3) not in table
+    assert per_over_from_graphs("<html>nothing</html>") is None

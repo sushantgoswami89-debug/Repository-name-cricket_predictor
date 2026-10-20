@@ -40,6 +40,33 @@ def fetch_page(kind: str, match_id: str, timeout: float = 20.0) -> str | None:
         return None
 
 
+
+def per_over_from_graphs(html: str) -> dict[tuple[int, int], dict] | None:
+    """{(innings, over): {"runs": n, "wicket": bool}} for EVERY over of the match from the graphs page's runsPerOverChartData
+    (team1 batted first = innings 1, team2 second). The main page keeps only the last 2-3 overs; this page keeps all of them."""
+    for chunk in _extract_flight_chunks(html):
+        at = chunk.find('"graphsData":')
+        if at == -1:
+            continue
+        try:
+            graphs, _ = _DECODER.raw_decode(chunk[at + len('"graphsData":'):].lstrip())
+        except json.JSONDecodeError:
+            continue
+        rows = (graphs.get("data") or {}).get("runsPerOverChartData")
+        if not isinstance(rows, list):
+            continue
+        table: dict[tuple[int, int], dict] = {}
+        for row in rows:
+            over = row.get("over")
+            if not isinstance(over, int):
+                continue
+            for innings, team_key, wicket_key in ((1, "team1", "isTeam1Wicket"), (2, "team2", "isTeam2Wicket")):
+                if row.get(team_key) is not None:
+                    table[(innings, over)] = {"runs": row[team_key], "wicket": bool(row.get(wicket_key))}
+        return table
+    return None
+
+
 def parse_win_curve(html: str) -> dict | None:
     """{"teams": {1: name, 2: name}, "innings": {1: team, 2: team}, "points": {innings: [{over, <team>: pct}]}}
     from the graphs page. `over` n = the state after n overs of that innings; over 0 of innings 1 is 50/50."""
