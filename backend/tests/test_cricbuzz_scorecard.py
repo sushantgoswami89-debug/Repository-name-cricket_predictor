@@ -94,3 +94,21 @@ def test_reader_sets_dismissed_and_match_complete_from_the_board():
            "batsmanDetails": {"playerName": "Shai Hope"}, "bowlerDetails": {"playerName": "Y"}}
     [delivery] = reader._build_deliveries(("1", 1), [obj])
     assert delivery.wicket_kind == "run out" and delivery.dismissed == "Shimron Hetmyer"
+
+
+def test_scorecard_total_is_compared_at_the_cards_own_over_not_with_our_newest_ball():
+    """2026-10-20: "[card] 19.0 ov: MISMATCH: total ours 206/6 vs card 202/6" while our over was exact: the card was still at 18.5."""
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_scorecard import compare_with_deliveries, state_at_overs
+
+    def ball(over, n, total):
+        return SimpleNamespace(innings=1, over=over, ball=n, is_legal=True, feed_total=total, feed_wickets=6, key=(1, over, n),
+                               striker="A", batter_runs=0, total_runs=0, wicket_kind=None, dismissed="")
+
+    ours = [ball(19, n, 196 + n) for n in range(1, 5)] + [ball(19, 5, 202), ball(19, 6, 206)]
+    card = {"innings": [{"innings": 1, "runs": 202, "wickets": 6, "overs": 18.5, "batting": [], "fall": []}]}
+    assert state_at_overs(ours, 18.5) == (202, 6)
+    assert compare_with_deliveries(card, ours, 1) == []                      # card at 18.5 with 202/6: it agrees with us at that ball
+    card["innings"][0]["runs"] = 201
+    assert compare_with_deliveries(card, ours, 1) != []                      # a real disagreement at its own ball is still reported

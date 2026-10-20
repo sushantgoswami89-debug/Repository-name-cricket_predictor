@@ -103,6 +103,22 @@ def fetch_scorecard(match_id: str, session: requests.Session | None = None, time
         return None
 
 
+def state_at_overs(ordered, overs: float) -> tuple[int, int] | None:
+    """(score, wickets) of our record after the legal ball the scorecard calls `overs` (18.5 = five balls into the 19th over), or None
+    when the record does not reach back that far. `ordered` is sorted by (over, ball)."""
+    legal_in_over: dict[int, int] = {}
+    state = None
+    for delivery in ordered:
+        if getattr(delivery, "is_legal", True):
+            legal_in_over[delivery.over] = legal_in_over.get(delivery.over, 0) + 1
+        legal = legal_in_over.get(delivery.over, 0)
+        position = float(delivery.over) if legal >= 6 else (delivery.over - 1) + legal / 10.0
+        if position > overs + 0.001:
+            break
+        state = (delivery.feed_total, delivery.feed_wickets)
+    return state
+
+
 def compare_with_deliveries(card: dict, deliveries, innings: int) -> list[str]:
     """Differences between the scorecard and the deliveries we rebuilt for one innings (empty = agree).
     Totals are always checked; per-batter/bowler figures and the fall of wickets only when we saw the
@@ -113,8 +129,15 @@ def compare_with_deliveries(card: dict, deliveries, innings: int) -> list[str]:
         return []
     problems = []
     last = ours[-1]
-    if theirs.get("runs") is not None and (last.feed_total, last.feed_wickets) != (theirs["runs"], theirs["wickets"]):
-        problems.append(f"total ours {last.feed_total}/{last.feed_wickets} vs card {theirs['runs']}/{theirs['wickets']}")
+    if theirs.get("runs") is not None:
+        mine = (last.feed_total, last.feed_wickets)
+        # The scorecard page usually trails the commentary by a ball or more. Compare it with OUR record at the card's own over.ball, not
+        # with our newest ball (2026-10-20: "ours 206/6 vs card 202/6" while our over was exact; the card was still at 18.5 and the
+        # 18.6 FOUR makes 206).
+        if theirs.get("overs") is not None:
+            mine = state_at_overs(ours, float(theirs["overs"]))   # None: the card is older than anything we hold, nothing to compare
+        if mine is not None and mine != (theirs["runs"], theirs["wickets"]):
+            problems.append(f"total ours {mine[0]}/{mine[1]} vs card {theirs['runs']}/{theirs['wickets']}")
     first = ours[0]
     from_start = first.over == 1 and first.ball == 1 and first.feed_total - first.total_runs == 0
     if not from_start:
