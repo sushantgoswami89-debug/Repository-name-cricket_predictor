@@ -410,3 +410,15 @@ def test_power_warning_only_while_a_match_is_followed_and_not_more_than_every_fi
     assert "ON BATTERY" not in capsys.readouterr().out
     state.warn_if_on_battery(1400.0)
     assert "ON BATTERY" in capsys.readouterr().out
+
+
+def test_only_top_ten_sides_are_followed_by_default_and_toi_is_off(tmp_path):
+    import run_live_auto
+
+    assert run_live_auto.follows_team_pair("India vs West Indies")
+    assert run_live_auto.follows_team_pair("India Women vs Zimbabwe Women") is False     # Zimbabwe is not top 10
+    assert run_live_auto.follows_team_pair("Australia Women vs New Zealand Women")
+    assert not run_live_auto.follows_team_pair("Nigeria vs Gambia")
+    assert not run_live_auto.follows_team_pair("Lesotho vs Mozambique")
+    state = run_live_auto.LiveAutoState(tmp_path, None, follow_all_teams=False, toi_backup=False)
+    assert state.follow_all_teams is False and state.toi_backup is False

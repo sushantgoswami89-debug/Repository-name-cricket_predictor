@@ -148,6 +148,15 @@ def is_women_match(match) -> bool:
     return "women" in f"{getattr(match, 'label', '')} {getattr(match, 'series', '')}".lower()
 
 
+def follows_team_pair(label: str) -> bool:
+    """True when both sides are ICC top-10 (men's or women's: "India Women" counts as India). User 2026-10-20: the driver was reading
+    associate-nation and friendly fixtures nobody wants; the live driver now follows the same top-10 sides the pre-match log scores."""
+    from app.live.prematch_log import ICC_TOP_10
+
+    parts = [re.sub(r"\s+Women(?:'s)?$", "", part.strip(), flags=re.I) for part in label.split(" vs ")]
+    return len(parts) == 2 and all(part in ICC_TOP_10 for part in parts)
+
+
 def on_battery() -> bool | None:
     """True when the Mac runs on battery (closing the lid then puts it to sleep whatever caffeinate says), None when unknown."""
     if sys.platform != "darwin":
@@ -271,6 +280,8 @@ class LiveAutoState:
         publisher: TelegramPublisher | None,
         stuck_alert_seconds: float = 300.0,
         facts_publisher=None,
+        follow_all_teams: bool = True,
+        toi_backup: bool = True,
     ) -> None:
         self.project_root = project_root
         self.publisher = publisher
@@ -278,6 +289,8 @@ class LiveAutoState:
         # so predictions and briefings can stay in shadow mode while the cards are sent (user 2026-10-11).
         self.facts_publisher = facts_publisher if facts_publisher is not None else publisher
         self.stuck_alert_seconds = stuck_alert_seconds
+        self.follow_all_teams = follow_all_teams
+        self.toi_backup = toi_backup
         self.active_cricbuzz: dict[str, CricbuzzMatchSession] = {}
         self._battery_warned = -1e9
         self.active_toi: dict[
@@ -311,7 +324,7 @@ class LiveAutoState:
             cricbuzz_matches = tuple(
                 match
                 for match in cricbuzz_discovery.live_matches()
-                if cricbuzz_is_t20i(match)
+                if cricbuzz_is_t20i(match) and (self.follow_all_teams or follows_team_pair(match.label))
             )
         except requests.exceptions.RequestException as error:
             print(f"Deferred Cricbuzz discovery scan: {error}")
@@ -378,8 +391,9 @@ class LiveAutoState:
         # already claims (from either source).
         try:
             toi_matches = tuple(
-                match for match in toi_discovery.live_summaries() if toi_is_t20i(match)
-            )
+                match for match in toi_discovery.live_summaries()
+                if self.toi_backup and toi_is_t20i(match) and (self.follow_all_teams or follows_team_pair(match.label))
+            ) if self.toi_backup else ()
         except requests.exceptions.RequestException as error:
             print(f"Deferred TOI discovery scan: {error}")
             toi_matches = ()
@@ -674,6 +688,14 @@ def main() -> None:
         help="ODI briefings for every national side, not only ICC top-10 vs top-10 (prematch_log.ICC_TOP_10).",
     )
     parser.add_argument(
+        "--all-teams", action="store_true",
+        help="Follow every T20 international Cricbuzz lists (default: only ICC top-10 sides, men's and women's, the same set the pre-match log scores).",
+    )
+    parser.add_argument(
+        "--toi-backup", action="store_true",
+        help="Also follow matches through the Times of India feed when Cricbuzz does not list them (default off: Cricbuzz only).",
+    )
+    parser.add_argument(
         "--single-console", action="store_true",
         help="Print every match into this window (default: one console file per match, data/live/console-<match id>.log).",
     )
@@ -692,15 +714,16 @@ def main() -> None:
     facts_publisher = publisher
     if args.facts_telegram and publisher is None:
         facts_publisher = SendOnceFile(_telegram(project_root), project_root / "data" / "live" / "factometer-sent.json")
-    state = LiveAutoState(project_root, publisher, stuck_alert_seconds=args.stuck_alert_seconds, facts_publisher=facts_publisher)
+    state = LiveAutoState(project_root, publisher, stuck_alert_seconds=args.stuck_alert_seconds, facts_publisher=facts_publisher,
+                          follow_all_teams=args.all_teams, toi_backup=args.toi_backup)
 
     last_scan = 0.0
     mode = "shadow (no Telegram)" if args.shadow else "LIVE (publishing to Telegram)"
     if args.facts_telegram and args.shadow:
         mode += " -- except Fact-o-Meter cards, which ARE sent to Telegram"
     print(
-        f"CricketBaba is watching Cricbuzz (primary) + TOI (backup) for live "
-        f"T20Is -- mode: {mode}. Press Control+C to stop."
+        f"CricketBaba is watching Cricbuzz{' + TOI (backup)' if args.toi_backup else ' only'} for live "
+        f"{'T20Is' if args.all_teams else 'T20Is between ICC top-10 sides'} -- mode: {mode}. Press Control+C to stop."
     )
 
     if on_battery():
