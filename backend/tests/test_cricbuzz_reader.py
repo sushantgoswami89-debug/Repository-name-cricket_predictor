@@ -264,6 +264,9 @@ def test_batting_side_is_remembered_when_a_copy_of_the_page_names_no_team():
     from app.live.cricbuzz_reader import _resolve_full_team_name
 
     assert _resolve_full_team_name("WI", teams) == "West Indies"
+    women = ["India Women", "Zimbabwe Women"]
+    assert _resolve_full_team_name("ZIMW", women) == "Zimbabwe Women" and _resolve_full_team_name("INDW", women) == "India Women"
+    assert _resolve_full_team_name("SAW", ["England Women", "South Africa Women"]) == "South Africa Women"
     assert _resolve_full_team_name("", teams) == ""   # no code: the caller must use what it remembers, not teams[0]
 
 

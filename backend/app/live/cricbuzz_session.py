@@ -774,7 +774,7 @@ def _revision_risk(snapshot) -> str:
 
 
 def _over_break_block(snapshot, crease, card_batters: dict, card_bowlers: dict, announced: str, expected: dict | None,
-                      first: tuple[int, int] | None = None) -> str:
+                      first: tuple[int, int] | None = None, confirmed: bool = False) -> str:
     """The over-end summary as a few short lines: score with run rates (and what the chase needs), the bowler who just finished
     with his figures, the batters at the crease, and the next bowler and striker."""
     last = snapshot.deliveries[-1]
@@ -783,7 +783,9 @@ def _over_break_block(snapshot, crease, card_batters: dict, card_bowlers: dict, 
     comparison = _chase_comparison(snapshot, first)
     if comparison:
         lines.append(comparison)
-    risk = _revision_risk(snapshot)
+    # Once Cricbuzz's own over summary has agreed with our over (runs and deliveries) nothing in it can still change: a review that
+    # was upheld or overturned is already in the total (2026-10-20: "2.1: review" was shown under an over the audit had called OK).
+    risk = "" if confirmed else _revision_risk(snapshot)
     if risk:
         lines.append(f"⚠️  this over's total may still change -- {risk}")
     lines.append(f"Bowled: {last.bowler}{card_bowlers.get(last.bowler, '')}")
@@ -1154,7 +1156,8 @@ class CricbuzzMatchSession:
                 over_now = int(str(snapshot.overs).partition(".")[0])
                 first = _first_innings_at(self.commentary_log_path.with_name(f"board-{self.match_id}.jsonl"), over_now)
             summary = _over_break_block(snapshot, crease, {**board_batters, **self._card_batters},
-                                        {**board_bowlers, **self._card_bowlers}, announced_now, expected_now, first)
+                                        {**board_bowlers, **self._card_bowlers}, announced_now, expected_now, first,
+                                        confirmed=self._confirm.get((snapshot.innings, int(str(snapshot.overs).partition(".")[0])), {}).get("summary") is True)
             if summary != self._last_summary:
                 self._last_summary = summary
                 print("\n".join(f"{self.prefix}{line}" for line in summary.splitlines()))

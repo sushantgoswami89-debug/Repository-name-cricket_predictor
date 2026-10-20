@@ -139,7 +139,9 @@ def compare_with_deliveries(card: dict, deliveries, innings: int) -> list[str]:
         if mine is not None and mine != (theirs["runs"], theirs["wickets"]):
             problems.append(f"total ours {mine[0]}/{mine[1]} vs card {theirs['runs']}/{theirs['wickets']}")
     first = ours[0]
-    from_start = first.over == 1 and first.ball == 1 and first.feed_total - first.total_runs == 0
+    # Overs rebuilt from Cricbuzz's over summary carry no striker, so per-batter figures and the fall of wickets cannot be compared
+    # (2026-10-20: a restart in over 1 back-filled it and every batter then "disagreed" with the card).
+    from_start = first.over == 1 and first.ball == 1 and first.feed_total - first.total_runs == 0 and all(d.striker for d in ours)
     if not from_start:
         return problems
     runs_by_batter: dict[str, int] = {}

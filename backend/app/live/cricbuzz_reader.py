@@ -143,6 +143,16 @@ def _resolve_full_team_name(code: str, full_names: list[str]) -> str:
     for override_code, override_name in _TEAM_CODE_OVERRIDES.items():
         if override_code == code and override_name in full_names:
             return override_name
+    # Women's sides: "ZIMW" / "INDW" = the country's code + W (2026-10-20: "ZIMW" matched nothing, so the chase fell back to teams[0]
+    # and the over-end block, target and win probability were all printed for the wrong side).
+    if len(code) > 3 and code.endswith("W"):
+        for full_name in full_names:
+            words = full_name.split()
+            if len(words) > 1 and words[-1].casefold() == "women":
+                base = words[:-1]
+                base_code = "".join(w[0] for w in base).upper() if len(base) > 1 else base[0][:3].upper()
+                if code[:-1] == base_code or (len(base) == 1 and code[:-1] == base[0][:len(code) - 1].upper()):
+                    return full_name
     return ""
 
 
@@ -683,7 +693,10 @@ class CricbuzzLiveReader:
         remembered = self._batting_team_by_scope.setdefault(scope, "")
         if resolved_team:
             self._batting_team_by_scope[scope] = resolved_team
-        batting_team = resolved_team or remembered or (teams[0] if teams else batting_code)
+        # With no usable code, innings 2 is the side that did not bat in innings 1 when we saw that innings.
+        first_side = self._batting_team_by_scope.get((match_id, 1), "") if current_innings == 2 else ""
+        other_side = next((team for team in teams if team != first_side), "") if first_side else ""
+        batting_team = resolved_team or remembered or other_side or (teams[0] if teams else batting_code)
         bowling_team = next((team for team in teams if team != batting_team), "")
 
         wickets = self._running_wickets.get(scope, 0)

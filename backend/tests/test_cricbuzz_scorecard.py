@@ -112,3 +112,10 @@ def test_scorecard_total_is_compared_at_the_cards_own_over_not_with_our_newest_b
     assert compare_with_deliveries(card, ours, 1) == []                      # card at 18.5 with 202/6: it agrees with us at that ball
     card["innings"][0]["runs"] = 201
     assert compare_with_deliveries(card, ours, 1) != []                      # a real disagreement at its own ball is still reported
+
+
+def test_batters_are_not_compared_when_an_over_was_rebuilt_from_the_summary_without_strikers():
+    """2026-10-20: a restart in over 1 back-filled it (no striker names) and the card then 'disagreed' on every batter and wicket."""
+    card = parse_scorecard(_page(SCORECARD))
+    backfilled = [_delivery(1, 1, "", 20, 20, 0), _delivery(1, 2, "", 0, 20, 1, "caught"), _delivery(1, 3, "S Samson", 21, 41, 1)]
+    assert compare_with_deliveries(card, backfilled, 1) == []

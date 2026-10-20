@@ -880,6 +880,19 @@ def test_board_still_on_the_previous_innings_is_not_a_mismatch():
     assert _board_check(snap) is not None
 
 
+def test_over_break_block_drops_the_revision_warning_once_cricbuzz_summary_confirmed_the_over():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _over_break_block
+
+    d = SimpleNamespace(over=3, ball=1, bowler="B", striker="S", commentary="a review for lbw", total_runs=0, is_legal=True, timestamp_ms=1)
+    snap = SimpleNamespace(deliveries=[d], innings=1, overs="3.0", score=20, wickets=2, innings_complete=False, target=0,
+                           scheduled_overs=20, batting_team="X", bowling_team="Y", balls_remaining=None, board=None)
+    kwargs = dict(crease=[], card_batters={}, card_bowlers={}, announced="", expected=None)
+    assert "may still change" in _over_break_block(snap, **kwargs)
+    assert "may still change" not in _over_break_block(snap, **kwargs, confirmed=True)
+
+
 def test_over_end_forecast_waits_for_confirmation_then_goes_out(monkeypatch, capsys):
     """User 2026-10-13: the forecast must not run ahead of correctly captured data -- "gate, then publish flagged"."""
     from app.live import cricbuzz_session
