@@ -244,9 +244,23 @@ def _delivery_objects(chunks: list[str], match_id: str) -> list[dict[str, Any]]:
                 # Cricbuzz posts an EMPTY twin of a ball a few seconds after it (151598 ball 16.1: the FOUR, then a blank entry with the
                 # same ballMetric and a new timestamp). It looked like a revision "4 -> 0 run(s)" and left the total 4 low.
                 continue
+            if isinstance(obj.get("ballMetric"), (int, float)) and obj["ballMetric"] <= 0:
+                # "<batters> are at the crease ... <bowler> will open the attack" carries ballMetric 0: it is not a delivery. It became
+                # "over 1 ball 0" and printed "Verification error: Impossible ball number 1.0" on every poll of every innings' first over.
+                obj["ballMetric"] = "$undefined"
             objects.append(obj)
     _attach_over_separators(chunks, objects)
     return objects
+
+
+def _within_scheduled_overs(objects: list[dict[str, Any]], scheduled_overs: int) -> list[dict[str, Any]]:
+    """Drop deliveries beyond the format's innings length (innings 1 and 2 only; a super over is innings 3+). 0 = format unknown, keep all."""
+    if not scheduled_overs:
+        return objects
+    return [
+        o for o in objects
+        if not (_int_field(o, "inningsId", 1) in (1, 2) and isinstance(o.get("ballMetric"), (int, float)) and int(o["ballMetric"]) >= scheduled_overs)
+    ]
 
 
 _SEPARATOR_MARKER = '{"commType":"over-separator"'
@@ -600,6 +614,8 @@ class CricbuzzLiveReader:
         html = response.text
         chunks = _extract_flight_chunks(html)
         raw_objects = _delivery_objects(chunks, match_id)
+        # A T20 innings is 20 overs and an ODI innings 50: nothing beyond that is recorded (a super over is innings 3+, its own scope).
+        raw_objects = _within_scheduled_overs(raw_objects, {"T20": 20, "T20I": 20, "ODI": 50}.get(self._format_from_html(html), 0))
         self._register_unattached_separators(match_id, chunks, raw_objects)
         if not raw_objects:
             if self._last_delivery.get((match_id, 1)) is None:

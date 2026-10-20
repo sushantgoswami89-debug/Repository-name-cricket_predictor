@@ -307,3 +307,23 @@ def test_an_over_never_seen_ball_by_ball_is_built_from_cricbuzz_over_summary():
     assert changed == (13, 1)                                            # the corrected running totals after the last ball
     last = max(known.values(), key=lambda d: d.key)
     assert (last.feed_total, last.feed_wickets) == (13, 1)
+
+
+def test_at_the_crease_entry_is_not_a_delivery_and_nothing_is_kept_beyond_the_format_length():
+    """2026-10-20: "<batters> are at the crease" carries ballMetric 0 and became "over 1 ball 0" ("Verification error: Impossible ball
+    number 1.0" on every poll). A T20 innings is 20 overs and an ODI innings 50; a super over (innings 3+) is its own scope."""
+    from app.live.cricbuzz_reader import _delivery_objects, _within_scheduled_overs
+
+    intro = ('{"matchId":9,"commType":"commentary","inningsId":1,"ballMetric":0,"timestamp":90,'
+             '"commText":"<b>A and B are at the crease. C will open the attack</b>","event":["none","all"]}')
+    first = '{"matchId":9,"commType":"commentary","inningsId":1,"ballMetric":0.1,"timestamp":100,"commText":"C to A, no run","event":["none","all"]}'
+    objects = _delivery_objects([intro, first], "9")
+    assert [o["ballMetric"] for o in objects] == ["$undefined", 0.1]
+
+    def obj(innings, metric):
+        return {"inningsId": innings, "ballMetric": metric}
+
+    mixed = [obj(1, 19.6), obj(1, 20.1), obj(2, 20.2), obj(3, 0.1), obj(2, "$undefined")]
+    assert [(o["inningsId"], o["ballMetric"]) for o in _within_scheduled_overs(mixed, 20)] == [(1, 19.6), (3, 0.1), (2, "$undefined")]
+    assert len(_within_scheduled_overs(mixed, 50)) == 5 and len(_within_scheduled_overs(mixed, 0)) == 5
+    assert [o["ballMetric"] for o in _within_scheduled_overs([obj(2, 49.6), obj(2, 50.1)], 50)] == [49.6]
