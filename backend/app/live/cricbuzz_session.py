@@ -881,6 +881,8 @@ class CricbuzzMatchSession:
     forecast_enabled: bool = True  # False: record the match, make no forecasts (women's matches: the models are trained on men's cricket)
     forecast_label: str = ""  # printed above every forecast when set (ODIs: "EXPERIMENTAL: the T20 models applied to an ODI ...")
     _gate_started: dict = field(default_factory=dict)
+    _block_started: dict = field(default_factory=dict)      # (innings, over) -> when the over-end block was first ready to print
+    _over_summaries: dict = field(default_factory=dict)     # (innings, over) -> Cricbuzz's own over summary once it has arrived
     _gate_notice: str | None = None
     _card_not_out: list[str] = field(default_factory=list)  # the latest scorecard page's not-out names (it may lag)
     _incoming: dict = field(default_factory=dict)  # innings -> batters the commentary said "comes to the crease"
@@ -940,6 +942,17 @@ class CricbuzzMatchSession:
                 pass
         return "unconfirmed", f"over {completed}: no source at this point yet to confirm {snapshot.score}/{snapshot.wickets} at {snapshot.overs} ov"
 
+    def _block_ready(self, snapshot) -> bool:
+        """False while the over-end block should wait for Cricbuzz's over summary (up to GATE_SECONDS after the over ended). The block
+        printed at once had no bowler figures, a revision warning that the summary then cleared, and sync/gate lines in between."""
+        if snapshot.innings_complete or not snapshot.deliveries:
+            return True
+        key = (snapshot.innings, int(str(snapshot.overs).partition(".")[0]))
+        if key in self._over_summaries:
+            return True
+        started = self._block_started.setdefault(key, time.monotonic())
+        return time.monotonic() - started >= GATE_SECONDS
+
     def _hold_for_confirmation(self, snapshot, why: str) -> bool:
         """True while an over-end forecast should wait because no source confirms our record yet (user 2026-10-13: the forecast must
         not run ahead of correctly captured data; "gate, then publish flagged"). Waits at most GATE_SECONDS from the first poll of
@@ -952,10 +965,7 @@ class CricbuzzMatchSession:
         waited = time.monotonic() - started
         if waited >= GATE_SECONDS:
             return False
-        if self._gate_notice != why:
-            print(f"{self.prefix}[gate] holding the forecast until the page confirms {snapshot.score}/{snapshot.wickets} at "
-                  f"{snapshot.overs} ov (up to {GATE_SECONDS:.0f} s): {why}")
-            self._gate_notice = why
+        self._gate_notice = why   # waiting for the page to confirm is routine; only "predicting UNCONFIRMED" (the wait ran out) is shown
         return True
 
     def _resync(self, snapshot, reason: str, rebuild: bool = True) -> bool:
@@ -969,7 +979,8 @@ class CricbuzzMatchSession:
             return False
         self._resyncs[key] = used + 1
         what = "re-reading the commentary" if rebuild else "looking at a fresher copy of the page"
-        print(f"{self.prefix}[sync] {what} ({used + 1}/{RESYNC_MAX_PER_OVER}): {reason}")
+        if rebuild:   # a plain look at a fresher copy of the page is routine and not shown
+            print(f"{self.prefix}[sync] {what} ({used + 1}/{RESYNC_MAX_PER_OVER}): {reason}")
         if rebuild:  # a fresh reader rebuilds the innings from what the page shows now, the board as the baseline
             self._previous_reader = self.reader
             self.reader = CricbuzzLiveReader()
@@ -1089,6 +1100,7 @@ class CricbuzzMatchSession:
         drain_summaries = getattr(self.reader, "drain_over_summaries", None)
         for summary in (drain_summaries() if drain_summaries else []):
             print(f"{self.prefix}{_audit_over(snapshot, summary)}")
+            self._over_summaries[(summary["innings"], summary["over"])] = summary
             verdict = _audit_ok(snapshot, summary)
             if verdict is not None:
                 self._confirm.setdefault((summary["innings"], summary["over"]), {})["summary"] = verdict
@@ -1147,7 +1159,9 @@ class CricbuzzMatchSession:
         for line in _delivery_event_lines(snapshot, self._seen_delivery_keys):
             print(f"{self.prefix}{line}")
         # Summary only (user 2026-10-11): one score line per over break / innings end, not one per poll.
-        if _at_over_break(snapshot) or snapshot.innings_complete:
+        if (_at_over_break(snapshot) or snapshot.innings_complete) and not self._block_ready(snapshot):
+            pass  # the over-end block waits for Cricbuzz's own over summary (it arrives some seconds after the last ball): one complete block
+        elif _at_over_break(snapshot) or snapshot.innings_complete:
             announced_now = (self._announced_bowler[1] if self._announced_bowler
                              and self._announced_bowler[0] > snapshot.deliveries[-1].timestamp_ms else "")
             board_batters, board_bowlers = _board_figures(snapshot)
@@ -1155,8 +1169,12 @@ class CricbuzzMatchSession:
             if snapshot.innings == 2 and self.commentary_log_path is not None:
                 over_now = int(str(snapshot.overs).partition(".")[0])
                 first = _first_innings_at(self.commentary_log_path.with_name(f"board-{self.match_id}.jsonl"), over_now)
+            card_bowlers_now = {**board_bowlers, **self._card_bowlers}
+            official = self._over_summaries.get((snapshot.innings, int(str(snapshot.overs).partition(".")[0])))
+            if official and official.get("bowler") == snapshot.deliveries[-1].bowler and official.get("bowler_figures"):
+                card_bowlers_now[official["bowler"]] = f" {official['bowler_figures']}"   # the over summary is the official figures
             summary = _over_break_block(snapshot, crease, {**board_batters, **self._card_batters},
-                                        {**board_bowlers, **self._card_bowlers}, announced_now, expected_now, first,
+                                        card_bowlers_now, announced_now, expected_now, first,
                                         confirmed=self._confirm.get((snapshot.innings, int(str(snapshot.overs).partition(".")[0])), {}).get("summary") is True)
             if summary != self._last_summary:
                 self._last_summary = summary

@@ -909,10 +909,34 @@ def test_over_end_forecast_waits_for_confirmation_then_goes_out(monkeypatch, cap
     assert session._hold_for_confirmation(snap, "no source yet") is True            # first poll of the over end: wait
     clock[0] += GATE_SECONDS - 1
     assert session._hold_for_confirmation(snap, "no source yet") is True
-    assert capsys.readouterr().out.count("[gate]") == 1                              # said once, not every poll
+    assert "[gate]" not in capsys.readouterr().out                                   # waiting is routine: not printed
     clock[0] += 2
     assert session._hold_for_confirmation(snap, "no source yet") is False           # waited long enough: publish flagged
     mid = _over_break_snapshot()
     mid.innings = 2
     mid.deliveries[-1].over = 14                                                     # the next over has begun: no more waiting
     assert session._hold_for_confirmation(mid, "no source yet") is False
+
+
+def test_over_end_block_waits_for_the_over_summary_then_prints_once(monkeypatch):
+    """2026-10-20: the block printed at once had no bowler figures and a warning the over summary cleared a few seconds later."""
+    from app.live import cricbuzz_session
+    from app.live.cricbuzz_session import GATE_SECONDS, CricbuzzMatchSession
+
+    session = CricbuzzMatchSession.__new__(CricbuzzMatchSession)
+    session._block_started, session._over_summaries = {}, {}
+    snap = _over_break_snapshot()
+    snap.innings = 2
+    snap.innings_complete = False
+    over = int(str(snap.overs).partition(".")[0])
+    clock = [500.0]
+    monkeypatch.setattr(cricbuzz_session.time, "monotonic", lambda: clock[0])
+    assert session._block_ready(snap) is False                       # the over just ended and Cricbuzz's summary is not here yet
+    clock[0] += 10
+    session._over_summaries[(2, over)] = {"bowler": "B", "bowler_figures": "1-0-2-0"}
+    assert session._block_ready(snap) is True                        # the summary arrived: print
+    session._over_summaries.clear()
+    session._block_started.clear()
+    assert session._block_ready(snap) is False
+    clock[0] += GATE_SECONDS + 1
+    assert session._block_ready(snap) is True                        # it never came: print anyway after the wait
