@@ -525,6 +525,7 @@ class CricbuzzLiveReader:
     # this poll's new balls.
     _all_deliveries: dict[tuple[str, int], dict[tuple[int, int, int], LiveDelivery]] | None = None
     _batting_team_by_scope: dict = field(default_factory=dict)
+    _roster: set = field(default_factory=set)   # full player names seen anywhere on the page (balls, separators); see _canonical_name
     _seed_cutoff_ms: dict[tuple[str, int], int] | None = None
     _last_delivery: dict[tuple[str, int], LiveDelivery] | None = None
     _seen_timestamps: dict[tuple[str, int], set[int]] | None = None
@@ -625,6 +626,7 @@ class CricbuzzLiveReader:
         chunks = _extract_flight_chunks(html)
         raw_objects = _delivery_objects(chunks, match_id)
         # A T20 innings is 20 overs and an ODI innings 50: nothing beyond that is recorded (a super over is innings 3+, its own scope).
+        self._learn_roster(raw_objects)
         raw_objects = _within_scheduled_overs(raw_objects, {"T20": 20, "T20I": 20, "ODI": 50}.get(self._format_from_html(html), 0))
         self._register_unattached_separators(match_id, chunks, raw_objects)
         if not raw_objects:
@@ -1034,6 +1036,33 @@ class CricbuzzLiveReader:
                         "non_striker": (separator.get("batNonStrikerObj") or {}).get("playerName"), "timestamp_ms": stamp,
                     })
 
+    def _learn_roster(self, objects: list[dict[str, Any]]) -> None:
+        for obj in objects:
+            for key in ("batsmanDetails", "bowlerDetails"):
+                details = obj.get(key)
+                if isinstance(details, dict) and details.get("playerName"):
+                    self._roster.add(str(details["playerName"]).strip())
+            separator = obj.get("overSeparator")
+            if isinstance(separator, dict):
+                for key in ("bowlerObj", "batStrikerObj", "batNonStrikerObj"):
+                    details = separator.get(key)
+                    if isinstance(details, dict) and details.get("playerName"):
+                        self._roster.add(str(details["playerName"]).strip())
+
+    def _canonical_name(self, name: str) -> str:
+        """The full name Cricbuzz uses for a player the page sometimes names briefly ("Mayers" -> "Sharne Mayers", "Mugeri" ->
+        "Chipo Mugeri-Tiripano"; 2026-10-20: one batter was recorded under two names, so the per-batter figures never matched the card).
+        The longest known name that contains every word of this one, when every other candidate is just a shorter form of it."""
+        name = (name or "").strip()
+        if not name:
+            return ""
+        def words(text: str) -> set[str]:
+            return set(re.split(r"[\s-]+", text.casefold()))
+        mine = words(name)
+        candidates = [full for full in self._roster | {name} if mine <= words(full)]
+        longest = max(candidates, key=lambda full: len(words(full)))
+        return longest if all(words(full) <= words(longest) for full in candidates) else name
+
     def drain_notes(self) -> list[tuple[int, str, str]]:
         """New (timestamp_ms, category, text) notes since the last call."""
         notes, self._pending_notes = self._pending_notes, []
@@ -1337,8 +1366,8 @@ class CricbuzzLiveReader:
                     innings=prior.innings,
                     over=prior.over,
                     ball=prior.ball,
-                    bowler=obj.get("bowlerDetails", {}).get("playerName", "") or names_from_text(comm_text)[0] or prior.bowler,
-                    striker=obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1] or prior.striker,
+                    bowler=self._canonical_name(obj.get("bowlerDetails", {}).get("playerName", "") or names_from_text(comm_text)[0]) or prior.bowler,
+                    striker=self._canonical_name(obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1]) or prior.striker,
                     total_runs=total_runs,
                     batter_runs=batter_runs,
                     extras=extras,
@@ -1347,11 +1376,11 @@ class CricbuzzLiveReader:
                     feed_wickets=prior.feed_wickets + delta_wkts,
                     timestamp_ms=_int_field(obj, "timestamp", 0),
                     commentary=re.sub(r"<[^>]+>", "", comm_text),
-                    dismissed=dismissed_batter(
+                    dismissed=self._canonical_name(dismissed_batter(
                         wicket_kind,
                         re.sub(r"<[^>]+>", "", comm_text),
-                        obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1] or prior.striker,
-                    ),
+                        self._canonical_name(obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1]) or prior.striker,
+                    )),
                 )
                 self._pending_repairs.append(
                     f"innings {innings} ball {prior.over - 1}.{prior.ball}: entry revised by Cricbuzz "
@@ -1398,8 +1427,8 @@ class CricbuzzLiveReader:
                 innings=key[0],
                 over=over_index + 1,
                 ball=ball_number,
-                bowler=obj.get("bowlerDetails", {}).get("playerName", "") or names_from_text(comm_text)[0],
-                striker=obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1],
+                bowler=self._canonical_name(obj.get("bowlerDetails", {}).get("playerName", "") or names_from_text(comm_text)[0]),
+                striker=self._canonical_name(obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1]),
                 total_runs=total_runs,
                 batter_runs=batter_runs,
                 extras=extras,
@@ -1408,11 +1437,11 @@ class CricbuzzLiveReader:
                 feed_wickets=running_wickets,
                 timestamp_ms=_int_field(obj, "timestamp", 0),
                 commentary=re.sub(r"<[^>]+>", "", comm_text),
-                dismissed=dismissed_batter(
+                dismissed=self._canonical_name(dismissed_batter(
                     wicket_kind,
                     re.sub(r"<[^>]+>", "", comm_text),
-                    obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1],
-                ),
+                    self._canonical_name(obj.get("batsmanDetails", {}).get("playerName", "") or names_from_text(comm_text)[1]),
+                )),
             )
 
         if known:

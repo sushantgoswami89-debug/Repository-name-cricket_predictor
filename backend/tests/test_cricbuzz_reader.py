@@ -330,3 +330,21 @@ def test_at_the_crease_entry_is_not_a_delivery_and_nothing_is_kept_beyond_the_fo
     assert [(o["inningsId"], o["ballMetric"]) for o in _within_scheduled_overs(mixed, 20)] == [(1, 19.6), (3, 0.1), (2, "$undefined")]
     assert len(_within_scheduled_overs(mixed, 50)) == 5 and len(_within_scheduled_overs(mixed, 0)) == 5
     assert [o["ballMetric"] for o in _within_scheduled_overs([obj(2, 49.6), obj(2, 50.1)], 50)] == [49.6]
+
+
+def test_short_names_from_commentary_text_become_the_full_name_cricbuzz_uses():
+    """2026-10-20: "Mayers" and "Sharne Mayers" were two batters in our record, so per-batter figures never matched the scorecard."""
+    from app.live.cricbuzz_reader import CricbuzzLiveReader
+
+    reader = CricbuzzLiveReader()
+    reader._learn_roster([
+        {"batsmanDetails": {"playerName": "Sharne Mayers"}, "bowlerDetails": {"playerName": "Kranti Gaud"}},
+        {"batsmanDetails": {"playerName": "Chipo Mugeri-Tiripano"}},
+        {"overSeparator": {"batStrikerObj": {"playerName": "Beloved Biza"}, "batNonStrikerObj": {"playerName": "Nyasha Gwanzura"}}},
+    ])
+    assert reader._canonical_name("Mayers") == "Sharne Mayers"
+    assert reader._canonical_name("Mugeri") == "Chipo Mugeri-Tiripano"
+    assert reader._canonical_name("Sharne Mayers") == "Sharne Mayers" and reader._canonical_name("") == ""
+    reader._roster.add("Sharne Sharma"); reader._roster.add("Deepti Sharma")
+    assert reader._canonical_name("Sharma") == "Sharma"          # two players share it: do not guess
+    assert reader._canonical_name("Unknown Person") == "Unknown Person"
