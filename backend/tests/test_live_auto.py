@@ -384,3 +384,29 @@ def test_keep_awake_launches_caffeinate_tied_to_this_process(monkeypatch):
     assert calls[0][0] == "caffeinate" and "-w" in calls[0] and str(run_live_auto.os.getpid()) in calls[0]
     monkeypatch.setattr(run_live_auto.sys, "platform", "linux")
     assert run_live_auto.keep_awake() is None
+
+
+def test_women_matches_are_recorded_but_not_forecast():
+    from types import SimpleNamespace
+
+    import run_live_auto
+
+    assert run_live_auto.is_women_match(SimpleNamespace(label="India Women vs Zimbabwe Women", series="Zimbabwe Women tour of India"))
+    assert run_live_auto.is_women_match(SimpleNamespace(label="A vs B", series="Women's T20 World Cup"))
+    assert not run_live_auto.is_women_match(SimpleNamespace(label="India vs West Indies", series="West Indies tour of India"))
+
+
+def test_power_warning_only_while_a_match_is_followed_and_not_more_than_every_five_minutes(monkeypatch, capsys, tmp_path):
+    import run_live_auto
+
+    state = run_live_auto.LiveAutoState(tmp_path, None)
+    monkeypatch.setattr(run_live_auto, "on_battery", lambda: True)
+    state.warn_if_on_battery(1000.0)                    # nothing followed: silent
+    assert "ON BATTERY" not in capsys.readouterr().out
+    state.active_cricbuzz["1"] = object()
+    state.warn_if_on_battery(1000.0)
+    assert "ON BATTERY" in capsys.readouterr().out
+    state.warn_if_on_battery(1100.0)                    # 100 s later: not again
+    assert "ON BATTERY" not in capsys.readouterr().out
+    state.warn_if_on_battery(1400.0)
+    assert "ON BATTERY" in capsys.readouterr().out

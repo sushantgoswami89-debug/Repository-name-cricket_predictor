@@ -143,6 +143,27 @@ def keep_awake() -> subprocess.Popen | None:
         return None
 
 
+def is_women_match(match) -> bool:
+    """Women's fixtures: recorded like any other, but no forecasts (the run, wicket and win models are trained on men's cricket)."""
+    return "women" in f"{getattr(match, 'label', '')} {getattr(match, 'series', '')}".lower()
+
+
+def on_battery() -> bool | None:
+    """True when the Mac runs on battery (closing the lid then puts it to sleep whatever caffeinate says), None when unknown."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        text = subprocess.run(["pmset", "-g", "batt"], capture_output=True, text=True, timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if "Battery Power" in text:
+        return True
+    return False if "AC Power" in text else None
+
+
+BATTERY_WARNING = ("ON BATTERY: closing the lid sleeps the Mac and the match is missed (2026-10-20 log: 'Maintenance Sleep ... Using Batt' every ~15 min). "
+                   "Plug in and keep the lid open, or once run: sudo pmset -a disablesleep 1")
+
 BRIEFING_REFRESH_SECONDS = 60.0
 FULL_XI = 11  # a line-up counts as full only when all 11 players are confirmed
 BRIEFING_REFRESH_MAX_HOURS = 8.0
@@ -258,6 +279,7 @@ class LiveAutoState:
         self.facts_publisher = facts_publisher if facts_publisher is not None else publisher
         self.stuck_alert_seconds = stuck_alert_seconds
         self.active_cricbuzz: dict[str, CricbuzzMatchSession] = {}
+        self._battery_warned = -1e9
         self.active_toi: dict[
             str, tuple[str, ToiLiveReader, VerifiedLivePredictionPipeline]
         ] = {}
@@ -312,6 +334,7 @@ class LiveAutoState:
                 publisher=self.publisher,
                 facts_publisher=self.facts_publisher,
                 stuck_alert_seconds=self.stuck_alert_seconds,
+                forecast_enabled=not is_women_match(match),
                 tag_lines=_CONSOLES is None,  # a match with its own console needs no team tag on every line
                 commentary_log_path=self.project_root
                 / "data"
@@ -320,7 +343,11 @@ class LiveAutoState:
             )
             if pair is not None:
                 self.covered_pairs[pair] = "cricbuzz"
-            print(f"[cricbuzz] Attached: {match.label} ({match.match_desc})")
+            print(f"[cricbuzz] Attached: {match.label} ({match.match_desc})"
+                  + ("" if not is_women_match(match) else " -- women's match: recorded, no forecasts"))
+            if is_women_match(match):
+                with match_console(match.match_id):
+                    print("Women's match: every ball is recorded, but no forecasts are made (the models are trained on men's cricket).")
             briefing = cricbuzz_briefing_text(match.match_id, match.url, match.label)
             if briefing:
                 with match_console(match.match_id):
@@ -485,6 +512,17 @@ class LiveAutoState:
                 self.publisher.publish(f"briefing:{source}:{match_id}:{tag}", message)
             if "not yet available" not in new_signature[0] and new_signature[1]:
                 del self._briefings[key]  # toss known and XIs confirmed: nothing left to wait for
+
+    def warn_if_on_battery(self, now: float) -> None:
+        """While a match is being followed, say so every 5 minutes if the Mac is on battery (in the driver window and every match console)."""
+        if not (self.active_cricbuzz or self.active_toi) or now - self._battery_warned < 300.0:
+            return
+        if on_battery():
+            self._battery_warned = now
+            print(f"⚠️  {BATTERY_WARNING}")
+            for match_id in tuple(self.active_cricbuzz):
+                with match_console(match_id):
+                    print(f"⚠️  {BATTERY_WARNING}")
 
     def poll(self) -> None:
         for match_id, session in tuple(self.active_cricbuzz.items()):
@@ -665,6 +703,8 @@ def main() -> None:
         f"T20Is -- mode: {mode}. Press Control+C to stop."
     )
 
+    if on_battery():
+        print(f"⚠️  {BATTERY_WARNING}")
     awake = None if args.no_keep_awake else keep_awake()
     print("Keep-awake: " + ("on (caffeinate, Mac will not idle-sleep while this runs)" if awake else "off"))
     watchdog = PollWatchdog()
@@ -680,6 +720,7 @@ def main() -> None:
                 f"⚠️ CricketBaba: nothing was polled for {gap / 60:.1f} min (the Mac slept or the process was "
                 "suspended). Balls bowled in that gap may be missing from the log; the live state is rebuilt "
                 "from the page on the next poll."
+                + (" The Mac is on battery: with the lid closed it sleeps whatever caffeinate says." if on_battery() else "")
             )
             print(message)
             if publisher is not None:
@@ -695,6 +736,7 @@ def main() -> None:
         if fetched is not None:
             state.scan(fetched[0], fetched[1])
 
+        state.warn_if_on_battery(time.monotonic())
         state.poll()
         state.refresh_briefings()
         if odi_watcher is not None:

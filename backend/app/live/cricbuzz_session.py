@@ -874,6 +874,7 @@ class CricbuzzMatchSession:
     _resyncs: dict = field(default_factory=dict)
     _previous_reader: object = None  # the reader replaced by a re-read, kept until the fresh one has produced a snapshot
     _last_gate: str | None = None
+    forecast_enabled: bool = True  # False: record the match, make no forecasts (women's matches: the models are trained on men's cricket)
     _gate_started: dict = field(default_factory=dict)
     _gate_notice: str | None = None
     _card_not_out: list[str] = field(default_factory=list)  # the latest scorecard page's not-out names (it may lag)
@@ -1257,8 +1258,11 @@ class CricbuzzMatchSession:
             )
 
         snapshot = _with_announced_bowler(snapshot, self._announced_bowler)
-        status, why = self._sync_status(snapshot)
-        hold = _prediction_hold(snapshot)  # the page's board disagreeing at the same over.ball
+        if not self.forecast_enabled:
+            status, why, hold = "ok", "", None   # record only: nothing to confirm before a forecast that is not made
+        else:
+            status, why = self._sync_status(snapshot)
+            hold = _prediction_hold(snapshot)  # the page's board disagreeing at the same over.ball
         if hold and status == "ok":
             status, why = "contradiction", hold
         if status != "ok":
@@ -1280,7 +1284,7 @@ class CricbuzzMatchSession:
             self._last_gate = None
         self._last_hold = None
         try:
-            output = self.pipeline.process(snapshot)
+            output = self.pipeline.process(snapshot) if self.forecast_enabled else None
         except VerificationError as error:
             print(f"{self.prefix}Verification error: {error}")
             return
