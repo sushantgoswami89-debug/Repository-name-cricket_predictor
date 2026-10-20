@@ -55,7 +55,7 @@ from app.live.cricbuzz_discovery import is_t20_international as cricbuzz_is_t20i
 from app.live.cricbuzz_session import CricbuzzMatchSession
 from app.live.cricbuzz_session import briefing_text as cricbuzz_briefing_text
 from app.live.cricbuzz_session import fact_text as cricbuzz_fact_text
-from app.live.odi_watch import OdiBriefingWatcher
+from app.live.odi_watch import OdiBriefingWatcher, is_men_international_odi
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery
@@ -154,7 +154,40 @@ def follows_team_pair(label: str) -> bool:
     from app.live.prematch_log import ICC_TOP_10
 
     parts = [re.sub(r"\s+Women(?:'s)?$", "", part.strip(), flags=re.I) for part in label.split(" vs ")]
-    return len(parts) == 2 and all(part in ICC_TOP_10 for part in parts)
+    return len(parts) == 2 and any(part in ICC_TOP_10 for part in parts)
+
+
+def is_followed_live_match(match, follow_all_teams: bool = False) -> bool:
+    """T20 internationals with a top-10 side, and men's top-10 v top-10 ODIs (ODIs are recorded ball by ball and never forecast)."""
+    if cricbuzz_is_t20i(match):
+        return follow_all_teams or follows_team_pair(match.label)
+    return is_men_international_odi(match, only_top10=not follow_all_teams)
+
+
+EXPERIMENTAL_ODI = "EXPERIMENTAL: the T20 models applied to an ODI (they were not trained on ODIs) -- shadow test only, never published"
+
+
+def odi_pipeline(project_root: Path, match_id: str) -> VerifiedLivePredictionPipeline:
+    """Pipeline for the T20 models run on an ODI (user 2026-10-20: "test the same T20 model with ODI"). Own log files (data/live/odi-*), so
+    these experimental forecasts never mix into the T20 shadow logs that are scored; no publisher, so nothing can reach Telegram."""
+    from app.ml.match_winner_ensemble_shadow_log import MatchWinnerEnsembleShadowLog
+    from app.ml.run_range_ensemble_shadow_log import RunRangeEnsembleShadowLog
+    from app.ml.wicket_ensemble_shadow_log import WicketEnsembleShadowLog
+    from app.ml.win_probability_shadow_log import WinProbabilityShadowLog
+
+    folder = project_root / "data" / "live"
+
+    def paths(name: str) -> tuple[Path, Path, Path]:
+        return folder / f"odi-{name}.jsonl", folder / f"odi-{name}-outcomes.jsonl", folder / f"odi-{name}-reminder.json"
+
+    return VerifiedLivePredictionPipeline(
+        publisher=None,
+        output_file=folder / f"cricbuzz-{match_id}.json",
+        win_probability_shadow_log=WinProbabilityShadowLog(*paths("win-probability")),
+        wicket_ensemble_shadow_log=WicketEnsembleShadowLog(*paths("wicket-ensemble")),
+        run_range_ensemble_shadow_log=RunRangeEnsembleShadowLog(*paths("run-range-ensemble")),
+        match_winner_ensemble_shadow_log=MatchWinnerEnsembleShadowLog(*paths("match-winner-ensemble")),
+    )
 
 
 def on_battery() -> bool | None:
@@ -324,7 +357,7 @@ class LiveAutoState:
             cricbuzz_matches = tuple(
                 match
                 for match in cricbuzz_discovery.live_matches()
-                if cricbuzz_is_t20i(match) and (self.follow_all_teams or follows_team_pair(match.label))
+                if is_followed_live_match(match, self.follow_all_teams)
             )
         except requests.exceptions.RequestException as error:
             print(f"Deferred Cricbuzz discovery scan: {error}")
@@ -341,13 +374,15 @@ class LiveAutoState:
             self.active_cricbuzz[match.match_id] = CricbuzzMatchSession(
                 match_id=match.match_id,
                 match_url=match.url,
-                pipeline=VerifiedLivePredictionPipeline(
-                    publisher=self.publisher, output_file=output_file
+                pipeline=(
+                    VerifiedLivePredictionPipeline(publisher=self.publisher, output_file=output_file)
+                    if cricbuzz_is_t20i(match) else odi_pipeline(self.project_root, match.match_id)
                 ),
-                publisher=self.publisher,
+                publisher=self.publisher if cricbuzz_is_t20i(match) else None,
                 facts_publisher=self.facts_publisher,
                 stuck_alert_seconds=self.stuck_alert_seconds,
-                forecast_enabled=not is_women_match(match),
+                forecast_enabled=not (cricbuzz_is_t20i(match) and is_women_match(match)),
+                forecast_label="" if cricbuzz_is_t20i(match) else EXPERIMENTAL_ODI,
                 tag_lines=_CONSOLES is None,  # a match with its own console needs no team tag on every line
                 commentary_log_path=self.project_root
                 / "data"
@@ -356,11 +391,20 @@ class LiveAutoState:
             )
             if pair is not None:
                 self.covered_pairs[pair] = "cricbuzz"
+            record_only_note = (
+                f"ODI: every ball and the live score are recorded. Forecasts are {EXPERIMENTAL_ODI}. The ODI briefing comes from the ODI watcher."
+                if not cricbuzz_is_t20i(match) else
+                "Women's match: every ball is recorded, but no forecasts are made (the models are trained on men's cricket)."
+                if is_women_match(match) else ""
+            )
             print(f"[cricbuzz] Attached: {match.label} ({match.match_desc})"
-                  + ("" if not is_women_match(match) else " -- women's match: recorded, no forecasts"))
-            if is_women_match(match):
+                  + (" -- ODI: recorded, experimental T20-model forecasts" if not cricbuzz_is_t20i(match)
+                     else " -- recorded, no forecasts" if record_only_note else ""))
+            if record_only_note:
                 with match_console(match.match_id):
-                    print("Women's match: every ball is recorded, but no forecasts are made (the models are trained on men's cricket).")
+                    print(record_only_note)
+            if not cricbuzz_is_t20i(match):
+                continue  # ODIs: no T20 briefing or Fact-o-Meter cards from this path
             briefing = cricbuzz_briefing_text(match.match_id, match.url, match.label)
             if briefing:
                 with match_console(match.match_id):

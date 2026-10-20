@@ -416,7 +416,7 @@ def test_only_top_ten_sides_are_followed_by_default_and_toi_is_off(tmp_path):
     import run_live_auto
 
     assert run_live_auto.follows_team_pair("India vs West Indies")
-    assert run_live_auto.follows_team_pair("India Women vs Zimbabwe Women") is False     # Zimbabwe is not top 10
+    assert run_live_auto.follows_team_pair("India Women vs Zimbabwe Women")               # one top-10 side is enough
     assert run_live_auto.follows_team_pair("Australia Women vs New Zealand Women")
     assert not run_live_auto.follows_team_pair("Nigeria vs Gambia")
     assert not run_live_auto.follows_team_pair("Lesotho vs Mozambique")

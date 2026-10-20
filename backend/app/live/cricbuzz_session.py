@@ -875,6 +875,7 @@ class CricbuzzMatchSession:
     _previous_reader: object = None  # the reader replaced by a re-read, kept until the fresh one has produced a snapshot
     _last_gate: str | None = None
     forecast_enabled: bool = True  # False: record the match, make no forecasts (women's matches: the models are trained on men's cricket)
+    forecast_label: str = ""  # printed above every forecast when set (ODIs: "EXPERIMENTAL: the T20 models applied to an ODI ...")
     _gate_started: dict = field(default_factory=dict)
     _gate_notice: str | None = None
     _card_not_out: list[str] = field(default_factory=list)  # the latest scorecard page's not-out names (it may lag)
@@ -1294,6 +1295,8 @@ class CricbuzzMatchSession:
 
         if output:
             sent = "Sent" if self.publisher else "Recorded"
+            if self.forecast_label:
+                print(f"{self.prefix}⚠️  {self.forecast_label}")
             started = [d for d in snapshot.deliveries if d.innings == output["innings"] and d.over == output["over"]]
             if started:  # 2026-10-13: over 4's forecast came out at 3.5 after a recovery; it still uses the pre-over state but is no use live
                 print(f"{self.prefix}⚠️  LATE: over {output['over']} was already under way ({snapshot.overs} ov, "
@@ -1345,6 +1348,33 @@ class CricbuzzMatchSession:
         except Exception:
             pass
 
+    def _log_scorecard(self, card: dict) -> None:
+        """Append Cricbuzz's scorecard (every batter and bowler figure) to data/live/scorecard-<id>.jsonl at each over end.
+        audit_vs_scorecard.py compares the DIFFERENCE between two of these with the deliveries we recorded in between, which checks every
+        ball's runs, striker and bowler against the scorecard even when we joined the match late (2026-10-20 deadline)."""
+        if self.commentary_log_path is None:
+            return
+        try:
+            row = {
+                "fetched_at": time.time(),
+                "header": card.get("header"),
+                "innings": [
+                    {
+                        "innings": inn.get("innings"), "team": inn.get("team"), "runs": inn.get("runs"), "wickets": inn.get("wickets"),
+                        "overs": inn.get("overs"),
+                        "batting": [{k: b.get(k) for k in ("name", "runs", "balls", "fours", "sixes", "out")} for b in inn.get("batting", [])],
+                        "bowling": [{k: b.get(k) for k in ("name", "overs", "maidens", "runs", "wickets", "wides", "no_balls")}
+                                    for b in inn.get("bowling", [])],
+                        "extras": inn.get("extras"),
+                    }
+                    for inn in card.get("innings", [])
+                ],
+            }
+            with self.commentary_log_path.with_name(f"scorecard-{self.match_id}.jsonl").open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(row) + "\n")
+        except (OSError, TypeError, ValueError):
+            pass
+
     def _card_check(self, snapshot) -> None:
         """At each over end (and at the finish) compare our rebuilt innings with Cricbuzz's own scorecard
         page: totals always, per-batter runs and fall of wickets when we saw the innings from ball 1.
@@ -1362,6 +1392,7 @@ class CricbuzzMatchSession:
         card = fetch_scorecard(self.match_id)
         if card is None:
             return
+        self._log_scorecard(card)
         problems = []
         for innings in sorted({d.innings for d in snapshot.deliveries}):
             problems += compare_with_deliveries(card, snapshot.deliveries, innings)
