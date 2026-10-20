@@ -27,3 +27,10 @@ by itself), so it was kept.
 - `backend/run_commentary_study.py` -- study-only commentary logger, no predictions (`tests/test_commentary_study.py`).
 - Offline replay and evaluation tools: `run_batch_replay.py`, `run_full_match_replay.py`, `run_match_card_replay.py`,
   `run_live_pipeline_replay.py`, `run_replay.py`, `run_candidate_v3_complete_match_test.py`, `run_prediction_evaluation.py`.
+
+## Re-checked 2026-10-20 (user: "delete all the outdated drivers")
+
+Nothing left to delete: `backend/run_live_auto.py` is the only live driver; the four old ones were removed on 2026-10-11 and no
+process or LaunchAgent starts them (running: `com.cricketbaba.driver` and `com.cricketbaba.telegram-control`, which launches
+`run_live_auto.py`). Cleaned the leftovers: `backend/README.md` now documents `run_live_auto.py` instead of `run_toi_live.py`, and
+`docs/next_live_field_test_checklist.md` is marked superseded. Code comments that mention the old names are history and were left.

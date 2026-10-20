@@ -1,3 +1,5 @@
+> **Superseded (2026-10-20).** The drivers named below (`run_cricbuzz_match.py`, `run_cricbuzz_auto.py`, `run_toi_auto.py`, `run_toi_live.py`) are deleted; the only driver is `backend/run_live_auto.py`. See `docs/outdated_drivers.md` and `docs/todo_2026-10-12.md`. Kept as history.
+
 # Checklist for the next real live match (3rd field test)
 
 Compiled 2026-09-18, after closing all 11 items from the 09-15 punch
