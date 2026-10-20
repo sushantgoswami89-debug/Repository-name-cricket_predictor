@@ -881,6 +881,7 @@ class CricbuzzMatchSession:
     forecast_enabled: bool = True  # False: record the match, make no forecasts (women's matches: the models are trained on men's cricket)
     forecast_label: str = ""  # printed above every forecast when set (ODIs: "EXPERIMENTAL: the T20 models applied to an ODI ...")
     _gate_started: dict = field(default_factory=dict)
+    _audit_lines: list = field(default_factory=list)       # [audit] lines waiting for this poll's ball lines to print first
     _block_started: dict = field(default_factory=dict)      # (innings, over) -> when the over-end block was first ready to print
     _over_summaries: dict = field(default_factory=dict)     # (innings, over) -> Cricbuzz's own over summary once it has arrived
     _gate_notice: str | None = None
@@ -1099,7 +1100,7 @@ class CricbuzzMatchSession:
                     handle.write(json.dumps({"at": datetime.now(timezone.utc).isoformat(), "repair": repair}) + "\n")
         drain_summaries = getattr(self.reader, "drain_over_summaries", None)
         for summary in (drain_summaries() if drain_summaries else []):
-            print(f"{self.prefix}{_audit_over(snapshot, summary)}")
+            self._audit_lines.append(_audit_over(snapshot, summary))   # printed after this poll's ball lines, so it follows the over's last ball
             self._over_summaries[(summary["innings"], summary["over"])] = summary
             verdict = _audit_ok(snapshot, summary)
             if verdict is not None:
@@ -1158,6 +1159,9 @@ class CricbuzzMatchSession:
             figures = _over_break_figures(snapshot, crease, self._card_batters, self._card_bowlers, announced)
         for line in _delivery_event_lines(snapshot, self._seen_delivery_keys):
             print(f"{self.prefix}{line}")
+        for line in self._audit_lines:
+            print(f"{self.prefix}{line}")
+        self._audit_lines.clear()
         # Summary only (user 2026-10-11): one score line per over break / innings end, not one per poll.
         if (_at_over_break(snapshot) or snapshot.innings_complete) and not self._block_ready(snapshot):
             pass  # the over-end block waits for Cricbuzz's own over summary (it arrives some seconds after the last ball): one complete block
@@ -1434,7 +1438,7 @@ class CricbuzzMatchSession:
             }
         verdict = "OK" if not problems else "MISMATCH: " + "; ".join(problems[:4])
         if problems:  # an OK check is not printed (user 2026-10-11); every verdict goes to the card-checks log
-            print(f"{self.prefix}[card] {snapshot.overs} ov: {verdict}")
+            self._audit_lines.append(f"[card] {snapshot.overs} ov: {verdict}")   # shown after this poll's ball lines
         if self.commentary_log_path is not None:
             try:
                 with self.commentary_log_path.with_name(f"card-checks-{self.match_id}.jsonl").open("a", encoding="utf-8") as handle:
