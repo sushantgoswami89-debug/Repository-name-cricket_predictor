@@ -867,6 +867,19 @@ def test_board_one_ball_behind_that_agrees_with_our_record_at_its_ball_is_not_a_
     assert _board_check(snap) is not None
 
 
+def test_board_still_on_the_previous_innings_is_not_a_mismatch():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import _board_check
+
+    snap = SimpleNamespace(deliveries=[], innings=2, score=0, wickets=0, overs="0.0",
+                           board={"innings": 1, "score": 216, "wickets": 7, "overs": "20"})
+    assert _board_check(snap) is None                       # the page has not rolled over to the chase yet
+    snap.innings = 1
+    snap.board = {"innings": 2, "score": 3, "wickets": 0, "overs": "0.4"}   # a board AHEAD of our innings is real
+    assert _board_check(snap) is not None
+
+
 def test_over_end_forecast_waits_for_confirmation_then_goes_out(monkeypatch, capsys):
     """User 2026-10-13: the forecast must not run ahead of correctly captured data -- "gate, then publish flagged"."""
     from app.live import cricbuzz_session

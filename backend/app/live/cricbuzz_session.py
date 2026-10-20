@@ -391,6 +391,8 @@ def _board_check(snapshot) -> str | None:
     if not board or board.get("score") is None:
         return None
     problems = []
+    if isinstance(board.get("innings"), int) and board["innings"] < snapshot.innings:
+        return None  # the board still shows the previous innings: the page is simply behind our innings-break rollover
     if board.get("innings") not in (None, snapshot.innings):
         problems.append(f"innings {snapshot.innings} vs board {board['innings']}")
     else:
@@ -1057,13 +1059,7 @@ class CricbuzzMatchSession:
 
         progress = _progress(snapshot)
         if self._best_progress is not None and progress < self._best_progress:
-            print(
-                f"{self.prefix}Stale snapshot skipped: innings "
-                f"{snapshot.innings} at {snapshot.overs} ov is behind the "
-                f"innings {self._best_progress[0]} / {self._best_progress[1]} "
-                "legal balls already seen."
-            )
-            return
+            return  # an older cached copy of the page; nothing to show
         self._best_progress = (
             progress if self._best_progress is None else max(self._best_progress, progress)
         )
