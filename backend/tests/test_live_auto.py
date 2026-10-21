@@ -164,6 +164,18 @@ def test_detaches_cricbuzz_match_and_frees_the_pair_when_no_longer_live(tmp_path
     assert state.covered_pairs == {}
 
 
+def test_odis_are_not_followed_unless_asked_for(tmp_path):
+    """User 2026-10-21: "we will track T20 only"."""
+    odi = _cricbuzz_match(match_id="172681", label="Bangladesh vs Afghanistan", match_desc="3rd Match", match_format="ODI")
+    t20 = _cricbuzz_match()
+    state = _state(tmp_path)
+    state.scan(FakeCricbuzzDiscovery((odi, t20)), FakeToiDiscovery(()))
+    assert set(state.active_cricbuzz) == {"152742"}                 # the T20I only
+    with_odi = run_live_auto.LiveAutoState(project_root=tmp_path, publisher=None, follow_odi=True)
+    with_odi.scan(FakeCricbuzzDiscovery((odi, t20)), FakeToiDiscovery(()))
+    assert set(with_odi.active_cricbuzz) == {"152742", "172681"}
+
+
 def test_a_failed_discovery_scan_does_not_detach_a_live_match(tmp_path):
     """2026-10-21: "Remote end closed connection" in the scan emptied the list, the live ODI was detached and re-attached a scan later."""
     import requests

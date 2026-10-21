@@ -159,11 +159,11 @@ def follows_team_pair(label: str) -> bool:
     return len(parts) == 2 and any(part in ICC_TOP_10 for part in parts)
 
 
-def is_followed_live_match(match, follow_all_teams: bool = False) -> bool:
-    """T20 internationals with a top-10 side, and men's top-10 v top-10 ODIs (ODIs are recorded ball by ball and never forecast)."""
+def is_followed_live_match(match, follow_all_teams: bool = False, follow_odi: bool = False) -> bool:
+    """T20 internationals with a top-10 side. Men's top-10 ODIs only with --odi (user 2026-10-21: "we will track T20 only")."""
     if cricbuzz_is_t20i(match):
         return follow_all_teams or follows_team_pair(match.label)
-    return is_men_international_odi(match, only_top10=not follow_all_teams)
+    return follow_odi and is_men_international_odi(match, only_top10=not follow_all_teams)
 
 
 EXPERIMENTAL_ODI = "EXPERIMENTAL: the T20 models applied to an ODI (they were not trained on ODIs) -- shadow test only, never published"
@@ -321,6 +321,7 @@ class LiveAutoState:
         facts_publisher=None,
         follow_all_teams: bool = True,
         toi_backup: bool = True,
+        follow_odi: bool = False,
     ) -> None:
         self.project_root = project_root
         self.publisher = publisher
@@ -329,6 +330,7 @@ class LiveAutoState:
         self.facts_publisher = facts_publisher if facts_publisher is not None else publisher
         self.stuck_alert_seconds = stuck_alert_seconds
         self.follow_all_teams = follow_all_teams
+        self.follow_odi = follow_odi
         self.toi_backup = toi_backup
         self.active_cricbuzz: dict[str, CricbuzzMatchSession] = {}
         self._battery_warned = -1e9
@@ -363,7 +365,7 @@ class LiveAutoState:
             cricbuzz_matches = tuple(
                 match
                 for match in cricbuzz_discovery.live_matches()
-                if is_followed_live_match(match, self.follow_all_teams)
+                if is_followed_live_match(match, self.follow_all_teams, self.follow_odi)
             )
             scan_failed = False
         except requests.exceptions.RequestException as error:
@@ -742,7 +744,7 @@ def main() -> None:
         help="Send ONLY the Fact-o-Meter cards to Telegram, even with --shadow (predictions and briefings stay in shadow).",
     )
     parser.add_argument(
-        "--no-odi", action="store_true", help="Do not watch ODIs for pre-match briefings."
+        "--odi", action="store_true", help="Also record men's ODIs (experimental T20-model forecasts) and watch ODIs for briefings. Default: T20 only."
     )
     parser.add_argument(
         "--odi-all-teams", action="store_true",
@@ -783,7 +785,7 @@ def main() -> None:
     if args.facts_telegram and publisher is None:
         facts_publisher = SendOnceFile(_telegram(project_root), project_root / "data" / "live" / "factometer-sent.json")
     state = LiveAutoState(project_root, publisher, stuck_alert_seconds=args.stuck_alert_seconds, facts_publisher=facts_publisher,
-                          follow_all_teams=args.all_teams, toi_backup=args.toi_backup)
+                          follow_all_teams=args.all_teams, toi_backup=args.toi_backup, follow_odi=args.odi)
 
     last_scan = 0.0
     mode = "shadow (no Telegram)" if args.shadow else "LIVE (publishing to Telegram)"
@@ -800,7 +802,7 @@ def main() -> None:
     print("Keep-awake: " + ("on (caffeinate, Mac will not idle-sleep while this runs)" if awake else "off"))
     watchdog = PollWatchdog()
     worker = _ScanWorker(cricbuzz_discovery, toi_discovery)
-    odi_watcher = None if args.no_odi else OdiBriefingWatcher(
+    odi_watcher = None if not args.odi else OdiBriefingWatcher(
         None if not args.odi_telegram else publisher, only_top10=not args.odi_all_teams, facts_publisher=facts_publisher)
     if odi_watcher is not None:
         print("Also watching men's ODIs for pre-match briefings only (" + ("all national sides" if args.odi_all_teams else "ICC top-10 sides") + "); no in-play ODI predictions.")
