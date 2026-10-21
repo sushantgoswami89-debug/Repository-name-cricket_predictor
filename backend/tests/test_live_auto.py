@@ -164,6 +164,23 @@ def test_detaches_cricbuzz_match_and_frees_the_pair_when_no_longer_live(tmp_path
     assert state.covered_pairs == {}
 
 
+def test_a_failed_discovery_scan_does_not_detach_a_live_match(tmp_path):
+    """2026-10-21: "Remote end closed connection" in the scan emptied the list, the live ODI was detached and re-attached a scan later."""
+    import requests
+
+    class FailingDiscovery:
+        def live_matches(self):
+            raise requests.exceptions.ConnectionError("Remote end closed connection without response")
+
+    state = _state(tmp_path)
+    state.scan(FakeCricbuzzDiscovery((_cricbuzz_match(),)), FakeToiDiscovery(()))
+    assert "152742" in state.active_cricbuzz
+    state.scan(FailingDiscovery(), FakeToiDiscovery(()))
+    assert "152742" in state.active_cricbuzz                      # unknown is not "no longer live"
+    state.scan(FakeCricbuzzDiscovery(()), FakeToiDiscovery(()))
+    assert state.active_cricbuzz == {}                            # a successful scan without it still detaches
+
+
 def test_freed_pair_can_then_be_attached_via_toi_backup(tmp_path):
     # After Cricbuzz stops seeing a match (detached, pair freed), a
     # later scan where only TOI still sees it must be able to pick it up.

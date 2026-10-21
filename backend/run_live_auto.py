@@ -363,9 +363,11 @@ class LiveAutoState:
                 for match in cricbuzz_discovery.live_matches()
                 if is_followed_live_match(match, self.follow_all_teams)
             )
+            scan_failed = False
         except requests.exceptions.RequestException as error:
             print(f"Deferred Cricbuzz discovery scan: {error}")
             cricbuzz_matches = ()
+            scan_failed = True   # an empty list from a failed scan means "unknown", not "no match is live"
 
         cricbuzz_live_ids = {match.match_id for match in cricbuzz_matches}
         for match in cricbuzz_matches:
@@ -420,7 +422,7 @@ class LiveAutoState:
                     self.publisher.publish(f"briefing:cricbuzz:{match.match_id}", briefing)
             self._track_briefing(f"cricbuzz:{match.match_id}", briefing, match.label)
             self._emit_facts(f"cricbuzz:{match.match_id}", cricbuzz_fact_text(match.match_id, match.url, match.label))
-        for match_id in set(self.active_cricbuzz) - cricbuzz_live_ids:
+        for match_id in (set(self.active_cricbuzz) - cricbuzz_live_ids) if not scan_failed else ():
             del self.active_cricbuzz[match_id]
             print(f"[cricbuzz] No longer live, detaching: {match_id}")
         # Free any cricbuzz-owned pair Cricbuzz no longer lists *before*
