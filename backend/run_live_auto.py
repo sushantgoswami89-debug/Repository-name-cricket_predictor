@@ -419,6 +419,8 @@ class LiveAutoState:
             print(f"[cricbuzz] Attached: {match.label} ({match.match_desc})"
                   + (" -- ODI: recorded, experimental T20-model forecasts" if not cricbuzz_is_t20i(match)
                      else " -- women's match: recorded, experimental forecasts" if record_only_note else ""))
+            if cricbuzz_is_t20i(match):
+                self.notify(f"attached:{match.match_id}", f"👀 Tracking {match.label} ({match.match_desc}): forecasts and Fact-o-Meter go to this chat.")
             if record_only_note:
                 with match_console(match.match_id):
                     print(record_only_note)
@@ -590,6 +592,15 @@ class LiveAutoState:
             if "not yet available" not in new_signature[0] and new_signature[1]:
                 del self._briefings[key]  # toss known and XIs confirmed: nothing left to wait for
 
+    def notify(self, key: str, text: str) -> None:
+        """One operational message to Telegram in live mode (driver started, match tracked, Mac on battery, error). Never raises."""
+        if self.publisher is None:
+            return
+        try:
+            self.publisher.publish(f"notice:{key}", text)
+        except Exception as error:
+            print(f"[notify] Telegram send failed: {error!r}")
+
     def warn_if_on_battery(self, now: float) -> None:
         """While a match is being followed, say so every 5 minutes if the Mac is on battery (in the driver window and every match console)."""
         if not (self.active_cricbuzz or self.active_toi) or now - self._battery_warned < 300.0:
@@ -597,6 +608,7 @@ class LiveAutoState:
         if on_battery():
             self._battery_warned = now
             print(f"⚠️  {BATTERY_WARNING}")
+            self.notify(f"battery:{int(time.time() // 1800)}", f"🔋 {BATTERY_WARNING}")   # at most one message per 30 minutes
             for match_id in tuple(self.active_cricbuzz):
                 with match_console(match_id):
                     print(f"⚠️  {BATTERY_WARNING}")
@@ -608,6 +620,8 @@ class LiveAutoState:
                     session.poll_once()
             except Exception as error:  # one bad match must not kill the watcher
                 print(f"[cricbuzz] Unexpected error on {match_id}: {type(error).__name__}: {error}")
+                self.notify(f"error:{match_id}:{type(error).__name__}:{int(time.time() // 3600)}",
+                            f"⚠️ CricketBaba: error while following match {match_id}: {type(error).__name__}: {error} (the driver keeps going)")
                 continue
             if session.finished:
                 del self.active_cricbuzz[match_id]
@@ -799,6 +813,9 @@ def main() -> None:
     if on_battery():
         print(f"⚠️  {BATTERY_WARNING}")
     awake = None if args.no_keep_awake else keep_awake()
+    state.notify(f"start:{int(time.time())}", "▶️ CricketBaba driver started"
+                 + (" (LIVE: forecasts, results and Fact-o-Meter cards for T20Is come to this chat)." if not args.shadow else " (shadow mode).")
+                 + (" ⚠️ The Mac is on battery: plug it in." if on_battery() else ""))
     print("Keep-awake: " + ("on (caffeinate, Mac will not idle-sleep while this runs)" if awake else "off"))
     watchdog = PollWatchdog()
     worker = _ScanWorker(cricbuzz_discovery, toi_discovery)

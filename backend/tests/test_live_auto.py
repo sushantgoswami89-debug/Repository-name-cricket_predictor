@@ -451,3 +451,21 @@ def test_only_top_ten_sides_are_followed_by_default_and_toi_is_off(tmp_path):
     assert not run_live_auto.follows_team_pair("Lesotho vs Mozambique")
     state = run_live_auto.LiveAutoState(tmp_path, None, follow_all_teams=False, toi_backup=False)
     assert state.follow_all_teams is False and state.toi_backup is False
+
+
+def test_operational_notices_go_to_telegram_only_in_live_mode_and_never_raise(tmp_path):
+    sent = []
+
+    class Capture:
+        def publish(self, key, text):
+            sent.append((key, text))
+
+    class Broken:
+        def publish(self, key, text):
+            raise RuntimeError("telegram down")
+
+    live = run_live_auto.LiveAutoState(project_root=tmp_path, publisher=Capture())
+    live.scan(FakeCricbuzzDiscovery((_cricbuzz_match(),)), FakeToiDiscovery(()))
+    assert [key for key, _ in sent] == ["notice:attached:152742"] and "Tracking India vs Afghanistan" in sent[0][1]
+    _state(tmp_path).notify("x", "shadow mode sends nothing")          # publisher None
+    run_live_auto.LiveAutoState(project_root=tmp_path, publisher=Broken()).notify("y", "must not raise")
