@@ -93,7 +93,7 @@ class TelegramControl:
             return f"CricketBaba is already watching for live matches (process {other[0]}, started from the terminal)."
         with LOG_PATH.open("a", encoding="utf-8") as log:
             process = subprocess.Popen(
-                [sys.executable, str(BACKEND_DIR / "run_live_auto.py"), "--shadow", "--facts-telegram", "--poll-seconds", "5"],
+                [sys.executable, str(BACKEND_DIR / "run_live_auto.py"), "--facts-telegram", "--poll-seconds", "5"],
                 cwd=BACKEND_DIR,
                 stdin=subprocess.DEVNULL,
                 stdout=log,
@@ -102,8 +102,8 @@ class TelegramControl:
             )
         PID_PATH.write_text(str(process.pid), encoding="utf-8")
         return (
-            "CricketBaba is now watching Cricbuzz (primary) and TOI (backup) in shadow mode: "
-            "predictions are logged, not sent; only Fact-o-Meter cards come to Telegram."
+            "CricketBaba is now watching Cricbuzz for live T20Is in LIVE mode: "
+            "over-by-over forecasts, results and Fact-o-Meter cards come to Telegram."
         )
 
     def _status(self) -> str:
