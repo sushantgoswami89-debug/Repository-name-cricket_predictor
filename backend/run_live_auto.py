@@ -46,6 +46,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import requests
 
@@ -57,6 +58,7 @@ from app.live.cricbuzz_session import briefing_text as cricbuzz_briefing_text
 from app.live.cricbuzz_session import fact_text as cricbuzz_fact_text
 from app.live.odi_watch import OdiBriefingWatcher, is_men_international_odi
 from app.live.pipeline import MatchStateAnomaly, VerifiedLivePredictionPipeline
+from app.live.publish_gate import GatedPublisher
 from app.live.telegram import TelegramPublisher
 from app.live.toi_discovery import ToiMatchDiscovery
 from app.live.toi_discovery import is_t20_international as toi_is_t20i
@@ -87,7 +89,7 @@ class SendOnceFile:
 
     def publish(self, key: str, text: str):
         if key in self._sent:
-            return None
+            return SimpleNamespace(sent=True, message_id=None)   # already out: the pipeline must not keep it "pending"
         result = self._inner.publish(key, text)
         self._sent.add(key)
         try:
@@ -170,10 +172,10 @@ EXPERIMENTAL_ODI = "EXPERIMENTAL: the T20 models applied to an ODI (they were no
 EXPERIMENTAL_WOMEN = "EXPERIMENTAL: the men's-trained models applied to a women's match (not validated) -- shadow test only, never published"
 
 
-def odi_pipeline(project_root: Path, match_id: str, prefix: str = "odi") -> VerifiedLivePredictionPipeline:
+def odi_pipeline(project_root: Path, match_id: str, prefix: str = "odi", publisher=None) -> VerifiedLivePredictionPipeline:
     """Pipeline for the T20 models run on an ODI or a women's match (user 2026-10-20: "test the same T20 model with ODI", then the same for
     women's matches). Own log files (data/live/<prefix>-*), so these experimental forecasts never mix into the T20 shadow logs that are
-    scored; no publisher, so nothing can reach Telegram."""
+    scored; no publisher unless one is given (women's T20Is in live mode, user 2026-10-21), so ODI forecasts can never reach Telegram."""
     from app.ml.match_winner_ensemble_shadow_log import MatchWinnerEnsembleShadowLog
     from app.ml.run_range_ensemble_shadow_log import RunRangeEnsembleShadowLog
     from app.ml.wicket_ensemble_shadow_log import WicketEnsembleShadowLog
@@ -185,7 +187,7 @@ def odi_pipeline(project_root: Path, match_id: str, prefix: str = "odi") -> Veri
         return folder / f"{prefix}-{name}.jsonl", folder / f"{prefix}-{name}-outcomes.jsonl", folder / f"{prefix}-{name}-reminder.json"
 
     return VerifiedLivePredictionPipeline(
-        publisher=None,
+        publisher=publisher,
         output_file=folder / f"cricbuzz-{match_id}.json",
         win_probability_shadow_log=WinProbabilityShadowLog(*paths("win-probability")),
         wicket_ensemble_shadow_log=WicketEnsembleShadowLog(*paths("wicket-ensemble")),
@@ -381,11 +383,17 @@ class LiveAutoState:
                 match_id=match.match_id,
                 match_url=match.url,
                 pipeline=(
-                    VerifiedLivePredictionPipeline(publisher=self.publisher, output_file=output_file)
+                    VerifiedLivePredictionPipeline(
+                        publisher=GatedPublisher(self.publisher) if self.publisher is not None else None, output_file=output_file)
                     if cricbuzz_is_t20i(match) and not is_women_match(match)
-                    else odi_pipeline(self.project_root, match.match_id, "odi" if not cricbuzz_is_t20i(match) else "women")
+                    else odi_pipeline(
+                        self.project_root, match.match_id, "odi" if not cricbuzz_is_t20i(match) else "women",
+                        # live mode: women's T20Is are published with the EXPERIMENTAL label in the text; ODI forecasts never are
+                        publisher=(GatedPublisher(self.publisher, prefix="⚠️ EXPERIMENTAL: men's-trained models applied to a women's match (not validated)")
+                                   if self.publisher is not None and cricbuzz_is_t20i(match) else None),
+                    )
                 ),
-                publisher=self.publisher if cricbuzz_is_t20i(match) and not is_women_match(match) else None,
+                publisher=self.publisher if cricbuzz_is_t20i(match) else None,
                 facts_publisher=self.facts_publisher,
                 stuck_alert_seconds=self.stuck_alert_seconds,
                 forecast_enabled=True,
@@ -753,6 +761,10 @@ def main() -> None:
         help="Print every match into this window (default: one console file per match, data/live/console-<match id>.log).",
     )
     parser.add_argument(
+        "--odi-telegram", action="store_true",
+        help="In live mode also send the men's ODI pre-match briefings to Telegram (default: T20s only; ODIs stay on the console).",
+    )
+    parser.add_argument(
         "--no-keep-awake", action="store_true", help="Do not stop the Mac from idle-sleeping while running."
     )
     args = parser.parse_args()
@@ -764,6 +776,9 @@ def main() -> None:
     cricbuzz_discovery = CricbuzzMatchDiscovery()
     toi_discovery = ToiMatchDiscovery()
     publisher = None if args.shadow else _telegram(project_root)
+    # Live mode: everything that goes out is remembered on disk, so a driver restart can never repeat a card or a briefing.
+    if publisher is not None:
+        publisher = SendOnceFile(publisher, project_root / "data" / "live" / "telegram-sent.json")
     facts_publisher = publisher
     if args.facts_telegram and publisher is None:
         facts_publisher = SendOnceFile(_telegram(project_root), project_root / "data" / "live" / "factometer-sent.json")
@@ -786,7 +801,7 @@ def main() -> None:
     watchdog = PollWatchdog()
     worker = _ScanWorker(cricbuzz_discovery, toi_discovery)
     odi_watcher = None if args.no_odi else OdiBriefingWatcher(
-        publisher, only_top10=not args.odi_all_teams, facts_publisher=facts_publisher)
+        None if not args.odi_telegram else publisher, only_top10=not args.odi_all_teams, facts_publisher=facts_publisher)
     if odi_watcher is not None:
         print("Also watching men's ODIs for pre-match briefings only (" + ("all national sides" if args.odi_all_teams else "ICC top-10 sides") + "); no in-play ODI predictions.")
     while True:

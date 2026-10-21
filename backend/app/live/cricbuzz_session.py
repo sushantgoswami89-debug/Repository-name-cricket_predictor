@@ -1305,6 +1305,10 @@ class CricbuzzMatchSession:
         else:
             self._last_gate = None
         self._last_hold = None
+        gate = getattr(self.pipeline, "_publisher", None)
+        if hasattr(gate, "mute"):   # live Telegram: a late forecast is recorded but never sent; an unconfirmed one is sent flagged
+            gate.mute = bool(snapshot.deliveries) and not _at_over_break(snapshot) and not snapshot.innings_complete
+            gate.flag = "⚠️ UNCONFIRMED: Cricbuzz has not yet confirmed this score" if status != "ok" else ""
         try:
             output = self.pipeline.process(snapshot) if self.forecast_enabled else None
         except VerificationError as error:
