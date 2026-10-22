@@ -1320,6 +1320,8 @@ class CricbuzzMatchSession:
 
         if output:
             sent = "Sent" if self.publisher else "Recorded"
+            if getattr(getattr(self.pipeline, "_publisher", None), "mute", False):
+                sent = "Recorded (late: NOT sent to Telegram)"
             if self.forecast_label:
                 print(f"{self.prefix}⚠️  {self.forecast_label}")
             started = [d for d in snapshot.deliveries if d.innings == output["innings"] and d.over == output["over"]]
