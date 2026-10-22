@@ -134,3 +134,25 @@ def test_restart_with_fresh_keys_does_not_relog_existing_balls(tmp_path):
     append_commentary_log(path, "match", snapshot, set())
 
     assert len(path.read_text(encoding="utf-8").splitlines()) == 2
+
+
+def test_a_delivery_changed_after_it_was_logged_is_logged_again_with_the_new_figures(tmp_path):
+    """2026-10-22 NZ v India 1.6: a SIX became a FOUR after the over was logged; readers take the last row of a ball."""
+    import json
+    from types import SimpleNamespace
+
+    from app.live.commentary_log import append_commentary_log
+
+    def delivery(total):
+        return SimpleNamespace(key=(2, 1, 6), innings=2, over=1, ball=6, bowler="B", striker="S", total_runs=total, batter_runs=total,
+                               extras={}, wicket_kind=None, commentary="Henry to Sharma, SIX")
+
+    path, keys = tmp_path / "c.jsonl", set()
+    append_commentary_log(path, "1", SimpleNamespace(deliveries=[delivery(6)]), keys)
+    append_commentary_log(path, "1", SimpleNamespace(deliveries=[delivery(6)]), keys)      # unchanged: nothing new
+    append_commentary_log(path, "1", SimpleNamespace(deliveries=[delivery(4)]), keys)      # revised
+    rows = [json.loads(line) for line in path.read_text().splitlines()]
+    assert [r["total_runs"] for r in rows] == [6, 4] and rows[1].get("revised") is True
+    restarted = set()                                                                       # a new process seeds from the file
+    append_commentary_log(path, "1", SimpleNamespace(deliveries=[delivery(4)]), restarted)
+    assert len(path.read_text().splitlines()) == 2

@@ -34,6 +34,10 @@ from app.live.delivery_detail import extract_delivery_detail
 from app.live.shot_quality import classify_conditions, classify_near_wicket, classify_shot_quality
 
 
+def _signature(key, total_runs, batter_runs, extras, wicket_kind) -> tuple:
+    return ("sig", key, total_runs, batter_runs, json.dumps(extras or {}, sort_keys=True), wicket_kind)
+
+
 def append_commentary_log(
     path: Path,
     match_id: str,
@@ -51,14 +55,21 @@ def append_commentary_log(
         try:
             for line in path.read_text(encoding="utf-8").splitlines():
                 row = json.loads(line)
-                logged_keys.add((row["innings"], row["over"], row["ball"]))
+                key = (row["innings"], row["over"], row["ball"])
+                logged_keys.add(key)
+                logged_keys.add(_signature(key, row["total_runs"], row["batter_runs"], row["extras"], row["wicket_kind"]))
         except (OSError, ValueError, KeyError):
             pass
     new_lines: list[str] = []
     for delivery in snapshot.deliveries:
-        if delivery.key in logged_keys:
+        signature = _signature(delivery.key, delivery.total_runs, delivery.batter_runs, delivery.extras, delivery.wicket_kind)
+        revised = delivery.key in logged_keys
+        if revised and signature in logged_keys:
             continue
+        # A delivery Cricbuzz changed AFTER it was logged (2026-10-22 NZ v India 1.6: SIX became FOUR once the over summary came) is logged
+        # again with the new figures; readers take the last row of a ball.
         logged_keys.add(delivery.key)
+        logged_keys.add(signature)
         new_lines.append(
             json.dumps(
                 {
@@ -77,6 +88,7 @@ def append_commentary_log(
                     "conditions": classify_conditions(delivery.commentary),
                     "detail": extract_delivery_detail(delivery.commentary),
                     "commentary": delivery.commentary,
+                    **({"revised": True} if revised else {}),
                 }
             )
         )
