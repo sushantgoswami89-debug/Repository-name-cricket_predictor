@@ -47,3 +47,12 @@ def test_send_once_file_survives_a_restart_and_reports_duplicates_as_sent(tmp_pa
     again = SendOnceFile(inner, path)                      # a new process reads the file
     result = again.publish("card:1", "text")
     assert len(inner.sent) == 1 and result.sent is True
+
+
+def test_a_forecast_one_ball_late_is_sent_flagged_and_two_balls_late_is_not():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import MAX_LATE_BALLS_TO_SEND, _balls_into_over
+
+    assert MAX_LATE_BALLS_TO_SEND == 1
+    assert [_balls_into_over(SimpleNamespace(overs=o)) for o in ("1.1", 4.0, "4.0", "19.5", "0.6")] == [1, 0, 0, 5, 6]

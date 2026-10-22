@@ -470,6 +470,15 @@ def _board_verdict(snapshot) -> bool | None:
     return (board["score"], board.get("wickets")) == (snapshot.score, snapshot.wickets)
 
 
+MAX_LATE_BALLS_TO_SEND = 1  # a forecast out this many balls into its over is still sent (flagged LATE); later ones are recorded only
+
+
+def _balls_into_over(snapshot) -> int:
+    """Balls already bowled of the over after the last complete one ("1.1" -> 1, "4.0" -> 0)."""
+    _, _, tail = str(snapshot.overs).partition(".")
+    return int(tail) if tail.isdigit() else 0
+
+
 GATE_SECONDS = 90.0  # how long an over-end forecast waits for the page to confirm our record before it goes out flagged UNCONFIRMED
 RESYNC_MAX_PER_OVER = 2  # re-reads of the commentary per over before a contradiction is allowed to hold a prediction
 
@@ -1307,8 +1316,14 @@ class CricbuzzMatchSession:
         self._last_hold = None
         gate = getattr(self.pipeline, "_publisher", None)
         if hasattr(gate, "mute"):   # live Telegram: a late forecast is recorded but never sent; an unconfirmed one is sent flagged
-            gate.mute = bool(snapshot.deliveries) and not _at_over_break(snapshot) and not snapshot.innings_complete
-            gate.flag = "⚠️ UNCONFIRMED: Cricbuzz has not yet confirmed this score" if status != "ok" else ""
+            late_balls = 0 if (not snapshot.deliveries or _at_over_break(snapshot) or snapshot.innings_complete) else _balls_into_over(snapshot)
+            gate.mute = late_balls > MAX_LATE_BALLS_TO_SEND   # user 2026-10-22: one ball late still goes out, flagged; more than that never
+            flags = []
+            if late_balls:
+                flags.append(f"⚠️ LATE: {late_balls} ball of the over already bowled -- use with care")
+            if status != "ok":
+                flags.append("⚠️ UNCONFIRMED: Cricbuzz has not yet confirmed this score")
+            gate.flag = "\n".join(flags)
         try:
             output = self.pipeline.process(snapshot) if self.forecast_enabled else None
         except VerificationError as error:
