@@ -1283,8 +1283,11 @@ class CricbuzzMatchSession:
             # so logging at first sight stored the short version and lost the
             # edge/mistimed/dropped-catch wording (2026-10-06).
             last_over = max((d.over for d in snapshot.deliveries), default=0)
+            # A chase that ends mid-over (NZ v India 2026-10-22: won in the 20th over, 4 balls) has no "over finished" and the snapshot is
+            # not flagged innings_complete, but the result is out: that last partial over is final and must be logged too.
+            ended = snapshot.innings_complete or bool(_match_result_text(snapshot))
             settled = tuple(
-                d for d in snapshot.deliveries if snapshot.innings_complete or d.over < last_over
+                d for d in snapshot.deliveries if ended or d.over < last_over
             )
             append_commentary_log(
                 self.commentary_log_path,
