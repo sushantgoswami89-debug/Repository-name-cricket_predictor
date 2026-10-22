@@ -103,11 +103,11 @@ def fetch_scorecard(match_id: str, session: requests.Session | None = None, time
         return None
 
 
-def state_at_overs(ordered, overs: float) -> tuple[int, int] | None:
-    """(score, wickets) of our record after the legal ball the scorecard calls `overs` (18.5 = five balls into the 19th over), or None
-    when the record does not reach back that far. `ordered` is sorted by (over, ball)."""
+def deliveries_up_to(ordered, overs: float) -> list:
+    """Our deliveries up to and including the legal ball the scorecard calls `overs` (18.5 = five balls into the 19th over). `ordered`
+    is sorted by (over, ball); empty when the record does not reach back that far."""
     legal_in_over: dict[int, int] = {}
-    state = None
+    kept = []
     for delivery in ordered:
         if getattr(delivery, "is_legal", True):
             legal_in_over[delivery.over] = legal_in_over.get(delivery.over, 0) + 1
@@ -115,8 +115,15 @@ def state_at_overs(ordered, overs: float) -> tuple[int, int] | None:
         position = float(delivery.over) if legal >= 6 else (delivery.over - 1) + legal / 10.0
         if position > overs + 0.001:
             break
-        state = (delivery.feed_total, delivery.feed_wickets)
-    return state
+        kept.append(delivery)
+    return kept
+
+
+def state_at_overs(ordered, overs: float) -> tuple[int, int] | None:
+    """(score, wickets) of our record after the legal ball the scorecard calls `overs`, or None when the record does not reach back that
+    far."""
+    kept = deliveries_up_to(ordered, overs)
+    return (kept[-1].feed_total, kept[-1].feed_wickets) if kept else None
 
 
 def compare_with_deliveries(card: dict, deliveries, innings: int) -> list[str]:
@@ -144,6 +151,10 @@ def compare_with_deliveries(card: dict, deliveries, innings: int) -> list[str]:
     from_start = first.over == 1 and first.ball == 1 and first.feed_total - first.total_runs == 0 and all(d.striker for d in ours)
     if not from_start:
         return problems
+    # The card trails the commentary by a ball or more: compare batters and wickets with our record at the card's own over.ball
+    # (2026-10-22 NZ v India: "Tim Seifert ours 20 vs card 14" at every over end, while our over totals were exact).
+    if theirs.get("overs") is not None:
+        ours = deliveries_up_to(ours, float(theirs["overs"]))
     runs_by_batter: dict[str, int] = {}
     for d in ours:
         runs_by_batter[d.striker] = runs_by_batter.get(d.striker, 0) + d.batter_runs

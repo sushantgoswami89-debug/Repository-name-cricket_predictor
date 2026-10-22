@@ -131,3 +131,15 @@ def test_graphs_page_gives_runs_and_wicket_flag_for_every_over_of_both_innings()
     assert table[(1, 1)] == {"runs": 4, "wicket": False} and table[(2, 1)] == {"runs": 12, "wicket": True}
     assert table[(1, 3)] == {"runs": 7, "wicket": False} and (2, 3) not in table
     assert per_over_from_graphs("<html>nothing</html>") is None
+
+
+def test_batters_are_compared_at_the_cards_own_ball_not_with_our_newest_ball():
+    """2026-10-22 NZ v India: "Tim Seifert ours 20 vs card 14" printed at every over end while our over totals were exact."""
+    card = parse_scorecard(_page(SCORECARD))
+    card["innings"][0]["overs"] = 0.2                     # the card is two balls in; we already hold the third ball (Samson 21)
+    card["innings"][0]["runs"], card["innings"][0]["wickets"] = 20, 1
+    card["innings"][0]["batting"] = [{"name": "A Sharma", "runs": 20, "balls": 2, "fours": 0, "sixes": 0, "out": "c X b Y", "wicket_code": ""},
+                                     {"name": "S Samson", "runs": 0, "balls": 0, "fours": 0, "sixes": 0, "out": "not out", "wicket_code": ""}]
+    ours = [_delivery(1, 1, "A Sharma", 20, 20, 0), _delivery(1, 2, "A Sharma", 0, 20, 1, "caught", "A Sharma"),
+            _delivery(1, 3, "S Samson", 21, 41, 1)]
+    assert compare_with_deliveries(card, ours, 1) == []   # Samson's 21 came after the card's ball: not a disagreement
