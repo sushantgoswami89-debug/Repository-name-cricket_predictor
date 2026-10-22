@@ -82,9 +82,9 @@ def test_state_toss_counts_as_live():
 
 def test_state_delay_counts_as_live_so_the_match_is_attached_before_play():
     """2026-10-22: Australia Women v New Zealand Women sat in state "Delay" after the toss; the driver waited for the first ball."""
-    matches = _discovery(_match_info_html(state="Delay")).matches()
-    assert matches[0].is_live is True
-    assert matches[0].is_upcoming is False
+    for state in ("Delay", "Rain", "Bad Light"):
+        matches = _discovery(_match_info_html(state=state)).matches()
+        assert matches[0].is_live is True and matches[0].is_upcoming is False
 
 
 def test_state_complete_is_neither_live_nor_upcoming():

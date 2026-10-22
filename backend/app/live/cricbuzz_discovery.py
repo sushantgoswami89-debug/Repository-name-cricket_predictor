@@ -60,9 +60,9 @@ class CricbuzzMatchSummary:
 class CricbuzzMatchDiscovery:
     LIST_URL = "https://www.cricbuzz.com/cricket-match/live-scores"
     _MATCH_INFO_RE = re.compile(r'\{"matchInfo":\{"matchId":\d+')
-    # "delay" (rain/light delay, seen 2026-10-22 on Australia Women v New Zealand Women after the toss): attach now, not at the first ball,
+    # "delay" ("Delay" after the toss and "Rain" at 2.4 overs, seen 2026-10-22 on Australia Women v New Zealand Women: the driver detached): attach now, not at the first ball,
     # so the briefing and the over-1 forecast still go out before play
-    _LIVE_STATES = frozenset({"in progress", "toss", "delay"})
+    _LIVE_STATES = frozenset({"in progress", "toss", "delay", "rain", "bad light", "drinks", "timeout"})
     _UPCOMING_STATES = frozenset({"preview"})
 
     def __init__(
