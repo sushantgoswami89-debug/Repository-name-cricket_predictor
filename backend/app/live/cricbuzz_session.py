@@ -479,7 +479,12 @@ def _balls_into_over(snapshot) -> int:
     return int(tail) if tail.isdigit() else 0
 
 
-GATE_SECONDS = 90.0  # how long an over-end forecast waits for the page to confirm our record before it goes out flagged UNCONFIRMED
+GATE_SECONDS = 45.0  # how long an over-end forecast waits for the page to confirm our record before it goes out flagged UNCONFIRMED
+GATE_SECONDS_INNINGS = 90.0  # the same wait at an innings boundary (user 2026-10-22: 45 s between overs, not between innings)
+
+
+def _gate_limit(snapshot) -> float:
+    return GATE_SECONDS_INNINGS if (snapshot.innings_complete or not snapshot.deliveries) else GATE_SECONDS
 RESYNC_MAX_PER_OVER = 2  # re-reads of the commentary per over before a contradiction is allowed to hold a prediction
 
 
@@ -953,7 +958,7 @@ class CricbuzzMatchSession:
         return "unconfirmed", f"over {completed}: no source at this point yet to confirm {snapshot.score}/{snapshot.wickets} at {snapshot.overs} ov"
 
     def _block_ready(self, snapshot) -> bool:
-        """False while the over-end block should wait for Cricbuzz's over summary (up to GATE_SECONDS after the over ended). The block
+        """False while the over-end block should wait for Cricbuzz's over summary (up to 45 s after the over ended). The block
         printed at once had no bowler figures, a revision warning that the summary then cleared, and sync/gate lines in between."""
         if snapshot.innings_complete or not snapshot.deliveries:
             return True
@@ -961,7 +966,7 @@ class CricbuzzMatchSession:
         if key in self._over_summaries:
             return True
         started = self._block_started.setdefault(key, time.monotonic())
-        return time.monotonic() - started >= GATE_SECONDS
+        return time.monotonic() - started >= _gate_limit(snapshot)
 
     def _hold_for_confirmation(self, snapshot, why: str) -> bool:
         """True while an over-end forecast should wait because no source confirms our record yet (user 2026-10-13: the forecast must
@@ -973,7 +978,7 @@ class CricbuzzMatchSession:
         key = (snapshot.innings, str(snapshot.overs))
         started = self._gate_started.setdefault(key, time.monotonic())
         waited = time.monotonic() - started
-        if waited >= GATE_SECONDS:
+        if waited >= _gate_limit(snapshot):
             return False
         self._gate_notice = why   # waiting for the page to confirm is routine; only "predicting UNCONFIRMED" (the wait ran out) is shown
         return True

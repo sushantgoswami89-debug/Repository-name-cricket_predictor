@@ -940,3 +940,14 @@ def test_over_end_block_waits_for_the_over_summary_then_prints_once(monkeypatch)
     assert session._block_ready(snap) is False
     clock[0] += GATE_SECONDS + 1
     assert session._block_ready(snap) is True                        # it never came: print anyway after the wait
+
+
+def test_confirmation_wait_is_45_seconds_between_overs_and_90_at_an_innings_boundary():
+    from types import SimpleNamespace
+
+    from app.live.cricbuzz_session import GATE_SECONDS, GATE_SECONDS_INNINGS, _gate_limit
+
+    assert (GATE_SECONDS, GATE_SECONDS_INNINGS) == (45.0, 90.0)
+    assert _gate_limit(SimpleNamespace(innings_complete=False, deliveries=[1])) == 45.0
+    assert _gate_limit(SimpleNamespace(innings_complete=True, deliveries=[1])) == 90.0
+    assert _gate_limit(SimpleNamespace(innings_complete=False, deliveries=[])) == 90.0
