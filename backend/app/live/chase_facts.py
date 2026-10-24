@@ -54,5 +54,5 @@ def target_card(first_innings_total: int, batting_team: str, chasing_team: str) 
     chased = chase_wins / len(rows)
     how_hard = "very hard" if chased <= 0.15 else "hard"
     times = "just 1 time" if chase_wins == 1 else f"just {chase_wins} times" if chased <= 0.15 else f"only {chase_wins} times"
-    return card("T20", f"{chasing_team} chase {first_innings_total + 1} · men's T20 since 2019",
+    return card("T20", f"{chasing_team} chase {first_innings_total + 1}",
                 f"A total of {threshold}+ is {how_hard} to chase. It has happened {times} in {len(rows)} matches.", len(rows), _fill(rate))
