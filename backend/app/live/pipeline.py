@@ -501,6 +501,7 @@ class VerifiedLivePredictionPipeline:
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
             "innings": snapshot.innings,
+            "batting_team": snapshot.batting_team,
             "over": next_over,
             "verified_through": f"{completed}.6",
             "score_before_over": score_before_over,
@@ -562,6 +563,7 @@ class VerifiedLivePredictionPipeline:
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
             "innings": snapshot.innings,
+            "batting_team": snapshot.batting_team,
             "over": 1,
             "score_before_over": 0,
             "wickets_before_over": 0,
@@ -585,7 +587,13 @@ class VerifiedLivePredictionPipeline:
         """Before a ball is bowled the in-play model has nothing in-play to go on, and the briefing already
         shows the staged pre-match model's number; on 2026-10-06 the two differed (over-1 message 33.5/66.5 vs
         a different briefing figure). Use the staged model here too (team strength, head-to-head, dew, XIs),
-        keep the in-play model's number in the metadata. Fault-isolated: any failure keeps the in-play value."""
+        keep the in-play model's number in the metadata. Fault-isolated: any failure keeps the in-play value.
+
+        Only for the FIRST innings. In a chase the target is known and decides the match far more than the pre-match view: on 2026-10-22
+        New Zealand made 225, the chase's over-1 message still said "India 69% (before a ball is bowled)" while history says a 225+ total
+        is chased down 7% of the time; the in-play model said India 5%."""
+        if snapshot.innings == 2 and getattr(snapshot, "target", 0):
+            return in_play
         try:
             from app.live.match_weather import match_day_weather
             from app.live.prematch_analysis import _cached, confirmed_xi
@@ -1148,6 +1156,57 @@ class VerifiedLivePredictionPipeline:
 
     @staticmethod
     def _telegram_text(output: dict[str, object]) -> str:
+        """The message people read (user 2026-10-24: plain, easy to understand, all facts stated):
+
+            🏏 Over 19 · New Zealand 199/4
+
+            Next over: about 13 runs expected
+            • Big over (10 or more runs): 68% chance
+            • Quiet over (4 or fewer runs): 4% chance
+            • Wicket: 46% chance of at least one
+
+            Who wins: New Zealand 85% | India 15%
+
+            Last over: 9 runs. We said 7 to 9. ✅
+        """
+        prediction = output["prediction"]
+        assert isinstance(prediction, dict)
+        win = output.get("win_probability")
+        team = output.get("batting_team") or (win.get("batting_team") if isinstance(win, dict) else "") or ""
+        head = f"🏏 Over {output['over']}" + (f" · {team} {output['score_before_over']}/{output['wickets_before_over']}" if team else
+                                              f" · {output['score_before_over']}/{output['wickets_before_over']}")
+        outlook = output.get("outlook") if isinstance(output.get("outlook"), dict) else None
+        if outlook:
+            lines = [
+                f"Next over: about {outlook['mean_runs']:.0f} runs expected",
+                f"• Big over ({outlook['big_runs']} or more runs): {outlook['p_big'] * 100:.0f}% chance",
+                f"• Quiet over ({outlook['quiet_runs']} or fewer runs): {outlook['p_quiet'] * 100:.0f}% chance",
+                f"• Wicket: {outlook['p_wicket'] * 100:.0f}% chance of at least one",
+            ]
+        else:
+            lines = [
+                f"Next over: most likely {str(prediction['expected_range']).replace('-', ' to ')} runs",
+                f"• Wicket: {float(prediction['wicket_probability']) * 100:.0f}% chance of at least one",
+            ]
+        message = head + "\n\n" + "\n".join(lines)
+        if isinstance(win, dict) and win.get("status") != "not_applied" and "win_probability" in win:
+            batting = win.get("batting_team") or "Batting side"
+            bowling = win.get("bowling_team") or "Bowling side"
+            pct = float(win["win_probability"]) * 100
+            before_play = " (before a ball is bowled)" if win.get("metadata", {}).get("basis") == "pre_match_staged_model" else ""
+            message += f"\n\nWho wins: {batting} {pct:.0f}% | {bowling} {100 - pct:.0f}%{before_play}"
+        evaluation = output.get("previous_over_evaluation")
+        if isinstance(evaluation, dict):
+            said = str(evaluation.get("expected_range", prediction.get("expected_range", ""))).replace("-", " to ")
+            mark = "✅" if evaluation.get("range_covered") else "❌"
+            message += f"\n\nLast over: {evaluation['actual_runs']} runs."
+            if evaluation.get("expected_range"):
+                message += f" We said {said}. {mark}"
+        return message
+
+    @staticmethod
+    def _technical_text(output: dict[str, object]) -> str:
+        """The detailed message for the console and the audit (models, point forecast, confidence, error); Telegram gets _telegram_text."""
         prediction = output["prediction"]
         assert isinstance(prediction, dict)
         probability = float(prediction["wicket_probability"]) * 100

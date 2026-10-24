@@ -649,7 +649,8 @@ def test_a_failed_reread_goes_back_to_the_previous_record(monkeypatch):
 
 
 def test_chase_over_1_prediction_uses_the_side_that_batted_first_in_the_staged_model(monkeypatch):
-    """The over-1 win % of a chase must tell the staged model that the OTHER side batted first (it only knew innings 1)."""
+    """With no target known yet, the over-1 win % of a chase must tell the staged model that the OTHER side batted first. (With the target
+    known the in-play model is kept: test_a_chase_keeps_the_in_play_win_probability_because_the_target_is_known.)"""
     from types import SimpleNamespace
 
     import app.live.prematch_xi as xi
@@ -663,7 +664,7 @@ def test_chase_over_1_prediction_uses_the_side_that_batted_first_in_the_staged_m
 
     monkeypatch.setattr(xi, "predict_stages", fake_predict_stages)
     pipeline = VerifiedLivePredictionPipeline.__new__(VerifiedLivePredictionPipeline)
-    chase = SimpleNamespace(batting_team="West Indies", bowling_team="India", innings=2, venue_name="", team_players={})
+    chase = SimpleNamespace(batting_team="West Indies", bowling_team="India", innings=2, target=0, venue_name="", team_players={})
     pipeline._pre_innings_win_probability(chase, {"win_probability": 0.5})
     assert seen["args"] == ("West Indies", "India", "India")                     # India batted first
     first = SimpleNamespace(batting_team="India", bowling_team="West Indies", innings=1, venue_name="", team_players={})

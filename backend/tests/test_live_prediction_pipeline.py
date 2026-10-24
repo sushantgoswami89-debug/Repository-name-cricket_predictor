@@ -118,9 +118,9 @@ def test_only_verified_completed_over_is_published() -> None:
     assert engine.contexts[0].live.score_before_over == 6
     assert len(publisher.messages) == 1
     message = publisher.messages[0][1]
-    assert "Candidate v3 — Over 2 Prediction" in message
-    assert "Most likely range: 5-9 (point 7.0)" in message
-    assert "Confidence: 🟢 90%" in message
+    assert message.startswith("🏏 Over 2 · A 6/0")
+    assert "Next over:" in message and "Wicket:" in message
+    assert "Candidate" not in message and "Confidence" not in message
     assert "verified" not in message.lower()
     assert pipeline.process(_snapshot()) is None
     assert len(publisher.messages) == 1
@@ -798,7 +798,20 @@ def test_over_one_win_probability_is_the_pre_match_staged_model_not_the_in_play_
     expected = predict_stages("West Indies", "India", "West Indies", None, [], [], "ranchi")["p_a"]
     assert win["win_probability"] == pytest.approx(expected)
     assert win["batting_team"] == "West Indies" and win["metadata"]["basis"] == "pre_match_staged_model"
-    assert "(pre-match model)" in VerifiedLivePredictionPipeline._telegram_text(out)
+    assert "(pre-match model)" in VerifiedLivePredictionPipeline._technical_text(out)
+    assert "(before a ball is bowled)" in VerifiedLivePredictionPipeline._telegram_text(out)
+
+
+def test_a_chase_keeps_the_in_play_win_probability_because_the_target_is_known(monkeypatch) -> None:
+    """2026-10-22: after New Zealand made 225 the chase's over-1 message said India 69% from the pre-match model."""
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: None)
+    pipeline = VerifiedLivePredictionPipeline(engine=FakeEngine(), publisher=FakePublisher())
+    in_play = {"status": "applied", "win_probability": 0.05, "batting_team": "India", "bowling_team": "New Zealand", "metadata": {}}
+    chase = replace(_pre_innings_snapshot(), innings=2, target=226, batting_team="India", bowling_team="New Zealand")
+    assert pipeline._pre_innings_win_probability(chase, in_play) is in_play
+    assert "before a ball is bowled" not in VerifiedLivePredictionPipeline._telegram_text(
+        {"over": 1, "score_before_over": 0, "wickets_before_over": 0, "batting_team": "India", "win_probability": in_play,
+         "prediction": {"expected_range": "6-8", "wicket_probability": 0.3}, "outlook": None})
 
 
 def test_a_wrong_toss_guess_before_the_first_ball_does_not_block_the_innings(monkeypatch) -> None:

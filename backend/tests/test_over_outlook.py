@@ -11,19 +11,34 @@ def _output(outlook):
     return {"over": 9, "score_before_over": 112, "wickets_before_over": 1, "prediction": prediction, "outlook": outlook}
 
 
-def test_message_shows_mean_big_quiet_and_wicket_chance_and_keeps_the_range_line():
-    text = VerifiedLivePredictionPipeline._telegram_text(_output(
+def test_telegram_message_is_plain_and_states_every_fact():
+    output = _output({"mean_runs": 10.4, "p_big": 0.54, "p_quiet": 0.13, "p_wicket": 0.26, "big_runs": 10, "quiet_runs": 4})
+    output.update(batting_team="India", win_probability={"status": "applied", "win_probability": 0.696, "batting_team": "India",
+                                                          "bowling_team": "New Zealand"},
+                  previous_over_evaluation={"actual_runs": 10, "expected_range": "9-11", "range_covered": True})
+    text = VerifiedLivePredictionPipeline._telegram_text(output)
+    assert text == (
+        "🏏 Over 9 · India 112/1\n\n"
+        "Next over: about 10 runs expected\n"
+        "• Big over (10 or more runs): 54% chance\n"
+        "• Quiet over (4 or fewer runs): 13% chance\n"
+        "• Wicket: 26% chance of at least one\n\n"
+        "Who wins: India 70% | New Zealand 30%\n\n"
+        "Last over: 10 runs. We said 9 to 11. ✅"
+    )
+    for jargon in ("Candidate", "point", "Confidence", "Error", "★", "Win Probability"):
+        assert jargon not in text
+
+
+def test_plain_message_without_the_outlook_and_the_technical_text_stays_detailed():
+    plain = VerifiedLivePredictionPipeline._telegram_text(_output(None))
+    assert "Next over: most likely 5 to 7 runs" in plain and "• Wicket: 30% chance of at least one" in plain and "Big over" not in plain
+    technical = VerifiedLivePredictionPipeline._technical_text(_output(
         {"mean_runs": 10.4, "p_big": 0.54, "p_quiet": 0.13, "p_wicket": 0.26, "big_runs": 10, "quiet_runs": 4}))
-    assert "Most likely range: 5-7 (point 6.0)" in text and "expected 8.9" not in text
-    assert "Expected: about 10.4 runs" in text
-    assert "Big over (10+ runs): 54% | Quiet over (4 or fewer): 13%" in text
-    assert "Wicket chance: 26% (at least one wicket in the over)" in text
-    assert "phase baseline" not in text
-
-
-def test_message_falls_back_to_the_old_wicket_line_without_an_outlook():
-    text = VerifiedLivePredictionPipeline._telegram_text(_output(None))
-    assert "Wicket risk (phase baseline): 30.0%" in text and "Big over" not in text and "Runs: 5-7 (point 6.0) | expected 8.9" in text
+    assert "Candidate v3 — Over 9 Prediction" in technical and "Confidence:" in technical and "Most likely range: 5-7 (point 6.0)" in technical
+    assert "Wicket chance: 26% (at least one wicket in the over)" in technical
+    old = VerifiedLivePredictionPipeline._technical_text(_output(None))
+    assert "Wicket risk (phase baseline): 30.0%" in old and "Runs: 5-7 (point 6.0) | expected 8.9" in old
 
 
 def test_outlook_models_load_and_respond_to_the_situation():

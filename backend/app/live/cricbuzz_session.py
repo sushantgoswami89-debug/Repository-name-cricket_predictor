@@ -1375,11 +1375,12 @@ class CricbuzzMatchSession:
                 f"{self.prefix}{sent} innings {output['innings']} "
                 f"over {output['over']} prediction."
             )
+            # The console keeps the detailed version (models, point forecast, confidence, error) for the audit; Telegram gets the plain
+            # message (user 2026-10-24). Shadow mode: shows what would have been sent (2026-10-06: a one-line "Recorded" left nothing to read).
             if self.publisher is None:
-                # Shadow mode: show exactly what Telegram would have received,
-                # not just that something was recorded (2026-10-06: the
-                # one-line "Recorded ... prediction." left nothing to read).
                 print(VerifiedLivePredictionPipeline._telegram_text(output))
+                print("   -- detailed --")
+            print(VerifiedLivePredictionPipeline._technical_text(output))
             innings = output["innings"]
             over = output["over"]
             prior = self._last_over_sent.get(innings)
