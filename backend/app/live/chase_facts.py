@@ -33,7 +33,8 @@ def _fill(rate: float) -> int:
 
 
 def target_card(first_innings_total: int, batting_team: str, chasing_team: str) -> str | None:
-    """"Teams that made 225+ ... won 92% of 153" for the biggest round threshold (steps of 5) at or below the first innings total."""
+    """"A first innings of 225+ has been chased down only 7% of the time (12 of 177 ...)" for the biggest round threshold (steps of 5) at or
+    below the first innings total; None unless the total is big and usually defended."""
     totals = _facts().get("totals") or []
     if first_innings_total < MIN_TOTAL:       # "150+" pools every bigger total too: only a big total makes the line mean something
         return None
@@ -48,9 +49,8 @@ def target_card(first_innings_total: int, batting_team: str, chasing_team: str) 
     chase_wins = sum(rows)
     defended = len(rows) - chase_wins
     rate = defended / len(rows)
-    if abs(rate - 0.5) < 0.15:       # a toss-up is not a fact worth a card
+    if rate < 0.65:                  # only a total that is usually defended makes a card; a toss-up or a chaser's game is not "a fact"
         return None
-    side = (f"sides batting first with {threshold}+ won {defended} of {len(rows)} ({rate * 100:.0f}%)" if rate > 0.5
-            else f"chasing sides facing {threshold}+ won {chase_wins} of {len(rows)} ({(1 - rate) * 100:.0f}%)")
     return card("T20", f"{chasing_team} chase {first_innings_total + 1}",
-                f"In men's T20 since 2019 {side}", len(rows), _fill(rate))
+                f"A first innings of {threshold}+ has been chased down only {chase_wins / len(rows) * 100:.0f}% of the time "
+                f"({chase_wins} of {len(rows)} men's T20 matches since 2019)", len(rows), _fill(rate))
