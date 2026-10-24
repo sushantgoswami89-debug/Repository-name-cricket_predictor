@@ -273,6 +273,8 @@ def _within_scheduled_overs(objects: list[dict[str, Any]], scheduled_overs: int)
     ]
 
 
+FIRE_BEFORE_START_MINUTES = 5
+
 _SEPARATOR_MARKER = '{"commType":"over-separator"'
 
 
@@ -834,10 +836,12 @@ class CricbuzzLiveReader:
         or while the batting side can't be determined (no toss yet), this
         raises CricbuzzInningsNotStarted instead -- a quiet wait."""
         start_ms = self._start_ms_from_html(html)
-        if start_ms is not None and time.time() * 1000 < start_ms:
+        # The over-1 forecast is released FIRE_BEFORE_START_MINUTES before the scheduled start (user 2026-10-24: "it should be 5 mins before
+        # the match"; until then it came out at the start time itself).
+        if start_ms is not None and time.time() * 1000 < start_ms - FIRE_BEFORE_START_MINUTES * 60_000:
             raise CricbuzzInningsNotStarted(
                 f"match {match_id} starts at {datetime.fromtimestamp(start_ms / 1000).strftime('%H:%M')} local; "
-                "waiting for the scheduled start."
+                f"waiting until {FIRE_BEFORE_START_MINUTES} minutes before the start."
             )
         teams = self._teams_from_ldjson(html)
         toss_won_by, toss_decision = self._toss_from_chunks(chunks)

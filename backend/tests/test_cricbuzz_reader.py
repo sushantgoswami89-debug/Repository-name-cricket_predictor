@@ -348,3 +348,21 @@ def test_short_names_from_commentary_text_become_the_full_name_cricbuzz_uses():
     reader._roster.add("Sharne Sharma"); reader._roster.add("Deepti Sharma")
     assert reader._canonical_name("Sharma") == "Sharma"          # two players share it: do not guess
     assert reader._canonical_name("Unknown Person") == "Unknown Person"
+
+
+def test_first_forecast_is_released_five_minutes_before_the_scheduled_start(monkeypatch):
+    """User 2026-10-24: "it should be 5 mins before the match" (the over-1 forecast came out at the start time itself)."""
+    import pytest
+
+    from app.live import cricbuzz_reader
+    from app.live.cricbuzz_reader import CricbuzzInningsNotStarted, CricbuzzLiveReader
+
+    start_ms = 1_800_000_000_000
+    reader = CricbuzzLiveReader()
+    monkeypatch.setattr(reader, "_start_ms_from_html", lambda html: start_ms)
+    monkeypatch.setattr(cricbuzz_reader.time, "time", lambda: (start_ms - 6 * 60_000) / 1000)
+    with pytest.raises(CricbuzzInningsNotStarted, match="5 minutes before the start"):
+        reader._pre_first_ball_snapshot("1", "<html></html>", [])
+    monkeypatch.setattr(cricbuzz_reader.time, "time", lambda: (start_ms - 4 * 60_000) / 1000)
+    with pytest.raises(CricbuzzInningsNotStarted, match="toss/batting side"):   # past the time gate: now it waits only for the toss
+        reader._pre_first_ball_snapshot("1", "<html></html>", [])
