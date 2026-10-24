@@ -26,7 +26,7 @@ import json
 import random
 from pathlib import Path
 
-from app.live.toi_reader import ToiDelivery
+from app.live.live_snapshot import LiveDelivery
 from runtime_run_range_v3 import RunRangeRuntimeV3
 from train_phase_calibrated_sharp_range_v33 import male_source_files
 
@@ -45,7 +45,7 @@ def replay_match(runtime: RunRangeRuntimeV3, path: Path) -> list[dict]:
     for innings_number, innings in enumerate(regular_innings, start=1):
         batting_team = str(innings.get("team", ""))
         target = first_total + 1 if innings_number == 2 and first_total is not None else 0
-        deliveries: list[ToiDelivery] = []
+        deliveries: list[LiveDelivery] = []
         score = wickets = legal_balls = 0
         innings_total = 0
 
@@ -68,7 +68,7 @@ def replay_match(runtime: RunRangeRuntimeV3, path: Path) -> list[dict]:
                 over_actual_wickets += int(wicket_kind is not None)
                 if is_legal:
                     legal_balls += 1
-                deliveries.append(ToiDelivery(
+                deliveries.append(LiveDelivery(
                     match_id=path.stem, innings=innings_number, over=over_number, ball=ball_index,
                     bowler=str(delivery.get("bowler", "")), striker=str(delivery.get("batter", "")),
                     total_runs=total_runs, batter_runs=batter_runs, extras=extras,

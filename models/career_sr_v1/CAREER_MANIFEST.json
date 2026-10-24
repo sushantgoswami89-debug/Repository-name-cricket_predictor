@@ -1,0 +1,11 @@
+{
+  "version": "career_sr_v1",
+  "as_of": "2026-07-02",
+  "matches": 4687,
+  "players": 4623,
+  "prior_runs_per_ball": 1.25,
+  "prior_balls": 60.0,
+  "sha256": {
+    "career_sr.json": "5863d9b8ffdea0ee617b0c13d9a85656e802a7347951170bdb1e96faf1ec8563"
+  }
+}

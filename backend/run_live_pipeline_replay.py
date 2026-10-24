@@ -5,7 +5,7 @@ PredictionEngine that run_full_match_replay.py exercises.
 Why: docs/live_match_test_checklist.md item #3 flags that a full
 predict -> verify -> publish cycle has never been observed end-to-end --
 every live TOI test so far got stuck on feed reconciliation first. This
-builds a Cricsheet-to-ToiSnapshot adapter that feeds the pipeline
+builds a Cricsheet-to-LiveSnapshot adapter that feeds the pipeline
 ball-by-ball exactly the way TOI would (growing cumulative delivery list,
 cumulative score/wickets, cricket-notation overs string), using real
 historical deliveries as a stand-in for a live feed. It's not a substitute
@@ -30,7 +30,7 @@ import sys
 from pathlib import Path
 
 from app.live.pipeline import VerifiedLivePredictionPipeline
-from app.live.toi_reader import ToiDelivery, ToiSnapshot
+from app.live.live_snapshot import LiveDelivery, LiveSnapshot
 
 MATCH_PATH = sys.argv[1] if len(sys.argv) > 1 else "../data/raw/cricsheet/t20i/1442989.json"
 
@@ -64,7 +64,7 @@ def replay_innings(
     overs_data: list[dict],
     pipeline: VerifiedLivePredictionPipeline,
 ) -> dict:
-    deliveries: list[ToiDelivery] = []
+    deliveries: list[LiveDelivery] = []
     score = 0
     wickets = 0
     outputs = 0
@@ -86,7 +86,7 @@ def replay_innings(
             if is_legal:
                 legal_in_over += 1
             deliveries.append(
-                ToiDelivery(
+                LiveDelivery(
                     match_id=match_id,
                     innings=innings_number,
                     over=over_number,
@@ -105,7 +105,7 @@ def replay_innings(
             )
             prior_full_overs = over_number - 1
             overs_string = f"{prior_full_overs}.{legal_in_over}"
-            snapshot = ToiSnapshot(
+            snapshot = LiveSnapshot(
                 match_id=match_id,
                 match_format=match_format,
                 batting_team=batting_team,
@@ -140,7 +140,7 @@ def replay_innings(
                 )
 
     # final snapshot marking innings complete
-    final_snapshot = ToiSnapshot(
+    final_snapshot = LiveSnapshot(
         match_id=match_id,
         match_format=match_format,
         batting_team=batting_team,

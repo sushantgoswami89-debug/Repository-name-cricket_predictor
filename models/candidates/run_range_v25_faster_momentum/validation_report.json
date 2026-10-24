@@ -1,0 +1,44 @@
+{
+  "candidate_version": "run_range_v25_faster_momentum",
+  "candidate_only": true,
+  "production_changed": false,
+  "run_model_changed": false,
+  "note": "Identical to run_range_v11_partnership_rate except recent_*/phase_*_pressure/phase_rotation_value use a 6-ball (1-over) window instead of 12 (2 overs) -- tests docs/live_field_test_2026-09-15.md's 'run-range momentum lag' finding.",
+  "split": {
+    "train_rows": 111533,
+    "holdout_rows": 36384
+  },
+  "reference_run_range_v11_partnership_rate_live": {
+    "blended": 0.3004,
+    "ipl": 0.3325,
+    "t20i": 0.2945
+  },
+  "holdout": {
+    "blended_hit_rate": 0.2982904573438874,
+    "ipl_hit_rate": 0.3253228120516499,
+    "t20i_hit_rate": 0.29339781874837706
+  },
+  "beats_live_blended_and_calibration_gate": false,
+  "beats_live_on_ipl_specifically": false,
+  "beats_live_on_t20i_specifically": false,
+  "recent_momentum_feature_importance_rank": {
+    "recent_legal_balls": 62,
+    "recent_runs_per_ball": 36,
+    "recent_dot_rate": 44,
+    "recent_single_rate": 39,
+    "recent_boundary_rate": 50,
+    "recent_wicket_rate": 57,
+    "state_regime": 46
+  },
+  "recent_momentum_feature_importance_share": {
+    "recent_legal_balls": 0.0,
+    "recent_runs_per_ball": 0.015788856304985336,
+    "recent_dot_rate": 0.00809384164222874,
+    "recent_single_rate": 0.01032258064516129,
+    "recent_boundary_rate": 0.003847507331378299,
+    "recent_wicket_rate": 0.0012434017595307919,
+    "state_regime": 0.006357771260997068
+  },
+  "total_features": 63,
+  "decision": "reject_keep_research"
+}

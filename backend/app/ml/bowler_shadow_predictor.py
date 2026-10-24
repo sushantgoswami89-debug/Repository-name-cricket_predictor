@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from catboost import CatBoostClassifier, CatBoostRegressor
 
-from app.live.toi_reader import ToiDelivery
+from app.live.live_snapshot import LiveDelivery
 from app.ml.ipl_identities import build_full_name_alias_index, first_last_key, identity_key
 from app.models.match_context import MatchContext
 
@@ -31,7 +31,7 @@ class BowlerShadowPredictor:
         context: MatchContext,
         baseline: dict[str, object],
         announced_bowler: str,
-        deliveries: list[ToiDelivery],
+        deliveries: list[LiveDelivery],
     ) -> dict[str, object]:
         if not announced_bowler:
             return self._unavailable("unannounced")
@@ -167,7 +167,7 @@ class BowlerShadowPredictor:
 
     @staticmethod
     def _current_match(
-        bowler: str, next_over: int, deliveries: list[ToiDelivery]
+        bowler: str, next_over: int, deliveries: list[LiveDelivery]
     ) -> dict[str, int | float | str]:
         key = identity_key(bowler)
         selected = [item for item in deliveries if identity_key(item.bowler) == key]

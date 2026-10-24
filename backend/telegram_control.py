@@ -88,9 +88,12 @@ class TelegramControl:
         pid = self._running_pid()
         if pid is not None:
             return f"CricketBaba is already watching for live matches (process {pid})."
+        other = subprocess.run(["pgrep", "-f", "run_live_auto.py"], capture_output=True, text=True).stdout.split()
+        if other:  # a driver started by hand (Terminal) is already running: a second one would fight over the same files
+            return f"CricketBaba is already watching for live matches (process {other[0]}, started from the terminal)."
         with LOG_PATH.open("a", encoding="utf-8") as log:
             process = subprocess.Popen(
-                [sys.executable, str(BACKEND_DIR / "run_toi_auto.py")],
+                [sys.executable, str(BACKEND_DIR / "run_live_auto.py"), "--facts-telegram", "--poll-seconds", "5"],
                 cwd=BACKEND_DIR,
                 stdin=subprocess.DEVNULL,
                 stdout=log,
@@ -99,24 +102,31 @@ class TelegramControl:
             )
         PID_PATH.write_text(str(process.pid), encoding="utf-8")
         return (
-            "CricketBaba is now watching TOI. I will send verified "
-            "predictions automatically."
+            "CricketBaba is now watching Cricbuzz for live T20Is in LIVE mode: "
+            "over-by-over forecasts, results and Fact-o-Meter cards come to Telegram."
         )
 
     def _status(self) -> str:
         pid = self._running_pid()
         if pid is None:
             return "CricketBaba is ready, but the live-match watcher is stopped."
-        return f"CricketBaba is watching TOI for live matches (process {pid})."
+        return f"CricketBaba is watching Cricbuzz and TOI for live matches (process {pid})."
 
     def _prematch_status(self) -> str:
-        self._start_watcher()
+        # Read-only: asking for a status must never launch the live-publishing
+        # watcher (it used to, 2026-10-06 finding). Start it with "match is live".
+        pid = self._running_pid()
+        watcher = (
+            f"running (process {pid})"
+            if pid is not None
+            else 'NOT running -- send "match is live" to start it'
+        )
         matches = ToiMatchDiscovery().matches()
         candidates = [match for match in matches if match.is_live or match.is_upcoming]
         if not candidates:
             return (
                 "No upcoming or live match is currently listed by TOI. "
-                "Telegram and Candidate v3 are ready; automatic watching is armed."
+                f"Telegram and Candidate v3 are ready; automatic watcher: {watcher}."
             )
         lines = ["🏏 Pre-match status"]
         for match in candidates[:5]:
@@ -146,7 +156,7 @@ class TelegramControl:
                 "Feed: ready",
                 "Candidate v3: ready",
                 "Telegram: connected",
-                "Automatic watcher: armed",
+                f"Automatic watcher: {watcher}",
             ]
         )
         return "\n".join(lines)

@@ -1,0 +1,75 @@
+{
+  "candidate_version": "match_winner_v2_nn_gbm_ensemble",
+  "candidate_only": true,
+  "production_changed": false,
+  "note": "Architecture test, not a new feature: does a GBM+NN ensemble (the same idea that gave real wins on wicket and run-range) beat the GBM alone for win-probability, using the exact same feature set as the live match_winner_v1 bowler-known cut?",
+  "reference_match_winner_v1_bowler_known_ceiling": {
+    "blended": {
+      "auc": 0.8587,
+      "brier": 0.1538
+    },
+    "ipl": {
+      "auc": 0.7889,
+      "brier": 0.1905
+    },
+    "t20i": {
+      "auc": 0.8703,
+      "brier": 0.1472
+    }
+  },
+  "gbm_alone_holdout": {
+    "blended": {
+      "rows": 35593,
+      "auc": 0.8586723635028404,
+      "brier": 0.15377795448598808
+    },
+    "ipl": {
+      "rows": 5440,
+      "auc": 0.7889131677816614,
+      "brier": 0.19047802272753972
+    },
+    "t20i": {
+      "rows": 30153,
+      "auc": 0.8703353585664024,
+      "brier": 0.14715677678446448
+    }
+  },
+  "nn_alone_holdout": {
+    "blended": {
+      "rows": 35593,
+      "auc": 0.8592467610760415,
+      "brier": 0.15348004239547652
+    },
+    "ipl": {
+      "rows": 5440,
+      "auc": 0.8042487566588368,
+      "brier": 0.18670490463318154
+    },
+    "t20i": {
+      "rows": 30153,
+      "auc": 0.8695568824508976,
+      "brier": 0.1474858378197091
+    }
+  },
+  "ensemble_holdout": {
+    "blended": {
+      "rows": 35593,
+      "auc": 0.8630549386733632,
+      "brier": 0.15147557083357646
+    },
+    "ipl": {
+      "rows": 5440,
+      "auc": 0.8019241214067226,
+      "brier": 0.18635796576103256
+    },
+    "t20i": {
+      "rows": 30153,
+      "auc": 0.8737793085064073,
+      "brier": 0.1451823254382473
+    }
+  },
+  "beats_v1_blended": true,
+  "beats_v1_ipl": true,
+  "beats_v1_t20i": true,
+  "decision": "promote_candidate"
+}

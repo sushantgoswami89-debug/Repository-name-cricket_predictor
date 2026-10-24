@@ -303,23 +303,30 @@ class PredictionEngine:
 
         start = time.perf_counter()
 
-        # Which named team (team1/team2) is currently batting -- same
-        # is_chase/batting_first/bowling_first resolution the run-range
-        # section below already used, computed once here so the wicket
-        # model's team-composition lookup (added 2026-08-23 for
-        # contract22_wicket_v16_team_composition) and run-range's
-        # competition-prior features share one answer instead of deriving
-        # it twice.
-        is_chase_for_batting_team = bool(context.live.is_chase)
-        batting_team = (
-            (context.bowling_first or context.team2)
-            if is_chase_for_batting_team
-            else (context.batting_first or context.team1)
-        )
-        if batting_team == context.team1:
-            batting_team_players, bowling_team_players = context.team1_players, context.team2_players
-        else:
-            batting_team_players, bowling_team_players = context.team2_players, context.team1_players
+        # Which named team (team1/team2) is currently batting, computed
+        # once here so the wicket model's team-composition lookup (added
+        # 2026-08-23 for contract22_wicket_v16_team_composition) and
+        # run-range's competition-prior features share one answer instead
+        # of deriving it twice.
+        #
+        # REAL BUG FIXED 2026-09-15 (docs/live_field_test_2026-09-15.md
+        # item 16): this used to branch on `context.live.is_chase`,
+        # falling back to `context.bowling_first or context.team2` during
+        # a chase -- but `batting_first`/`bowling_first` are declared
+        # fields on MatchContext that are never set anywhere in the
+        # codebase (always None), so that branch always resolved to
+        # `context.team2`, which pipeline.py always sets to the currently
+        # BOWLING team for both innings (same convention
+        # match_winner_dataset.py's training-side label uses). Every
+        # chase prediction this model has ever served had
+        # batting_team_players/bowling_team_players swapped as a result --
+        # the exact same bug class already found and fixed once in
+        # match_winner_engine.py on 2026-08-23
+        # (docs/finding_win_probability_chase_bug.md), just missed here.
+        # pipeline.py's guarantee makes this trivial: team1 is always the
+        # batting side, in both innings, no branch needed.
+        batting_team = context.team1
+        batting_team_players, bowling_team_players = context.team1_players, context.team2_players
 
         # 2. WICKET PROBABILITY (contract22_wicket_v2_batter_state)
         # Replaces the old models/wkt_model.pkl + phase-keyed calibrator
@@ -422,7 +429,7 @@ class PredictionEngine:
         # falls back gracefully for a player with no competition-specific
         # history at all (shrinks to the pooled rate, doesn't crash).
         competition_scope = "ipl" if rules["engine_family"] == "ipl" else "t20i"
-        is_chase = is_chase_for_batting_team
+        is_chase = bool(context.live.is_chase)
         deliveries = context.metadata.get("deliveries", [])
         registry = context.metadata.get("registry", {})
         run_range = self._run_range_runtime.predict_next_over(
@@ -544,6 +551,7 @@ class PredictionEngine:
                 "batting_team": batting_team,
                 "sharp_band_width": width,
                 "sharp_band_prob": round(run_range[f"sharp_{width}_prob"], 3),
+                "expected_runs_mean": round(float(run_range.get("expected_runs_mean", 0.0)), 1),
                 "display_runs": pivot,
                 "confidence_type": "dynamic stability indicator",
                 "raw_confidence": round(raw_confidence, 3),

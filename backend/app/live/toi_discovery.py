@@ -229,3 +229,34 @@ class ToiMatchDiscovery:
         if value >= 60:
             return "Moderate potential in the second innings."
         return "Low potential based on current TOI humidity."
+
+
+def is_t20_international(match: ToiMatchSummary) -> bool:
+    """T20/T20I fixtures that are genuine international play, not IPL.
+
+    Moved 2026-09-18 from run_toi_auto.py's private _is_t20_international
+    so run_live_auto.py (Cricbuzz primary, TOI backup) can reuse the
+    exact same filter instead of re-deriving a slightly different one.
+    TOI has no direct "International"/"League" classifier the way
+    Cricbuzz's matchType does (see app/live/cricbuzz_discovery.py's
+    is_t20_international, a more precise sibling of this function) --
+    this stays a series-name/team_type keyword heuristic, unchanged from
+    its original form.
+    """
+    match_format = match.match_format.strip().upper()
+    team_type = match.team_type.strip().lower()
+    series = match.series.strip().lower()
+    if "indian premier league" in series or match_format == "IPL":
+        return False
+    if match_format in {"T20I", "IT20"} or "international" in team_type:
+        return True
+    international_markers = (
+        "world cup",
+        "asia cup",
+        "tour of",
+        "tri-series",
+        "international",
+    )
+    return match_format in {"T20", "TWENTY20"} and any(
+        marker in series for marker in international_markers
+    )

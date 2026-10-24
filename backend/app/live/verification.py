@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from app.live.toi_reader import ToiDelivery, ToiSnapshot
+from app.live.live_snapshot import LiveDelivery, LiveSnapshot
 
 
 class VerificationError(ValueError):
@@ -19,13 +19,17 @@ class LiveDeliveryVerifier:
     innings: int
     score: int = 0
     wickets: int = 0
+    # Score/wickets BEFORE the first delivery this verifier accepted (0/0 for
+    # a feed with full history; the bootstrap values when attached mid-innings).
+    base_score: int = 0
+    base_wickets: int = 0
     last_key: tuple[int, int, int] | None = None
-    accepted: dict[tuple[int, int, int], ToiDelivery] = field(default_factory=dict)
+    accepted: dict[tuple[int, int, int], LiveDelivery] = field(default_factory=dict)
     over_runs: dict[int, int] = field(default_factory=dict)
     over_wickets: dict[int, int] = field(default_factory=dict)
 
     @staticmethod
-    def _same_cricket_state(first: ToiDelivery, second: ToiDelivery) -> bool:
+    def _same_cricket_state(first: LiveDelivery, second: LiveDelivery) -> bool:
         """Ignore TOI prose enrichment while protecting scoring facts."""
         return (
             first.match_id,
@@ -49,7 +53,7 @@ class LiveDeliveryVerifier:
             second.feed_wickets,
         )
 
-    def apply(self, delivery: ToiDelivery) -> bool:
+    def apply(self, delivery: LiveDelivery) -> bool:
         """Apply one delivery. Return False only for an identical duplicate."""
         if delivery.match_id != self.match_id or delivery.innings != self.innings:
             raise VerificationError("Delivery belongs to a different match or innings.")
@@ -77,6 +81,25 @@ class LiveDeliveryVerifier:
             raise VerificationError(
                 f"Impossible ball number {delivery.over}.{delivery.ball}."
             )
+        if self.last_key is None and not self.accepted:
+            # Bootstrap from this very first delivery's own reported
+            # feed_total/feed_wickets rather than assuming the verifier
+            # starts at literal ball 1 of the innings. For a feed that
+            # always provides complete history from ball 1 (TOI), this is
+            # a no-op: feed_total for a genuine first ball already equals
+            # its own total_runs, so self.score bootstraps to exactly 0,
+            # identical to the prior hardcoded-zero behavior. It also
+            # correctly handles a feed that can only provide a recent
+            # window (e.g. Cricbuzz, added 2026-09-15) and is attaching
+            # mid-innings -- see docs/live_field_test_2026-09-15.md item 9.
+            # Deliberate trade-off: this specific verifier instance can no
+            # longer detect feed corruption on the very first ball it ever
+            # sees (a real but narrow loss -- every subsequent ball is
+            # still fully cross-checked as before).
+            self.score = delivery.feed_total - delivery.total_runs
+            self.wickets = delivery.feed_wickets - int(delivery.wicket_kind is not None)
+            self.base_score = self.score
+            self.base_wickets = self.wickets
         expected_score = self.score + delivery.total_runs
         expected_wickets = self.wickets + (delivery.wicket_kind is not None)
         if expected_score != delivery.feed_total:
@@ -101,8 +124,8 @@ class LiveDeliveryVerifier:
         ) + int(delivery.wicket_kind is not None)
         return True
 
-    def apply_snapshot(self, snapshot: ToiSnapshot) -> tuple[ToiDelivery, ...]:
-        accepted: list[ToiDelivery] = []
+    def apply_snapshot(self, snapshot: LiveSnapshot) -> tuple[LiveDelivery, ...]:
+        accepted: list[LiveDelivery] = []
         for delivery in snapshot.deliveries:
             if delivery.key not in self.accepted and self.apply(delivery):
                 accepted.append(delivery)

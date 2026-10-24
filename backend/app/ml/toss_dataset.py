@@ -1,7 +1,7 @@
 """Leakage-safe toss state, from Cricsheet's ``info.toss`` block.
 
 CTO-agreed roadmap priority #2 (2026-08-23): of the four fields TOI's
-``ToiSnapshot`` already fetches live but the pipeline drops
+``LiveSnapshot`` already fetches live but the pipeline drops
 (``toss_won_by``/``toss_decision``/``pitch_type``/``weather_*``), toss is
 the only one with a historical source (Cricsheet) and is therefore the
 only one backtestable before shipping -- weather/pitch/lineup would need

@@ -1,11 +1,8 @@
-"""Automatic TOI shadow-monitor filtering and recording tests."""
+"""TOI T20I filtering tests."""
 
 from __future__ import annotations
 
-import json
-
-from app.live.toi_discovery import ToiMatchSummary
-from run_toi_auto import _is_t20_international, _write_shadow_prediction
+from app.live.toi_discovery import ToiMatchSummary, is_t20_international
 
 
 def _summary(
@@ -35,26 +32,10 @@ def _summary(
 
 
 def test_shadow_filter_accepts_t20i_and_rejects_ipl() -> None:
-    assert _is_t20_international(_summary("T20I", "International series"))
-    assert _is_t20_international(
+    assert is_t20_international(_summary("T20I", "International series"))
+    assert is_t20_international(
         _summary("T20", "Bilateral series", "International")
     )
-    assert not _is_t20_international(
+    assert not is_t20_international(
         _summary("T20", "Indian Premier League", "Domestic")
     )
-
-
-def test_shadow_prediction_is_immutable_and_match_scoped(tmp_path) -> None:
-    output = {"innings": 1, "over": 2, "prediction": {"expected_runs": 7}}
-
-    path = _write_shadow_prediction(tmp_path, "match-a", output)
-    _write_shadow_prediction(
-        tmp_path,
-        "match-a",
-        {"innings": 1, "over": 2, "prediction": {"expected_runs": 99}},
-    )
-
-    assert path == (
-        tmp_path / "match-a" / "predictions" / "innings-1-over-2.json"
-    )
-    assert json.loads(path.read_text(encoding="utf-8")) == output

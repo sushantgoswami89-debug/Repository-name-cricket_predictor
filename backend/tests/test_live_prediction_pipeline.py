@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from app.live.pipeline import VerifiedLivePredictionPipeline
-from app.live.toi_reader import ToiDelivery, ToiSnapshot
+from app.live.live_snapshot import LiveDelivery, LiveSnapshot
 from app.ml.prediction_result import PredictionResult
 
 
@@ -52,9 +52,9 @@ class FakeShadowPredictor:
         }
 
 
-def _snapshot(is_live: bool = True) -> ToiSnapshot:
+def _snapshot(is_live: bool = True) -> LiveSnapshot:
     deliveries = tuple(
-        ToiDelivery(
+        LiveDelivery(
             "match",
             1,
             1,
@@ -72,13 +72,13 @@ def _snapshot(is_live: bool = True) -> ToiSnapshot:
         )
         for ball in range(1, 7)
     )
-    return ToiSnapshot("match", "T20", "A", "B", 1, 6, 0, "1.0", is_live, deliveries)
+    return LiveSnapshot("match", "T20", "A", "B", 1, 6, 0, "1.0", is_live, deliveries)
 
 
-def _two_over_snapshot() -> ToiSnapshot:
+def _two_over_snapshot() -> LiveSnapshot:
     first = _snapshot().deliveries
     second = tuple(
-        ToiDelivery(
+        LiveDelivery(
             "match",
             1,
             2,
@@ -96,13 +96,13 @@ def _two_over_snapshot() -> ToiSnapshot:
         )
         for ball in range(1, 7)
     )
-    return ToiSnapshot(
+    return LiveSnapshot(
         "match", "T20", "A", "B", 1, 12, 0, "2.0", True, first + second
     )
 
 
-def _empty_snapshot() -> ToiSnapshot:
-    return ToiSnapshot("match", "T20", "A", "B", 1, 0, 0, "0.0", True, ())
+def _empty_snapshot() -> LiveSnapshot:
+    return LiveSnapshot("match", "T20", "A", "B", 1, 0, 0, "0.0", True, ())
 
 
 def test_only_verified_completed_over_is_published() -> None:
@@ -118,9 +118,9 @@ def test_only_verified_completed_over_is_published() -> None:
     assert engine.contexts[0].live.score_before_over == 6
     assert len(publisher.messages) == 1
     message = publisher.messages[0][1]
-    assert "Candidate v3 — Over 2 Prediction" in message
-    assert "Runs: 5-9 (point 7.0)" in message
-    assert "System Health: 🟢 90%" in message
+    assert message.startswith("🏏 Over 2 · A 6/0")
+    assert "Next over:" in message and "Wicket:" in message
+    assert "Candidate" not in message and "Confidence" not in message
     assert "verified" not in message.lower()
     assert pipeline.process(_snapshot()) is None
     assert len(publisher.messages) == 1
@@ -375,12 +375,21 @@ def test_super_over_uses_one_over_limit_and_never_predicts_over_two() -> None:
     assert engine.contexts == []
 
 
-def test_late_snapshot_does_not_backfill_prediction_after_next_over_starts() -> None:
+def test_next_over_already_starting_still_serves_a_bounded_prediction() -> None:
+    # Regression test for the 2026-09-15/-17 over-14-skip bug (docs/
+    # live_field_test_2026-09-15.md item 16, docs/live_field_test_2026-09-17.md):
+    # when the next over's first ball(s) arrive in the same poll that
+    # finishes the current over, this used to `return None` and silently
+    # drop the completed over's prediction/review entirely, with no error
+    # logged. It must now still serve that over-boundary prediction, with
+    # every "as of end of this over" quantity correctly bounded to exclude
+    # the already-arrived next-over ball (feature leakage, not just a
+    # missing-output bug).
     publisher = FakePublisher()
     engine = FakeEngine()
     pipeline = VerifiedLivePredictionPipeline(engine=engine, publisher=publisher)
     completed = _snapshot()
-    wide = ToiDelivery(
+    wide = LiveDelivery(
         "match",
         1,
         2,
@@ -396,7 +405,7 @@ def test_late_snapshot_does_not_backfill_prediction_after_next_over_starts() -> 
         7,
         "Wide",
     )
-    late = ToiSnapshot(
+    late = LiveSnapshot(
         "match",
         "T20",
         "A",
@@ -409,9 +418,19 @@ def test_late_snapshot_does_not_backfill_prediction_after_next_over_starts() -> 
         completed.deliveries + (wide,),
     )
 
-    assert pipeline.process(late) is None
-    assert engine.contexts == []
-    assert publisher.messages == []
+    output = pipeline.process(late)
+
+    assert output is not None
+    assert output["over"] == 2
+    assert output["score_before_over"] == 6
+    assert output["wickets_before_over"] == 0
+    assert len(engine.contexts) == 1
+    live = engine.contexts[0].live
+    assert live.score_before_over == 6
+    assert live.wkts_down_before_over == 0
+    assert live.legal_balls_bowled == 6
+    assert live.current_run_rate == 6.0
+    assert len(publisher.messages) == 1
 
 
 def test_dynamic_confidence_changes_with_match_stability() -> None:
@@ -722,7 +741,7 @@ def test_rebase_rebuilds_deliveries_but_retains_pending_review(
         )
         for ball, delivery in enumerate(_two_over_snapshot().deliveries[6:], start=1)
     )
-    corrected = ToiSnapshot(
+    corrected = LiveSnapshot(
         "match",
         "T20",
         "A",
@@ -746,3 +765,79 @@ def test_rebase_rebuilds_deliveries_but_retains_pending_review(
     evaluation = output["previous_over_evaluation"]
     assert isinstance(evaluation, dict)
     assert evaluation["actual_runs"] == 6
+
+
+def test_batting_team_change_inside_an_innings_is_refused() -> None:
+    from app.live.pipeline import MatchStateAnomaly
+
+    pipeline = VerifiedLivePredictionPipeline(engine=FakeEngine(), publisher=FakePublisher())
+    first = _snapshot()
+    pipeline.process(first)
+    flipped = replace(first, batting_team="Somebody Else")
+    with pytest.raises(MatchStateAnomaly, match="Batting team changed"):
+        pipeline.process(flipped)
+    assert pipeline.process(replace(first, batting_team="")) is None  # unnamed is ignored, not a change
+
+
+def _pre_innings_snapshot() -> LiveSnapshot:
+    return replace(_snapshot(), deliveries=(), score=0, wickets=0, overs="0.0", innings=1,
+                   batting_team="West Indies", bowling_team="India", venue_name="JSCA International Stadium Complex, Ranchi",
+                   toss_won_by="India", toss_decision="bowl")
+
+
+def test_over_one_win_probability_is_the_pre_match_staged_model_not_the_in_play_one(monkeypatch) -> None:
+    from app.live.prematch_xi import STAGES_PATH, predict_stages
+
+    if not STAGES_PATH.exists():
+        pytest.skip("staged model not trained")
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: None)
+    pipeline = VerifiedLivePredictionPipeline(engine=FakeEngine(), publisher=FakePublisher())
+    out = pipeline.process(_pre_innings_snapshot())
+    assert out is not None and out["over"] == 1 and out["prediction_basis"] == "pre_innings_context"
+    win = out["win_probability"]
+    expected = predict_stages("West Indies", "India", "West Indies", None, [], [], "ranchi")["p_a"]
+    assert win["win_probability"] == pytest.approx(expected)
+    assert win["batting_team"] == "West Indies" and win["metadata"]["basis"] == "pre_match_staged_model"
+    assert "(pre-match model)" in VerifiedLivePredictionPipeline._technical_text(out)
+    assert "(before a ball is bowled)" in VerifiedLivePredictionPipeline._telegram_text(out)
+
+
+def test_a_chase_keeps_the_in_play_win_probability_because_the_target_is_known(monkeypatch) -> None:
+    """2026-10-22: after New Zealand made 225 the chase's over-1 message said India 69% from the pre-match model."""
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: None)
+    pipeline = VerifiedLivePredictionPipeline(engine=FakeEngine(), publisher=FakePublisher())
+    in_play = {"status": "applied", "win_probability": 0.05, "batting_team": "India", "bowling_team": "New Zealand", "metadata": {}}
+    chase = replace(_pre_innings_snapshot(), innings=2, target=226, batting_team="India", bowling_team="New Zealand")
+    assert pipeline._pre_innings_win_probability(chase, in_play) is in_play
+    assert "before a ball is bowled" not in VerifiedLivePredictionPipeline._telegram_text(
+        {"over": 1, "score_before_over": 0, "wickets_before_over": 0, "batting_team": "India", "win_probability": in_play,
+         "prediction": {"expected_range": "6-8", "wicket_probability": 0.3}, "outlook": None})
+
+
+def test_a_wrong_toss_guess_before_the_first_ball_does_not_block_the_innings(monkeypatch) -> None:
+    monkeypatch.setattr("app.live.match_weather.match_day_weather", lambda city, day=None: None)
+    pipeline = VerifiedLivePredictionPipeline(engine=FakeEngine(), publisher=FakePublisher())
+    pipeline.process(replace(_pre_innings_snapshot(), batting_team="India", bowling_team="West Indies"))  # toss guess: wrong side
+    real = replace(_snapshot(), innings=1, batting_team="West Indies", bowling_team="India")
+    pipeline.process(real)  # must not raise MatchStateAnomaly (it may legitimately return no prediction yet)
+
+
+def test_rebuilding_the_same_over_does_not_emit_the_same_forecast_twice() -> None:
+    """2026-10-13: a revised entry made the session rebuild; the same over was resolved again and its forecast was printed,
+    logged and scored a second time (72 of 262 shadow rows were such repeats)."""
+    pipeline = VerifiedLivePredictionPipeline(engine=FakeEngine())
+    first = pipeline.process(_snapshot())
+    assert first is not None
+    pending = pipeline._pending_prediction
+    pipeline._last_resolved_over = 0  # what the rebuild branch does
+    pipeline._pending_prediction = None
+    assert pipeline.process(_snapshot()) is None
+    assert pipeline._pending_prediction == pending   # the next review still has its forecast to score
+
+
+def test_forecast_text_shows_the_expected_runs_next_to_the_most_likely_band() -> None:
+    from app.live.pipeline import _expected_mean_text
+
+    assert _expected_mean_text({"metadata": {"expected_runs_mean": 8.04}}) == " | expected 8.0"
+    assert _expected_mean_text({"metadata": {}}) == ""
+    assert _expected_mean_text({}) == ""
