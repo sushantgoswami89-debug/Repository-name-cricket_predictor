@@ -44,7 +44,7 @@ All numbers: men's T20, trained on matches up to 2023, holdout 2025+ (60,988 ove
 | score so far | +0.001 | -0.000 | no change on its own (overlaps run rate + balls) |
 | position (over, balls bowled, balls remaining) | +0.001 | -0.000 | no change on its own |
 | phase label | -0.000 | -0.000 | no change |
-| pitch / venue history | +0.002 | +0.000 | no change on runs; wicket AUC 0.0025 better WITH it removed... and 0.0025 worse with it, see the interval |
+| pitch / venue history | +0.002 | +0.000 | no change on runs or big/quiet; the wicket AUC is 0.0025 BETTER without it (interval clear of zero), so it slightly hurts the wicket chance |
 
 Caution: score, run rate, position and phase say overlapping things, so removing ONE of them costs nothing while removing all of them
 would. They are delete candidates only as a set, to be tested together (open).
