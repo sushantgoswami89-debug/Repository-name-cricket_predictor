@@ -1030,27 +1030,21 @@ class CricbuzzMatchSession:
         return names if len(names) == 2 else None
 
     def _chase_cards(self, snapshot) -> None:
-        """Fact-o-Meter from the historical record (chase_facts.py): the target card once the target is known, and a checkpoint card after
-        6, 10 and 15 overs of a chase. Each once per innings; a side stat must never disturb the feed."""
+        """The chase target Fact-o-Meter card (chase_facts.py), ONCE and only before the chase starts (user 2026-10-24: not during the chase,
+        "we are pushing it very high"). A side stat must never disturb the feed."""
         try:
-            if snapshot.innings != 2 or not getattr(snapshot, "target", 0) or snapshot.match_format not in ("T20", "T20I", "IPL"):
+            if (snapshot.innings != 2 or not getattr(snapshot, "target", 0) or snapshot.deliveries
+                    or snapshot.match_format not in ("T20", "T20I", "IPL")):
                 return
-            from app.live.chase_facts import CHECKPOINTS, checkpoint_card, target_card
+            from app.live.chase_facts import target_card
 
             key = (2, "target-card")
-            if key not in self._settled_shown:
-                self._settled_shown.add(key)
-                stat = target_card(snapshot.target - 1, snapshot.bowling_team, snapshot.batting_team)
-                if stat:
-                    self._send_card(stat, key)
-            if snapshot.deliveries and _at_over_break(snapshot):
-                done = int(str(snapshot.overs).partition(".")[0])
-                key = (2, "chase-card", done)
-                if done in CHECKPOINTS and key not in self._settled_shown:
-                    self._settled_shown.add(key)
-                    stat = checkpoint_card(done, snapshot.score, snapshot.wickets, snapshot.target, snapshot.batting_team)
-                    if stat:
-                        self._send_card(stat, key)
+            if key in self._settled_shown:
+                return
+            self._settled_shown.add(key)
+            stat = target_card(snapshot.target - 1, snapshot.bowling_team, snapshot.batting_team)
+            if stat:
+                self._send_card(stat, key)
         except Exception as error:
             print(f"{self.prefix}[stat] unavailable: {error!r}")
 
