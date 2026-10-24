@@ -1353,6 +1353,7 @@ class CricbuzzMatchSession:
                 flags.append("⚠️ UNCONFIRMED: Cricbuzz has not yet confirmed this score")
             gate.flag = "\n".join(flags)
         try:
+            self.pipeline.expected_pair = self._expected_next   # for the silent career-rate shadow (pipeline._log_career_shadow)
             output = self.pipeline.process(snapshot) if self.forecast_enabled else None
         except VerificationError as error:
             print(f"{self.prefix}Verification error: {error}")

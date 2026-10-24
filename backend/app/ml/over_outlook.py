@@ -36,12 +36,14 @@ class OverOutlook:
         except Exception:
             return None
 
-    def predict(self, live) -> dict | None:
-        """`live` is the pipeline's LiveMatchState for the over about to be bowled. T20 only (20-over innings)."""
+    def predict(self, live, extra: dict | None = None) -> dict | None:
+        """`live` is the pipeline's LiveMatchState for the over about to be bowled. T20 only (20-over innings). `extra` supplies inputs the
+        live state does not carry (the career strike rates of the shadow version)."""
         try:
             if live.balls_remaining > 120 or live.over < 1 or live.over > 20:
                 return None
-            row = {name: getattr(live, name) for name in self._features if name != "phase"}
+            row = {name: getattr(live, name) for name in self._features if name != "phase" and not (extra and name in extra)}
+            row.update(extra or {})
             row["over"] = live.over
             row["phase"] = _phase(live.over)
             frame = pd.DataFrame([row])[self._features]

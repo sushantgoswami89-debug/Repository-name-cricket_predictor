@@ -22,6 +22,7 @@ from app.ml.prediction_engine import PredictionEngine
 from app.ml.win_probability_shadow_log import WinProbabilityShadowLog
 from app.ml.wicket_ensemble_shadow_log import WicketEnsembleShadowLog
 from app.ml.over_outlook import OverOutlook
+from app.ml.over_outlook_career import CareerOverOutlook
 from app.ml.run_range_ensemble_shadow_log import RunRangeEnsembleShadowLog
 from app.ml.match_winner_ensemble_shadow_log import MatchWinnerEnsembleShadowLog
 from app.models.live_match_state import LiveMatchState
@@ -135,6 +136,12 @@ class VerifiedLivePredictionPipeline:
         self._engine = engine or PredictionEngine()
         # Mean runs + chance of a big / quiet over + wicket chance (models/over_outlook_v1); None if the artifacts are missing.
         self._outlook = OverOutlook.try_load()
+        # Shadow only (never published): the same outlook with the batters' career strike rates, logged beside the live one for scoring on real overs
+        # (backend/score_career_shadow.py). `expected_pair` is set by the Cricbuzz session: {"over", "striker", "other"} for the coming over.
+        self._career_outlook = CareerOverOutlook.try_load()
+        self.expected_pair: dict | None = None
+        self._career_shadow_logged: set[tuple] = set()
+        self._career_shadow_path: Path | None = Path(output_file).parent / "over-outlook-career-shadow.jsonl" if output_file else None
         self._shadow_predictor = shadow_predictor or BowlerShadowPredictor()
         # Deliberately separate from self._engine -- see
         # app/ml/match_winner_engine.py's module docstring. Constructed
@@ -497,6 +504,8 @@ class VerifiedLivePredictionPipeline:
         win_probability = self._predict_win_probability(context)
         self._log_win_probability_shadow(snapshot, next_over, win_probability)
         self._log_match_winner_ensemble_shadow(snapshot, next_over, win_probability)
+        outlook = self._outlook.predict(context.live) if self._outlook is not None else None
+        self._log_career_shadow(snapshot, context.live, next_over, outlook)
         output: dict[str, object] = {
             "candidate_version": "v3_verified_live",
             "match_id": snapshot.match_id,
@@ -515,7 +524,7 @@ class VerifiedLivePredictionPipeline:
             "shadow_prediction": shadow,
             "win_probability": win_probability,
             "previous_over_evaluation": previous_evaluation,
-            "outlook": self._outlook.predict(context.live) if self._outlook is not None else None,
+            "outlook": outlook,
         }
         if self._output:
             self._atomic_write(output)
@@ -1143,6 +1152,25 @@ class VerifiedLivePredictionPipeline:
         if snapshot.scheduled_overs > 0:
             return snapshot.scheduled_overs
         return cls._innings_limit(snapshot.match_format, snapshot.competition)
+
+    def _log_career_shadow(self, snapshot, live, next_over: int, outlook: dict | None) -> None:
+        """Shadow log (never published, never raises): the career-rate outlook beside the live one for this over, once per over."""
+        try:
+            pair = self.expected_pair
+            key = (snapshot.match_id, snapshot.innings, next_over)
+            if (self._career_outlook is None or self._career_shadow_path is None or not pair or pair.get("over") != next_over
+                    or key in self._career_shadow_logged):
+                return
+            shadow = self._career_outlook.predict_for_pair(live, pair.get("striker"), pair.get("other"))
+            if shadow is None:
+                return
+            self._career_shadow_logged.add(key)
+            record = {"match_id": snapshot.match_id, "innings": snapshot.innings, "over": next_over, "striker": pair.get("striker"),
+                      "partner": pair.get("other"), "recorded_at": datetime.now(timezone.utc).isoformat(), "live": outlook, "career": shadow}
+            with self._career_shadow_path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(record) + "\n")
+        except Exception:
+            pass
 
     def _atomic_write(self, output: dict[str, object]) -> None:
         assert self._output is not None
