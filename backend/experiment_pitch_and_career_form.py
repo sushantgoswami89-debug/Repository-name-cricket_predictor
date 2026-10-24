@@ -86,6 +86,11 @@ def build() -> pd.DataFrame:
                     row[f"{who}_career_sr"] = rate(career, PRIOR_RPB, BAT_PRIOR_BALLS)
                     row[f"{who}_phase_sr"] = rate(in_phase, rate(career, PRIOR_RPB, BAT_PRIOR_BALLS), BAT_PRIOR_BALLS)
                     row[f"{who}_career_balls"] = career[1]
+                    # the batter's profile across all three phases (his SR in each, and the share of his career balls faced there = his role)
+                    for ph in ("powerplay", "middle", "death"):
+                        pr = bat_phase[(player, ph)]
+                        row[f"{who}_sr_{ph}"] = rate(pr, rate(career, PRIOR_RPB, BAT_PRIOR_BALLS), BAT_PRIOR_BALLS)
+                        row[f"{who}_share_{ph}"] = pr[1] / career[1] if career[1] else 0.0
                 rows.append(row)
                 runs = sum(int(d["runs"]["total"]) for d in deliveries)
                 total += runs
@@ -125,6 +130,7 @@ def build() -> pd.DataFrame:
 
 
 VENUE = ["venue_rpo", "venue_phase_rpo", "venue_first_avg", "venue_overs_seen", "crr_vs_venue", "crr_vs_venue_phase"]
+PROFILE = [f"{who}_{kind}_{ph}" for who in ("striker", "partner") for kind in ("sr", "share") for ph in ("powerplay", "middle", "death")]
 CAREER = ["striker_career_sr", "partner_career_sr", "striker_phase_sr", "partner_phase_sr", "pair_phase_sr", "striker_career_balls", "partner_career_balls"]
 
 
@@ -145,9 +151,10 @@ def prepare() -> pd.DataFrame:
 
 def fit_predict(train, hold, features):
     Xt, Xh = _features(train, features), _features(hold, features)
-    out = {"mean": np.clip(lgb.LGBMRegressor(objective="regression", **KW).fit(Xt, train["runs_in_over"], categorical_feature=CATEGORICAL_FEATURES).predict(Xh), 0, None)}
+    cats = [c for c in CATEGORICAL_FEATURES if c in features]
+    out = {"mean": np.clip(lgb.LGBMRegressor(objective="regression", **KW).fit(Xt, train["runs_in_over"], categorical_feature=cats).predict(Xh), 0, None)}
     for name, target in (("big", train["runs_in_over"] >= BIG), ("quiet", train["runs_in_over"] <= QUIET), ("wicket", train["wicket_in_over"] == 1)):
-        out[name] = lgb.LGBMClassifier(**KW).fit(Xt, target.astype(int), categorical_feature=CATEGORICAL_FEATURES).predict_proba(Xh)[:, 1]
+        out[name] = lgb.LGBMClassifier(**KW).fit(Xt, target.astype(int), categorical_feature=cats).predict_proba(Xh)[:, 1]
     return out
 
 
