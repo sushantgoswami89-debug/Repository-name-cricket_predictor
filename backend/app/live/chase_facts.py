@@ -33,8 +33,8 @@ def _fill(rate: float) -> int:
 
 
 def target_card(first_innings_total: int, batting_team: str, chasing_team: str) -> str | None:
-    """"A first innings of 225+ has been chased down only 7% of the time (12 of 177 ...)" for the biggest round threshold (steps of 5) at or
-    below the first innings total; None unless the total is big and usually defended."""
+    """"A total of 225+ is very hard to chase. It has happened just 12 times in 177 matches." (everyday wording chosen by the user 2026-10-24)
+    for the biggest round threshold (steps of 5) at or below the first innings total; None unless the total is big and usually defended."""
     totals = _facts().get("totals") or []
     if first_innings_total < MIN_TOTAL:       # "150+" pools every bigger total too: only a big total makes the line mean something
         return None
@@ -51,6 +51,8 @@ def target_card(first_innings_total: int, batting_team: str, chasing_team: str) 
     rate = defended / len(rows)
     if rate < 0.65:                  # only a total that is usually defended makes a card; a toss-up or a chaser's game is not "a fact"
         return None
-    return card("T20", f"{chasing_team} chase {first_innings_total + 1}",
-                f"A first innings of {threshold}+ has been chased down only {chase_wins / len(rows) * 100:.0f}% of the time "
-                f"({chase_wins} of {len(rows)} men's T20 matches since 2019)", len(rows), _fill(rate))
+    chased = chase_wins / len(rows)
+    how_hard = "very hard" if chased <= 0.15 else "hard"
+    times = "just 1 time" if chase_wins == 1 else f"just {chase_wins} times" if chased <= 0.15 else f"only {chase_wins} times"
+    return card("T20", f"{chasing_team} chase {first_innings_total + 1} · men's T20 since 2019",
+                f"A total of {threshold}+ is {how_hard} to chase. It has happened {times} in {len(rows)} matches.", len(rows), _fill(rate))

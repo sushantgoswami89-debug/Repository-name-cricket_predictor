@@ -8,8 +8,10 @@ from app.live.chase_facts import target_card
 def test_target_card_says_how_often_a_big_total_was_defended():
     card = target_card(225, "New Zealand", "India")
     assert card and "India chase 226" in card and "FACT-O-METER (T20)" in card
-    assert "A first innings of 225+ has been chased down only 7% of the time (12 of 177 men's T20 matches since 2019)" in card
+    assert "A total of 225+ is very hard to chase. It has happened just 12 times in 177 matches." in card
+    assert "men's T20 since 2019" in card
     assert len(card.splitlines()) == 2                     # the title line and the one fact line
+    assert "hard to chase" in target_card(195, "A", "B") and "only" in target_card(195, "A", "B")   # 16%: hard, not very hard
     assert target_card(150, "A", "B") is None              # not a big total: no card
 
 
