@@ -16,6 +16,7 @@ All numbers: men's T20, trained on matches up to 2023, holdout 2025+ (60,988 ove
 | 7 | Same layer, weighted by runs scored / excess runs | experiment_current_sr_runs_weight.py | same as #6 | per-ball weighting, boundaries-only weighting |
 | 8 | Which inputs carry weight (drop one group at a time) | experiment_feature_ablation.py | see the ablation section | drop several redundant groups TOGETHER (phase, score, position, run rate overlap each other); rerun on the final feature set |
 | 12 | Batter phase profile: SR in each phase + share of balls per phase (role), then current-phase SR, then in-innings SR, then the gap | experiment_batter_phase_profile.py | profile/role: RMSE -0.0007 (nothing); in-innings rate + gap: RMSE -0.005, wicket AUC +0.002 (borderline) | profile per bowler type, role from batting position instead of balls share, openers/finishers split |
+| 13 | Required rate compared with current rate directly (gap, ratio, runs per wicket in hand, required vs last-2-overs rate) | experiment_required_rate_gap.py | RMSE -0.002, AUC +-0.0005 (nothing); the model already learns it from the two rates | win-probability model (not tested there), required rate against the batters' phase rates |
 
 ## Win probability
 
