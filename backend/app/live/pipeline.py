@@ -21,6 +21,7 @@ from app.ml.match_winner_engine import MatchWinnerEngine
 from app.ml.prediction_engine import PredictionEngine
 from app.ml.win_probability_shadow_log import WinProbabilityShadowLog
 from app.ml.wicket_ensemble_shadow_log import WicketEnsembleShadowLog
+from app.ml.over_outlook import OverOutlook
 from app.ml.run_range_ensemble_shadow_log import RunRangeEnsembleShadowLog
 from app.ml.match_winner_ensemble_shadow_log import MatchWinnerEnsembleShadowLog
 from app.models.live_match_state import LiveMatchState
@@ -132,6 +133,8 @@ class VerifiedLivePredictionPipeline:
         match_winner_ensemble_shadow_log: MatchWinnerEnsembleShadowLog | None = None,
     ) -> None:
         self._engine = engine or PredictionEngine()
+        # Mean runs + chance of a big / quiet over + wicket chance (models/over_outlook_v1); None if the artifacts are missing.
+        self._outlook = OverOutlook.try_load()
         self._shadow_predictor = shadow_predictor or BowlerShadowPredictor()
         # Deliberately separate from self._engine -- see
         # app/ml/match_winner_engine.py's module docstring. Constructed
@@ -511,6 +514,7 @@ class VerifiedLivePredictionPipeline:
             "shadow_prediction": shadow,
             "win_probability": win_probability,
             "previous_over_evaluation": previous_evaluation,
+            "outlook": self._outlook.predict(context.live) if self._outlook is not None else None,
         }
         if self._output:
             self._atomic_write(output)
@@ -566,6 +570,7 @@ class VerifiedLivePredictionPipeline:
             "win_probability": win_probability,
             "previous_over_evaluation": None,
             "prediction_basis": "pre_innings_context",
+            "outlook": self._outlook.predict(context.live) if self._outlook is not None else None,
         }
         if self._output:
             self._atomic_write(output)
@@ -1177,13 +1182,28 @@ class VerifiedLivePredictionPipeline:
             shadow = win.get("metadata", {}).get("monte_carlo_shadow_win_probability")
             if shadow is not None:
                 win_line += f" (Monte Carlo shadow: {float(shadow) * 100:.1f}%)"
+        outlook = output.get("outlook") if isinstance(output.get("outlook"), dict) else None
+        if outlook:
+            # Mean + chance of a big / quiet over + chance of a wicket (user 2026-10-24); the range line stays for comparison.
+            outlook_lines = (
+                f"Expected: about {outlook['mean_runs']:.1f} runs\n"
+                f"Big over ({outlook['big_runs']}+ runs): {outlook['p_big'] * 100:.0f}% | "
+                f"Quiet over ({outlook['quiet_runs']} or fewer): {outlook['p_quiet'] * 100:.0f}%\n"
+                f"Wicket chance: {outlook['p_wicket'] * 100:.0f}% (at least one wicket in the over)"
+            )
+        else:
+            outlook_lines = f"Wicket risk (phase baseline): {probability:.1f}%"
+        # With the outlook the old "| expected X" mean is left off: two different "expected" numbers side by side would only confuse.
+        runs_line = (
+            f"Most likely range: {prediction['expected_range']} (point {prediction['expected_runs']})"
+            if outlook
+            else f"Runs: {prediction['expected_range']} (point {prediction['expected_runs']}){_expected_mean_text(prediction)}"
+        )
         message = (
             f"🏏 Candidate v3 — Over {output['over']} Prediction\n"
             f"Score: {output['score_before_over']}/{output['wickets_before_over']}\n"
-            f"Runs: {prediction['expected_range']} "
-            f"(point {prediction['expected_runs']})"
-            f"{_expected_mean_text(prediction)}\n"
-            f"Wicket risk (phase baseline): {probability:.1f}%"
+            f"{runs_line}\n"
+            f"{outlook_lines}"
             f"{win_line}\n"
             f"Confidence: {confidence_color} "
             f"{prediction['confidence_percent']}%"

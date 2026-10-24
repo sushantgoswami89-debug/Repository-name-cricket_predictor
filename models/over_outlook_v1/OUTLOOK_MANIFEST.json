@@ -1,0 +1,61 @@
+{
+  "version": "over_outlook_v1",
+  "trained_at": "2026-10-24T07:48:00.646911+00:00",
+  "rows": 246846,
+  "features": [
+    "over",
+    "score_before_over",
+    "wkts_down_before_over",
+    "phase",
+    "wickets_in_hand",
+    "legal_balls_bowled",
+    "balls_remaining",
+    "current_run_rate",
+    "is_chase",
+    "runs_required",
+    "required_run_rate",
+    "recent_legal_balls",
+    "recent_runs_per_ball",
+    "recent_dot_rate",
+    "recent_single_rate",
+    "recent_boundary_rate",
+    "recent_wicket_rate"
+  ],
+  "categorical": [
+    "phase"
+  ],
+  "big_over_runs": 10,
+  "quiet_over_runs": 4,
+  "holdout_2025_plus_fit_on_up_to_2023": {
+    "holdout_rows": 60988,
+    "mean_bias": -0.022,
+    "mean_mae": 3.259,
+    "big": {
+      "base_rate": 0.263,
+      "mean_predicted": 0.259,
+      "auc": 0.714,
+      "brier": 0.1725,
+      "base_rate_brier": 0.194
+    },
+    "quiet": {
+      "base_rate": 0.328,
+      "mean_predicted": 0.322,
+      "auc": 0.7,
+      "brier": 0.1955,
+      "base_rate_brier": 0.2203
+    },
+    "wicket": {
+      "base_rate": 0.303,
+      "mean_predicted": 0.29,
+      "auc": 0.601,
+      "brier": 0.2043,
+      "base_rate_brier": 0.2112
+    }
+  },
+  "sha256": {
+    "mean.pkl": "fb252cd5b753ab8aa6fa79a13cdbb662ac73ee4b69d46231f8a0a85c44874782",
+    "big.pkl": "0934ae90010ced605a82c77c03fe74995a2f774e3d137a06785dd43c91464090",
+    "quiet.pkl": "07f2f95c6e536cf275e9a0ab0ccd4daa101408ffd852132240a132d3e2527486",
+    "wicket.pkl": "b9c80e13bc51b2b90b86853b9571896d7aaf652cceeda32ad8f5c6da1ea2bda0"
+  }
+}
