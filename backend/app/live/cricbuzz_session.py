@@ -1029,6 +1029,31 @@ class CricbuzzMatchSession:
                 names.append(name)
         return names if len(names) == 2 else None
 
+    def _chase_cards(self, snapshot) -> None:
+        """Fact-o-Meter from the historical record (chase_facts.py): the target card once the target is known, and a checkpoint card after
+        6, 10 and 15 overs of a chase. Each once per innings; a side stat must never disturb the feed."""
+        try:
+            if snapshot.innings != 2 or not getattr(snapshot, "target", 0) or snapshot.match_format not in ("T20", "T20I", "IPL"):
+                return
+            from app.live.chase_facts import CHECKPOINTS, checkpoint_card, target_card
+
+            key = (2, "target-card")
+            if key not in self._settled_shown:
+                self._settled_shown.add(key)
+                stat = target_card(snapshot.target - 1, snapshot.bowling_team, snapshot.batting_team)
+                if stat:
+                    self._send_card(stat, key)
+            if snapshot.deliveries and _at_over_break(snapshot):
+                done = int(str(snapshot.overs).partition(".")[0])
+                key = (2, "chase-card", done)
+                if done in CHECKPOINTS and key not in self._settled_shown:
+                    self._settled_shown.add(key)
+                    stat = checkpoint_card(done, snapshot.score, snapshot.wickets, snapshot.target, snapshot.batting_team)
+                    if stat:
+                        self._send_card(stat, key)
+        except Exception as error:
+            print(f"{self.prefix}[stat] unavailable: {error!r}")
+
     def _send_card(self, stat: str, key: tuple) -> None:
         """Print a live Fact-o-Meter card and send it to Telegram when a facts publisher is set (never raises)."""
         print(f"{self.prefix}" + stat.replace("\n", "\n    "))
@@ -1245,6 +1270,7 @@ class CricbuzzMatchSession:
             if stat:
                 self._settled_shown.add(key)
                 self._send_card(stat, key)
+        self._chase_cards(snapshot)
         if _at_over_break(snapshot):
             for name in dict.fromkeys([snapshot.deliveries[-1].bowler, announced]):
                 figures_now = self._card_bowl_nums.get(name) if name else None
